@@ -6,6 +6,7 @@ import * as remarkable from "remarkable"
 import * as uslug from "uslug"
 import * as matter from "gray-matter"
 import * as jsonic from "jsonic"
+import * as md5 from "md5"
 
 import {MarkdownPreviewEnhancedConfig} from './config'
 import * as plantumlAPI from './puml'
@@ -49,6 +50,9 @@ export class MarkdownEngine {
   private enableTypographer: boolean
 
   private md;
+
+  // caches 
+  private graphsCache:{[key:string]:string} = {}
 
   constructor(args:MarkdownEngineConstructorArgs) {
     this.fileDirectoryPath = args.fileDirectoryPath
@@ -109,7 +113,7 @@ export class MarkdownEngine {
    * @param parameters is in the format of `lang {opt1:val1, opt2:val2}` or just `lang`       
    * @param text 
    */
-  private async renderCodeBlock($preElement, text, parameters) {
+  private async renderCodeBlock($preElement, text, parameters, {graphsCache}) {
     let match, lang 
     if (match = parameters.match(/\s*([^\s]+)\s+\{(.+?)\}/)) {
       lang = match[1]
@@ -130,21 +134,32 @@ export class MarkdownEngine {
     }
 
     if (lang.match(/^(puml|plantuml)$/)) {
-      const svg = await plantumlAPI.render(text, this.fileDirectoryPath)
-      $preElement.replaceWith(svg)
+      const checksum = md5(text)
+      let svg:string = this.graphsCache[checksum] 
+      if (!svg) {
+        svg = await plantumlAPI.render(text, this.fileDirectoryPath)
+      }
+      $preElement.replaceWith(`<p>${svg}</p>`)
+      graphsCache[checksum] = svg // store to new cache 
+
     } else if (lang.match(/^mermaid$/)) {
       $preElement.replaceWith(`<div class="mermaid">${text}</div>`)
     } else if (lang.match(/^(dot|viz)$/)) {
-      if (!viz) {
-        viz = require(path.resolve(__dirname, '../../dependencies/viz/viz.js'))
-      }
-      try {
-        let engine = parameters.engine || "dot"
-        const svg = viz(text, {engine})
-        $preElement.replaceWith(svg)
-      } catch(e) {
-        $preElement.replaceWith(`<pre>${e.toString()}</pre>`)
-      }
+      const checksum = md5(text)
+      let svg = this.graphsCache[checksum]
+      if (!svg) {
+        if (!viz) viz = require(path.resolve(__dirname, '../../dependencies/viz/viz.js'))
+        
+        try {
+          let engine = parameters.engine || "dot"
+          svg = viz(text, {engine})
+        } catch(e) {
+          $preElement.replaceWith(`<pre>${e.toString()}</pre>`)
+        }
+      } 
+
+      $preElement.replaceWith(`<p>${svg}</p>`)
+      graphsCache[checksum] = svg // store to new cache
     }
   }
 
@@ -155,6 +170,10 @@ export class MarkdownEngine {
    */
   private async resolveImagePathAndCodeBlock(html) {
     let $ = cheerio.load(html, {xmlMode:true})
+    
+    // new caches
+    // which will be set when this.renderCodeBlocks is called
+    const newGraphsCache:{[key:string]:string} = {}
 
     const asyncFunctions = []
     $('pre').each((i, preElement)=> {
@@ -174,10 +193,14 @@ export class MarkdownEngine {
           text = ''
       }
       
-      asyncFunctions.push(this.renderCodeBlock($(preElement), text, lang))
+      asyncFunctions.push(this.renderCodeBlock($(preElement), text, lang, {graphsCache: newGraphsCache }))
     })
 
     await Promise.all(asyncFunctions)
+
+    // reset caches 
+    this.graphsCache = newGraphsCache
+
     return $.html()
   }
 

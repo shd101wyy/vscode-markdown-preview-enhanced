@@ -67,7 +67,7 @@ class PlantUMLTask {
     this.task.on("exit", ()=> this.closeSelf())
   }
 
-  public generateSVG(content:string) {
+  public generateSVG(content:string):Promise<string> {
     return new Promise((resolve, reject)=> {
       this.callbacks.push(resolve)
       this.task.stdin.write(content + '\n')
@@ -86,7 +86,7 @@ class PlantUMLTask {
 
 
 // async call 
-export async function render(content:string, fileDirectoryPath:string="") {
+export async function render(content:string, fileDirectoryPath:string=""):Promise<string> {
   content = content.trim()
   // ' @mpe_file_directory_path:/fileDirectoryPath
   // fileDirectoryPath 
