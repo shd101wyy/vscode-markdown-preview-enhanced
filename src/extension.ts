@@ -92,7 +92,7 @@ function togglePreview(uri?: vscode.Uri) {
 
 
 function revealLine(fsPath) {
-  console.log('revealLine: ' + fsPath)
+  // console.log('revealLine: ' + fsPath)
 }
 
 // this method is called when your extension is deactivated

@@ -7,12 +7,14 @@ export class MarkdownPreviewEnhancedConfig {
 
   public readonly breakOnSingleNewLine: boolean
   public readonly enableTypographer: boolean
+  public readonly mermaidTheme: string
 
   private constructor() {
     const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
 
     this.breakOnSingleNewLine = config.get<boolean>('breakOnSingleNewLine')
     this.enableTypographer = config.get<boolean>('enableTypographer')
+    this.mermaidTheme = config.get<string>('mermaidTheme')
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

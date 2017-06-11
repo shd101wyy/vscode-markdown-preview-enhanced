@@ -43,6 +43,16 @@
                     "description": "Enable smartypants and other sweet transforms.",
                     "default": false,
                     "type": "boolean"
+                },
+                "markdown-preview-enhanced.mermaidTheme": {
+                    "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
+                    "default": "mermaid.css",
+                    "type": "string",
+                    "enum": [
+                        "mermaid.css",
+                        "mermaid.dark.css",
+                        "mermaid.forest.css"
+                    ]
                 }
             }
         }
@@ -56,7 +66,7 @@
     "dependencies": {
         "async": "^2.4.1",
         "babyparse": "^0.4.6",
-        "cheerio": "^0.15.0",
+        "cheerio": "0.15.0",
         "gray-matter": "^2.1.1",
         "html-pdf": "^2.1.0",
         "imgur": "^0.2.0",
@@ -64,7 +74,7 @@
         "less": "^2.7.2",
         "md5": "^2.2.1",
         "remarkable": "^1.7.1",
-        "request": "^2.76.0",
+        "request": "2.76.0",
         "temp": "^0.8.3",
         "uslug": "^1.0.4"
     },

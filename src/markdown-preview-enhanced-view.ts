@@ -56,14 +56,19 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       const engine:MarkdownEngine = this.engineMaps[sourceUri.fsPath]
       return engine.parseMD(text, {})
         .then(({markdown, html})=> {
+          console.log('@'+html+'@', html.length)
+
           return `<!DOCTYPE html>
 <html>
 <head>
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
   <meta id="vscode-markdown-preview-enhanced-data" data-settings="${JSON.stringify(settings).replace(/"/g, '&quot;')}">
-  
+  <meta charset="UTF-8">
   <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
+  <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">
 
+
+  <script src="${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>
   <base href="${document.uri.toString(true)}">
 
 </head>

@@ -1,7 +1,8 @@
 import * as path from "path"
+import {getExtensionDirectoryPath} from './utility'
 import {spawn} from "child_process"
 
-const PlantUMLJarPath = path.resolve(__dirname, '../dependencies/plantuml/plantuml.jar')
+const PlantUMLJarPath = path.resolve(getExtensionDirectoryPath(), './dependencies/plantuml/plantuml.jar')
 
 /**
  * key is fileDirectoryPath, value is PlantUMLTask
@@ -29,6 +30,8 @@ class PlantUMLTask {
     this.chunks = CHUNKS[this.fileDirectoryPath] || ''
     this.callbacks = CALLBACKS[this.fileDirectoryPath] || []
     this.task = null 
+
+    this.startTask()
   }
 
   startTask() {
@@ -50,8 +53,9 @@ class PlantUMLTask {
         diagrams.forEach((diagram, i)=> {
           if (diagram.length) {
             const callback = this.callbacks.shift()
-            if (callback)
+            if (callback) {
               callback(diagram + '</svg>')
+            }
           }
         })
       } else {
@@ -82,7 +86,7 @@ class PlantUMLTask {
 
 
 // async call 
-export async function render(content:string, fileDirectoryPath:string="", callback:(result:string)=>void) {
+export async function render(content:string, fileDirectoryPath:string="") {
   content = content.trim()
   // ' @mpe_file_directory_path:/fileDirectoryPath
   // fileDirectoryPath 
@@ -102,7 +106,7 @@ export async function render(content:string, fileDirectoryPath:string="", callba
 ${content}
 @enduml`
   }
-
+  
   if (!TASKS[fileDirectoryPath]) // init `plantuml.jar` task
     TASKS[fileDirectoryPath] = new PlantUMLTask(fileDirectoryPath)
   

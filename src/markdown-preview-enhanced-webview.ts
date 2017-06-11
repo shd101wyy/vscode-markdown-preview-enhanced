@@ -15,4 +15,7 @@
     command: 'did-click-link', // <= this has to be `did-click-link` to post message
     data: `command:_markdown-preview-enhanced.revealLine?${JSON.stringify([settings.fsPath])}`
   }, 'file://')
+
+  console.log(document.getElementsByTagName('html')[0].innerHTML)
+
 })()

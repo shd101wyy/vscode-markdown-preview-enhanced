@@ -7,6 +7,9 @@ import * as uslug from "uslug"
 import * as matter from "gray-matter"
 
 import {MarkdownPreviewEnhancedConfig} from './config'
+import * as plantumlAPI from './puml'
+import {escapeString, unescapeString, getExtensionDirectoryPath} from "./utility"
+let viz = null
 
 interface MarkdownEngineConstructorArgs {
   fileDirectoryPath: string,
@@ -97,10 +100,79 @@ export class MarkdownEngine {
     }
   }
 
+
+
+  /**
+   * 
+   * @param preElement the cheerio element
+   * @param parameters is in the format of `lang {opt1:val1, opt2:val2}` or just `lang`       
+   * @param text 
+   */
+  private async renderCodeBlock($preElement, text, parameters) {
+    let match, lang 
+    if (match = parameters.match(/\s*([^\s]+)\s+\{(.+?)\}/)) {
+      lang = match[1]
+      parameters = match[2]
+    } else {
+      lang = parameters
+      parameters = ''
+    }
+
+    if (lang.match(/^(puml|plantuml)$/)) {
+      const svg = await plantumlAPI.render(text, this.fileDirectoryPath)
+      $preElement.replaceWith(svg)
+    } else if (lang.match(/^mermaid$/)) {
+      $preElement.replaceWith(`<div class="mermaid">${text}</div>`)
+    } else if (lang.match(/^(dot|viz)$/)) {
+      if (!viz) {
+        viz = require(path.resolve(__dirname, '../../dependencies/viz/viz.js'))
+      }
+      const svg = viz(text)
+      $preElement.replaceWith(svg)
+    }
+  }
+
+  /**
+   * This function resovle image paths and render code blocks
+   * @param html the html string that we will analyze 
+   * @return html 
+   */
+  private async resolveImagePathAndCodeBlock(html) {
+    let $ = cheerio.load(html, {xmlMode:true})
+
+    const asyncFunctions = []
+    $('pre').each((i, preElement)=> {
+      let codeBlock, lang, text 
+
+      if (preElement.children[0] && preElement.children[0].name == 'code') {
+        codeBlock = $(preElement).children().first()
+        lang = 'text'
+        if (codeBlock.attr('class'))
+          lang = codeBlock.attr('class').replace(/^language-/, '') || 'text'
+        text = codeBlock.text()
+      } else {
+        lang = 'text'
+        if (preElement.children[0])
+          text = preElement.children[0].data
+        else
+          text = ''
+      }
+      
+      asyncFunctions.push(this.renderCodeBlock($(preElement), text, lang))
+    })
+
+    await Promise.all(asyncFunctions)
+    return $.html()
+  }
+
   public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
+    console.log('parseMD')
     return new Promise((resolve, reject)=> {
       let html = this.md.render(inputString)
-      return resolve({html, markdown:inputString})
+
+      return this.resolveImagePathAndCodeBlock(html).then((html)=> {
+        return resolve({html, markdown:inputString})
+      })
     })
   }
 }
