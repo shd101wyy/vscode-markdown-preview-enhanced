@@ -61,14 +61,19 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 <head>
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
   <meta id="vscode-markdown-preview-enhanced-data" data-settings="${JSON.stringify(settings).replace(/"/g, '&quot;')}">
-  <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
-  <base href="${document.uri.toString(true)}">
-</head>
-<body class="markdown-preview-enhanced">
-  ${html}
-</body>
-</html>`
+  
+  <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
 
+  <base href="${document.uri.toString(true)}">
+
+</head>
+<body class="markdown-preview-enhanced-container">
+  <div class="markdown-preview-enhanced" for="preview">
+  ${html}
+  </div>
+</body>
+<script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
+</html>`
         })
     })
   }

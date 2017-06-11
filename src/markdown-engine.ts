@@ -54,6 +54,8 @@ export class MarkdownEngine {
 
     this.md = new remarkable('full', 
       Object.assign({}, defaults, {typographer: this.enableTypographer, breaks: this.breakOnSingleNewLine}))
+    
+    this.configureRemarkable()
   }
 
   private initConfig() {
@@ -66,6 +68,33 @@ export class MarkdownEngine {
     this.initConfig()
 
     this.md.set({breaks: this.breakOnSingleNewLine, typographer: this.enableTypographer})
+  }
+
+  private configureRemarkable() {
+
+    // task list 
+    this.md.renderer.rules.list_item_open = (tokens, idx)=> {
+      if (tokens[idx + 2]) {
+        let children = tokens[idx + 2].children
+        if (!children || !(children[0] && children[0].content))
+          return '<li>'
+
+        const line = children[0].content
+        if (line.match(/^\[[xX\s]\]\s/)) {
+          children[0].content = line.slice(3)
+          let checked = !(line[1] == ' ')
+          let checkBox = `<input type=\"checkbox\" class=\"task-list-item-checkbox\" ${checked ? 'checked' : ''}>`
+          let level = children[0].level
+          children = [{content: checkBox, type: 'htmltag', level}].concat(children)
+
+          tokens[idx + 2].children = children
+          return '<li class="task-list-item">'
+        }
+        return '<li>'
+      } else {
+        return '<li>'
+      }
+    }
   }
 
   public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {

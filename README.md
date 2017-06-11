@@ -1,5 +1,8 @@
 # markdown-preview-enhanced README
 
+Trying hard to port [Markdown Preview Enhanced for atom](https://github.com/shd101wyy/markdown-preview-enhanced) to vscode.
+
+
 This is the README for your extension "markdown-preview-enhanced". After writing up a brief description, we recommend including the following sections.
 
 ## Features
