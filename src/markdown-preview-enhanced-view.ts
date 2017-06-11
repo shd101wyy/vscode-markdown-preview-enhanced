@@ -56,7 +56,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       const engine:MarkdownEngine = this.engineMaps[sourceUri.fsPath]
       return engine.parseMD(text, {})
         .then(({markdown, html})=> {
-          console.log('@'+html+'@', html.length)
 
           return `<!DOCTYPE html>
 <html>

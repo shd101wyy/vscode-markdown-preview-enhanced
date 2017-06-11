@@ -5,6 +5,7 @@ import * as fs from "fs"
 import * as remarkable from "remarkable"
 import * as uslug from "uslug"
 import * as matter from "gray-matter"
+import * as jsonic from "jsonic"
 
 import {MarkdownPreviewEnhancedConfig} from './config'
 import * as plantumlAPI from './puml'
@@ -118,6 +119,16 @@ export class MarkdownEngine {
       parameters = ''
     }
 
+    if (parameters) {
+      try {
+        parameters = jsonic('{'+parameters+'}')
+      } catch (e) {
+        return $preElement.replaceWith(`<pre>${'{'+parameters+'}'}<br>${e.toString()}</pre>`)
+      }
+    } else {
+      parameters = {}
+    }
+
     if (lang.match(/^(puml|plantuml)$/)) {
       const svg = await plantumlAPI.render(text, this.fileDirectoryPath)
       $preElement.replaceWith(svg)
@@ -127,8 +138,13 @@ export class MarkdownEngine {
       if (!viz) {
         viz = require(path.resolve(__dirname, '../../dependencies/viz/viz.js'))
       }
-      const svg = viz(text)
-      $preElement.replaceWith(svg)
+      try {
+        let engine = parameters.engine || "dot"
+        const svg = viz(text, {engine})
+        $preElement.replaceWith(svg)
+      } catch(e) {
+        $preElement.replaceWith(`<pre>${e.toString()}</pre>`)
+      }
     }
   }
 
@@ -166,7 +182,7 @@ export class MarkdownEngine {
   }
 
   public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
-    console.log('parseMD')
+    // console.log('parseMD')
     return new Promise((resolve, reject)=> {
       let html = this.md.render(inputString)
 
