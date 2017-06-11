@@ -30,8 +30,7 @@ function activate(context: vscode.ExtensionContext) {
 	}))
 
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => {
-		// logger.updateConfiguration();
-		// contentProvider.updateConfiguration();
+		contentProvider.updateConfiguration();
 	}))
 
   context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(event => {
@@ -49,6 +48,8 @@ function activate(context: vscode.ExtensionContext) {
 	}))
 
   context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.toggle', togglePreview))
+
+  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 
   context.subscriptions.push(contentProviderRegistration)
 }
@@ -87,6 +88,11 @@ function togglePreview(uri?: vscode.Uri) {
   }, (reason)=> {
     vscode.window.showErrorMessage(reason)
   })
+}
+
+
+function revealLine(fsPath) {
+  console.log('revealLine: ' + fsPath)
 }
 
 // this method is called when your extension is deactivated
