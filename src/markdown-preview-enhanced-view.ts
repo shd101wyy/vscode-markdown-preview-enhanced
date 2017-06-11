@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
+import * as path from 'path'
 import {Uri, CancellationToken, Event, ProviderResult} from 'vscode'
-
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -11,19 +11,37 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   private _onDidChange = new vscode.EventEmitter<Uri>()
   private _waiting:boolean = false
 
-  public constructor(private _context: vscode.ExtensionContext) {
+  public constructor(private context: vscode.ExtensionContext) {
+  }
+
+  /**
+   * 
+   * @param mediaFile 
+   * @return path.resolve(this.context.extensionPath, `media/${mediaFile}`)
+   */
+  private getMediaPath(mediaFile: string): string {
+    return vscode.Uri.file(this.context.asAbsolutePath(path.join('media', mediaFile))).toString();
   }
 
   public provideTextDocumentContent(uri: Uri, token: CancellationToken)
-  : string {
-    console.log('provideTextDocumentContent')
-    const editor = vscode.window.activeTextEditor;
-    if (editor.document.languageId !== 'markdown') {
-        return "Active editor doesn't show a CSS document - no properties to preview.";
-    }
-    
-    const text = editor.document.getText();
-    return `<div class="markdown-preview-enhanced">${text}</div>`
+  : Thenable<string> {
+		const sourceUri = vscode.Uri.parse(uri.query);
+
+    return vscode.workspace.openTextDocument(sourceUri).then(document => {
+      const text = document.getText()
+      return `<!DOCTYPE html>
+				<html>
+				<head>
+					<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+					<meta id="vscode-markdown-preview-data" >
+					<script src="${this.getMediaPath('main.js')}"></script>
+					<base href="${document.uri.toString(true)}">
+				</head>
+				<body class="markdown-preview-enhanced">
+          ${text}
+				</body>
+				</html>`;
+    })
   }
 
   get onDidChange(): Event<Uri> {

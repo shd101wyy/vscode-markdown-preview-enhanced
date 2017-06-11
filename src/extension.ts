@@ -20,19 +20,33 @@ function activate(context: vscode.ExtensionContext) {
 			const uri = getMarkdownUri(document.uri);
 			contentProvider.update(uri);
 		}
-	}));
+	}))
 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
 		if (isMarkdownFile(event.document)) {
 			const uri = getMarkdownUri(event.document.uri);
 			contentProvider.update(uri);
 		}
-	}));
+	}))
 
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => {
 		// logger.updateConfiguration();
 		// contentProvider.updateConfiguration();
-	}));
+	}))
+
+  context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(event => {
+		if (isMarkdownFile(event.textEditor.document)) {
+			const markdownFile = getMarkdownUri(event.textEditor.document.uri);
+			// logger.log('updatePreviewForSelection', { markdownFile: markdownFile.toString() });
+      // console.log('onDidChangeTextEditorSelection', markdownFile)
+      vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
+        markdownFile,
+        {
+          type: 'change-text-editor-selection',
+          line: event.selections[0].active.line
+        })
+      }
+	}))
 
   context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.toggle', togglePreview))
 
@@ -67,6 +81,8 @@ function togglePreview(uri?: vscode.Uri) {
     `Preview '${path.basename(resource.fsPath)}'`)
   .then((success)=> {
     console.log('done opening: ' + getMarkdownUri(resource).toString())
+
+    vscode.commands.executeCommand('_workbench.htmlPreview.postMessage', resource, )
 
   }, (reason)=> {
     vscode.window.showErrorMessage(reason)
