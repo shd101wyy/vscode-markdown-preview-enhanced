@@ -78,7 +78,109 @@ export class MarkdownEngine {
     this.md.set({breaks: this.breakOnSingleNewLine, typographer: this.enableTypographer})
   }
 
+  /**
+   * 
+   * @param content the math expression 
+   * @param openTag the open tag, eg: '\('
+   * @param closeTag the close tag, eg: '\)'
+   * @param displayMode whether to be rendered in display mode
+   */
+  private parseMath({content, openTag, closeTag, displayMode}) {
+    if (!content) return ''
+    if (this.config.mathRenderingOption[0] == 'K') { // KaTeX
+      try {
+        return katex.renderToString(content, {displayMode})
+      } catch(error) {
+        return `<span style=\"color: #ee7f49; font-weight: 500;\">${error.toString()}</span>`
+      }
+    } else if (this.config.mathRenderingOption[0] == 'M') { // MathJax
+      return ''
+    } else {
+      return ''
+    }
+  }
+
   private configureRemarkable() {
+
+    /**
+     * math rule
+     */
+    this.md.inline.ruler.before('escape', 'math', (state, silent)=> {
+      if (this.config.mathRenderingOption[0] == 'N')
+        return false
+
+      let openTag = null,
+          closeTag = null,
+          displayMode = true,
+          inline = this.config.mathInlineDelimiters,
+          block = this.config.mathBlockDelimiters
+
+      for (let a = 0; a < block.length; a++) {
+        const b = block[a]
+        if (state.src.startsWith(b[0], state.pos)) {
+          openTag = b[0]
+          closeTag = b[1]
+          displayMode = true
+          break
+        }
+      }
+
+      if (!openTag) {
+        for (let a = 0; a < inline.length; a++) {
+          const i = inline[a]
+          if (state.src.startsWith(i[0], state.pos)) {
+            openTag = i[0]
+            closeTag = i[1]
+            displayMode = false
+            break
+          }
+        }
+      }
+
+      if (!openTag) return false // not math
+
+      let content = null,
+          end = -1
+
+      let i = state.pos + openTag.length
+      while (i < state.src.length) {
+        if (state.src.startsWith(closeTag, i)) {
+          end = i
+          break
+        } else if (state.src[i] == '\\') {
+          i += 1
+        }
+        i += 1
+      }
+
+      if (end >= 0)
+        content = state.src.slice(state.pos + openTag.length, end)
+      else
+        return false
+
+      if (content && !silent) {
+        state.push({
+          type: 'math',
+          content: content.trim(),
+          openTag: openTag,
+          closeTag: closeTag,
+          displayMode: displayMode
+        })
+
+        state.pos += (content.length + openTag.length + closeTag.length)
+        return true
+      } else {
+        return false
+      }
+    })
+
+    /**
+     * math renderer 
+     */
+    this.md.renderer.rules.math = (tokens, idx)=> {
+      return this.parseMath(tokens[idx] || {})
+    }
+
 
     // task list 
     this.md.renderer.rules.list_item_open = (tokens, idx)=> {
@@ -205,7 +307,6 @@ export class MarkdownEngine {
   }
 
   public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
-    // console.log('parseMD')
     return new Promise((resolve, reject)=> {
       let html = this.md.render(inputString)
 

@@ -8,6 +8,12 @@ export class MarkdownPreviewEnhancedConfig {
   public readonly breakOnSingleNewLine: boolean
   public readonly enableTypographer: boolean
   public readonly mermaidTheme: string
+  /**
+   * "KaTeX", "MathJax", or "None"
+   */
+  public readonly mathRenderingOption: string
+  public readonly mathInlineDelimiters: Array<string[]>
+  public readonly mathBlockDelimiters: Array<string[]>
 
   private constructor() {
     const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
@@ -15,6 +21,9 @@ export class MarkdownPreviewEnhancedConfig {
     this.breakOnSingleNewLine = config.get<boolean>('breakOnSingleNewLine')
     this.enableTypographer = config.get<boolean>('enableTypographer')
     this.mermaidTheme = config.get<string>('mermaidTheme')
+    this.mathRenderingOption = config.get<string>('mathRenderingOption')
+    this.mathInlineDelimiters = config.get<Array<string[]>>('mathInlineDelimiters')
+    this.mathBlockDelimiters = config.get<Array<string[]>>('mathBlockDelimiters')
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

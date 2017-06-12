@@ -15,9 +15,18 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   private _waiting:boolean = false
 
   /**
-   *  The key is markdown file fsPath, value is MarkdownEngine
+   * The key is markdown file fsPath
+   * value is MarkdownEngine
    */
   private engineMaps:{[key:string]: MarkdownEngine} = {} 
+
+  /**
+   * key is markdown file path
+   * value is html generated from markdown file 
+   */
+  // private htmlMaps:{[key:string]: string} = {}
+
+
   private config:MarkdownPreviewEnhancedConfig
 
   public constructor(private context: vscode.ExtensionContext) {
@@ -33,7 +42,51 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     return vscode.Uri.file(this.context.asAbsolutePath(path.join('media', mediaFile))).toString();
   }
 
-  public provideTextDocumentContent(uri: Uri, token: CancellationToken)
+  private getScripts() {
+    let scripts = ""
+  }
+
+  /**
+   * @return a string of <link ...> that links to css files
+   */
+  private getStyles() {
+    let styles = ""
+
+    // check math 
+    if (this.config.mathRenderingOption === "KaTeX") {
+      styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './node_modules/katex/dist/katex.min.css')}">`
+    }
+
+    // check mermaid 
+    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
+    return styles  
+  }
+
+  public getHTMLTemplate(html) {
+    /* data-settings="${JSON.stringify(settings).replace(/"/g, '&quot;')}" */
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <meta id="vscode-markdown-preview-enhanced-data">
+  <meta charset="UTF-8">
+  <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
+  ${this.getStyles()}
+
+  <script src="${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>
+
+</head>
+<body class="markdown-preview-enhanced-container">
+  <div class="markdown-preview-enhanced" for="preview">
+  ${html}
+  </div>
+</body>
+<script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
+</html>`
+  }
+
+  public provideTextDocumentContent(uri: Uri)
   : Thenable<string> {
 		const sourceUri = vscode.Uri.parse(uri.query)
     // console.log(sourceUri, uri, vscode.workspace.rootPath)
@@ -45,40 +98,22 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         fsPath: sourceUri.fsPath
       }
 
-      if (!this.engineMaps[sourceUri.fsPath]) {
-        this.engineMaps[sourceUri.fsPath] = new MarkdownEngine(
+      let engine = this.engineMaps[sourceUri.fsPath]
+      if (!engine) {
+        engine = new MarkdownEngine(
           {
             fileDirectoryPath: sourceUri.fsPath,
             projectDirectoryPath: vscode.workspace.rootPath,
             config: this.config
           })
+        this.engineMaps[sourceUri.fsPath] = engine
       }
-      const engine:MarkdownEngine = this.engineMaps[sourceUri.fsPath]
-      return engine.parseMD(text, {})
-        .then(({markdown, html})=> {
 
-          return `<!DOCTYPE html>
-<html>
-<head>
-  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-  <meta id="vscode-markdown-preview-enhanced-data" data-settings="${JSON.stringify(settings).replace(/"/g, '&quot;')}">
-  <meta charset="UTF-8">
-  <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
-  <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">
-
-
-  <script src="${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>
-  <base href="${document.uri.toString(true)}">
-
-</head>
-<body class="markdown-preview-enhanced-container">
-  <div class="markdown-preview-enhanced" for="preview">
-  ${html}
-  </div>
-</body>
-<script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
-</html>`
-        })
+      return engine.parseMD(text, {}).then(({markdown, html})=> {
+        html = this.getHTMLTemplate(html)
+        // this.htmlMaps[sourceUri.fsPath] = html
+        return html
+      })
     })
   }
 
@@ -87,6 +122,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   }
 
   public update(uri: Uri) {
+    console.log('update')
 		if (!this._waiting) {
 			this._waiting = true;
 			setTimeout(() => {

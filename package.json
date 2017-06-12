@@ -44,6 +44,26 @@
                     "default": false,
                     "type": "boolean"
                 },
+                "markdown-preview-enhanced.mathRenderingOption": {
+                    "description": "Choose the Math expression rendering method here. You can also disable math rendering if you want by choosing 'None'.",
+                    "default": "KaTeX",
+                    "type": "string",
+                    "enum": [
+                        "KaTeX",
+                        "MathJax",
+                        "None"                        
+                    ]
+                },
+                "markdown-preview-enhanced.mathInlineDelimiters": {
+                    "description": "Use customized Math expression inline delimiters.",
+                    "default": [["$", "$"], ["\\(", "\\)"]],
+                    "type": "array"
+                },
+                "markdown-preview-enhanced.mathBlockDelimiters": {
+                    "description": "Use customized Math expression block delimiters.",
+                    "default": [["$$", "$$"], ["\\\\(", "\\\\)"]], 
+                    "type": "array"
+                },
                 "markdown-preview-enhanced.mermaidTheme": {
                     "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
                     "default": "mermaid.css",
