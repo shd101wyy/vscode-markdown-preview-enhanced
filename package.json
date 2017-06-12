@@ -5,6 +5,7 @@
     "version": "0.0.1",
     "publisher": "shd101wyy",
     "repository": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced",
+    "license": "NCSA",
     "engines": {
         "vscode": "^1.12.0"
     },
@@ -18,17 +19,112 @@
     "contributes": {
         "commands": [
             {
-                "command": "markdown-preview-enhanced.toggle",
-                "title": "Markdown Preview Enhanced: Toggle Preview"
+                "command": "markdown-preview-enhanced.open-preview",
+                "title": "Markdown Preview Enhanced: Open Preview"
             }
         ],
         "keybindings": [
             {
-                "command": "markdown-preview-enhanced.toggle",
+                "command": "markdown-preview-enhanced.open-preview",
                 "key": "shift+ctrl+m",
                 "when": "editorLangId == markdown"
             }
-        ]
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Markdown Preview Enhanced",
+            "properties": {
+                "markdown-preview-enhanced.breakOnSingleNewLine": {
+                    "description": "In Markdown, a single newline character doesn't cause a line break in the generated HTML. In GitHub Flavored Markdown, that is not true. Enable this config option to insert line breaks in rendered HTML for single newlines in Markdown source.",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.scrollSync": {
+                    "description": "Automatic scroll sync. This is now partially done.",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.enableTypographer": {
+                    "description": "Enable smartypants and other sweet transforms.",
+                    "default": false,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.mathRenderingOption": {
+                    "description": "Choose the Math expression rendering method here. You can also disable math rendering if you want by choosing 'None'.",
+                    "default": "KaTeX",
+                    "type": "string",
+                    "enum": [
+                        "KaTeX",
+                        "MathJax",
+                        "None"
+                    ]
+                },
+                "markdown-preview-enhanced.mathInlineDelimiters": {
+                    "description": "Use customized Math expression inline delimiters.",
+                    "default": [
+                        [
+                            "$",
+                            "$"
+                        ],
+                        [
+                            "\\(",
+                            "\\)"
+                        ]
+                    ],
+                    "type": "array"
+                },
+                "markdown-preview-enhanced.mathBlockDelimiters": {
+                    "description": "Use customized Math expression block delimiters.",
+                    "default": [
+                        [
+                            "$$",
+                            "$$"
+                        ],
+                        [
+                            "\\\\(",
+                            "\\\\)"
+                        ]
+                    ],
+                    "type": "array"
+                },
+                "markdown-preview-enhanced.mermaidTheme": {
+                    "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
+                    "default": "mermaid.css",
+                    "type": "string",
+                    "enum": [
+                        "mermaid.css",
+                        "mermaid.dark.css",
+                        "mermaid.forest.css"
+                    ]
+                },
+                "markdown-preview-enhanced.codeBlockTheme": {
+                    "description": "Code block theme.",
+                    "default": "default.css",
+                    "type": "string",
+                    "enum": [
+                        "atom-dark.css",
+                        "coy.css",
+                        "dark.css",
+                        "default.css",
+                        "funky.css",
+                        "github.css",
+                        "monokai.css",
+                        "okaidia.css",
+                        "solarized-light.css",
+                        "twilight.css"
+                    ]
+                },
+                "markdown-preview-enhanced.previewTheme": {
+                    "description": "Preview Theme",
+                    "default": "github-light.css",
+                    "type": "string",
+                    "enum": [
+                        "github-light.css",
+                        "github-dark.css"
+                    ]
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
@@ -36,12 +132,28 @@
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./node_modules/vscode/bin/test"
     },
+    "dependencies": {
+        "async": "^2.4.1",
+        "babyparse": "^0.4.6",
+        "cheerio": "0.15.0",
+        "gray-matter": "^2.1.1",
+        "imgur": "^0.2.0",
+        "jsonic": "^0.3.0",
+        "katex": "^0.7.1",
+        "less": "^2.7.2",
+        "md5": "^2.2.1",
+        "remarkable": "^1.7.1",
+        "request": "2.76.0",
+        "temp": "^0.8.3",
+        "uslug": "^1.0.4"
+    },
     "devDependencies": {
-        "typescript": "^2.0.3",
-        "vscode": "^1.0.0",
-        "mocha": "^2.3.3",
-        "eslint": "^3.6.0",
+        "@types/jquery": "^2.0.46",
+        "@types/mocha": "^2.2.32",
         "@types/node": "^6.0.40",
-        "@types/mocha": "^2.2.32"
+        "eslint": "^3.6.0",
+        "mocha": "^2.3.3",
+        "typescript": "^2.0.3",
+        "vscode": "^1.0.0"
     }
 }
