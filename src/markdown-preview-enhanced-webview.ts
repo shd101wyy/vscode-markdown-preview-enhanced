@@ -22,6 +22,7 @@ let previewElement = null,
     totalLineCount = 0,
     previewScrollDelay = 0,
     editorScrollDelay = 0,
+    scrollTimeout = null,
     presentationMode = false, 
     presentationZoom = 1
 
@@ -38,7 +39,6 @@ function onLoad() {
   console.log(JSON.stringify(config))
 
   previewElement.onscroll = scrollEvent
-  previewElement.addEventListener('resize', resizeEvent)
 }
 
 function renderMermaid() {
@@ -203,18 +203,77 @@ function previewSyncSource() {
   // editorScrollDelay = Date.now() + 100
 }
 
+/**
+ * scroll preview to match `line`
+ * @param line: the buffer row of editor
+ */
+function scrollSyncToLine(line:number) {
+  if (!scrollMap) scrollMap = buildScrollMap()
+  scrollToPos(scrollMap[line] - previewElement.offsetHeight / 2)
+}
+
+function scrollToPos(scrollTop) {
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout)
+    scrollTimeout = null
+  }
+
+  if (scrollTop < 0) return 
+
+  const delay = 10
+
+  function helper(duration=0) {
+    scrollTimeout = setTimeout(() => {
+      if (duration <= 0) {
+        previewScrollDelay = Date.now() + 500
+        previewElement.scrollTop = scrollTop
+        return
+      }
+
+      const difference = scrollTop - previewElement.scrollTop
+
+      const perTick = difference / duration * delay
+
+      // disable preview onscroll
+      previewScrollDelay = Date.now() + 500
+
+      previewElement.scrollTop += perTick
+      if (previewElement.scrollTop == scrollTop) return 
+
+      helper(duration-delay)
+    }, delay)
+  }
+
+  const scrollDuration = 120
+  helper(scrollDuration)
+}
+
+function scrollToRevealSourceLine(line) {
+  // disable preview onscroll
+  previewScrollDelay = Date.now() + 500
+  scrollSyncToLine(line)
+}
+
+
 function resizeEvent() {
+  console.log('resize')
   scrollMap = null
 }
 
 window.addEventListener('message', (event)=> {
   console.log('receive message: ')
   const data = event.data 
-  if (data && data.type === 'update-html') {
+  if (!data) return 
+  if (data.type === 'update-html') {
     totalLineCount = data.totalLineCount
     updateHTML(data.html)
+  } else if (data.type === 'change-text-editor-selection') {
+    const line = parseInt(data.line)
+    scrollToRevealSourceLine(line)
   }
 }, false);
+
+window.addEventListener('resize', resizeEvent)
 
 /*
 window.parent.postMessage({ 
