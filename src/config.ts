@@ -7,6 +7,7 @@ export class MarkdownPreviewEnhancedConfig {
 
   public readonly breakOnSingleNewLine: boolean
   public readonly enableTypographer: boolean
+  public readonly scrollSync: boolean
   public readonly mermaidTheme: string
   /**
    * "KaTeX", "MathJax", or "None"
@@ -27,6 +28,7 @@ export class MarkdownPreviewEnhancedConfig {
 
     this.breakOnSingleNewLine = config.get<boolean>('breakOnSingleNewLine')
     this.enableTypographer = config.get<boolean>('enableTypographer')
+    this.scrollSync = config.get<boolean>('scrollSync')
     this.mermaidTheme = config.get<string>('mermaidTheme')
     this.mathRenderingOption = config.get<string>('mathRenderingOption')
     this.mathInlineDelimiters = config.get<Array<string[]>>('mathInlineDelimiters')

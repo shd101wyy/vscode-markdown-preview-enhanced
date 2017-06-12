@@ -129,7 +129,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
       const config = Object.assign({}, this.config, {
 				previewUri: uri.toString(),
-				source: sourceUri.toString(),
+				sourceUri: sourceUri.toString(),
       })
 
       return `<!DOCTYPE html>

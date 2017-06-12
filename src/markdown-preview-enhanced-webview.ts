@@ -9,6 +9,7 @@ console.log('init webview')
 interface MarkdownConfig {
   breakOnSingleNewLine?: boolean,
   enableTypographer?: boolean,
+  scrollSync?: boolean,
   mermaidTheme?: string,
 
   mathRenderingOption?: string,
@@ -22,18 +23,31 @@ interface MarkdownConfig {
 
 /**
  * this is the element with class `markdown-preview-enhanced`
+ * the final html is rendered by that previewElement
  */
-let previewElement = null,
-    config:MarkdownConfig = {},
-    /**
-     * markdown file URI 
-     */
-    source = null, 
-    /**
-     * mpe URI
-     */
-    previewURI = null, 
-    scrollMap = null,
+let previewElement = null
+
+/**
+ * tempPreviewElement is used to render html and then put the rendered html result to previewElement
+ */
+let tempPreviewElement = null
+
+/**
+ * This config is the same as the one defined in `config.ts` file
+ */
+let config:MarkdownConfig = {}
+
+/**
+ * markdown file URI 
+ */
+let sourceUri = null
+
+/**
+ * mpe URI
+ */
+let previewUri = null 
+
+let scrollMap = null,
     totalLineCount = 0,
     previewScrollDelay = 0,
     editorScrollDelay = 0,
@@ -45,38 +59,64 @@ let previewElement = null,
 function onLoad() {
   previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0]
 
+  tempPreviewElement = document.createElement("div")
+  tempPreviewElement.classList.add('markdown-preview-enhanced')
+  tempPreviewElement.setAttribute('for', 'preview')
+  document.body.insertBefore(tempPreviewElement, previewElement)
+
   /** load config */
   config = JSON.parse(document.getElementById('vscode-markdown-preview-enhanced-data').getAttribute('data-config'))
-  source = config['source']
-  previewURI = config['previewURI']
+  sourceUri = config['sourceUri']
+  previewUri = config['previewUri']
+  currentLine = config['line'] || -1
 
   console.log(document.getElementsByTagName('html')[0].innerHTML)
   console.log(JSON.stringify(config))
 
+  scrollMap = null
   previewElement.onscroll = scrollEvent
 }
 
 function renderMermaid() {
-  const mermaid = window['mermaid'] // window.mermaid doesn't work, has to be written as window['mermaid']
-  mermaid.init(null, '.mermaid')
+  return new Promise((resolve, reject)=> {
+    const mermaid = window['mermaid'] // window.mermaid doesn't work, has to be written as window['mermaid']
+    const mermaidGraphs = tempPreviewElement.getElementsByClassName('mermaid')
+    mermaid.init(null, mermaidGraphs)
+    // setTimeout(()=> resolve(), 5000)
+    return resolve()
+  })
 }
 
 function renderMathJax() {
-  if (config['mathRenderingOption'] === 'MathJax') {
-    const MathJax = window['MathJax']
-    window['MathJax'].Hub.Queue(
-      ['Typeset', MathJax.Hub, previewElement], 
-      ()=> scrollMap = null)
-  }
+  return new Promise((resolve, reject)=> {
+    if (config['mathRenderingOption'] === 'MathJax') {
+      const MathJax = window['MathJax']
+      window['MathJax'].Hub.Queue(
+        ['Typeset', MathJax.Hub, tempPreviewElement], 
+        ()=> {
+          scrollMap = null
+          return resolve()
+        })
+    } else {
+      return resolve()
+    }
+  })
 }
 
-function initEvents() {
-  renderMermaid()
-  renderMathJax()
+async function initEvents() {
+  await Promise.all([
+    renderMathJax(), 
+    renderMermaid()
+  ])
+  previewElement.innerHTML = tempPreviewElement.innerHTML
+  tempPreviewElement.innerHTML = ""
 }
 
 function updateHTML(html) {
-  previewElement.innerHTML = html
+  // editorScrollDelay = Date.now() + 500
+  previewScrollDelay = Date.now() + 500
+
+  tempPreviewElement.innerHTML = html
   initEvents()
 }
 
@@ -144,6 +184,8 @@ function buildScrollMap():Array<number> {
 }
 
 function scrollEvent() { 
+  if (!config.scrollSync) return
+
   if (!scrollMap) {
     scrollMap = buildScrollMap()
     return 
@@ -162,7 +204,7 @@ function previewSyncSource() {
 
     window.parent.postMessage({ 
       command: 'did-click-link', // <= this has to be `did-click-link` to post message
-      data: `command:_markdown-preview-enhanced.revealLine?${JSON.stringify([source, scrollToLine])}`
+      data: `command:_markdown-preview-enhanced.revealLine?${JSON.stringify([sourceUri, scrollToLine])}`
     }, 'file://')
 
     return 
@@ -208,7 +250,7 @@ function previewSyncSource() {
 
   window.parent.postMessage({ 
     command: 'did-click-link', // <= this has to be `did-click-link` to post message
-    data: `command:_markdown-preview-enhanced.revealLine?${JSON.stringify([source, scrollToLine])}`
+    data: `command:_markdown-preview-enhanced.revealLine?${JSON.stringify([sourceUri, scrollToLine])}`
   }, 'file://')
 
   // @scrollToPos(screenRow * @editor.getLineHeightInPixels() - @previewElement.offsetHeight / 2, @editor.getElement())
@@ -277,7 +319,7 @@ function scrollToPos(scrollTop) {
  * @param line 
  */
 function scrollToRevealSourceLine(line) {
-  if (line == currentLine) {
+  if (!config.scrollSync || line == currentLine) {
     return 
   } else {
     currentLine = line
@@ -296,9 +338,11 @@ function resizeEvent() {
 }
 
 window.addEventListener('message', (event)=> {
-  console.log('receive message: ')
   const data = event.data 
   if (!data) return 
+  
+  console.log('receive message: ' + data.type)
+
   if (data.type === 'update-html') {
     totalLineCount = data.totalLineCount
     updateHTML(data.html)
