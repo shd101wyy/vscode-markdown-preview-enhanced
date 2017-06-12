@@ -14,6 +14,7 @@ import * as plantumlAPI from './puml'
 import {escapeString, unescapeString, getExtensionDirectoryPath} from "./utility"
 let viz = null
 import {scopeForLanguageName} from "./extension-helper"
+import {fileImport} from "./file-import"
 
 interface MarkdownEngineConstructorArgs {
   fileDirectoryPath: string,
@@ -334,11 +335,15 @@ export class MarkdownEngine {
 
   public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
     return new Promise((resolve, reject)=> {
-      let html = this.md.render(inputString)
 
-      return this.resolveImagePathAndCodeBlock(html).then((html)=> {
-        this.cachedHTML = html
-        return resolve({html, markdown:inputString})
+      fileImport(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
+      .then(({outputString})=> {
+        let html = this.md.render(outputString)
+
+        return this.resolveImagePathAndCodeBlock(html).then((html)=> {
+          this.cachedHTML = html
+          return resolve({html, markdown:inputString})
+        })
       })
     })
   }

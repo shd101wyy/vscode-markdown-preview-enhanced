@@ -90,8 +90,22 @@ function activate(context: vscode.ExtensionContext) {
 exports.activate = activate;
 
 
-function revealLine(fsPath) {
-  // console.log('revealLine: ' + fsPath)
+function revealLine(uri, line) {
+	// console.log('revealLine: ' + uri + ' ' + line)
+	const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+
+	vscode.window.visibleTextEditors
+		.filter(editor => isMarkdownFile(editor.document) && editor.document.uri.fsPath === sourceUri.fsPath)
+		.forEach(editor => {
+			const sourceLine = Math.floor(line);
+			const fraction = line - sourceLine;
+			const text = editor.document.lineAt(sourceLine).text;
+			const start = Math.floor(fraction * text.length);
+			editor.revealRange(
+				new vscode.Range(sourceLine, start, sourceLine + 1, 0),
+				vscode.TextEditorRevealType.InCenter);
+		})
+
 }
 
 // this method is called when your extension is deactivated

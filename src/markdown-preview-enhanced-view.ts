@@ -127,11 +127,16 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         html = engine.getCachedHTML()
       }
 
+      const config = Object.assign({}, this.config, {
+				previewUri: uri.toString(),
+				source: sourceUri.toString(),
+      })
+
       return `<!DOCTYPE html>
       <html>
       <head>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        <meta id="vscode-markdown-preview-enhanced-data" data-config="${escapeString(JSON.stringify(this.config))}">
+        <meta id="vscode-markdown-preview-enhanced-data" data-config="${escapeString(JSON.stringify(config))}">
         <meta charset="UTF-8">
         ${this.getStyles(true)}
         ${this.getScripts()}
@@ -154,13 +159,14 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
-      engine.parseMD(text, {}).then(({markdown, html})=> {
+      engine.parseMD(text, {isForPreview: true}).then(({markdown, html})=> {
         vscode.commands.executeCommand(
           '_workbench.htmlPreview.postMessage',
           uri,
           {
             type: 'update-html',
-            html: html
+            html: html,
+            totalLineCount: document.lineCount
           })
       })
     })
