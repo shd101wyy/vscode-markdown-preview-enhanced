@@ -5,11 +5,26 @@ console.log('init webview')
 // const settings = JSON.parse(document.getElementById('vscode-markdown-preview-enhanced-data').getAttribute('data-settings'));
 // console.log(settings)
 
+// copied from 'config.ts'
+interface MarkdownConfig {
+  breakOnSingleNewLine?: boolean,
+  enableTypographer?: boolean,
+  mermaidTheme?: string,
+
+  mathRenderingOption?: string,
+  mathInlineDelimiters?: Array<string[]>,
+  mathBlockDelimiters?: Array<string[]>,
+
+  codeBlockTheme?: string,
+
+  previewTheme?: string,
+}
+
 /**
  * this is the element with class `markdown-preview-enhanced`
  */
 let previewElement = null,
-    config = {},
+    config:MarkdownConfig = {},
     /**
      * markdown file URI 
      */
@@ -33,7 +48,6 @@ function onLoad() {
   config = JSON.parse(document.getElementById('vscode-markdown-preview-enhanced-data').getAttribute('data-config'))
   source = config['source']
   previewURI = config['previewURI']
-
 
   console.log(document.getElementsByTagName('html')[0].innerHTML)
   console.log(JSON.stringify(config))
@@ -209,9 +223,13 @@ function previewSyncSource() {
  */
 function scrollSyncToLine(line:number) {
   if (!scrollMap) scrollMap = buildScrollMap()
-  scrollToPos(scrollMap[line] - previewElement.offsetHeight / 2)
+  scrollToPos(scrollMap[line] - previewElement.offsetHeight / 3.5)
 }
 
+/**
+ * Smoothly scroll the previewElement to `scrollTop` position.  
+ * @param scrollTop: the scrollTop position that the previewElement should be at
+ */
 function scrollToPos(scrollTop) {
   if (scrollTimeout) {
     clearTimeout(scrollTimeout)
@@ -248,9 +266,14 @@ function scrollToPos(scrollTop) {
   helper(scrollDuration)
 }
 
+/**
+ * It's unfortunate that I am not able to access the viewport.  
+ * @param line 
+ */
 function scrollToRevealSourceLine(line) {
   // disable preview onscroll
   previewScrollDelay = Date.now() + 500
+
   scrollSyncToLine(line)
 }
 
