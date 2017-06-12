@@ -2,7 +2,7 @@
     "name": "markdown-preview-enhanced",
     "displayName": "Markdown Preview Enhanced",
     "description": "Markdown Preview Enhanced ported to vscode",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "publisher": "shd101wyy",
     "repository": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced",
     "license": "NCSA",
@@ -13,19 +13,20 @@
         "Other"
     ],
     "activationEvents": [
-        "onLanguage:markdown"
+        "onLanguage:markdown",
+        "onCommand:markdown-preview-enhanced.openPreview"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [
             {
-                "command": "markdown-preview-enhanced.open-preview",
+                "command": "markdown-preview-enhanced.openPreview",
                 "title": "Markdown Preview Enhanced: Open Preview"
             }
         ],
         "keybindings": [
             {
-                "command": "markdown-preview-enhanced.open-preview",
+                "command": "markdown-preview-enhanced.openPreview",
                 "key": "shift+ctrl+m",
                 "when": "editorLangId == markdown"
             }

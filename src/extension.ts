@@ -92,7 +92,7 @@ function activate(context: vscode.ExtensionContext) {
 		// console.log('onDidChangeonDidChangeVisibleTextEditors ', textEditors)
 	}))
 
-  context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.open-preview', openPreview))
+  context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPreview', openPreview))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 
