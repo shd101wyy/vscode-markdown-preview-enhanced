@@ -51,17 +51,35 @@
                     "enum": [
                         "KaTeX",
                         "MathJax",
-                        "None"                        
+                        "None"
                     ]
                 },
                 "markdown-preview-enhanced.mathInlineDelimiters": {
                     "description": "Use customized Math expression inline delimiters.",
-                    "default": [["$", "$"], ["\\(", "\\)"]],
+                    "default": [
+                        [
+                            "$",
+                            "$"
+                        ],
+                        [
+                            "\\(",
+                            "\\)"
+                        ]
+                    ],
                     "type": "array"
                 },
                 "markdown-preview-enhanced.mathBlockDelimiters": {
                     "description": "Use customized Math expression block delimiters.",
-                    "default": [["$$", "$$"], ["\\\\(", "\\\\)"]], 
+                    "default": [
+                        [
+                            "$$",
+                            "$$"
+                        ],
+                        [
+                            "\\\\(",
+                            "\\\\)"
+                        ]
+                    ],
                     "type": "array"
                 },
                 "markdown-preview-enhanced.mermaidTheme": {
@@ -72,6 +90,23 @@
                         "mermaid.css",
                         "mermaid.dark.css",
                         "mermaid.forest.css"
+                    ]
+                },
+                "markdown-preview-enhanced.codeBlockTheme": {
+                    "description": "Code block theme.",
+                    "default": "default.css",
+                    "type": "string",
+                    "enum":[
+                        "atom-dark.css",
+                        "coy.css",
+                        "dark.css",
+                        "default.css",
+                        "funky.css",
+                        "github.css",
+                        "monokai.css",
+                        "okaidia.css",
+                        "solarized-light.css",
+                        "twilight.css"
                     ]
                 }
             }
@@ -94,6 +129,7 @@
         "katex": "^0.7.1",
         "less": "^2.7.2",
         "md5": "^2.2.1",
+        "prismjs": "^1.6.0",
         "remarkable": "^1.7.1",
         "request": "2.76.0",
         "temp": "^0.8.3",

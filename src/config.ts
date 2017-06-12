@@ -15,6 +15,11 @@ export class MarkdownPreviewEnhancedConfig {
   public readonly mathInlineDelimiters: Array<string[]>
   public readonly mathBlockDelimiters: Array<string[]>
 
+  /**
+   * Code block theme 
+   */
+  public readonly codeBlockTheme: string
+
   private constructor() {
     const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
 
@@ -24,6 +29,7 @@ export class MarkdownPreviewEnhancedConfig {
     this.mathRenderingOption = config.get<string>('mathRenderingOption')
     this.mathInlineDelimiters = config.get<Array<string[]>>('mathInlineDelimiters')
     this.mathBlockDelimiters = config.get<Array<string[]>>('mathBlockDelimiters')
+    this.codeBlockTheme = config.get<string>('codeBlockTheme')
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

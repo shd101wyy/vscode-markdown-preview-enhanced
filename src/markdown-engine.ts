@@ -7,11 +7,13 @@ import * as uslug from "uslug"
 import * as matter from "gray-matter"
 import * as jsonic from "jsonic"
 import * as md5 from "md5"
+import * as Prism from "prismjs"
 
 import {MarkdownPreviewEnhancedConfig} from './config'
 import * as plantumlAPI from './puml'
 import {escapeString, unescapeString, getExtensionDirectoryPath} from "./utility"
 let viz = null
+import {scopeForLanguageName} from "./extension-helper"
 
 interface MarkdownEngineConstructorArgs {
   fileDirectoryPath: string,
@@ -217,7 +219,7 @@ export class MarkdownEngine {
    * @param parameters is in the format of `lang {opt1:val1, opt2:val2}` or just `lang`       
    * @param text 
    */
-  private async renderCodeBlock($preElement, text, parameters, {graphsCache}) {
+  private async renderCodeBlock($preElement, code, parameters, {graphsCache}) {
     let match, lang 
     if (match = parameters.match(/\s*([^\s]+)\s+\{(.+?)\}/)) {
       lang = match[1]
@@ -237,26 +239,26 @@ export class MarkdownEngine {
       parameters = {}
     }
 
-    if (lang.match(/^(puml|plantuml)$/)) {
-      const checksum = md5(text)
+    if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
+      const checksum = md5(code)
       let svg:string = this.graphsCache[checksum] 
       if (!svg) {
-        svg = await plantumlAPI.render(text, this.fileDirectoryPath)
+        svg = await plantumlAPI.render(code, this.fileDirectoryPath)
       }
       $preElement.replaceWith(`<p>${svg}</p>`)
       graphsCache[checksum] = svg // store to new cache 
 
-    } else if (lang.match(/^mermaid$/)) {
-      $preElement.replaceWith(`<div class="mermaid">${text}</div>`)
-    } else if (lang.match(/^(dot|viz)$/)) {
-      const checksum = md5(text)
+    } else if (lang.match(/^mermaid$/)) { // mermaid 
+      $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
+    } else if (lang.match(/^(dot|viz)$/)) { // GraphViz
+      const checksum = md5(code)
       let svg = this.graphsCache[checksum]
       if (!svg) {
         if (!viz) viz = require(path.resolve(__dirname, '../../dependencies/viz/viz.js'))
         
         try {
           let engine = parameters.engine || "dot"
-          svg = viz(text, {engine})
+          svg = viz(code, {engine})
         } catch(e) {
           $preElement.replaceWith(`<pre>${e.toString()}</pre>`)
         }
@@ -264,6 +266,13 @@ export class MarkdownEngine {
 
       $preElement.replaceWith(`<p>${svg}</p>`)
       graphsCache[checksum] = svg // store to new cache
+    } else { // normal code block  // TODO: code chunk
+      try {
+        const html = Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])
+        $preElement.html(html)  
+      } catch(e) {
+        // do nothing
+      }
     }
   }
 
@@ -281,23 +290,26 @@ export class MarkdownEngine {
 
     const asyncFunctions = []
     $('pre').each((i, preElement)=> {
-      let codeBlock, lang, text 
-
+      let codeBlock, lang, code 
+      const $preElement = $(preElement)
       if (preElement.children[0] && preElement.children[0].name == 'code') {
-        codeBlock = $(preElement).children().first()
+        codeBlock = $preElement.children().first()
         lang = 'text'
-        if (codeBlock.attr('class'))
-          lang = codeBlock.attr('class').replace(/^language-/, '') || 'text'
-        text = codeBlock.text()
+        let classes = codeBlock.attr('class')
+        if (classes)
+          lang = classes.replace(/^language-/, '') || 'text'
+        code = codeBlock.text()
+        $preElement.attr('class', classes)
       } else {
         lang = 'text'
         if (preElement.children[0])
-          text = preElement.children[0].data
+          code = preElement.children[0].data
         else
-          text = ''
+          code = ''
+        $preElement.attr('class', 'language-text')
       }
       
-      asyncFunctions.push(this.renderCodeBlock($(preElement), text, lang, {graphsCache: newGraphsCache }))
+      asyncFunctions.push(this.renderCodeBlock($preElement, code, lang, {graphsCache: newGraphsCache }))
     })
 
     await Promise.all(asyncFunctions)

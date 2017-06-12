@@ -80,6 +80,10 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // check mermaid 
     styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
+
+    // check prism 
+    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)}">`
+
     return styles  
   }
 
@@ -178,7 +182,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       // update all generated md documents
 			vscode.workspace.textDocuments.forEach(document => {
 				if (document.uri.scheme === 'markdown-preview-enhanced') {
-					this.update(document.uri);
+					// this.update(document.uri);
+          this._onDidChange.fire(document.uri)
 				}
 			})
     }
