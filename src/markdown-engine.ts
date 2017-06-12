@@ -7,7 +7,8 @@ import * as uslug from "uslug"
 import * as matter from "gray-matter"
 import * as jsonic from "jsonic"
 import * as md5 from "md5"
-import * as Prism from "prismjs"
+// import * as Prism from "prismjs"
+let Prism = null
 
 import {MarkdownPreviewEnhancedConfig} from './config'
 import * as plantumlAPI from './puml'
@@ -274,6 +275,9 @@ export class MarkdownEngine {
       graphsCache[checksum] = svg // store to new cache
     } else { // normal code block  // TODO: code chunk
       try {
+        if (!Prism) {
+          Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
+        }
         const html = Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])
         $preElement.html(html)  
       } catch(e) {

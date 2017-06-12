@@ -39,7 +39,8 @@ let previewElement = null,
     editorScrollDelay = 0,
     scrollTimeout = null,
     presentationMode = false, 
-    presentationZoom = 1
+    presentationZoom = 1,
+    currentLine = -1
 
 function onLoad() {
   previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0]
@@ -276,6 +277,12 @@ function scrollToPos(scrollTop) {
  * @param line 
  */
 function scrollToRevealSourceLine(line) {
+  if (line == currentLine) {
+    return 
+  } else {
+    currentLine = line
+  }
+
   // disable preview onscroll
   previewScrollDelay = Date.now() + 500
 
