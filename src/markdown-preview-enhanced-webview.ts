@@ -223,7 +223,12 @@ function previewSyncSource() {
  */
 function scrollSyncToLine(line:number) {
   if (!scrollMap) scrollMap = buildScrollMap()
-  scrollToPos(scrollMap[line] - previewElement.offsetHeight / 3.5)
+
+  /**
+   * Since I am not able to access the viewport of the editor 
+   * I used `golden section` here for scrollTop.  
+   */
+  scrollToPos(Math.max(scrollMap[line] - previewElement.offsetHeight * 0.372, 0))
 }
 
 /**
