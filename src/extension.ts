@@ -15,6 +15,40 @@ function activate(context: vscode.ExtensionContext) {
   const contentProvider = new MarkdownPreviewEnhancedView(context);
   const contentProviderRegistration = vscode.workspace.registerTextDocumentContentProvider('markdown-preview-enhanced', contentProvider);
 
+	function togglePreview(uri?: vscode.Uri) {
+		let resource = uri;
+		if (!(resource instanceof vscode.Uri)) {
+			if (vscode.window.activeTextEditor) {
+				// we are relaxed and don't check for markdown files
+				resource = vscode.window.activeTextEditor.document.uri;
+			}
+		}
+
+		/*
+		if (!(resource instanceof vscode.Uri)) {
+			if (!vscode.window.activeTextEditor) {
+				// this is most likely toggling the preview
+				return vscode.commands.executeCommand('markdown.showSource');
+			}
+			// nothing found that could be shown or toggled
+			return;
+		}
+		*/
+
+		const markdownURI = getMarkdownUri(resource)
+		return vscode.commands.executeCommand(
+			'vscode.previewHtml', 
+			markdownURI, 
+			vscode.ViewColumn.Two, 
+			`Preview '${path.basename(resource.fsPath)}'`)
+		.then((success)=> {
+			contentProvider.update(markdownURI)
+		}, (reason)=> {
+			vscode.window.showErrorMessage(reason)
+		})
+	}
+
+
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {
 			const uri = getMarkdownUri(document.uri);
@@ -54,41 +88,6 @@ function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(contentProviderRegistration)
 }
 exports.activate = activate;
-
-function togglePreview(uri?: vscode.Uri) {
-	let resource = uri;
-	if (!(resource instanceof vscode.Uri)) {
-		if (vscode.window.activeTextEditor) {
-			// we are relaxed and don't check for markdown files
-			resource = vscode.window.activeTextEditor.document.uri;
-		}
-	}
-
-  /*
-	if (!(resource instanceof vscode.Uri)) {
-		if (!vscode.window.activeTextEditor) {
-			// this is most likely toggling the preview
-			return vscode.commands.executeCommand('markdown.showSource');
-		}
-		// nothing found that could be shown or toggled
-		return;
-	}
-  */
-
-  return vscode.commands.executeCommand(
-    'vscode.previewHtml', 
-    getMarkdownUri(resource), 
-    vscode.ViewColumn.Two, 
-    `Preview '${path.basename(resource.fsPath)}'`)
-  .then((success)=> {
-    console.log('done opening: ' + getMarkdownUri(resource).toString())
-
-    // vscode.commands.executeCommand('_workbench.htmlPreview.postMessage', resource, )
-
-  }, (reason)=> {
-    vscode.window.showErrorMessage(reason)
-  })
-}
 
 
 function revealLine(fsPath) {

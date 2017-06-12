@@ -56,6 +56,11 @@ export class MarkdownEngine {
   // caches 
   private graphsCache:{[key:string]:string} = {}
 
+  /**
+   * cachedHTML is the cache of html generated from the markdown file.  
+   */
+  private cachedHTML:string = '';
+
   constructor(args:MarkdownEngineConstructorArgs) {
     this.fileDirectoryPath = args.fileDirectoryPath
     this.projectDirectoryPath = args.projectDirectoryPath
@@ -320,11 +325,19 @@ export class MarkdownEngine {
     return $.html()
   }
 
+  /**
+   * return this.cachedHTML
+   */
+  public getCachedHTML() {
+    return this.cachedHTML
+  }
+
   public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
     return new Promise((resolve, reject)=> {
       let html = this.md.render(inputString)
 
       return this.resolveImagePathAndCodeBlock(html).then((html)=> {
+        this.cachedHTML = html
         return resolve({html, markdown:inputString})
       })
     })

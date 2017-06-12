@@ -68,9 +68,10 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   }
 
   /**
+   * @param isForPreview: whether to getStyles for rendering preview.  
    * @return a string of <link ...> that links to css files
    */
-  private getStyles() {
+  private getStyles(isForPreview:boolean) {
     let styles = ""
 
     // check math 
@@ -83,6 +84,11 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // check prism 
     styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)}">`
+
+    if (isForPreview) {
+      // loading.css 
+      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/loading.css')}">`
+    }
 
     return styles  
   }
@@ -99,7 +105,11 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         fsPath: sourceUri.fsPath
       }
 
+      /**
+       * Initialize MarkdownEngine for this markdown file
+       */
       let engine = this.engineMaps[sourceUri.fsPath]
+      let html
       if (!engine) {
         engine = new MarkdownEngine(
           {
@@ -108,28 +118,30 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
             config: this.config
           })
         this.engineMaps[sourceUri.fsPath] = engine
+
+        html = '<div class="markdown-spinner"> Loading Markdown\u2026 </div>'
+      } else { // engine already initialized
+        html = engine.getCachedHTML()
       }
 
-      return engine.parseMD(text, {}).then(({markdown, html})=> {
-        return `<!DOCTYPE html>
-<html>
-<head>
-  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-  <meta id="vscode-markdown-preview-enhanced-data" data-config="${escapeString(JSON.stringify(this.config))}">
-  <meta charset="UTF-8">
-  <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
-  ${this.getStyles()}
-  ${this.getScripts()}
-	<base href="${document.uri.toString(true)}">
-</head>
-<body class="markdown-preview-enhanced-container">
-  <div class="markdown-preview-enhanced" for="preview">
-  ${html}
-  </div>
-</body>
-<script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
-</html>`
-      })
+      return `<!DOCTYPE html>
+      <html>
+      <head>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <meta id="vscode-markdown-preview-enhanced-data" data-config="${escapeString(JSON.stringify(this.config))}">
+        <meta charset="UTF-8">
+        <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
+        ${this.getStyles(true)}
+        ${this.getScripts()}
+        <base href="${document.uri.toString(true)}">
+      </head>
+      <body class="markdown-preview-enhanced-container">
+        <div class="markdown-preview-enhanced" for="preview">
+          ${html}
+        </div>
+      </body>
+      <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
+      </html>`
     })
   }
 

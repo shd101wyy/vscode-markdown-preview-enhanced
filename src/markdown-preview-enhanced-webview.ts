@@ -34,10 +34,14 @@ function renderMathJax() {
   }
 }
 
-function updateHTML(html) {
-  previewElement.innerHTML = html
+function initEvents() {
   renderMermaid()
   renderMathJax()
+}
+
+function updateHTML(html) {
+  previewElement.innerHTML = html
+  initEvents()
 }
 
 window.addEventListener('message', (event)=> {
