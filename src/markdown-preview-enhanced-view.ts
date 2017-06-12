@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
-import {Uri, CancellationToken, Event, ProviderResult} from 'vscode'
+import {Uri, CancellationToken, Event, ProviderResult, TextEditor} from 'vscode'
 
 import {MarkdownEngine} from './markdown-engine'
 import {MarkdownPreviewEnhancedConfig} from './config'
@@ -239,6 +239,15 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 				}
 			})
     }
+  }
+
+  /**
+   * check if the markdown preview is on for the textEditor
+   * @param textEditor 
+   */
+  public isPreviewOn(textEditor:TextEditor) {
+    const fsPath = textEditor.document.fileName
+    return (fsPath in this.engineMaps)
   }
 }
 

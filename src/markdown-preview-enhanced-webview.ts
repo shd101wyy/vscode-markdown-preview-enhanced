@@ -108,8 +108,8 @@ function onLoad() {
   previewUri = config['previewUri']
   currentLine = config['line'] || -1
 
-  console.log(document.getElementsByTagName('html')[0].innerHTML)
-  console.log(JSON.stringify(config))
+  // console.log(document.getElementsByTagName('html')[0].innerHTML)
+  // console.log(JSON.stringify(config))
 
   /** init mermaid */
   initMermaid()
@@ -139,7 +139,7 @@ function initContextMenu() {
   $["contextMenu"]({
     selector: '.markdown-preview-enhanced-container',
     items: {
-      open_in_browser: {name: "Open in Browser", callback: ()=>{ console.log('open in browser') } },
+      open_in_browser: {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
       export_to_disk: {name: "Export to Disk (not done)"},
       pandoc_export: {name: "Pandoc (not done)"},
       save_as_markdown: {name: "Save as Markdown (not done)"},
@@ -437,7 +437,7 @@ function scrollToRevealSourceLine(line) {
 
 
 function resizeEvent() {
-  console.log('resize')
+  // console.log('resize')
   scrollMap = null
 }
 
@@ -445,7 +445,7 @@ window.addEventListener('message', (event)=> {
   const data = event.data 
   if (!data) return 
   
-  console.log('receive message: ' + data.type)
+  // console.log('receive message: ' + data.type)
 
   if (data.type === 'update-html') {
     totalLineCount = data.totalLineCount

@@ -15,7 +15,7 @@ function activate(context: vscode.ExtensionContext) {
   const contentProvider = new MarkdownPreviewEnhancedView(context);
   const contentProviderRegistration = vscode.workspace.registerTextDocumentContentProvider('markdown-preview-enhanced', contentProvider);
 
-	function togglePreview(uri?: vscode.Uri) {
+	function openPreview(uri?: vscode.Uri) {
 		let resource = uri;
 		if (!(resource instanceof vscode.Uri)) {
 			if (vscode.window.activeTextEditor) {
@@ -35,17 +35,24 @@ function activate(context: vscode.ExtensionContext) {
 		}
 		*/
 
+
+		vscode.window.activeTextEditor.hide
+
 		const markdownURI = getMarkdownUri(resource)
-		return vscode.commands.executeCommand(
-			'vscode.previewHtml', 
-			markdownURI, 
-			vscode.ViewColumn.Two, 
-			`Preview '${path.basename(resource.fsPath)}'`)
-		.then((success)=> {
-			contentProvider.update(markdownURI)
-		}, (reason)=> {
-			vscode.window.showErrorMessage(reason)
-		})
+		if (contentProvider.isPreviewOn(vscode.window.activeTextEditor)) {
+			// return vscode.commands.executeCommand('workbench.action.closeActiveEditor', markdownURI)
+		} else {
+			return vscode.commands.executeCommand(
+				'vscode.previewHtml', 
+				markdownURI, 
+				vscode.ViewColumn.Two, 
+				`Preview '${path.basename(resource.fsPath)}'`)
+			.then((success)=> {
+				contentProvider.update(markdownURI)
+			}, (reason)=> {
+				vscode.window.showErrorMessage(reason)
+			})
+		}
 	}
 
 
@@ -81,7 +88,11 @@ function activate(context: vscode.ExtensionContext) {
       }
 	}))
 
-  context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.toggle', togglePreview))
+	context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(textEditors=> {
+		// console.log('onDidChangeonDidChangeVisibleTextEditors ', textEditors)
+	}))
+
+  context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.open-preview', openPreview))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 

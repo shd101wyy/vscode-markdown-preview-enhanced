@@ -19,13 +19,13 @@
     "contributes": {
         "commands": [
             {
-                "command": "markdown-preview-enhanced.toggle",
-                "title": "Markdown Preview Enhanced: Toggle Preview"
+                "command": "markdown-preview-enhanced.open-preview",
+                "title": "Markdown Preview Enhanced: Open Preview"
             }
         ],
         "keybindings": [
             {
-                "command": "markdown-preview-enhanced.toggle",
+                "command": "markdown-preview-enhanced.open-preview",
                 "key": "shift+ctrl+m",
                 "when": "editorLangId == markdown"
             }
@@ -137,7 +137,6 @@
         "babyparse": "^0.4.6",
         "cheerio": "0.15.0",
         "gray-matter": "^2.1.1",
-        "html-pdf": "^2.1.0",
         "imgur": "^0.2.0",
         "jsonic": "^0.3.0",
         "katex": "^0.7.1",

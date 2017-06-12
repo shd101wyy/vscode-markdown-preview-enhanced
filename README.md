@@ -1,68 +1,40 @@
-# markdown-preview-enhanced README
+# Markdown Preview Enhanced
 
 Trying hard to port [Markdown Preview Enhanced for atom](https://github.com/shd101wyy/markdown-preview-enhanced) to vscode.
 
+First time to write typescript, and it is awesome. I think I will write all my web projects in TypeScript from now on.  
 
-This is the README for your extension "markdown-preview-enhanced". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Right now only 20% done:   
 
-For example if there is an image subfolder under your extension project workspace:
+* Basic preview 
+    * <kbd>ctrl-shift-m</kbd> to `Open Preview`
+* Scroll sync partially done
+* Support KaTeX and MathJax
+* Support mermaid, PlantUML, viz.js 
 
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+For more features that will be supported in the future, check [Markdown Preview Enhanced for atom](https://shd101wyy.github.io/markdown-preview-enhanced/#/).
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+TODO
+
+## My Questions
+It would be great if you can answer my following questions to help develop this extension.  
+1. Is the a `onDidChangeScrollTop` function for `TextEditor` in vscode. So that I can track the change of scrollTop position of the text editor.  
+1. Can I manually set the `scrollTop` of `TextEditor`?
+1. How to programmatically close my preview by `uri`? I tried to implement the `Toggle Preview` command bu failed because I don't know how to close a preview. So now only `Open Preview` is provided.  
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+Search `markdown-preview-enhanced` in settings.  
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+TODO
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on OSX or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on OSX or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (OSX) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+TODO
