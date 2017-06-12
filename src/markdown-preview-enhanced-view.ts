@@ -4,6 +4,7 @@ import {Uri, CancellationToken, Event, ProviderResult} from 'vscode'
 
 import {MarkdownEngine} from './markdown-engine'
 import {MarkdownPreviewEnhancedConfig} from './config'
+import {escapeString} from './utility'
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -37,6 +38,33 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
   private getScripts() {
     let scripts = ""
+
+    // mermaid
+    scripts += `<script src="file://${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>`
+    
+    // math 
+    if (this.config.mathRenderingOption === 'MathJax') {
+      const mathJaxConfig = {
+        extensions: ['tex2jax.js'],
+        jax: ['input/TeX','output/HTML-CSS'],
+        messageStyle: 'none',
+        tex2jax: {
+          inlineMath: this.config.mathInlineDelimiters,
+          displayMath: this.config.mathBlockDelimiters,
+          processEnvironments: false,
+          processEscapes: true
+        },
+        TeX: {
+          extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
+        },
+        'HTML-CSS': { availableFonts: ['TeX'] }
+      }
+
+      scripts += `<script type="text/javascript" async src="file://${path.resolve(this.context.extensionPath, './dependencies/mathjax/MathJax.js')}"></script>`
+      scripts += `<script type="text/x-mathjax-config"> MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)}) </script>`
+    }
+    
+    return scripts
   }
 
   /**
@@ -47,11 +75,11 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // check math 
     if (this.config.mathRenderingOption === "KaTeX") {
-      styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './node_modules/katex/dist/katex.min.css')}">`
+      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './node_modules/katex/dist/katex.min.css')}">`
     }
 
     // check mermaid 
-    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
+    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
     return styles  
   }
 
@@ -83,12 +111,11 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 <html>
 <head>
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-  <meta id="vscode-markdown-preview-enhanced-data">
+  <meta id="vscode-markdown-preview-enhanced-data" data-config="${escapeString(JSON.stringify(this.config))}">
   <meta charset="UTF-8">
   <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
   ${this.getStyles()}
-
-  <script src="${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>
+  ${this.getScripts()}
 	<base href="${document.uri.toString(true)}">
 </head>
 <body class="markdown-preview-enhanced-container">

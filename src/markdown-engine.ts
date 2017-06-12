@@ -94,7 +94,9 @@ export class MarkdownEngine {
         return `<span style=\"color: #ee7f49; font-weight: 500;\">${error.toString()}</span>`
       }
     } else if (this.config.mathRenderingOption[0] == 'M') { // MathJax
-      return ''
+      const text = (openTag + content + closeTag).replace(/\n/g, '')
+      const tag = displayMode ? 'div' : 'span'
+      return escapeString(text)
     } else {
       return ''
     }

@@ -25,10 +25,10 @@ const TAGS_TO_REPLACE_REVERSE = {
     '&#x5C;': '\\',
 }
 
-export function escapeString(str) {
+export function escapeString(str:string):string {
   return str.replace(/[&<>"'\/\\]/g, (tag)=>(TAGS_TO_REPLACE[tag] || tag))
 }
 
-export function unescapeString(str) {
+export function unescapeString(str:string):string {
   return str.replace(/\&(amp|lt|gt|quot|apos|\#x27|\#x2F|\#x5C)\;/g, (whole)=> (TAGS_TO_REPLACE_REVERSE[whole] || whole))
 }
