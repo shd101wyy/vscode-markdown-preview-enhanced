@@ -7,7 +7,7 @@ import {MarkdownPreviewEnhancedView, getMarkdownUri, isMarkdownFile} from './mar
 
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
-function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext) {
 
   // assume only one preview supported.  
   const extensionPath = context.extensionPath
@@ -98,7 +98,6 @@ function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(contentProviderRegistration)
 }
-exports.activate = activate;
 
 
 function revealLine(uri, line) {
@@ -120,6 +119,5 @@ function revealLine(uri, line) {
 }
 
 // this method is called when your extension is deactivated
-function deactivate() {
+export function deactivate() {
 }
-exports.deactivate = deactivate;

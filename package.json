@@ -2,15 +2,21 @@
     "name": "markdown-preview-enhanced",
     "displayName": "Markdown Preview Enhanced",
     "description": "Markdown Preview Enhanced ported to vscode",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "publisher": "shd101wyy",
     "repository": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced",
+    "bugs": {
+        "url": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues"
+    },
     "license": "NCSA",
     "engines": {
         "vscode": "^1.12.0"
     },
     "categories": [
         "Other"
+    ],
+    "keywords": [
+        "markdown"
     ],
     "activationEvents": [
         "onLanguage:markdown",
