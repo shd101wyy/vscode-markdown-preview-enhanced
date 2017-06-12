@@ -36,23 +36,24 @@ export function activate(context: vscode.ExtensionContext) {
 		*/
 
 
-		vscode.window.activeTextEditor.hide
-
-		const markdownURI = getMarkdownUri(resource)
+		/*
 		if (contentProvider.isPreviewOn(vscode.window.activeTextEditor)) {
 			// return vscode.commands.executeCommand('workbench.action.closeActiveEditor', markdownURI)
 		} else {
-			return vscode.commands.executeCommand(
-				'vscode.previewHtml', 
-				markdownURI, 
-				vscode.ViewColumn.Two, 
-				`Preview '${path.basename(resource.fsPath)}'`)
-			.then((success)=> {
-				contentProvider.update(markdownURI)
-			}, (reason)=> {
-				vscode.window.showErrorMessage(reason)
-			})
+
 		}
+		*/
+		const markdownURI = getMarkdownUri(resource)
+		return vscode.commands.executeCommand(
+			'vscode.previewHtml', 
+			markdownURI, 
+			vscode.ViewColumn.Two, 
+			`Preview '${path.basename(resource.fsPath)}'`)
+		.then((success)=> {
+			contentProvider.update(markdownURI)
+		}, (reason)=> {
+			vscode.window.showErrorMessage(reason)
+		})
 	}
 
 
