@@ -101,7 +101,7 @@
                     "description": "Code block theme.",
                     "default": "default.css",
                     "type": "string",
-                    "enum":[
+                    "enum": [
                         "atom-dark.css",
                         "coy.css",
                         "dark.css",
@@ -118,7 +118,7 @@
                     "description": "Preview Theme",
                     "default": "github-light.css",
                     "type": "string",
-                    "enum":[
+                    "enum": [
                         "github-light.css",
                         "github-dark.css"
                     ]
@@ -149,11 +149,12 @@
         "uslug": "^1.0.4"
     },
     "devDependencies": {
-        "typescript": "^2.0.3",
-        "vscode": "^1.0.0",
-        "mocha": "^2.3.3",
-        "eslint": "^3.6.0",
+        "@types/jquery": "^2.0.46",
+        "@types/mocha": "^2.2.32",
         "@types/node": "^6.0.40",
-        "@types/mocha": "^2.2.32"
+        "eslint": "^3.6.0",
+        "mocha": "^2.3.3",
+        "typescript": "^2.0.3",
+        "vscode": "^1.0.0"
     }
 }

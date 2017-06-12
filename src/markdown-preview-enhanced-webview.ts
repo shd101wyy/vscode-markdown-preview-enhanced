@@ -39,14 +39,19 @@ interface Toolbar {
  * this is the element with class `markdown-preview-enhanced`
  * the final html is rendered by that previewElement
  */
-let previewElement = null
+let previewElement:HTMLElement = null
 
 /**
  * hiddenPreviewElement is used to render html and then put the rendered html result to previewElement
  */
-let hiddenPreviewElement = null
+let hiddenPreviewElement:HTMLElement = null
 
+/**
+ * toolbar object 
+ */
 let toolbar:Toolbar = null
+
+let $:JQuery = null
 
 /**
  * This config is the same as the one defined in `config.ts` file
@@ -73,14 +78,16 @@ let scrollMap = null,
     currentLine = -1
 
 function onLoad() {
-  previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0]
+  previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0] as HTMLElement
+
+  $ = window['$'] as JQuery
 
   /** init preview elements */
   hiddenPreviewElement = document.createElement("div")
   hiddenPreviewElement.classList.add('markdown-preview-enhanced')
   hiddenPreviewElement.classList.add('hidden-preview')
   hiddenPreviewElement.setAttribute('for', 'preview')
-  hiddenPreviewElement.style.zIndex = 0
+  hiddenPreviewElement.style.zIndex = '0'
   previewElement.insertAdjacentElement('beforebegin', hiddenPreviewElement)
 
   /** init toolbar */
@@ -125,9 +132,20 @@ function initToolbarEvent() {
 
 /**
  * init contextmenu
+ * check markdown-preview-enhanced-view.ts
+ * reference: http://jsfiddle.net/w33z4bo0/1/
  */
 function initContextMenu() {
-
+  $["contextMenu"]({
+    selector: '.markdown-preview-enhanced-container',
+    items: {
+      open_in_browser: {name: "Open in Browser", callback: ()=>{ console.log('open in browser') } },
+      export_to_disk: {name: "Export to Disk (not done)"},
+      pandoc_export: {name: "Pandoc (not done)"},
+      save_as_markdown: {name: "Save as Markdown (not done)"},
+      sync_source: {name: "Sync Source (not done)"}
+    }
+  })
 }
 
 /**
@@ -228,8 +246,8 @@ function buildScrollMap():Array<number> {
   const lineElements = previewElement.getElementsByClassName('sync-line')
 
   for (let i = 0; i < lineElements.length; i++) {
-    let el = lineElements[i]
-    let t = el.getAttribute('data-line')
+    let el = lineElements[i] as HTMLElement
+    let t:any = el.getAttribute('data-line')
     if (!t) continue
 
     t = parseInt(t)
@@ -244,7 +262,7 @@ function buildScrollMap():Array<number> {
       let offsetTop = 0
       while (el && el !== previewElement) {
         offsetTop += el.offsetTop
-        el = el.offsetParent
+        el = el.offsetParent as HTMLElement
       }
 
       _scrollMap[t] = Math.round(offsetTop)

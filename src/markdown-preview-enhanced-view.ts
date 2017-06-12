@@ -36,7 +36,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     return vscode.Uri.file(this.context.asAbsolutePath(path.join('media', mediaFile))).toString();
   }
 
-  private getScripts() {
+  private getScripts(isForPreview:boolean) {
     let scripts = ""
 
     // mermaid
@@ -66,6 +66,16 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
       scripts += `<script type="text/javascript" async src="file://${path.resolve(this.context.extensionPath, './dependencies/mathjax/MathJax.js')}"></script>`
       scripts += `<script type="text/x-mathjax-config"> MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)}); </script>`
+    }
+
+    if  (isForPreview) {
+      // jquery 
+      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery/jquery.js')}"></script>`
+    
+      // jquery contextmenu
+      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
+      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
+
     }
     
     return scripts
@@ -98,6 +108,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
       // loading.css 
       styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/loading.css')}">`
+    
+      // jquery-contextmenu
+      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-contextmenu/jquery.contextMenu.min.css`)}">`
     }
 
     return styles  
@@ -146,7 +159,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <meta id="vscode-markdown-preview-enhanced-data" data-config="${escapeString(JSON.stringify(config))}">
         <meta charset="UTF-8">
         ${this.getStyles(true)}
-        ${this.getScripts()}
+        ${this.getScripts(true)}
         <base href="${document.uri.toString(true)}">
       </head>
       <body class="markdown-preview-enhanced-container">
@@ -159,11 +172,11 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
           <div class="sidebar-toc-btn btn"><span>≡</span></div>
         </div>
         <menu class="contextmenu">
-          <menu title="Open in Browser"></menu>
-          <menu title="Export to Disk (not done)"></menu>
-          <menu title="Pandoc (not done)"></menu>
-          <menu title="Save as Markdown (not done)"></menu>
-          <menu title="Sync source (not done)"></menu>
+          <menu class="open-in-browser" title="Open in Browser"></menu>
+          <menu class="export-to-disk" title="Export to Disk (not done)"></menu>
+          <menu class="pandoc-export" title="Pandoc (not done)"></menu>
+          <menu class="save-as-markdown" title="Save as Markdown (not done)"></menu>
+          <menu class="sync-source" title="Sync source (not done)"></menu>
         </menu>
       </body>
       <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
