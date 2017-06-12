@@ -122,7 +122,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   }
 
   public update(uri: Uri) {
-    console.log('update')
+    // console.log('update')
 		if (!this._waiting) {
 			this._waiting = true;
 			setTimeout(() => {
