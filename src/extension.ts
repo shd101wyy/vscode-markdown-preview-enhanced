@@ -83,7 +83,7 @@ function togglePreview(uri?: vscode.Uri) {
   .then((success)=> {
     console.log('done opening: ' + getMarkdownUri(resource).toString())
 
-    vscode.commands.executeCommand('_workbench.htmlPreview.postMessage', resource, )
+    // vscode.commands.executeCommand('_workbench.htmlPreview.postMessage', resource, )
 
   }, (reason)=> {
     vscode.window.showErrorMessage(reason)

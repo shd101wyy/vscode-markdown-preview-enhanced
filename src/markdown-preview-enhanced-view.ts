@@ -20,13 +20,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    */
   private engineMaps:{[key:string]: MarkdownEngine} = {} 
 
-  /**
-   * key is markdown file path
-   * value is html generated from markdown file 
-   */
-  // private htmlMaps:{[key:string]: string} = {}
-
-
   private config:MarkdownPreviewEnhancedConfig
 
   public constructor(private context: vscode.ExtensionContext) {
@@ -62,30 +55,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     return styles  
   }
 
-  public getHTMLTemplate(html) {
-    /* data-settings="${JSON.stringify(settings).replace(/"/g, '&quot;')}" */
-
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-  <meta id="vscode-markdown-preview-enhanced-data">
-  <meta charset="UTF-8">
-  <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
-  ${this.getStyles()}
-
-  <script src="${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>
-
-</head>
-<body class="markdown-preview-enhanced-container">
-  <div class="markdown-preview-enhanced" for="preview">
-  ${html}
-  </div>
-</body>
-<script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
-</html>`
-  }
-
   public provideTextDocumentContent(uri: Uri)
   : Thenable<string> {
 		const sourceUri = vscode.Uri.parse(uri.query)
@@ -110,12 +79,48 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       }
 
       return engine.parseMD(text, {}).then(({markdown, html})=> {
-        html = this.getHTMLTemplate(html)
-        // this.htmlMaps[sourceUri.fsPath] = html
-        return html
+        return `<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <meta id="vscode-markdown-preview-enhanced-data">
+  <meta charset="UTF-8">
+  <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
+  ${this.getStyles()}
+
+  <script src="${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>
+	<base href="${document.uri.toString(true)}">
+</head>
+<body class="markdown-preview-enhanced-container">
+  <div class="markdown-preview-enhanced" for="preview">
+  ${html}
+  </div>
+</body>
+<script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
+</html>`
       })
     })
   }
+
+  public updateMarkdown(uri:Uri) {
+    const sourceUri = vscode.Uri.parse(uri.query)
+    const engine = this.engineMaps[sourceUri.fsPath]
+    if (!engine) return 
+
+    vscode.workspace.openTextDocument(sourceUri).then(document => {
+      const text = document.getText()
+      engine.parseMD(text, {}).then(({markdown, html})=> {
+        vscode.commands.executeCommand(
+          '_workbench.htmlPreview.postMessage',
+          uri,
+          {
+            type: 'update-html',
+            html: html
+          })
+      })
+    })
+  }
+
 
   get onDidChange(): Event<Uri> {
     return this._onDidChange.event
@@ -127,7 +132,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 			this._waiting = true;
 			setTimeout(() => {
 				this._waiting = false;
-				this._onDidChange.fire(uri);
+				// this._onDidChange.fire(uri);
+        this.updateMarkdown(uri)
 			}, 300);
 		}
   }
