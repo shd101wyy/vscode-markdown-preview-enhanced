@@ -22,6 +22,20 @@ interface MarkdownConfig {
 }
 
 /**
+ * .mpe-toolbar {
+ *   .refresh-btn
+ *   .back-to-top-btn
+ *   .sidebar-toc-btn
+ * }
+ */
+interface Toolbar {
+  toolbar: HTMLElement,
+  backToTopBtn: HTMLElement,
+  refreshBtn: HTMLElement,
+  sidebarTOCBtn: HTMLElement
+}
+
+/**
  * this is the element with class `markdown-preview-enhanced`
  * the final html is rendered by that previewElement
  */
@@ -31,6 +45,8 @@ let previewElement = null
  * hiddenPreviewElement is used to render html and then put the rendered html result to previewElement
  */
 let hiddenPreviewElement = null
+
+let toolbar:Toolbar = null
 
 /**
  * This config is the same as the one defined in `config.ts` file
@@ -59,12 +75,25 @@ let scrollMap = null,
 function onLoad() {
   previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0]
 
+  /** init preview elements */
   hiddenPreviewElement = document.createElement("div")
   hiddenPreviewElement.classList.add('markdown-preview-enhanced')
   hiddenPreviewElement.classList.add('hidden-preview')
   hiddenPreviewElement.setAttribute('for', 'preview')
   hiddenPreviewElement.style.zIndex = 0
   previewElement.insertAdjacentElement('beforebegin', hiddenPreviewElement)
+
+  /** init toolbar */
+  toolbar = {
+    toolbar: document.getElementsByClassName('mpe-toolbar')[0] as HTMLElement,
+    backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
+    refreshBtn: document.getElementsByClassName('refresh-btn')[0] as HTMLElement,
+    sidebarTOCBtn: document.getElementsByClassName('sidebar-toc-btn')[0] as HTMLElement
+  }
+  initToolbarEvent()
+
+  /** init contextmenu */
+  initContextMenu()
 
   /** load config */
   config = JSON.parse(document.getElementById('vscode-markdown-preview-enhanced-data').getAttribute('data-config'))
@@ -75,16 +104,64 @@ function onLoad() {
   console.log(document.getElementsByTagName('html')[0].innerHTML)
   console.log(JSON.stringify(config))
 
+  /** init mermaid */
+  initMermaid()
+
   scrollMap = null
   previewElement.onscroll = scrollEvent
+}
+
+/**
+ * init events for tool bar
+ */
+function initToolbarEvent() {
+    const showToolbar = ()=> toolbar.toolbar.style.opacity = "1"
+
+    previewElement.onmouseenter = showToolbar
+    toolbar.toolbar.onmouseenter = showToolbar
+
+    previewElement.onmouseleave = ()=> toolbar.toolbar.style.opacity = "0"
+}
+
+/**
+ * init contextmenu
+ */
+function initContextMenu() {
+
+}
+
+/**
+ * init mermaid
+ */
+function initMermaid() {
+  const mermaidAPI = window["mermaidAPI"]
+  // mermaidAPI.initialize(loadMermaidConfig())
+  mermaidAPI.initialize({startOnLoad: false})
 }
 
 function renderMermaid() {
   return new Promise((resolve, reject)=> {
     const mermaid = window['mermaid'] // window.mermaid doesn't work, has to be written as window['mermaid']
+    const mermaidAPI = window['mermaidAPI']
     const mermaidGraphs = hiddenPreviewElement.getElementsByClassName('mermaid')
-    mermaid.init(null, mermaidGraphs)
-    return resolve()
+
+    const validMermaidGraphs = []
+    for (let i = 0; i < mermaidGraphs.length; i++) {
+      const mermaidGraph = mermaidGraphs[i] as HTMLElement
+      mermaid.parseError = function(err) {
+        mermaidGraph.innerHTML = `<pre class="language-text">${err.toString()}</pre>`
+      }
+
+      if (mermaidAPI.parse(mermaidGraph.textContent)) {
+        validMermaidGraphs.push(mermaidGraph)
+      }
+    }
+
+    if (!validMermaidGraphs.length) return resolve()
+
+    mermaid.init(null, validMermaidGraphs, function(){
+      resolve()
+    })
   })
 }
 

@@ -93,6 +93,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
 
     if (isForPreview) {
+      // preview.css 
+      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/preview.css')}">`
+
       // loading.css 
       styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/loading.css')}">`
     }
@@ -150,6 +153,18 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <div class="markdown-preview-enhanced" for="preview">
           ${html}
         </div>
+        <div class="mpe-toolbar">
+          <div class="back-to-top-btn btn"><span>⬆︎</span></div>
+          <div class="refresh-btn btn"><span>⟳︎</span></div>
+          <div class="sidebar-toc-btn btn"><span>≡</span></div>
+        </div>
+        <menu class="contextmenu">
+          <menu title="Open in Browser"></menu>
+          <menu title="Export to Disk (not done)"></menu>
+          <menu title="Pandoc (not done)"></menu>
+          <menu title="Save as Markdown (not done)"></menu>
+          <menu title="Sync source (not done)"></menu>
+        </menu>
       </body>
       <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
       </html>`
