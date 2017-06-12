@@ -105,7 +105,7 @@ export class MarkdownEngine {
     } else if (this.config.mathRenderingOption[0] == 'M') { // MathJax
       const text = (openTag + content + closeTag).replace(/\n/g, '')
       const tag = displayMode ? 'div' : 'span'
-      return escapeString(text)
+      return `<${tag} class="mathjax-exps">${escapeString(text)}</${tag}>`
     } else {
       return ''
     }

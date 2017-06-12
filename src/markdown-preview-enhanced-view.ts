@@ -47,21 +47,25 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       const mathJaxConfig = {
         extensions: ['tex2jax.js'],
         jax: ['input/TeX','output/HTML-CSS'],
+        showMathMenu: false,
         messageStyle: 'none',
+
         tex2jax: {
           inlineMath: this.config.mathInlineDelimiters,
           displayMath: this.config.mathBlockDelimiters,
           processEnvironments: false,
-          processEscapes: true
+          processEscapes: true,
+          preview: "none"
         },
         TeX: {
           extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
         },
-        'HTML-CSS': { availableFonts: ['TeX'] }
+        'HTML-CSS': { availableFonts: ['TeX'] },
+        skipStartupTypeset: true
       }
 
       scripts += `<script type="text/javascript" async src="file://${path.resolve(this.context.extensionPath, './dependencies/mathjax/MathJax.js')}"></script>`
-      scripts += `<script type="text/x-mathjax-config"> MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)}) </script>`
+      scripts += `<script type="text/x-mathjax-config"> MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)}); </script>`
     }
     
     return scripts

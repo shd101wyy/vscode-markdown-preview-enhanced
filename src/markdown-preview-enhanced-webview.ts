@@ -28,9 +28,9 @@ interface MarkdownConfig {
 let previewElement = null
 
 /**
- * tempPreviewElement is used to render html and then put the rendered html result to previewElement
+ * hiddenPreviewElement is used to render html and then put the rendered html result to previewElement
  */
-let tempPreviewElement = null
+let hiddenPreviewElement = null
 
 /**
  * This config is the same as the one defined in `config.ts` file
@@ -59,10 +59,12 @@ let scrollMap = null,
 function onLoad() {
   previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0]
 
-  tempPreviewElement = document.createElement("div")
-  tempPreviewElement.classList.add('markdown-preview-enhanced')
-  tempPreviewElement.setAttribute('for', 'preview')
-  document.body.insertBefore(tempPreviewElement, previewElement)
+  hiddenPreviewElement = document.createElement("div")
+  hiddenPreviewElement.classList.add('markdown-preview-enhanced')
+  hiddenPreviewElement.classList.add('hidden-preview')
+  hiddenPreviewElement.setAttribute('for', 'preview')
+  hiddenPreviewElement.style.zIndex = 0
+  previewElement.insertAdjacentElement('beforebegin', hiddenPreviewElement)
 
   /** load config */
   config = JSON.parse(document.getElementById('vscode-markdown-preview-enhanced-data').getAttribute('data-config'))
@@ -80,9 +82,8 @@ function onLoad() {
 function renderMermaid() {
   return new Promise((resolve, reject)=> {
     const mermaid = window['mermaid'] // window.mermaid doesn't work, has to be written as window['mermaid']
-    const mermaidGraphs = tempPreviewElement.getElementsByClassName('mermaid')
+    const mermaidGraphs = hiddenPreviewElement.getElementsByClassName('mermaid')
     mermaid.init(null, mermaidGraphs)
-    // setTimeout(()=> resolve(), 5000)
     return resolve()
   })
 }
@@ -91,12 +92,20 @@ function renderMathJax() {
   return new Promise((resolve, reject)=> {
     if (config['mathRenderingOption'] === 'MathJax') {
       const MathJax = window['MathJax']
+      const unprocessedElements = hiddenPreviewElement.getElementsByClassName('mathjax-exps')
+      if (!unprocessedElements.length) return resolve()
+
       window['MathJax'].Hub.Queue(
-        ['Typeset', MathJax.Hub, tempPreviewElement], 
-        ()=> {
+        ['Typeset', MathJax.Hub, hiddenPreviewElement], 
+        [function() {
+          // sometimes the this callback will be called twice
+          // and only the second time will the Math expressions be rendered.
+          // therefore, I added the line below to check whether math is already rendered.  
+          if (!hiddenPreviewElement.getElementsByClassName('MathJax').length) return
+          
           scrollMap = null
           return resolve()
-        })
+        }])
     } else {
       return resolve()
     }
@@ -108,15 +117,15 @@ async function initEvents() {
     renderMathJax(), 
     renderMermaid()
   ])
-  previewElement.innerHTML = tempPreviewElement.innerHTML
-  tempPreviewElement.innerHTML = ""
+  previewElement.innerHTML = hiddenPreviewElement.innerHTML
+  hiddenPreviewElement.innerHTML = ""
 }
 
 function updateHTML(html) {
   // editorScrollDelay = Date.now() + 500
   previewScrollDelay = Date.now() + 500
 
-  tempPreviewElement.innerHTML = html
+  hiddenPreviewElement.innerHTML = html
   initEvents()
 }
 
