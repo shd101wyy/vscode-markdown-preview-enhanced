@@ -108,6 +108,15 @@
                         "solarized-light.css",
                         "twilight.css"
                     ]
+                },
+                "markdown-preview-enhanced.previewTheme": {
+                    "description": "Preview Theme",
+                    "default": "github-light.css",
+                    "type": "string",
+                    "enum":[
+                        "github-light.css",
+                        "github-dark.css"
+                    ]
                 }
             }
         }

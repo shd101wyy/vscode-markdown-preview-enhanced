@@ -72,7 +72,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    * @return a string of <link ...> that links to css files
    */
   private getStyles(isForPreview:boolean) {
-    let styles = ""
+    let styles = `<link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">`
 
     // check math 
     if (this.config.mathRenderingOption === "KaTeX") {
@@ -84,6 +84,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // check prism 
     styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)}">`
+
+    // check preview theme 
+    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
 
     if (isForPreview) {
       // loading.css 
@@ -130,7 +133,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
         <meta id="vscode-markdown-preview-enhanced-data" data-config="${escapeString(JSON.stringify(this.config))}">
         <meta charset="UTF-8">
-        <link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">
         ${this.getStyles(true)}
         ${this.getScripts()}
         <base href="${document.uri.toString(true)}">
