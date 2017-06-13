@@ -50,6 +50,7 @@ let hiddenPreviewElement:HTMLElement = null
  * toolbar object 
  */
 let toolbar:Toolbar = null
+let refreshingIcon:HTMLElement = null
 
 let $:JQuery = null
 
@@ -102,6 +103,9 @@ function onLoad() {
   /** init contextmenu */
   initContextMenu()
 
+  /** init refreshing icon */
+  initRefreshingIcon()
+
   /** load config */
   config = JSON.parse(document.getElementById('vscode-markdown-preview-enhanced-data').getAttribute('data-config'))
   sourceUri = config['sourceUri']
@@ -146,6 +150,14 @@ function initContextMenu() {
       sync_source: {name: "Sync Source (not done)"}
     }
   })
+}
+
+/**
+ * init .refreshing-icon
+ */
+function initRefreshingIcon() {
+  refreshingIcon = document.getElementsByClassName('refreshing-icon')[0] as HTMLElement
+  refreshingIcon.style.display = "none"
 }
 
 /**
@@ -208,12 +220,16 @@ function renderMathJax() {
 }
 
 async function initEvents() {
+  refreshingIcon.style.display = "block"
+
   await Promise.all([
     renderMathJax(), 
     renderMermaid()
   ])
   previewElement.innerHTML = hiddenPreviewElement.innerHTML
   hiddenPreviewElement.innerHTML = ""
+
+  refreshingIcon.style.display = "none"
 }
 
 function updateHTML(html) {
