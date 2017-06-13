@@ -145,9 +145,9 @@ function initContextMenu() {
     items: {
       "open_in_browser": {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
       "sep1": "---------",
-      "prince_export": {name: "PDF (prince)"},
+      "prince_export": {name: "PDF (prince) (not done)"},
       "ebook_export": {
-        name: "eBook",
+        name: "eBook (not done)",
         items: {
           "ebook_epub": {name: "ePub"},
           "ebook_mobi": {name: "mobi"},

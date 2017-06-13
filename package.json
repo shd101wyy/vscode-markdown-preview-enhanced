@@ -97,12 +97,12 @@
                 "markdown-preview-enhanced.enableWikiLinkSyntax": {
                     "description": "Enable Wiki Link syntax support. More information can be found at https://help.github.com/articles/adding-links-to-wikis/",
                     "default": true,
-                    "type":"boolean"
+                    "type": "boolean"
                 },
                 "markdown-preview-enhanced.wikiLinkFileExtension": {
                     "description": "By default, the extension for wikilink is `.md`. For example: [[test]] will direct to file path `test.md`.",
                     "default": ".md",
-                    "type":"string"
+                    "type": "string"
                 },
                 "markdown-preview-enhanced.mermaidTheme": {
                     "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
@@ -151,7 +151,8 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "cheerio": "0.15.0"
+        "cheerio": "0.15.0",
+        "uslug": "^1.0.4"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
