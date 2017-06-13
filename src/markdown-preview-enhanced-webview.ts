@@ -57,6 +57,7 @@ let hiddenPreviewElement:HTMLElement = null
  */
 let sidebarTOC:HTMLElement = null
 let sidebarTOCHTML:string = ''
+let zoomLevel = 1
 
 /**
  * toolbar object 
@@ -169,7 +170,7 @@ function initSideBarTOCButton() {
       containerElement.appendChild(sidebarTOC)
       containerElement.classList.add('show-sidebar-toc')
       renderSidebarTOC()
-      // @setZoomLevel()
+      setZoomLevel()
     } else {
       if (sidebarTOC) sidebarTOC.remove()
       sidebarTOC = null
@@ -467,6 +468,14 @@ function previewSyncSource() {
 
   // track currnet time to disable onDidChangeScrollTop
   // editorScrollDelay = Date.now() + 100
+}
+
+function setZoomLevel () {
+  previewElement.style.zoom = zoomLevel
+  if (toolbar.enableSidebarTOC) {
+    previewElement.style.width = `calc(100% - ${268 / zoomLevel}px)`
+  }
+  scrollMap = null
 }
 
 /**
