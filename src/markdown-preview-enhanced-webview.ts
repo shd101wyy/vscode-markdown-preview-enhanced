@@ -127,6 +127,12 @@ function onLoad() {
 
   scrollMap = null
   previewElement.onscroll = scrollEvent
+
+  window.parent.postMessage({ 
+    command: 'did-click-link', // <= this has to be `did-click-link` to post message
+    data: `command:_markdown-preview-enhanced.webviewFinishLoading?${JSON.stringify([previewUri])}`
+  }, 'file://')
+
 }
 
 /**

@@ -76,6 +76,9 @@ export class MarkdownEngine {
   private enableTypographer: boolean
   private protocolsWhiteListRegExp:RegExp
 
+  private headings: Array<Heading>
+  private tocHTML: string
+
   private md;
 
   // caches 
@@ -91,6 +94,8 @@ export class MarkdownEngine {
     this.projectDirectoryPath = args.projectDirectoryPath
     this.config = args.config
     this.initConfig()
+    this.headings = []
+    this.tocHTML = ''
 
     this.md = new remarkable('full', 
       Object.assign({}, defaults, {typographer: this.enableTypographer, breaks: this.breakOnSingleNewLine}))
@@ -559,7 +564,11 @@ export class MarkdownEngine {
               headings:Array<Heading> = [],
               slideConfigs = []
         let tocBracketEnabled:boolean = false
-        let tocHTML = ""
+        /**
+         * flag for checking whether there is change in headings.
+         */
+        let headingsChanged = false,
+            headingOffset = 0
 
         // overwrite remarkable heading parse function
         this.md.renderer.rules.heading_open = (tokens, idx)=> {
@@ -601,7 +610,20 @@ export class MarkdownEngine {
             }
 
             if (!ignore) {
-              headings.push({content: heading, level: tokens[idx].hLevel, id:id})
+              const heading1:Heading = {content: heading, level: tokens[idx].hLevel, id:id}
+              headings.push(heading1)
+
+              /**
+               * check whether the heading is changed compared to the old one
+               */
+              if (headingOffset >= this.headings.length) headingsChanged = true
+              if (!headingsChanged && headingOffset < this.headings.length) {
+                const heading2 = this.headings[headingOffset]
+                if (heading1.content !== heading2.content || heading1.level !== heading2.level) {
+                  headingsChanged = true
+                }
+              }
+              headingOffset += 1
             }
           }
 
@@ -632,16 +654,19 @@ export class MarkdownEngine {
         /**
          * render tocHTML
          */
-        const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
-        tocHTML = this.md.render(tocObject.content)
+        if (headingsChanged) {
+          const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
+          this.tocHTML = this.md.render(tocObject.content)
+        }
+        this.headings = headings // reset headings information
 
         if (tocBracketEnabled) { // [TOC]
-          html = html.replace(/^\s*\[MPETOC\]\s*/gm, tocHTML)
+          html = html.replace(/^\s*\[MPETOC\]\s*/gm, this.tocHTML)
         }
       
         return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
           this.cachedHTML = html
-          return resolve({html, markdown:inputString, tocHTML})
+          return resolve({html, markdown:inputString, tocHTML: this.tocHTML})
         })
       })
     })

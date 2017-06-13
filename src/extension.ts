@@ -50,10 +50,15 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.ViewColumn.Two, 
 			`Preview '${path.basename(resource.fsPath)}'`)
 		.then((success)=> {
-			contentProvider.update(markdownURI)
+			// contentProvider.update(markdownURI)
+			// the line above is changed to webviewFinishLoading function.
 		}, (reason)=> {
 			vscode.window.showErrorMessage(reason)
 		})
+	}
+
+	function webviewFinishLoading(previewUri) {
+		contentProvider.update(vscode.Uri.parse(previewUri))
 	}
 
 
@@ -98,6 +103,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPreview', openPreview))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.webviewFinishLoading', webviewFinishLoading))
 
   context.subscriptions.push(contentProviderRegistration)
 }
