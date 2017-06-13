@@ -1,14 +1,15 @@
-import * as cheerio from "cheerio"
 import * as path from "path"
 import * as fs from "fs"
+import * as cheerio from "cheerio"
+import * as uslug from "uslug"
 
-
-import {MarkdownPreviewEnhancedConfig} from './config'
-import * as plantumlAPI from './puml'
+import {MarkdownPreviewEnhancedConfig} from "./config"
+import * as plantumlAPI from "./puml"
 import {escapeString, unescapeString, getExtensionDirectoryPath} from "./utility"
 let viz = null
 import {scopeForLanguageName} from "./extension-helper"
 import {fileImport} from "./file-import"
+import {toc} from "./toc"
 
 const extensionDirectoryPath = getExtensionDirectoryPath()
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
@@ -20,6 +21,16 @@ const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascr
 // import * as matter from "gray-matter"
 // import * as Prism from "prismjs"
 let Prism = null
+
+enum CustomSubjects {
+  pagebreak,
+  newpage,
+  toc,
+  tocstop,
+  slide,
+  ebook,
+  'toc-bracket'
+}
 
 interface MarkdownEngineConstructorArgs {
   fileDirectoryPath: string,
@@ -36,7 +47,14 @@ interface MarkdownEngineRenderOption {
 
 interface MarkdownEngineOutput {
   html:string,
-  markdown:string
+  markdown:string,
+  tocHTML:string
+}
+
+interface Heading {
+  content:string,
+  level:number,
+  id:string
 }
 
 const defaults = {
@@ -56,6 +74,10 @@ export class MarkdownEngine {
 
   private breakOnSingleNewLine: boolean
   private enableTypographer: boolean
+  private protocolsWhiteListRegExp:RegExp
+
+  private headings: Array<Heading>
+  private tocHTML: string
 
   private md;
 
@@ -72,6 +94,8 @@ export class MarkdownEngine {
     this.projectDirectoryPath = args.projectDirectoryPath
     this.config = args.config
     this.initConfig()
+    this.headings = []
+    this.tocHTML = ''
 
     this.md = new remarkable('full', 
       Object.assign({}, defaults, {typographer: this.enableTypographer, breaks: this.breakOnSingleNewLine}))
@@ -82,6 +106,10 @@ export class MarkdownEngine {
   private initConfig() {
     this.breakOnSingleNewLine = this.config.breakOnSingleNewLine
     this.enableTypographer = this.config.enableTypographer
+
+    // protocal whitelist
+    const protocolsWhiteList = this.config.protocolsWhiteList.split(',').map((x)=>x.trim()) || ['http', 'https', 'atom', 'file']
+    this.protocolsWhiteListRegExp = new RegExp('^(' + protocolsWhiteList.join('|')+')\:\/\/')  // eg /^(http|https|atom|file)\:\/\//
   }
 
   public updateConfiguration(config) {
@@ -196,6 +224,134 @@ export class MarkdownEngine {
       return this.parseMath(tokens[idx] || {})
     }
 
+    /**
+     * wikilink rule
+     * inline [[]] 
+     * [[...]]
+     */
+    this.md.inline.ruler.before('autolink', 'wikilink',
+    (state, silent)=> {
+      if (!this.config.enableWikiLinkSyntax || !state.src.startsWith('[[', state.pos))
+        return false
+
+      let content = null,
+          tag = ']]',
+          end = -1
+
+      let i = state.pos + tag.length
+      while (i < state.src.length) {
+        if (state.src[i] == '\\') {
+          i += 1
+        } else if (state.src.startsWith(tag, i)) {
+          end = i
+          break
+        }
+        i += 1
+      }
+
+      if (end >= 0) // found ]]
+        content = state.src.slice(state.pos + tag.length, end)
+      else
+        return false
+
+      if (content && !silent) {
+        state.push({
+          type: 'wikilink',
+          content: content
+        })
+        state.pos += content.length + 2 * tag.length
+        return true
+      } else {
+        return false
+      }
+    })
+
+    this.md.renderer.rules.wikilink = (tokens, idx)=> {
+      let {content} = tokens[idx]
+      if (!content) return
+
+      let splits = content.split('|')
+      let linkText = splits[0].trim()
+      let wikiLink = splits.length === 2 ? `${splits[1].trim()}${this.config.wikiLinkFileExtension}` : `${linkText.replace(/\s/g, '')}${this.config.wikiLinkFileExtension}`
+
+      return `<a href="${wikiLink}">${linkText}</a>`
+    }
+
+    // custom comment
+    this.md.block.ruler.before('code', 'custom-comment',
+    (state, start, end, silent)=> {
+      let pos = state.bMarks[start] + state.tShift[start],
+          max = state.eMarks[start],
+          src = state.src
+
+      if (pos >= max)
+        return false
+      if (src.startsWith('<!--', pos)) {
+        end = src.indexOf('-->', pos + 4)
+        if (end >= 0) {
+          let content = src.slice(pos + 4, end).trim()
+
+          let match = content.match(/(\s|\n)/) // find ' ' or '\n'
+          let firstIndexOfSpace:number
+          if (!match) {
+            firstIndexOfSpace = content.length
+          } else {
+            firstIndexOfSpace = match.index
+          }
+
+          let subject = content.slice(0, firstIndexOfSpace)
+
+          if (!(subject in CustomSubjects)) { // check if it is a valid subject
+            // it's not a valid subject, therefore escape it
+            state.line = start + 1 + (src.slice(pos + 4, end).match(/\n/g)||[]).length
+            return true
+          }
+
+          let rest = content.slice(firstIndexOfSpace+1).trim()
+
+          match = rest.match(/(?:[^\s\n:"']+|"[^"]*"|'[^']*')+/g) // split by space and \newline and : (not in single and double quotezz)
+
+          let option:object
+          if (match && match.length % 2 === 0) {
+            option = {}
+            let i = 0
+            while (i < match.length) {
+              const key = match[i],
+                    value = match[i+1]
+              try {
+                option[key] = JSON.parse(value)
+              } catch (e) {
+                null // do nothing
+              }
+              i += 2
+            }
+          } else {
+            option = {}
+          }
+
+          state.tokens.push({
+            type: 'custom',
+            subject: subject,
+            option: option
+          })
+
+          state.line = start + 1 + (src.slice(pos + 4, end).match(/\n/g)||[]).length
+          return true
+        } else {
+          return false
+        }
+      } else if (src[pos] === '[' && src.slice(pos, max).match(/^\[toc\]\s*$/i)) { // [TOC]
+        state.tokens.push({
+          type: 'custom',
+          subject: 'toc-bracket',
+          option: {}
+        })
+        state.line = start + 1
+        return true
+      } else {
+        return false
+      }
+    })
 
     // task list 
     this.md.renderer.rules.list_item_open = (tokens, idx)=> {
@@ -219,6 +375,38 @@ export class MarkdownEngine {
       } else {
         return '<li>'
       }
+    }
+
+    // code fences 
+    // modified to support math block
+    // check https://github.com/jonschlinkert/remarkable/blob/875554aedb84c9dd190de8d0b86c65d2572eadd5/lib/rules.js
+    this.md.renderer.rules.fence = (tokens, idx, options, env, instance)=> {
+      let token = tokens[idx],
+          langClass = '',
+          langPrefix = options.langPrefix,
+          langName = escapeString(token.params)
+
+      if (token.params)
+        langClass = ' class="' + langPrefix + langName + '" ';
+
+      // get code content
+      let content = escapeString(token.content)
+
+      // copied from getBreak function.
+      let break_ = '\n'
+      if (idx < tokens.length && tokens[idx].type === 'list_item_close')
+        break_ = ''
+
+      if (langName === 'math') {
+        const openTag = this.config.mathBlockDelimiters[0][0] || '$$'
+        const closeTag = this.config.mathBlockDelimiters[0][1] || '$$'
+        const mathExp = unescapeString(content).trim()
+        if (!mathExp) return ''
+        const mathHtml = this.parseMath({openTag, closeTag, content: mathExp, displayMode: true})
+        return `<p>${mathHtml}</p>`
+      }
+
+      return '<pre><code' + langClass + '>' + content + '</code></pre>' + break_
     }
   }
 
@@ -244,7 +432,7 @@ export class MarkdownEngine {
       try {
         parameters = jsonic('{'+parameters+'}')
       } catch (e) {
-        return $preElement.replaceWith(`<pre>${'{'+parameters+'}'}<br>${e.toString()}</pre>`)
+        return $preElement.replaceWith(`<pre class="language-text">ParameterError: ${'{'+parameters+'}'}<br>${e.toString()}</pre>`)
       }
     } else {
       parameters = {}
@@ -295,8 +483,33 @@ export class MarkdownEngine {
    * @param html the html string that we will analyze 
    * @return html 
    */
-  private async resolveImagePathAndCodeBlock(html) {
+  private async resolveImagePathAndCodeBlock(html, options:MarkdownEngineRenderOption) {
     let $ = cheerio.load(html, {xmlMode:true})
+
+    // resolve image paths
+    $('img, a').each((i, imgElement)=> {
+      let srcTag = 'src'
+      if (imgElement.name === 'a')
+        srcTag = 'href'
+
+      const img = $(imgElement)
+      const src = img.attr(srcTag)
+
+      if (src &&
+        (!(src.match(this.protocolsWhiteListRegExp) ||
+          src.startsWith('data:image/') ||
+          src[0] == '#' ||
+          src[0] == '/'))) {
+        if (!options.useRelativeImagePath) 
+          img.attr(srcTag, 'file://'+path.resolve(this.fileDirectoryPath,  src))
+      } else if (src && src[0] === '/') { // absolute path
+        if (options.useRelativeImagePath)
+          img.attr(srcTag, path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.' + src)))
+        else
+          img.attr(srcTag, 'file://'+path.resolve(this.projectDirectoryPath, '.' + src))
+      }
+    })
+
     
     // new caches
     // which will be set when this.renderCodeBlocks is called
@@ -346,11 +559,114 @@ export class MarkdownEngine {
 
       fileImport(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
       .then(({outputString})=> {
+
+        const tocTable:{[key:string]:number} = {},
+              headings:Array<Heading> = [],
+              slideConfigs = []
+        let tocBracketEnabled:boolean = false
+        /**
+         * flag for checking whether there is change in headings.
+         */
+        let headingsChanged = false,
+            headingOffset = 0
+
+        // overwrite remarkable heading parse function
+        this.md.renderer.rules.heading_open = (tokens, idx)=> {
+          let line = null
+          let id = null
+          let classes = null
+
+          if (tokens[idx + 1] && tokens[idx + 1].content) {
+            let ignore = false
+            let heading = tokens[idx + 1].content
+
+            // check {class:string, id:string, ignore:boolean}
+            let optMatch = null
+            if (optMatch = heading.match(/[^\\]\{(.+?)\}(\s*)$/)) {
+              heading = heading.replace(optMatch[0], '')
+              tokens[idx + 1].content = heading
+              tokens[idx + 1].children[0].content = heading
+
+              try {
+                let opt = jsonic(optMatch[1])
+                
+                classes = opt.class,
+                id = opt.id,
+                ignore = opt.ignore 
+              } catch(e) {
+                heading = "ParameterError: " + optMatch[1]
+              }
+            }
+
+            if (!id) {
+              id = uslug(heading)
+            }
+
+            if (tocTable[id] >= 0) {
+              tocTable[id] += 1
+              id = id + '-' + tocTable[id]
+            } else {
+              tocTable[id] = 0
+            }
+
+            if (!ignore) {
+              const heading1:Heading = {content: heading, level: tokens[idx].hLevel, id:id}
+              headings.push(heading1)
+
+              /**
+               * check whether the heading is changed compared to the old one
+               */
+              if (headingOffset >= this.headings.length) headingsChanged = true
+              if (!headingsChanged && headingOffset < this.headings.length) {
+                const heading2 = this.headings[headingOffset]
+                if (heading1.content !== heading2.content || heading1.level !== heading2.level) {
+                  headingsChanged = true
+                }
+              }
+              headingOffset += 1
+            }
+          }
+
+          id = id ? `id=${id}` : ''
+          classes = classes ? `class=${classes}` : ''
+          return `<h${tokens[idx].hLevel} ${id} ${classes}>`
+        }
+
+        // <!-- subject options... -->
+        this.md.renderer.rules.custom = (tokens, idx)=> {
+          const subject = tokens[idx].subject
+
+          if (subject === 'pagebreak' || subject === 'newpage') {
+            return '<div class="pagebreak"> </div>'
+          } else if (subject == 'toc-bracket') { // [toc]
+            tocBracketEnabled = true
+            return '\n[MPETOC]\n'
+          } else if (subject == 'slide') {
+            let opt = tokens[idx].option
+            slideConfigs.push(opt)
+            return '<span class="new-slide"></span>'
+          }
+          return ''
+        }
+  
         let html = this.md.render(outputString)
 
-        return this.resolveImagePathAndCodeBlock(html).then((html)=> {
+        /**
+         * render tocHTML
+         */
+        if (headingsChanged) {
+          const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
+          this.tocHTML = this.md.render(tocObject.content)
+        }
+        this.headings = headings // reset headings information
+
+        if (tocBracketEnabled) { // [TOC]
+          html = html.replace(/^\s*\[MPETOC\]\s*/gm, this.tocHTML)
+        }
+      
+        return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
           this.cachedHTML = html
-          return resolve({html, markdown:inputString})
+          return resolve({html, markdown:inputString, tocHTML: this.tocHTML})
         })
       })
     })

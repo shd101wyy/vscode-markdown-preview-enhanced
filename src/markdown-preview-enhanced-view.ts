@@ -136,7 +136,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       if (!engine) {
         engine = new MarkdownEngine(
           {
-            fileDirectoryPath: sourceUri.fsPath,
+            fileDirectoryPath: path.dirname(sourceUri.fsPath),
             projectDirectoryPath: vscode.workspace.rootPath,
             config: this.config
           })
@@ -166,18 +166,14 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <div class="markdown-preview-enhanced" for="preview">
           ${html}
         </div>
+        <div class="refreshing-icon"></div>
         <div class="mpe-toolbar">
           <div class="back-to-top-btn btn"><span>⬆︎</span></div>
           <div class="refresh-btn btn"><span>⟳︎</span></div>
           <div class="sidebar-toc-btn btn"><span>≡</span></div>
         </div>
-        <menu class="contextmenu">
-          <menu class="open-in-browser" title="Open in Browser"></menu>
-          <menu class="export-to-disk" title="Export to Disk (not done)"></menu>
-          <menu class="pandoc-export" title="Pandoc (not done)"></menu>
-          <menu class="save-as-markdown" title="Save as Markdown (not done)"></menu>
-          <menu class="sync-source" title="Sync source (not done)"></menu>
-        </menu>
+        <span class="contextmenu">
+        </span>
       </body>
       <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
       </html>`
@@ -191,13 +187,14 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
-      engine.parseMD(text, {isForPreview: true}).then(({markdown, html})=> {
+      engine.parseMD(text, {isForPreview: true}).then(({markdown, html, tocHTML})=> {
         vscode.commands.executeCommand(
           '_workbench.htmlPreview.postMessage',
           uri,
           {
             type: 'update-html',
             html: html,
+            tocHTML: tocHTML,
             totalLineCount: document.lineCount
           })
       })

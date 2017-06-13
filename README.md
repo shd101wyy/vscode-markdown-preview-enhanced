@@ -1,6 +1,6 @@
 # Markdown Preview Enhanced
 
-Trying hard to port [Markdown Preview Enhanced for atom](https://github.com/shd101wyy/markdown-preview-enhanced) to vscode.
+Trying hard to port [Markdown Preview Enhanced for Atom](https://github.com/shd101wyy/markdown-preview-enhanced) to vscode.
 
 First time to write typescript, and it is awesome. I think I will write all my web projects in TypeScript from now on.  
 
@@ -16,6 +16,12 @@ Right now only 20% done:
 * Support mermaid, PlantUML, viz.js 
 
 For more features that will be supported in the future, check [Markdown Preview Enhanced for atom](https://shd101wyy.github.io/markdown-preview-enhanced/#/).
+
+### Progress so far
+* Done supporting `mermaid`, `PlantUML` and `viz.js`.
+* Done supporting `[TOC]`.  
+* Done supporting `MathJax` and `KaTeX`
+* Done sidebar TOC.  
 
 ## Requirements
 

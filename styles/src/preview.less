@@ -20,6 +20,10 @@
 
 .markdown-preview-enhanced-container {
     width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
     .btn {
         display: inline-block;
         color: #99aeb8;
@@ -43,6 +47,23 @@
         z-index: 0;
         -webkit-user-select: none;
     }
+
+    .refreshing-icon {
+        display: none;
+        position: absolute;
+        bottom: 32px;
+        left: 48px;
+        width: 48px;
+        height: 48px;
+        background-image: url(octocat-spinner-128.gif);
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: cover;
+        font-size: 24px;
+        z-index: 999;
+        color: black;
+    }
+
     .mpe-toolbar {
         position: absolute;
         top: 32px;
@@ -82,8 +103,11 @@
             color: @fg;
             font-size: 14px;
             box-shadow: -4px 0px 12px rgba(150, 150, 150, .33);
+            box-sizing: border-box;
+
             a {
                 color: @fg;
+                text-decoration: none;
             }
             ul {
                 padding: 0 1.6em;
@@ -103,8 +127,10 @@
             width: calc(~"100% - 268px");
         }
     }
+    /*
     .mpe-sidebar-toc,
     .markdown-preview-enhanced {
-        .scrollbar-style();
+        // .scrollbar-style();
     }
+    */
 }

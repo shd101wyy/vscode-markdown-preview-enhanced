@@ -32,8 +32,14 @@ interface Toolbar {
   toolbar: HTMLElement,
   backToTopBtn: HTMLElement,
   refreshBtn: HTMLElement,
-  sidebarTOCBtn: HTMLElement
+  sidebarTOCBtn: HTMLElement,
+  enableSidebarTOC: boolean
 }
+
+/**
+ * .markdown-preview-enhanced-container element 
+ */
+let containerElement:HTMLElement = null
 
 /**
  * this is the element with class `markdown-preview-enhanced`
@@ -47,9 +53,16 @@ let previewElement:HTMLElement = null
 let hiddenPreviewElement:HTMLElement = null
 
 /**
+ * sidebar toc element
+ */
+let sidebarTOC:HTMLElement = null
+let sidebarTOCHTML:string = ''
+
+/**
  * toolbar object 
  */
 let toolbar:Toolbar = null
+let refreshingIcon:HTMLElement = null
 
 let $:JQuery = null
 
@@ -78,6 +91,7 @@ let scrollMap = null,
     currentLine = -1
 
 function onLoad() {
+  containerElement = document.body
   previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0] as HTMLElement
 
   $ = window['$'] as JQuery
@@ -91,16 +105,13 @@ function onLoad() {
   previewElement.insertAdjacentElement('beforebegin', hiddenPreviewElement)
 
   /** init toolbar */
-  toolbar = {
-    toolbar: document.getElementsByClassName('mpe-toolbar')[0] as HTMLElement,
-    backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
-    refreshBtn: document.getElementsByClassName('refresh-btn')[0] as HTMLElement,
-    sidebarTOCBtn: document.getElementsByClassName('sidebar-toc-btn')[0] as HTMLElement
-  }
-  initToolbarEvent()
+  initToolbar()
 
   /** init contextmenu */
   initContextMenu()
+
+  /** init refreshing icon */
+  initRefreshingIcon()
 
   /** load config */
   config = JSON.parse(document.getElementById('vscode-markdown-preview-enhanced-data').getAttribute('data-config'))
@@ -116,18 +127,58 @@ function onLoad() {
 
   scrollMap = null
   previewElement.onscroll = scrollEvent
+
+  window.parent.postMessage({ 
+    command: 'did-click-link', // <= this has to be `did-click-link` to post message
+    data: `command:_markdown-preview-enhanced.webviewFinishLoading?${JSON.stringify([previewUri])}`
+  }, 'file://')
+
 }
 
 /**
  * init events for tool bar
  */
-function initToolbarEvent() {
+function initToolbar() {
+    toolbar = {
+      toolbar: document.getElementsByClassName('mpe-toolbar')[0] as HTMLElement,
+      backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
+      refreshBtn: document.getElementsByClassName('refresh-btn')[0] as HTMLElement,
+      sidebarTOCBtn: document.getElementsByClassName('sidebar-toc-btn')[0] as HTMLElement,
+      enableSidebarTOC: false
+    }
+    
     const showToolbar = ()=> toolbar.toolbar.style.opacity = "1"
-
     previewElement.onmouseenter = showToolbar
     toolbar.toolbar.onmouseenter = showToolbar
-
     previewElement.onmouseleave = ()=> toolbar.toolbar.style.opacity = "0"
+
+    initSideBarTOCButton()
+}
+
+/**
+ * init .sidebar-toc-btn
+ */
+function initSideBarTOCButton() {
+
+  toolbar.sidebarTOCBtn.onclick = ()=> {
+    toolbar.enableSidebarTOC = !toolbar.enableSidebarTOC
+
+    if (toolbar.enableSidebarTOC) {
+      sidebarTOC = document.createElement('div') // create new sidebar toc
+      sidebarTOC.classList.add('mpe-sidebar-toc')
+      containerElement.appendChild(sidebarTOC)
+      containerElement.classList.add('show-sidebar-toc')
+      renderSidebarTOC()
+      // @setZoomLevel()
+    } else {
+      if (sidebarTOC) sidebarTOC.remove()
+      sidebarTOC = null
+      containerElement.classList.remove('show-sidebar-toc')
+      previewElement.style.width = "100%"
+    }
+
+    scrollMap = null 
+  }
 }
 
 /**
@@ -139,13 +190,31 @@ function initContextMenu() {
   $["contextMenu"]({
     selector: '.markdown-preview-enhanced-container',
     items: {
-      open_in_browser: {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
-      export_to_disk: {name: "Export to Disk (not done)"},
-      pandoc_export: {name: "Pandoc (not done)"},
-      save_as_markdown: {name: "Save as Markdown (not done)"},
-      sync_source: {name: "Sync Source (not done)"}
+      "open_in_browser": {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
+      "sep1": "---------",
+      "prince_export": {name: "PDF (prince) (not done)"},
+      "ebook_export": {
+        name: "eBook (not done)",
+        items: {
+          "ebook_epub": {name: "ePub"},
+          "ebook_mobi": {name: "mobi"},
+          "ebook_pdf": {name: "PDF"}
+        }
+      },
+      "pandoc_export": {name: "Pandoc (not done)"},
+      "save_as_markdown": {name: "Save as Markdown (not done)"},
+      "sep2": "---------",
+      "sync_source": {name: "Sync Source (not done)"}
     }
   })
+}
+
+/**
+ * init .refreshing-icon
+ */
+function initRefreshingIcon() {
+  refreshingIcon = document.getElementsByClassName('refreshing-icon')[0] as HTMLElement
+  refreshingIcon.style.display = "none"
 }
 
 /**
@@ -157,6 +226,9 @@ function initMermaid() {
   mermaidAPI.initialize({startOnLoad: false})
 }
 
+/**
+ * render mermaid graphs
+ */
 function renderMermaid() {
   return new Promise((resolve, reject)=> {
     const mermaid = window['mermaid'] // window.mermaid doesn't work, has to be written as window['mermaid']
@@ -183,6 +255,9 @@ function renderMermaid() {
   })
 }
 
+/**
+ * render MathJax expressions
+ */
 function renderMathJax() {
   return new Promise((resolve, reject)=> {
     if (config['mathRenderingOption'] === 'MathJax') {
@@ -207,15 +282,45 @@ function renderMathJax() {
   })
 }
 
+/**
+ * render sidebar toc 
+ */
+function renderSidebarTOC() {
+  if (!toolbar.enableSidebarTOC) return
+  if (sidebarTOCHTML) {
+    sidebarTOC.innerHTML = sidebarTOCHTML
+  } else {
+    sidebarTOC.innerHTML = `<p style="text-align:center;font-style: italic;">Outline (empty)</p>`
+  }
+}
+
+/**
+ * init several preview events
+ */
 async function initEvents() {
+  /**
+   * show refreshingIcon after 1 second
+   * if preview hasn't finished rendering.
+   */
+  const timeout = setTimeout(()=> {
+    refreshingIcon.style.display = "block"
+  }, 1000)
+
   await Promise.all([
     renderMathJax(), 
     renderMermaid()
   ])
   previewElement.innerHTML = hiddenPreviewElement.innerHTML
   hiddenPreviewElement.innerHTML = ""
+
+  clearTimeout(timeout)
+  refreshingIcon.style.display = "none"
 }
 
+/**
+ * update previewElement innerHTML content
+ * @param html 
+ */
 function updateHTML(html) {
   // editorScrollDelay = Date.now() + 500
   previewScrollDelay = Date.now() + 500
@@ -449,6 +554,8 @@ window.addEventListener('message', (event)=> {
 
   if (data.type === 'update-html') {
     totalLineCount = data.totalLineCount
+    sidebarTOCHTML = data.tocHTML
+    renderSidebarTOC()
     updateHTML(data.html)
   } else if (data.type === 'change-text-editor-selection') {
     const line = parseInt(data.line)

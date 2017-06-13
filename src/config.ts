@@ -7,6 +7,8 @@ export class MarkdownPreviewEnhancedConfig {
 
   public readonly breakOnSingleNewLine: boolean
   public readonly enableTypographer: boolean
+  public readonly enableWikiLinkSyntax: boolean
+  public readonly wikiLinkFileExtension: string
   public readonly scrollSync: boolean
   public readonly mermaidTheme: string
   /**
@@ -17,17 +19,20 @@ export class MarkdownPreviewEnhancedConfig {
   public readonly mathBlockDelimiters: Array<string[]>
 
   /**
-   * Code block theme 
+   * Themes
    */
   public readonly codeBlockTheme: string
-
   public readonly previewTheme: string
+
+  public readonly protocolsWhiteList: string
 
   private constructor() {
     const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
 
     this.breakOnSingleNewLine = config.get<boolean>('breakOnSingleNewLine')
     this.enableTypographer = config.get<boolean>('enableTypographer')
+    this.enableWikiLinkSyntax = config.get<boolean>('enableWikiLinkSyntax')
+    this.wikiLinkFileExtension = config.get<string>('wikiLinkFileExtension')
     this.scrollSync = config.get<boolean>('scrollSync')
     this.mermaidTheme = config.get<string>('mermaidTheme')
     this.mathRenderingOption = config.get<string>('mathRenderingOption')
@@ -35,6 +40,7 @@ export class MarkdownPreviewEnhancedConfig {
     this.mathBlockDelimiters = config.get<Array<string[]>>('mathBlockDelimiters')
     this.codeBlockTheme = config.get<string>('codeBlockTheme')
     this.previewTheme = config.get<string>('previewTheme')
+    this.protocolsWhiteList = config.get<string>('protocolsWhiteList')
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
