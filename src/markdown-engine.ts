@@ -272,6 +272,38 @@ export class MarkdownEngine {
         return '<li>'
       }
     }
+
+    // code fences 
+    // modified to support math block
+    // check https://github.com/jonschlinkert/remarkable/blob/875554aedb84c9dd190de8d0b86c65d2572eadd5/lib/rules.js
+    this.md.renderer.rules.fence = (tokens, idx, options, env, instance)=> {
+      let token = tokens[idx],
+          langClass = '',
+          langPrefix = options.langPrefix,
+          langName = escapeString(token.params)
+
+      if (token.params)
+        langClass = ' class="' + langPrefix + langName + '" ';
+
+      // get code content
+      let content = escapeString(token.content)
+
+      // copied from getBreak function.
+      let break_ = '\n'
+      if (idx < tokens.length && tokens[idx].type === 'list_item_close')
+        break_ = ''
+
+      if (langName === 'math') {
+        const openTag = this.config.mathBlockDelimiters[0][0] || '$$'
+        const closeTag = this.config.mathBlockDelimiters[0][1] || '$$'
+        const mathExp = unescapeString(content).trim()
+        if (!mathExp) return ''
+        const mathHtml = this.parseMath({openTag, closeTag, content: mathExp, displayMode: true})
+        return `<p>${mathHtml}</p>`
+      }
+
+      return '<pre><code' + langClass + '>' + content + '</code></pre>' + break_
+    }
   }
 
 
@@ -296,11 +328,13 @@ export class MarkdownEngine {
       try {
         parameters = jsonic('{'+parameters+'}')
       } catch (e) {
-        return $preElement.replaceWith(`<pre>${'{'+parameters+'}'}<br>${e.toString()}</pre>`)
+        return $preElement.replaceWith(`<pre class="language-text">ParameterError: ${'{'+parameters+'}'}<br>${e.toString()}</pre>`)
       }
     } else {
       parameters = {}
     }
+
+    console.log(parameters)
 
     if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
       const checksum = md5(code)
