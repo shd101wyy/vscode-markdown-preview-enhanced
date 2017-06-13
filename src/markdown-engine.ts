@@ -2,6 +2,7 @@ import * as path from "path"
 import * as fs from "fs"
 import * as cheerio from "cheerio"
 import * as uslug from "uslug"
+const matter = require('gray-matter')
 
 import {MarkdownPreviewEnhancedConfig} from "./config"
 import * as plantumlAPI from "./puml"
@@ -18,7 +19,6 @@ const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/json
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 
 // import * as uslug from "uslug"
-// import * as matter from "gray-matter"
 // import * as Prism from "prismjs"
 let Prism = null
 
@@ -91,7 +91,7 @@ export class MarkdownEngine {
 
   constructor(args:MarkdownEngineConstructorArgs) {
     this.fileDirectoryPath = args.fileDirectoryPath
-    this.projectDirectoryPath = args.projectDirectoryPath
+    this.projectDirectoryPath = args.projectDirectoryPath || '/'
     this.config = args.config
     this.initConfig()
     this.headings = []
@@ -410,8 +410,6 @@ export class MarkdownEngine {
     }
   }
 
-
-
   /**
    * 
    * @param preElement the cheerio element
@@ -554,9 +552,85 @@ export class MarkdownEngine {
     return this.cachedHTML
   }
 
+  /**
+   * process input string, skip front-matter
+   * if display table. return {
+   *      content: rest of input string after skipping front matter (but with '\n' included)
+   *      table: string of <table>...</table> generated from data
+   * }
+   * else return {
+   *      content: replace ---\n with ```yaml
+   *      table: '',
+   * }
+   * 
+   */
+  private processFrontMatter(inputString:string, hideFrontMatter=false) {
+    function toTable (arg) {
+      if (arg instanceof Array) {
+        let tbody = "<tbody><tr>"
+        arg.forEach((item)=> tbody += `<td>${toTable(item)}</td>` )
+        tbody += "</tr></tbody>"
+        return `<table>${tbody}</table>`
+      } else if (typeof(arg) === 'object') {
+        let thead = "<thead><tr>"
+        let tbody = "<tbody><tr>"
+        for (let key in arg) {
+          thead += `<th>${key}</th>`
+          tbody += `<td>${toTable(arg[key])}</td>`
+        }
+        thead += "</tr></thead>"
+        tbody += "</tr></tbody>"
+
+        return `<table>${thead}${tbody}</table>`
+      } else {
+        return arg
+      }
+    }
+
+    // https://regexper.com/
+    let r = /^-{3}[\n\r]([\w|\W]+?)[\n\r]-{3}[\n\r]/
+
+    let match = r.exec(inputString)
+
+    if (match) {
+      let yamlStr = match[0] 
+      let data:any = matter(yamlStr).data
+
+      if (hideFrontMatter || this.config.frontMatterRenderingOption[0] == 'n') { // hide
+        const content = '\n'.repeat((yamlStr.match(/\n/g) || []).length) + inputString.slice(yamlStr.length)
+        return {content, table: '', data}
+      } else if (this.config.frontMatterRenderingOption[0] === 't') { // table
+        const content = '\n'.repeat((yamlStr.match(/\n/g) || []).length) + inputString.slice(yamlStr.length)
+
+        // to table
+        let table 
+        if (typeof(data) === 'object')
+          table = toTable(data)
+        else
+          table = "<pre>Failed to parse YAML.</pre>"
+
+        return {content, table, data}
+      } else { // # if frontMatterRenderingOption[0] == 'c' # code block
+        const content = '```yaml\n' + match[1] + '\n```\n' + inputString.slice(yamlStr.length)
+
+        return {content, table: '', data}
+      }
+    } else {
+      return {content: inputString, table: '', data:{}}
+    }
+  }
+
+
   public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
     return new Promise((resolve, reject)=> {
 
+      // process front-matter
+      const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
+      const frontMatterTable = fm.table,
+            yamlConfig = fm.data 
+      inputString = fm.content
+
+      // import external files and insert anchors if necessary 
       fileImport(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
       .then(({outputString})=> {
 
@@ -666,7 +740,7 @@ export class MarkdownEngine {
       
         return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
           this.cachedHTML = html
-          return resolve({html, markdown:inputString, tocHTML: this.tocHTML})
+          return resolve({html: frontMatterTable+html, markdown:inputString, tocHTML: this.tocHTML})
         })
       })
     })

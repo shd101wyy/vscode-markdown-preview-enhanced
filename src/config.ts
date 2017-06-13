@@ -9,6 +9,7 @@ export class MarkdownPreviewEnhancedConfig {
   public readonly enableTypographer: boolean
   public readonly enableWikiLinkSyntax: boolean
   public readonly wikiLinkFileExtension: string
+  public readonly frontMatterRenderingOption:string
   public readonly scrollSync: boolean
   public readonly mermaidTheme: string
   /**
@@ -33,6 +34,7 @@ export class MarkdownPreviewEnhancedConfig {
     this.enableTypographer = config.get<boolean>('enableTypographer')
     this.enableWikiLinkSyntax = config.get<boolean>('enableWikiLinkSyntax')
     this.wikiLinkFileExtension = config.get<string>('wikiLinkFileExtension')
+    this.frontMatterRenderingOption = config.get<string>('frontMatterRenderingOption')
     this.scrollSync = config.get<boolean>('scrollSync')
     this.mermaidTheme = config.get<string>('mermaidTheme')
     this.mathRenderingOption = config.get<string>('mathRenderingOption')

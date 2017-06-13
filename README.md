@@ -20,8 +20,9 @@ For more features that will be supported in the future, check [Markdown Preview 
 ### Progress so far
 * Done supporting `mermaid`, `PlantUML` and `viz.js`.
 * Done supporting `[TOC]`.  
-* Done supporting `MathJax` and `KaTeX`
+* Done supporting `MathJax` and `KaTeX`.
 * Done sidebar TOC.  
+* Done supporting front matter.
 
 ## Requirements
 

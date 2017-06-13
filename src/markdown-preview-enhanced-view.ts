@@ -90,7 +90,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // check math 
     if (this.config.mathRenderingOption === "KaTeX") {
-      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './node_modules/katex/dist/katex.min.css')}">`
+      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './dependencies/katex/katex.min.css')}">`
     }
 
     // check mermaid 
