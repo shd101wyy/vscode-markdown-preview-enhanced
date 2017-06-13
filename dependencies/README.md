@@ -12,7 +12,11 @@ I managed many libraries by myself instead of through npm to reduce overall file
     "MathJax": "v2.7.1",
     "mpld3": "v0.3.0",
     "jquery": "v3.2.1",
-    "jquery-contextmenu": "2.5.0"
+    "jquery-contextmenu": "2.5.0",
+    "remarkable": "1.7.1",
+    "JavaScript-MD5": "2.7.0",
+    "katex": "0.7.1",
+    "jsonic": "0.3.0"
 }
 ```  
 

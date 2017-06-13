@@ -89,9 +89,11 @@ export function activate(context: vscode.ExtensionContext) {
       }
 	}))
 
+	/*
 	context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(textEditors=> {
 		// console.log('onDidChangeonDidChangeVisibleTextEditors ', textEditors)
 	}))
+	*/
 
   context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPreview', openPreview))
 

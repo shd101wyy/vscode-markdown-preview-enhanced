@@ -1,14 +1,7 @@
-import * as katex from "katex"
 import * as cheerio from "cheerio"
 import * as path from "path"
 import * as fs from "fs"
-import * as remarkable from "remarkable"
-import * as uslug from "uslug"
-import * as matter from "gray-matter"
-import * as jsonic from "jsonic"
-import * as md5 from "md5"
-// import * as Prism from "prismjs"
-let Prism = null
+
 
 import {MarkdownPreviewEnhancedConfig} from './config'
 import * as plantumlAPI from './puml'
@@ -16,6 +9,17 @@ import {escapeString, unescapeString, getExtensionDirectoryPath} from "./utility
 let viz = null
 import {scopeForLanguageName} from "./extension-helper"
 import {fileImport} from "./file-import"
+
+const extensionDirectoryPath = getExtensionDirectoryPath()
+const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
+const remarkable = require(path.resolve(extensionDirectoryPath, './dependencies/remarkable/remarkable.js'))
+const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
+const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
+
+// import * as uslug from "uslug"
+// import * as matter from "gray-matter"
+// import * as Prism from "prismjs"
+let Prism = null
 
 interface MarkdownEngineConstructorArgs {
   fileDirectoryPath: string,
