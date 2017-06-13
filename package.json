@@ -104,6 +104,16 @@
                     "default": ".md",
                     "type": "string"
                 },
+                "markdown-preview-enhanced.frontMatterRenderingOption": {
+                    "description": "Front matter rendering option",
+                    "type": "string",
+                    "enum": [
+                        "table",
+                        "code block",
+                        "none"
+                    ],
+                    "default": "table"
+                },
                 "markdown-preview-enhanced.mermaidTheme": {
                     "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
                     "default": "mermaid.css",
@@ -157,6 +167,7 @@
     },
     "dependencies": {
         "cheerio": "0.15.0",
+        "gray-matter": "^2.1.1",
         "uslug": "^1.0.4"
     },
     "devDependencies": {
