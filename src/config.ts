@@ -7,6 +7,8 @@ export class MarkdownPreviewEnhancedConfig {
 
   public readonly breakOnSingleNewLine: boolean
   public readonly enableTypographer: boolean
+  public readonly enableWikiLinkSyntax: boolean
+  public readonly wikiLinkFileExtension: string
   public readonly scrollSync: boolean
   public readonly mermaidTheme: string
   /**
@@ -28,6 +30,8 @@ export class MarkdownPreviewEnhancedConfig {
 
     this.breakOnSingleNewLine = config.get<boolean>('breakOnSingleNewLine')
     this.enableTypographer = config.get<boolean>('enableTypographer')
+    this.enableWikiLinkSyntax = config.get<boolean>('enableWikiLinkSyntax')
+    this.wikiLinkFileExtension = config.get<string>('wikiLinkFileExtension')
     this.scrollSync = config.get<boolean>('scrollSync')
     this.mermaidTheme = config.get<string>('mermaidTheme')
     this.mathRenderingOption = config.get<string>('mathRenderingOption')

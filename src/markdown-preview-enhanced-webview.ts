@@ -239,7 +239,13 @@ function renderMathJax() {
  * init several preview events
  */
 async function initEvents() {
-  refreshingIcon.style.display = "block"
+  /**
+   * show refreshingIcon after 1 second
+   * if preview hasn't finished rendering.
+   */
+  const timeout = setTimeout(()=> {
+    refreshingIcon.style.display = "block"
+  }, 1000)
 
   await Promise.all([
     renderMathJax(), 
@@ -248,6 +254,7 @@ async function initEvents() {
   previewElement.innerHTML = hiddenPreviewElement.innerHTML
   hiddenPreviewElement.innerHTML = ""
 
+  clearTimeout(timeout)
   refreshingIcon.style.display = "none"
 }
 
