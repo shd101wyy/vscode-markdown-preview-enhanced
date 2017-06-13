@@ -3,7 +3,7 @@ import * as path from "path"
 import * as fs from "fs"
 // import * as request from 'request'
 // import * as less from "less"
-import * as md5 from "md5"
+// import * as md5 from "md5"
 // import * as temp from "temp"
 // temp.track()
 

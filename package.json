@@ -2,7 +2,7 @@
     "name": "markdown-preview-enhanced",
     "displayName": "Markdown Preview Enhanced",
     "description": "Markdown Preview Enhanced ported to vscode",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "publisher": "shd101wyy",
     "repository": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced",
     "bugs": {
@@ -141,8 +141,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "cheerio": "0.15.0",
-        "less": "^2.7.2"
+        "cheerio": "0.15.0"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
