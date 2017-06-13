@@ -143,11 +143,21 @@ function initContextMenu() {
   $["contextMenu"]({
     selector: '.markdown-preview-enhanced-container',
     items: {
-      open_in_browser: {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
-      export_to_disk: {name: "Export to Disk (not done)"},
-      pandoc_export: {name: "Pandoc (not done)"},
-      save_as_markdown: {name: "Save as Markdown (not done)"},
-      sync_source: {name: "Sync Source (not done)"}
+      "open_in_browser": {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
+      "sep1": "---------",
+      "prince_export": {name: "PDF (prince)"},
+      "ebook_export": {
+        name: "eBook",
+        items: {
+          "ebook_epub": {name: "ePub"},
+          "ebook_mobi": {name: "mobi"},
+          "ebook_pdf": {name: "PDF"}
+        }
+      },
+      "pandoc_export": {name: "Pandoc (not done)"},
+      "save_as_markdown": {name: "Save as Markdown (not done)"},
+      "sep2": "---------",
+      "sync_source": {name: "Sync Source (not done)"}
     }
   })
 }
@@ -169,6 +179,9 @@ function initMermaid() {
   mermaidAPI.initialize({startOnLoad: false})
 }
 
+/**
+ * render mermaid graphs
+ */
 function renderMermaid() {
   return new Promise((resolve, reject)=> {
     const mermaid = window['mermaid'] // window.mermaid doesn't work, has to be written as window['mermaid']
@@ -195,6 +208,9 @@ function renderMermaid() {
   })
 }
 
+/**
+ * render MathJax expressions
+ */
 function renderMathJax() {
   return new Promise((resolve, reject)=> {
     if (config['mathRenderingOption'] === 'MathJax') {
@@ -219,6 +235,9 @@ function renderMathJax() {
   })
 }
 
+/**
+ * init several preview events
+ */
 async function initEvents() {
   refreshingIcon.style.display = "block"
 
