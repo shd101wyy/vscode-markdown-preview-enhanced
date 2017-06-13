@@ -91,7 +91,7 @@ export class MarkdownEngine {
 
   constructor(args:MarkdownEngineConstructorArgs) {
     this.fileDirectoryPath = args.fileDirectoryPath
-    this.projectDirectoryPath = args.projectDirectoryPath
+    this.projectDirectoryPath = args.projectDirectoryPath || '/'
     this.config = args.config
     this.initConfig()
     this.headings = []
