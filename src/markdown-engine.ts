@@ -73,6 +73,7 @@ export class MarkdownEngine {
 
   private breakOnSingleNewLine: boolean
   private enableTypographer: boolean
+  private protocolsWhiteListRegExp:RegExp
 
   private md;
 
@@ -99,6 +100,10 @@ export class MarkdownEngine {
   private initConfig() {
     this.breakOnSingleNewLine = this.config.breakOnSingleNewLine
     this.enableTypographer = this.config.enableTypographer
+
+    // protocal whitelist
+    const protocolsWhiteList = this.config.protocolsWhiteList.split(',').map((x)=>x.trim()) || ['http', 'https', 'atom', 'file']
+    this.protocolsWhiteListRegExp = new RegExp('^(' + protocolsWhiteList.join('|')+')\:\/\/')  // eg /^(http|https|atom|file)\:\/\//
   }
 
   public updateConfiguration(config) {
@@ -472,8 +477,33 @@ export class MarkdownEngine {
    * @param html the html string that we will analyze 
    * @return html 
    */
-  private async resolveImagePathAndCodeBlock(html) {
+  private async resolveImagePathAndCodeBlock(html, options:MarkdownEngineRenderOption) {
     let $ = cheerio.load(html, {xmlMode:true})
+
+    // resolve image paths
+    $('img, a').each((i, imgElement)=> {
+      let srcTag = 'src'
+      if (imgElement.name === 'a')
+        srcTag = 'href'
+
+      const img = $(imgElement)
+      const src = img.attr(srcTag)
+
+      if (src &&
+        (!(src.match(this.protocolsWhiteListRegExp) ||
+          src.startsWith('data:image/') ||
+          src[0] == '#' ||
+          src[0] == '/'))) {
+        if (!options.useRelativeImagePath) 
+          img.attr(srcTag, 'file://'+path.resolve(this.fileDirectoryPath,  src))
+      } else if (src && src[0] === '/') { // absolute path
+        if (options.useRelativeImagePath)
+          img.attr(srcTag, path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.' + src)))
+        else
+          img.attr(srcTag, 'file://'+path.resolve(this.projectDirectoryPath, '.' + src))
+      }
+    })
+
     
     // new caches
     // which will be set when this.renderCodeBlocks is called
@@ -548,7 +578,6 @@ export class MarkdownEngine {
 
               try {
                 let opt = jsonic(optMatch[1])
-                console.log('heading parameter', opt)
                 
                 classes = opt.class,
                 id = opt.id,
@@ -604,7 +633,7 @@ export class MarkdownEngine {
           html = html.replace(/^\s*\[MPETOC\]\s*/gm, tocHtml)
         }
       
-        return this.resolveImagePathAndCodeBlock(html).then((html)=> {
+        return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
           this.cachedHTML = html
           return resolve({html, markdown:inputString})
         })

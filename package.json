@@ -139,6 +139,11 @@
                         "github-light.css",
                         "github-dark.css"
                     ]
+                },
+                "markdown-preview-enhanced.protocolsWhiteList": {
+                    "description": "Accepted protocols followed by `://` for links.",
+                    "default": "http, https, atom, file",
+                    "type": "string"
                 }
             }
         }

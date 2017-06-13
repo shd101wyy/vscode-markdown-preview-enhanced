@@ -136,7 +136,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       if (!engine) {
         engine = new MarkdownEngine(
           {
-            fileDirectoryPath: sourceUri.fsPath,
+            fileDirectoryPath: path.dirname(sourceUri.fsPath),
             projectDirectoryPath: vscode.workspace.rootPath,
             config: this.config
           })
