@@ -32,8 +32,14 @@ interface Toolbar {
   toolbar: HTMLElement,
   backToTopBtn: HTMLElement,
   refreshBtn: HTMLElement,
-  sidebarTOCBtn: HTMLElement
+  sidebarTOCBtn: HTMLElement,
+  enableSidebarTOC: boolean
 }
+
+/**
+ * .markdown-preview-enhanced-container element 
+ */
+let containerElement:HTMLElement = null
 
 /**
  * this is the element with class `markdown-preview-enhanced`
@@ -45,6 +51,12 @@ let previewElement:HTMLElement = null
  * hiddenPreviewElement is used to render html and then put the rendered html result to previewElement
  */
 let hiddenPreviewElement:HTMLElement = null
+
+/**
+ * sidebar toc element
+ */
+let sidebarTOC:HTMLElement = null
+let sidebarTOCHTML:string = ''
 
 /**
  * toolbar object 
@@ -79,6 +91,7 @@ let scrollMap = null,
     currentLine = -1
 
 function onLoad() {
+  containerElement = document.body
   previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0] as HTMLElement
 
   $ = window['$'] as JQuery
@@ -92,13 +105,7 @@ function onLoad() {
   previewElement.insertAdjacentElement('beforebegin', hiddenPreviewElement)
 
   /** init toolbar */
-  toolbar = {
-    toolbar: document.getElementsByClassName('mpe-toolbar')[0] as HTMLElement,
-    backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
-    refreshBtn: document.getElementsByClassName('refresh-btn')[0] as HTMLElement,
-    sidebarTOCBtn: document.getElementsByClassName('sidebar-toc-btn')[0] as HTMLElement
-  }
-  initToolbarEvent()
+  initToolbar()
 
   /** init contextmenu */
   initContextMenu()
@@ -125,13 +132,47 @@ function onLoad() {
 /**
  * init events for tool bar
  */
-function initToolbarEvent() {
+function initToolbar() {
+    toolbar = {
+      toolbar: document.getElementsByClassName('mpe-toolbar')[0] as HTMLElement,
+      backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
+      refreshBtn: document.getElementsByClassName('refresh-btn')[0] as HTMLElement,
+      sidebarTOCBtn: document.getElementsByClassName('sidebar-toc-btn')[0] as HTMLElement,
+      enableSidebarTOC: false
+    }
+    
     const showToolbar = ()=> toolbar.toolbar.style.opacity = "1"
-
     previewElement.onmouseenter = showToolbar
     toolbar.toolbar.onmouseenter = showToolbar
-
     previewElement.onmouseleave = ()=> toolbar.toolbar.style.opacity = "0"
+
+    initSideBarTOCButton()
+}
+
+/**
+ * init .sidebar-toc-btn
+ */
+function initSideBarTOCButton() {
+
+  toolbar.sidebarTOCBtn.onclick = ()=> {
+    toolbar.enableSidebarTOC = !toolbar.enableSidebarTOC
+
+    if (toolbar.enableSidebarTOC) {
+      sidebarTOC = document.createElement('div') // create new sidebar toc
+      sidebarTOC.classList.add('mpe-sidebar-toc')
+      containerElement.appendChild(sidebarTOC)
+      containerElement.classList.add('show-sidebar-toc')
+      renderSidebarTOC()
+      // @setZoomLevel()
+    } else {
+      if (sidebarTOC) sidebarTOC.remove()
+      sidebarTOC = null
+      containerElement.classList.remove('show-sidebar-toc')
+      previewElement.style.width = "100%"
+    }
+
+    scrollMap = null 
+  }
 }
 
 /**
@@ -236,6 +277,18 @@ function renderMathJax() {
 }
 
 /**
+ * render sidebar toc 
+ */
+function renderSidebarTOC() {
+  if (!toolbar.enableSidebarTOC) return
+  if (sidebarTOCHTML) {
+    sidebarTOC.innerHTML = sidebarTOCHTML
+  } else {
+    sidebarTOC.innerHTML = `<p style="text-align:center;font-style: italic;">Outline (empty)</p>`
+  }
+}
+
+/**
  * init several preview events
  */
 async function initEvents() {
@@ -258,6 +311,10 @@ async function initEvents() {
   refreshingIcon.style.display = "none"
 }
 
+/**
+ * update previewElement innerHTML content
+ * @param html 
+ */
 function updateHTML(html) {
   // editorScrollDelay = Date.now() + 500
   previewScrollDelay = Date.now() + 500
@@ -491,6 +548,8 @@ window.addEventListener('message', (event)=> {
 
   if (data.type === 'update-html') {
     totalLineCount = data.totalLineCount
+    sidebarTOCHTML = data.tocHTML
+    renderSidebarTOC()
     updateHTML(data.html)
   } else if (data.type === 'change-text-editor-selection') {
     const line = parseInt(data.line)

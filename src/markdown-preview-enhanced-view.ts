@@ -187,13 +187,14 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
-      engine.parseMD(text, {isForPreview: true}).then(({markdown, html})=> {
+      engine.parseMD(text, {isForPreview: true}).then(({markdown, html, tocHTML})=> {
         vscode.commands.executeCommand(
           '_workbench.htmlPreview.postMessage',
           uri,
           {
             type: 'update-html',
             html: html,
+            tocHTML: tocHTML,
             totalLineCount: document.lineCount
           })
       })

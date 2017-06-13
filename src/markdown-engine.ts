@@ -47,7 +47,8 @@ interface MarkdownEngineRenderOption {
 
 interface MarkdownEngineOutput {
   html:string,
-  markdown:string
+  markdown:string,
+  tocHTML:string
 }
 
 interface Heading {
@@ -558,6 +559,7 @@ export class MarkdownEngine {
               headings:Array<Heading> = [],
               slideConfigs = []
         let tocBracketEnabled:boolean = false
+        let tocHTML = ""
 
         // overwrite remarkable heading parse function
         this.md.renderer.rules.heading_open = (tokens, idx)=> {
@@ -627,15 +629,19 @@ export class MarkdownEngine {
   
         let html = this.md.render(outputString)
 
+        /**
+         * render tocHTML
+         */
+        const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
+        tocHTML = this.md.render(tocObject.content)
+
         if (tocBracketEnabled) { // [TOC]
-          const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
-          const tocHtml = this.md.render(tocObject.content)
-          html = html.replace(/^\s*\[MPETOC\]\s*/gm, tocHtml)
+          html = html.replace(/^\s*\[MPETOC\]\s*/gm, tocHTML)
         }
       
         return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
           this.cachedHTML = html
-          return resolve({html, markdown:inputString})
+          return resolve({html, markdown:inputString, tocHTML})
         })
       })
     })
