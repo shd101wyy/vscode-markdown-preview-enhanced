@@ -4,6 +4,9 @@ Trying hard to port [Markdown Preview Enhanced for Atom](https://github.com/shd1
 
 First time to write typescript, and it is awesome. I think I will write all my web projects in TypeScript from now on.  
 
+Below is a demo of the Atom version.   
+
+![](https://user-images.githubusercontent.com/1908863/26898176-a5cad7fc-4b90-11e7-9d8c-74f85f28f133.gif)
 
 ## Features
 
@@ -22,7 +25,9 @@ For more features that will be supported in the future, check [Markdown Preview 
 * Done supporting `[TOC]`.  
 * Done supporting `MathJax` and `KaTeX`.
 * Done sidebar TOC.  
+* Done back to top button.  
 * Done supporting front matter.
+* Done supporting `reveal.js` presentation mode. Try inserting `<!-- slide -->` to your markdown.  
 
 ## Requirements
 

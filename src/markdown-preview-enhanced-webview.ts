@@ -271,7 +271,12 @@ function initContextMenu() {
   $["contextMenu"]({
     selector: '.markdown-preview-enhanced-container',
     items: {
-      "open_in_browser": {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
+      "open_in_browser": {
+        name: "Open in Browser", 
+        callback: ()=>{     
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.openInBrowser?${JSON.stringify([sourceUri])}`}, 'file://') 
+        } 
+      },
       "sep1": "---------",
       "html_export": {name: "HTML (not done)"},
       "prince_export": {name: "PDF (prince) (not done)"},

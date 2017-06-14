@@ -136,7 +136,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       if (!engine) {
         engine = new MarkdownEngine(
           {
-            fileDirectoryPath: path.dirname(sourceUri.fsPath),
+            filePath: sourceUri.fsPath,
             projectDirectoryPath: vscode.workspace.rootPath,
             config: this.config
           })
@@ -187,7 +187,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
-      engine.parseMD(text, {isForPreview: true}).then(({markdown, html, tocHTML})=> {
+      engine.parseMD(text, {isForPreview: true, useRelativeImagePath: false, hideFrontMatter: false}).then(({markdown, html, tocHTML})=> {
         vscode.commands.executeCommand(
           '_workbench.htmlPreview.postMessage',
           uri,
@@ -201,6 +201,13 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     })
   }
 
+  public openInBrowser(sourceUri: Uri) {
+    const fsPath = sourceUri.fsPath
+    const engine = this.engineMaps[fsPath]
+    if (engine) {
+      engine.openInBrowser()
+    }
+  }
 
   get onDidChange(): Event<Uri> {
     return this._onDidChange.event
