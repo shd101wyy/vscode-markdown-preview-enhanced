@@ -98,7 +98,11 @@ export function activate(context: vscode.ExtensionContext) {
       }
 	}))
 
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((textEditor)=> {
+	/**
+	 * Open preview automatically if the `automaticallyShowPreviewOfMarkdownBeingEdited` is on.  
+	 * @param textEditor 
+	 */
+	function openPreviewAutomatically(textEditor:vscode.TextEditor) {
 		if (!textEditor) return 
 
 		if (isMarkdownFile(textEditor.document)) {
@@ -118,6 +122,11 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage(reason)
 			})
     }
+	}
+	
+	openPreviewAutomatically(vscode.window.activeTextEditor) // first time 
+	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((textEditor)=> {
+		openPreviewAutomatically(textEditor)
 	}))
 
 	/*
