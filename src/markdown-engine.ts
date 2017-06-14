@@ -11,6 +11,7 @@ let viz = null
 import {scopeForLanguageName} from "./extension-helper"
 import {fileImport} from "./file-import"
 import {toc} from "./toc"
+import {CustomSubjects} from "./custom-subjects"
 
 const extensionDirectoryPath = getExtensionDirectoryPath()
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
@@ -22,15 +23,6 @@ const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascr
 // import * as Prism from "prismjs"
 let Prism = null
 
-enum CustomSubjects {
-  pagebreak,
-  newpage,
-  toc,
-  tocstop,
-  slide,
-  ebook,
-  'toc-bracket'
-}
 
 interface MarkdownEngineConstructorArgs {
   fileDirectoryPath: string,
@@ -646,13 +638,12 @@ export class MarkdownEngine {
       height = presentationConfig['height'] || 700
     }
 
-    // ratio = height / width * 100 + '%'
-    // const zoom = (@previewElement.offsetWidth - 128)/width ## 64 is 2*padding
-    // @presentationZoom = zoom
+
     slides.forEach((slide, offset)=> {
       if (!offset) {  // first part of html before the first <!-- slide -->
-        return output += slide
+        return output += `<div style='display: none;'>${slide}</div>`
       }
+      offset = offset - 1
       const slideConfig = slideConfigs[offset] || {}
       let styleString = '',
           videoString = '',
@@ -697,7 +688,7 @@ export class MarkdownEngine {
       }
 
       output += `
-        <div class='slide ${classString}' ${idString} data-offset='${offset}' style="width: ${width}px; height: ${height}px; ${styleString}">
+        <div class='slide ${classString}' ${idString} data-line="${slideConfig['lineNo']}" data-offset='${offset}' style="width: ${width}px; height: ${height}px; ${styleString}">
           ${videoString}
           ${iframeString}
           <section>${slide}</section>
@@ -834,17 +825,19 @@ export class MarkdownEngine {
         if (tocBracketEnabled) { // [TOC]
           html = html.replace(/^\s*\[MPETOC\]\s*/gm, this.tocHTML)
         }
-
-        /**
-         * check slides
-         */
-        if (slideConfigs.length) {
-          html = this.parseSlides(html, slideConfigs, yamlConfig)
-        }
       
         return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
-          this.cachedHTML = html
-          return resolve({html: frontMatterTable+html, markdown:inputString, tocHTML: this.tocHTML})
+          html = frontMatterTable + html
+
+          /**
+           * check slides
+           */
+          if (slideConfigs.length) {
+            html = this.parseSlides(html, slideConfigs, yamlConfig)
+          }
+
+          this.cachedHTML = html // save to cache
+          return resolve({html, markdown:inputString, tocHTML: this.tocHTML})
         })
       })
     })

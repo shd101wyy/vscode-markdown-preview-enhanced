@@ -113,6 +113,11 @@ interface MarkdownPreviewEnhancedPreview {
   presentationZoom: number
 
   /**
+   * track the buffer line number of slides
+   */
+  slideBufferLineNumbers: Array<number>
+
+  /**
    * setTimeout value
    */
   scrollTimeout: any
@@ -177,6 +182,7 @@ function onLoad() {
     scrollTimeout: null,
     presentationZoom: 1,
     presentationMode: false,
+    slideBufferLineNumbers: [],
     toolbar: {
       toolbar: document.getElementsByClassName('mpe-toolbar')[0] as HTMLElement,
       backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
@@ -267,7 +273,7 @@ function initContextMenu() {
     items: {
       "open_in_browser": {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
       "sep1": "---------",
-      "html_export": {name: "HTML"},
+      "html_export": {name: "HTML (not done)"},
       "prince_export": {name: "PDF (prince) (not done)"},
       "ebook_export": {
         name: "eBook (not done)",
@@ -370,20 +376,19 @@ function zoomSlidesToFitScreen(element:HTMLElement) {
         height = parseFloat(element.getAttribute('data-height'))
   
   // ratio = height / width * 100 + '%'
-  const zoom = (mpe.previewElement.offsetWidth - 128)/width  // 64 is 2*padding
+  const desiredWidth = mpe.previewElement.offsetWidth - 200
+  const zoom = desiredWidth / width  // 100 is padding
   
+  mpe.slideBufferLineNumbers = []
+
   const slides = element.getElementsByClassName('slide') 
   for (let i = 0; i < slides.length; i++) {
     const slide = slides[i] as HTMLElement
     slide.style.zoom = zoom.toString()
+
+    mpe.slideBufferLineNumbers.push(parseInt(slide.getAttribute('data-line')))
   }
   mpe.presentationZoom = zoom
-
-  console.log('width: ' + width)
-  console.log('height: ' + height)
-  console.log(zoom)
-  // mpe.previewElement.style.zoom = zoom.toString()
-  
 }
 
 /**
@@ -583,6 +588,32 @@ function setZoomLevel () {
 }
 
 /**
+ * scroll sync to display slide according `line`
+ * @param: line: the buffer row of editor
+ */
+function scrollSyncToSlide(line:number) {
+  let i = mpe.slideBufferLineNumbers.length - 1 
+  while (i >= 0) {
+    if (line >= mpe.slideBufferLineNumbers[i]) {
+      break
+    }
+    i -= 1
+  }
+  
+  const slideElement:HTMLElement = mpe.previewElement.querySelector(`.slide[data-offset="${i}"]`) as HTMLElement
+  console.log(slideElement)
+  if (!slideElement) {
+    mpe.previewElement.scrollTop = 0
+  } else {
+    const firstSlide = mpe.previewElement.querySelector('.slide[data-offset="0"]') as HTMLElement
+    console.log(firstSlide.offsetHeight)
+    // set slide to middle of preview
+    mpe.previewElement.scrollTop = -mpe.previewElement.offsetHeight/2 + (slideElement.offsetTop + slideElement.offsetHeight/2)*mpe.presentationZoom
+
+  }  
+}
+
+/**
  * scroll preview to match `line`
  * @param line: the buffer row of editor
  */
@@ -650,13 +681,24 @@ function scrollToRevealSourceLine(line) {
   // disable preview onscroll
   mpe.previewScrollDelay = Date.now() + 500
 
-  scrollSyncToLine(line)
+  if (mpe.presentationMode) {
+    scrollSyncToSlide(line)
+  } else {
+    scrollSyncToLine(line)
+  }
 }
 
 
 function resizeEvent() {
   // console.log('resize')
   mpe.scrollMap = null
+
+  /*
+  // nvm it doesn't work.  
+  if (this.presentationMode) { // zoom again 
+    zoomSlidesToFitScreen(document.getElementById('preview-slides'))
+  }
+  */
 }
 
 window.addEventListener('message', (event)=> {
