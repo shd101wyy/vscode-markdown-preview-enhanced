@@ -228,6 +228,14 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
+
+      vscode.commands.executeCommand(
+        '_workbench.htmlPreview.postMessage',
+        getPreviewUri(sourceUri),
+        {
+          type: 'start-parsing-markdown',
+        })
+
       engine.parseMD(text, {isForPreview: true, useRelativeImagePath: false, hideFrontMatter: false}).then(({markdown, html, tocHTML})=> {
         vscode.commands.executeCommand(
           '_workbench.htmlPreview.postMessage',

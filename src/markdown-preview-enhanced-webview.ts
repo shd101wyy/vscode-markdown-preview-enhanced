@@ -87,6 +87,7 @@ interface MarkdownPreviewEnhancedPreview {
    * .refreshing-icon element
    */
   refreshingIcon:HTMLElement
+  refreshingIconTimeout
 
   /**
    * scroll map 
@@ -199,7 +200,8 @@ function onLoad() {
     sidebarTOC: null,
     sidebarTOCHTML: "",
     zoomLevel: 1,
-    refreshingIcon: document.getElementsByClassName('refreshing-icon')[0] as HTMLElement 
+    refreshingIcon: document.getElementsByClassName('refreshing-icon')[0] as HTMLElement, 
+    refreshingIconTimeout: null
   }
 
   /** init mermaid */
@@ -433,14 +435,6 @@ function zoomSlidesToFitScreen(element:HTMLElement) {
  * init several preview events
  */
 async function initEvents() {
-  /**
-   * show refreshingIcon after 1 second
-   * if preview hasn't finished rendering.
-   */
-  const timeout = setTimeout(()=> {
-    mpe.refreshingIcon.style.display = "block"
-  }, 1000)
-
   await Promise.all([
     renderMathJax(), 
     renderMermaid()
@@ -448,7 +442,10 @@ async function initEvents() {
   mpe.previewElement.innerHTML = mpe.hiddenPreviewElement.innerHTML
   mpe.hiddenPreviewElement.innerHTML = ""
 
-  clearTimeout(timeout)
+  if (mpe.refreshingIconTimeout) {
+    clearTimeout(mpe.refreshingIconTimeout)
+    mpe.refreshingIconTimeout = null
+  }
   mpe.refreshingIcon.style.display = "none"
 }
 
@@ -463,18 +460,22 @@ function updateHTML(html) {
   mpe.hiddenPreviewElement.innerHTML = html
 
   let previewSlidesElement;
-  if ( previewSlidesElement = document.getElementById('preview-slides') ) {
+  if ( previewSlidesElement = mpe.hiddenPreviewElement.querySelector('#preview-slides')) {
     mpe.previewElement.setAttribute('data-presentation-preview-mode', '')
+    mpe.hiddenPreviewElement.setAttribute('data-presentation-preview-mode', '')
+
     mpe.presentationMode = true 
-    mpe.scrollMap = null
     zoomSlidesToFitScreen(previewSlidesElement)
   } else {
     mpe.previewElement.removeAttribute('data-presentation-preview-mode')
+    mpe.hiddenPreviewElement.removeAttribute('data-presentation-preview-mode')
+
     mpe.presentationMode = false 
   }
 
   // init several events 
   initEvents().then(()=> {
+    mpe.scrollMap = null 
     
     // scroll to initial position 
     if (!mpe.doneLoadingPreview) {
@@ -759,6 +760,16 @@ window.addEventListener('message', (event)=> {
   } else if (data.type === 'change-text-editor-selection') {
     const line = parseInt(data.line)
     scrollToRevealSourceLine(line)
+  } else if (data.type === 'start-parsing-markdown') {
+    /**
+     * show refreshingIcon after 1 second
+     * if preview hasn't finished rendering.
+     */
+    if (mpe.refreshingIconTimeout) clearTimeout(mpe.refreshingIconTimeout)
+
+    mpe.refreshingIconTimeout = setTimeout(()=> {
+      mpe.refreshingIcon.style.display = "block"
+    }, 1000)
   }
 }, false);
 
