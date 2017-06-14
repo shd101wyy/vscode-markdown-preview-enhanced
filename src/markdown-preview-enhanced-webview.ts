@@ -452,7 +452,7 @@ function updateHTML(html) {
     // scroll to initial position 
     if (!mpe.doneLoadingPreview) {
       mpe.doneLoadingPreview = true
-      scrollToRevealSourceLine(config.initialLine)
+      scrollToRevealSourceLine(config['initialLine'])
     }
   })
 }
