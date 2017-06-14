@@ -121,6 +121,12 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 		const sourceUri = vscode.Uri.parse(uri.query)
     // console.log(sourceUri, uri, vscode.workspace.rootPath)
 
+		let initialLine: number | undefined = undefined;
+		const editor = vscode.window.activeTextEditor;
+		if (editor && editor.document.uri.fsPath === sourceUri.fsPath) {
+			initialLine = editor.selection.active.line;
+		}
+
     return vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
 
@@ -150,6 +156,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       const config = Object.assign({}, this.config, {
 				previewUri: uri.toString(),
 				sourceUri: sourceUri.toString(),
+        initialLine: initialLine
       })
 
       return `<!DOCTYPE html>

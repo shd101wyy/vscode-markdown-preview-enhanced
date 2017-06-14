@@ -37,6 +37,11 @@ interface Toolbar {
 
 interface MarkdownPreviewEnhancedPreview {
  /**
+   * whether finished loading preview
+   */
+  doneLoadingPreview: boolean
+
+ /**
   * .markdown-preview-enhanced-container element 
   */
   containerElement: HTMLElement,
@@ -171,6 +176,7 @@ function onLoad() {
 
   /** init mpe object */
   mpe = {
+    doneLoadingPreview: false,
     containerElement: document.body,
     previewElement,
     hiddenPreviewElement,
@@ -441,7 +447,14 @@ function updateHTML(html) {
   }
 
   // init several events 
-  initEvents()
+  initEvents().then(()=> {
+    
+    // scroll to initial position 
+    if (!mpe.doneLoadingPreview) {
+      mpe.doneLoadingPreview = true
+      scrollToRevealSourceLine(config.initialLine)
+    }
+  })
 }
 
 /**
@@ -677,7 +690,7 @@ function scrollToPos(scrollTop) {
  * @param line 
  */
 function scrollToRevealSourceLine(line) {
-  if (!config.scrollSync || line == mpe.currentLine) {
+  if (!config.scrollSync || line === mpe.currentLine) {
     return 
   } else {
     mpe.currentLine = line
