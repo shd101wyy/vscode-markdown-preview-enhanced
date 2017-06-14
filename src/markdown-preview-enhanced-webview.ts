@@ -216,6 +216,7 @@ function initToolbarEvent() {
     mpe.previewElement.onmouseleave = ()=> toolbarElement.style.opacity = "0"
 
     initSideBarTOCButton()
+    initBackToTopButton()
 
     return toolbar
 }
@@ -247,6 +248,15 @@ function initSideBarTOCButton() {
 }
 
 /**
+ * init .back-to-top-btn
+ */
+function initBackToTopButton() {
+  mpe.toolbar.backToTopBtn.onclick = ()=> {
+    mpe.previewElement.scrollTop = 0
+  }
+}
+
+/**
  * init contextmenu
  * check markdown-preview-enhanced-view.ts
  * reference: http://jsfiddle.net/w33z4bo0/1/
@@ -257,6 +267,7 @@ function initContextMenu() {
     items: {
       "open_in_browser": {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
       "sep1": "---------",
+      "html_export": {name: "HTML"},
       "prince_export": {name: "PDF (prince) (not done)"},
       "ebook_export": {
         name: "eBook (not done)",
