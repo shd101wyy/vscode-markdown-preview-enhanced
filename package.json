@@ -47,8 +47,13 @@
                     "type": "boolean"
                 },
                 "markdown-preview-enhanced.scrollSync": {
-                    "description": "Automatic scroll sync. This is now partially done.",
+                    "description": "Automatic scroll sync. This is now partially supported.",
                     "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": {
+                    "description": "Automatically show preview of markdown being edited",
+                    "default": false,
                     "type": "boolean"
                 },
                 "markdown-preview-enhanced.enableTypographer": {
