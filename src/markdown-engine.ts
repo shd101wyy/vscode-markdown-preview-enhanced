@@ -16,6 +16,7 @@ import {scopeForLanguageName} from "./extension-helper"
 import {fileImport} from "./file-import"
 import {toc} from "./toc"
 import {CustomSubjects} from "./custom-subjects"
+import {princeConvert} from "./prince-convert"
 
 const extensionDirectoryPath = getExtensionDirectoryPath()
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
@@ -50,7 +51,6 @@ interface MarkdownEngineOutput {
 }
 
 interface HTMLTemplateOption {
-  useRelativeImagePath: boolean
   isForPrint: boolean
   isForPrince: boolean
   offline: boolean
@@ -585,7 +585,7 @@ export class MarkdownEngine {
     this.parseMD(this.cachedInputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
     .then(({html, yamlConfig})=> {
       this.generateHTMLFromTemplate(html, yamlConfig, 
-                                    {useRelativeImagePath: false, isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )
+                                    {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )
       .then((html)=> {      
         // create temp file
 
@@ -627,7 +627,6 @@ export class MarkdownEngine {
       dest = dest.replace(new RegExp(extname+'$'), '.html')
 
       this.generateHTMLFromTemplate(html, yamlConfig, {
-          useRelativeImagePath:true, 
           isForPrint: false, 
           isForPrince: false,
           embedLocalImages: false,  // TODO
@@ -656,6 +655,49 @@ export class MarkdownEngine {
         })
       })
     })
+  }
+
+  /**
+   * prince pdf file export
+   */
+  public princeExport() {
+    this.parseMD(this.cachedInputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+    .then(({html, yamlConfig})=> {
+      let dest = this.filePath
+      let extname = path.extname(dest) 
+      dest = dest.replace(new RegExp(extname+'$'), '.pdf')
+
+      this.generateHTMLFromTemplate(html, yamlConfig, {
+          isForPrint: true, 
+          isForPrince: true,
+          embedLocalImages: false, 
+          offline: true
+      }).then((html)=> {
+        temp.open({prefix: 'markdown-preview-enhanced', suffix: '.html'}, (error, info)=> {
+          if (error) return utility.showErrorMessage(error)
+          utility.writeFile(info.fd, html).then(()=> {
+            console.log(info.path)
+            if (yamlConfig['isPresentationMode']) {
+              const url = 'file://' + info.path + '?print-pdf'
+              utility.showSuccessMessage(`Please copy and open the link: { ${url.replace(/\_/g, '\\_')} } in Chrome then Print as Pdf.`)
+            } else {
+              princeConvert(info.path, dest, (error)=> {
+                if (error) return utility.showErrorMessage(error)
+                utility.showSuccessMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+
+                //  open pdf
+                // @openFile dest if atom.config.get('markdown-preview-enhanced.pdfOpenAutomatically')
+                utility.openFile(dest)
+              })
+            }
+          })
+          .catch((error)=> {
+            utility.showErrorMessage(error)
+          })
+        })  
+      })
+    })
+
   }
 
   /**
@@ -1184,7 +1226,7 @@ export class MarkdownEngine {
             } else {
               html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeImagePath)
             }
-            if (yamlConfig) yamlConfig.isPresentationMode = true // mark as presentation mode
+            if (yamlConfig) yamlConfig['isPresentationMode'] = true // mark as presentation mode
           }
 
           this.cachedHTML = html // save to cache

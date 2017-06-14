@@ -290,7 +290,13 @@ function initContextMenu() {
           window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.saveAsHTML?${JSON.stringify([sourceUri])}`}, 'file://') 
         }
       },
-      "prince_export": {name: "PDF (prince) (not done)"},
+      "prince_export": 
+      {
+        name: "PDF (prince)",
+        callback: ()=> {
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.princeExport?${JSON.stringify([sourceUri])}`}, 'file://') 
+        }
+      },
       "ebook_export": {
         name: "eBook (not done)",
         items: {
