@@ -51,11 +51,6 @@
                     "default": true,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": {
-                    "description": "Automatically show preview of markdown being edited",
-                    "default": false,
-                    "type": "boolean"
-                },
                 "markdown-preview-enhanced.enableTypographer": {
                     "description": "Enable smartypants and other sweet transforms.",
                     "default": false,

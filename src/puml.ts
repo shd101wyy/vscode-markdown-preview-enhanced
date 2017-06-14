@@ -97,7 +97,7 @@ export async function render(content:string, fileDirectoryPath:string=""):Promis
 
   let startMatch;
   if (startMatch = content.match(/^\@start(.+?)\s+/m)) {
-    if (content.match(new RegExp("^\\@end#{startMatch[1]}", 'm')))
+    if (content.match(new RegExp(`^\\@end${startMatch[1]}`, 'm')))
       null // do nothing
     else
       content = "@startuml\n@enduml" // error

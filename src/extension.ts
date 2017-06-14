@@ -102,6 +102,7 @@ export function activate(context: vscode.ExtensionContext) {
 	 * Open preview automatically if the `automaticallyShowPreviewOfMarkdownBeingEdited` is on.  
 	 * @param textEditor 
 	 */
+	/*
 	function openPreviewAutomatically(textEditor:vscode.TextEditor) {
 		if (!textEditor) return 
 
@@ -129,7 +130,7 @@ export function activate(context: vscode.ExtensionContext) {
 		openPreviewAutomatically(textEditor)
 	}))
 
-	/*
+	
 	context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(textEditors=> {
 		// console.log('onDidChangeonDidChangeVisibleTextEditors ', textEditors)
 	}))
