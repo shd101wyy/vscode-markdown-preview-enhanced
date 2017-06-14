@@ -432,7 +432,7 @@ export class MarkdownEngine {
    * @param yamlConfig: this is the front matter.
    * @param option: HTMLTemplateOption
    */
-  public async generateHTMLFromTemplate(html, yamlConfig={}, options:HTMLTemplateOption):Promise<string> {
+  public async generateHTMLFromTemplate(html:string, yamlConfig={}, options:HTMLTemplateOption):Promise<string> {
       // get `id` and `class`
       const elementId = yamlConfig['id'] || ''
       let elementClass = yamlConfig['class'] || []
@@ -508,14 +508,14 @@ export class MarkdownEngine {
         }
 
         let presentationConfig = yamlConfig['presentation'] || {}
-        let dependencies = presentationConfig.dependencies || []
+        let dependencies = presentationConfig['dependencies'] || []
         if (presentationConfig['enableSpeakerNotes']) {
           if (options.offline)
-            dependencies.push({src: path.resolve(__dirname, '../dependencies/reveal/plugin/notes/notes.js'), async: true})
+            dependencies.push({src: path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js'), async: true})
           else
             dependencies.push({src: 'revealjs_deps/notes.js', async: true}) // TODO: copy notes.js file to corresponding folder
         }
-        presentationConfig.dependencies = dependencies
+        presentationConfig['dependencies'] = dependencies
 
         presentationStyle = `
         <style>
@@ -610,6 +610,59 @@ export class MarkdownEngine {
     })
   }
 
+  /**
+   * 
+   * @param filePath 
+   */
+  public saveAsHTML() {
+    this.parseMD(this.cachedInputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
+    .then(({html, yamlConfig})=> {
+      const htmlConfig = yamlConfig['html'] || {}
+      let cdn = htmlConfig['cdn'],
+          offline = !cdn
+      let embedLocalImages = htmlConfig['embed_local_images']
+      
+      let dest = this.filePath
+      let extname = path.extname(dest) 
+      dest = dest.replace(new RegExp(extname+'$'), '.html')
+
+      this.generateHTMLFromTemplate(html, yamlConfig, {
+          useRelativeImagePath:true, 
+          isForPrint: false, 
+          isForPrince: false,
+          embedLocalImages: false,  // TODO
+          offline: !cdn
+      }).then((html)=> {
+        const htmlFileName = path.basename(dest)
+
+        // presentation speaker notes
+        // copy dependency files
+        
+        if (!offline && html.indexOf('[{"src":"revealjs_deps/notes.js","async":true}]') >= 0) {
+          const depsDirName = path.resolve(path.dirname(dest), 'revealjs_deps')
+          if (!fs.existsSync(depsDirName)) {
+            fs.mkdirSync(depsDirName)
+          }
+          fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.js')))
+          fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.html')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.html')))
+        }
+
+        utility.writeFile(dest, html)
+        .then(()=> {
+          utility.showSuccessMessage(`File ${htmlFileName} was created at path: ${dest}`)
+        })
+        .catch((error)=> {
+          utility.showErrorMessage(error)
+        })
+      })
+    })
+  }
+
+  /**
+   * 
+   * @param filePath 
+   * @param relative: whether to use the path relative to filePath or not.  
+   */
   private resolveFilePath(filePath='', relative=false) {
     if (  filePath.match(this.protocolsWhiteListRegExp) ||
           filePath.startsWith('data:image/') ||
@@ -676,7 +729,7 @@ export class MarkdownEngine {
       const checksum = md5(code)
       let svg = this.graphsCache[checksum]
       if (!svg) {
-        if (!viz) viz = require(path.resolve(__dirname, '../../dependencies/viz/viz.js'))
+        if (!viz) viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
         
         try {
           let engine = parameters.engine || "dot"

@@ -284,7 +284,12 @@ function initContextMenu() {
         } 
       },
       "sep1": "---------",
-      "html_export": {name: "HTML (not done)"},
+      "html_export": {
+        name: "HTML",
+        callback: ()=> {
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.saveAsHTML?${JSON.stringify([sourceUri])}`}, 'file://') 
+        }
+      },
       "prince_export": {name: "PDF (prince) (not done)"},
       "ebook_export": {
         name: "eBook (not done)",

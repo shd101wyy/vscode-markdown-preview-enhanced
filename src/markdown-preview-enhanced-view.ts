@@ -250,6 +250,13 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     }
   }
 
+  public saveAsHTML(sourceUri: Uri) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.saveAsHTML()
+    }
+  }
+
   public cacheSVG(sourceUri: Uri, code:string, svg:string) {
     const engine = this.getEngine(sourceUri)
     if (engine) {

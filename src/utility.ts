@@ -46,6 +46,15 @@ export function readFile(filePath):Promise<string> {
   })
 }
 
+export function writeFile(filePath, data):Promise<string> {
+  return new Promise((resolve, reject)=> {
+    fs.writeFile(filePath, data, {encoding: 'utf-8'}, (error)=> {
+      if (error) return reject(error.toString())
+      else return resolve()
+    })
+  }) 
+}
+
 /**
  * Display error messages
  * @param msg 
@@ -53,6 +62,11 @@ export function readFile(filePath):Promise<string> {
 export function showErrorMessage(msg) {
   vscode.window.showErrorMessage(msg)
 }
+
+export function showSuccessMessage(msg) {
+  vscode.window.showInformationMessage(msg)
+}
+
 
 /**
  * open html file in browser or open pdf file in reader ... etc
