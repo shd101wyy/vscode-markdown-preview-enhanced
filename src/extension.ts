@@ -66,6 +66,11 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.openInBrowser(sourceUri)
 	}
 
+	function cacheSVG(uri, code, svg) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.cacheSVG(sourceUri, code, svg)
+	}
+
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {
 			const uri = getMarkdownUri(document.uri);
@@ -143,6 +148,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.openInBrowser', openInBrowser))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.webviewFinishLoading', webviewFinishLoading))
+
+  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheSVG', cacheSVG))
 
   context.subscriptions.push(contentProviderRegistration)
 }

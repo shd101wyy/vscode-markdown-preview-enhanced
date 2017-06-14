@@ -22,6 +22,7 @@ const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex
 const remarkable = require(path.resolve(extensionDirectoryPath, './dependencies/remarkable/remarkable.js'))
 const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
+const CryptoJS = require(path.resolve(extensionDirectoryPath, './dependencies/crypto-js/crypto-js.js'))
 
 // import * as uslug from "uslug"
 // import * as Prism from "prismjs"
@@ -128,6 +129,10 @@ export class MarkdownEngine {
     this.initConfig()
 
     this.md.set({breaks: this.breakOnSingleNewLine, typographer: this.enableTypographer})
+  }
+
+  public cacheSVG(code:string, svg:string) {
+    this.graphsCache[md5(code)] = CryptoJS.AES.decrypt(svg, 'markdown-preview-enhanced').toString(CryptoJS.enc.Utf8)
   }
 
   /**
@@ -487,21 +492,6 @@ export class MarkdownEngine {
         mathStyle = ''
       }
 
-      // mermaid 
-      let mermaidStyle = '',
-          mermaidScript = '',
-          mermaidInitScript = ''
-      if (html.indexOf('<div class="mermaid">') >= 0) {
-        mermaidStyle = await readFile(path.resolve(extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`))
-        mermaidStyle = `<style>${mermaidStyle}</style>`
-
-        if (options.offline) {
-          mermaidScript = `<script type="text/javascript" src="file://${path.resolve(extensionDirectoryPath, './dependencies/mermaid/mermaid.min.js')}"></script>`
-        } else {
-          mermaidScript = '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/mermaid.min.js"></script>'
-        }
-      }
-
       // presentation
       let presentationScript = '',
           presentationStyle = '',
@@ -573,10 +563,8 @@ export class MarkdownEngine {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         ${presentationStyle}
         ${mathStyle}
-        ${mermaidStyle}
 
         ${presentationScript}
-        ${mermaidScript}
 
         <style> ${styleCSS} </style>
       </head>
@@ -584,7 +572,6 @@ export class MarkdownEngine {
       ${html}
       </body>
       ${presentationInitScript}
-      ${mermaidInitScript}
     </html>
       `
 
@@ -677,7 +664,14 @@ export class MarkdownEngine {
       graphsCache[checksum] = svg // store to new cache 
 
     } else if (lang.match(/^mermaid$/)) { // mermaid 
-      $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
+      const checksum = md5(code) 
+      let svg:string = this.graphsCache[checksum]
+      if (!svg) {
+        $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
+      } else {
+        $preElement.replaceWith(svg)
+        graphsCache[checksum] = svg // store to new cache 
+      }
     } else if (lang.match(/^(dot|viz)$/)) { // GraphViz
       const checksum = md5(code)
       let svg = this.graphsCache[checksum]

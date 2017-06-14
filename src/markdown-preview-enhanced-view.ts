@@ -76,6 +76,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
       scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
 
+      // crpto-js
+      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/crypto-js/crypto-js.js')}"></script>`
     }
     
     return scripts
@@ -213,6 +215,14 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     const engine = this.engineMaps[fsPath]
     if (engine) {
       engine.openInBrowser()
+    }
+  }
+
+  public cacheSVG(sourceUri: Uri, code:string, svg:string) {
+    const fsPath = sourceUri.fsPath
+    const engine = this.engineMaps[fsPath]
+    if (engine) {
+      engine.cacheSVG(code, svg)
     }
   }
 

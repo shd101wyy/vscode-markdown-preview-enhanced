@@ -321,14 +321,18 @@ function renderMermaid() {
     const mermaidGraphs = mpe.hiddenPreviewElement.getElementsByClassName('mermaid')
 
     const validMermaidGraphs = []
+    const mermaidCodes = []
     for (let i = 0; i < mermaidGraphs.length; i++) {
       const mermaidGraph = mermaidGraphs[i] as HTMLElement
+      if (mermaidGraph.getAttribute('data-processed') === 'true') continue 
+
       mermaid.parseError = function(err) {
         mermaidGraph.innerHTML = `<pre class="language-text">${err.toString()}</pre>`
       }
 
       if (mermaidAPI.parse(mermaidGraph.textContent)) {
         validMermaidGraphs.push(mermaidGraph)
+        mermaidCodes.push(mermaidGraph.textContent)
       }
     }
 
@@ -336,6 +340,18 @@ function renderMermaid() {
 
     mermaid.init(null, validMermaidGraphs, function(){
       resolve()
+
+      // send svg data
+      const CryptoJS = window["CryptoJS"]
+      validMermaidGraphs.forEach((mermaidGraph, offset)=> {
+        const code = mermaidCodes[offset],
+              svg = CryptoJS.AES.encrypt(mermaidGraph.outerHTML, "markdown-preview-enhanced").toString()
+
+        window.parent.postMessage({ 
+          command: 'did-click-link', // <= this has to be `did-click-link` to post message
+          data: `command:_markdown-preview-enhanced.cacheSVG?${JSON.stringify([sourceUri, code, svg])}`
+        }, 'file://')
+      })
     })
   })
 }
@@ -619,12 +635,10 @@ function scrollSyncToSlide(line:number) {
   }
   
   const slideElement:HTMLElement = mpe.previewElement.querySelector(`.slide[data-offset="${i}"]`) as HTMLElement
-  console.log(slideElement)
   if (!slideElement) {
     mpe.previewElement.scrollTop = 0
   } else {
     const firstSlide = mpe.previewElement.querySelector('.slide[data-offset="0"]') as HTMLElement
-    console.log(firstSlide.offsetHeight)
     // set slide to middle of preview
     mpe.previewElement.scrollTop = -mpe.previewElement.offsetHeight/2 + (slideElement.offsetTop + slideElement.offsetHeight/2)*mpe.presentationZoom
 
