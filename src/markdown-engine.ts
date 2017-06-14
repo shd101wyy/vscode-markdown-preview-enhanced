@@ -487,6 +487,21 @@ export class MarkdownEngine {
         mathStyle = ''
       }
 
+      // mermaid 
+      let mermaidStyle = '',
+          mermaidScript = '',
+          mermaidInitScript = ''
+      if (html.indexOf('<div class="mermaid">') >= 0) {
+        mermaidStyle = await readFile(path.resolve(extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`))
+        mermaidStyle = `<style>${mermaidStyle}</style>`
+
+        if (options.offline) {
+          mermaidScript = `<script type="text/javascript" src="file://${path.resolve(extensionDirectoryPath, './dependencies/mermaid/mermaid.min.js')}"></script>`
+        } else {
+          mermaidScript = '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/mermaid.min.js"></script>'
+        }
+      }
+
       // presentation
       let presentationScript = '',
           presentationStyle = '',
@@ -558,13 +573,18 @@ export class MarkdownEngine {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         ${presentationStyle}
         ${mathStyle}
+        ${mermaidStyle}
+
         ${presentationScript}
+        ${mermaidScript}
+
         <style> ${styleCSS} </style>
       </head>
       <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
       ${html}
       </body>
       ${presentationInitScript}
+      ${mermaidInitScript}
     </html>
       `
 
