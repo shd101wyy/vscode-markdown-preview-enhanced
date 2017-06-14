@@ -662,13 +662,16 @@ export class MarkdownEngine {
               tokens[idx + 1].children[0].content = heading
 
               try {
-                let opt = jsonic(optMatch[1])
+                let opt = jsonic(optMatch[0].trim())
                 
                 classes = opt.class,
                 id = opt.id,
                 ignore = opt.ignore 
               } catch(e) {
                 heading = "ParameterError: " + optMatch[1]
+
+                tokens[idx + 1].content = heading
+                tokens[idx + 1].children[0].content = heading
               }
             }
 
@@ -728,7 +731,7 @@ export class MarkdownEngine {
         /**
          * render tocHTML
          */
-        if (headingsChanged) {
+        if (headingsChanged || headings.length !== this.headings.length) {
           const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
           this.tocHTML = this.md.render(tocObject.content)
         }
