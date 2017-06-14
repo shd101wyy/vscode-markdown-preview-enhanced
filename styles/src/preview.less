@@ -23,7 +23,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-
     .btn {
         display: inline-block;
         color: #99aeb8;
@@ -47,7 +46,6 @@
         z-index: 0;
         -webkit-user-select: none;
     }
-
     .refreshing-icon {
         display: none;
         position: absolute;
@@ -63,7 +61,6 @@
         z-index: 999;
         color: black;
     }
-
     .mpe-toolbar {
         position: absolute;
         top: 32px;
@@ -104,7 +101,6 @@
             font-size: 14px;
             box-shadow: -4px 0px 12px rgba(150, 150, 150, .33);
             box-sizing: border-box;
-
             a {
                 color: @fg;
                 text-decoration: none;
@@ -133,4 +129,71 @@
         // .scrollbar-style();
     }
     */
+    .markdown-preview-enhanced[for="preview"] {
+        width: 100%;
+        height: 100%;
+        margin: 0; // z-index: 999;
+        overflow: auto;
+        font-size: 16px;
+        display: block;
+        position: absolute;
+    }
+    /*
+    * Reveal.js styles
+    */
+    .markdown-preview-enhanced[data-presentation-preview-mode] {
+        background-color: #f4f4f4;
+        
+        #preview-slides {
+            width: 100%;
+            .slide {
+                position: relative;
+                background-color: @bg; //width: 100%; # need to be set later
+                //height: 100%;
+                padding: 2em !important;
+                margin-bottom: 12px;
+                text-align: left !important;
+                display: flex;
+                align-items: center;
+                border: 1px solid #e6e6e6;
+                box-shadow: 0px 0px 16px 4px #eeeeee;
+                font-size: 24px;
+                h1,
+                h2,
+                h3,
+                h4,
+                h5,
+                h6 {
+                    margin-top: 0;
+                }
+                .background-video {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                }
+                .background-iframe,
+                .background-iframe-overlay {
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    left: 0;
+                    top: 0;
+                    border: none;
+                    z-index: 1;
+                }
+                .background-iframe-overlay {
+                    z-index: 2;
+                }
+            }
+        }
+        section {
+            display: block;
+            width: 100%;
+            transform-style: preserve-3d;
+            font-size: 100%;
+            font: inherit; // z-index: 100;
+        }
+    }
 }

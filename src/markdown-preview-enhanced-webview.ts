@@ -37,6 +37,11 @@ interface Toolbar {
 
 interface MarkdownPreviewEnhancedPreview {
  /**
+   * whether finished loading preview
+   */
+  doneLoadingPreview: boolean
+
+ /**
   * .markdown-preview-enhanced-container element 
   */
   containerElement: HTMLElement,
@@ -110,7 +115,12 @@ interface MarkdownPreviewEnhancedPreview {
   /**
    * zoom of the presentation
    */
-  presentationZoom: 1
+  presentationZoom: number
+
+  /**
+   * track the buffer line number of slides
+   */
+  slideBufferLineNumbers: Array<number>
 
   /**
    * setTimeout value
@@ -166,6 +176,7 @@ function onLoad() {
 
   /** init mpe object */
   mpe = {
+    doneLoadingPreview: false,
     containerElement: document.body,
     previewElement,
     hiddenPreviewElement,
@@ -177,6 +188,7 @@ function onLoad() {
     scrollTimeout: null,
     presentationZoom: 1,
     presentationMode: false,
+    slideBufferLineNumbers: [],
     toolbar: {
       toolbar: document.getElementsByClassName('mpe-toolbar')[0] as HTMLElement,
       backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
@@ -216,6 +228,7 @@ function initToolbarEvent() {
     mpe.previewElement.onmouseleave = ()=> toolbarElement.style.opacity = "0"
 
     initSideBarTOCButton()
+    initBackToTopButton()
 
     return toolbar
 }
@@ -247,6 +260,15 @@ function initSideBarTOCButton() {
 }
 
 /**
+ * init .back-to-top-btn
+ */
+function initBackToTopButton() {
+  mpe.toolbar.backToTopBtn.onclick = ()=> {
+    mpe.previewElement.scrollTop = 0
+  }
+}
+
+/**
  * init contextmenu
  * check markdown-preview-enhanced-view.ts
  * reference: http://jsfiddle.net/w33z4bo0/1/
@@ -255,8 +277,14 @@ function initContextMenu() {
   $["contextMenu"]({
     selector: '.markdown-preview-enhanced-container',
     items: {
-      "open_in_browser": {name: "Open in Browser (not done)", callback: ()=>{ console.log('open in browser') } },
+      "open_in_browser": {
+        name: "Open in Browser", 
+        callback: ()=>{     
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.openInBrowser?${JSON.stringify([sourceUri])}`}, 'file://') 
+        } 
+      },
       "sep1": "---------",
+      "html_export": {name: "HTML (not done)"},
       "prince_export": {name: "PDF (prince) (not done)"},
       "ebook_export": {
         name: "eBook (not done)",
@@ -352,6 +380,29 @@ function renderSidebarTOC() {
 }
 
 /**
+ * zoom slides to fit screen
+ */
+function zoomSlidesToFitScreen(element:HTMLElement) {
+  const width = parseFloat(element.getAttribute('data-width')),
+        height = parseFloat(element.getAttribute('data-height'))
+  
+  // ratio = height / width * 100 + '%'
+  const desiredWidth = mpe.previewElement.offsetWidth - 200
+  const zoom = desiredWidth / width  // 100 is padding
+  
+  mpe.slideBufferLineNumbers = []
+
+  const slides = element.getElementsByClassName('slide') 
+  for (let i = 0; i < slides.length; i++) {
+    const slide = slides[i] as HTMLElement
+    slide.style.zoom = zoom.toString()
+
+    mpe.slideBufferLineNumbers.push(parseInt(slide.getAttribute('data-line')))
+  }
+  mpe.presentationZoom = zoom
+}
+
+/**
  * init several preview events
  */
 async function initEvents() {
@@ -383,7 +434,27 @@ function updateHTML(html) {
   mpe.previewScrollDelay = Date.now() + 500
 
   mpe.hiddenPreviewElement.innerHTML = html
-  initEvents()
+
+  let previewSlidesElement;
+  if ( previewSlidesElement = document.getElementById('preview-slides') ) {
+    mpe.previewElement.setAttribute('data-presentation-preview-mode', '')
+    mpe.presentationMode = true 
+    mpe.scrollMap = null
+    zoomSlidesToFitScreen(previewSlidesElement)
+  } else {
+    mpe.previewElement.removeAttribute('data-presentation-preview-mode')
+    mpe.presentationMode = false 
+  }
+
+  // init several events 
+  initEvents().then(()=> {
+    
+    // scroll to initial position 
+    if (!mpe.doneLoadingPreview) {
+      mpe.doneLoadingPreview = true
+      scrollToRevealSourceLine(config.initialLine)
+    }
+  })
 }
 
 /**
@@ -535,6 +606,32 @@ function setZoomLevel () {
 }
 
 /**
+ * scroll sync to display slide according `line`
+ * @param: line: the buffer row of editor
+ */
+function scrollSyncToSlide(line:number) {
+  let i = mpe.slideBufferLineNumbers.length - 1 
+  while (i >= 0) {
+    if (line >= mpe.slideBufferLineNumbers[i]) {
+      break
+    }
+    i -= 1
+  }
+  
+  const slideElement:HTMLElement = mpe.previewElement.querySelector(`.slide[data-offset="${i}"]`) as HTMLElement
+  console.log(slideElement)
+  if (!slideElement) {
+    mpe.previewElement.scrollTop = 0
+  } else {
+    const firstSlide = mpe.previewElement.querySelector('.slide[data-offset="0"]') as HTMLElement
+    console.log(firstSlide.offsetHeight)
+    // set slide to middle of preview
+    mpe.previewElement.scrollTop = -mpe.previewElement.offsetHeight/2 + (slideElement.offsetTop + slideElement.offsetHeight/2)*mpe.presentationZoom
+
+  }  
+}
+
+/**
  * scroll preview to match `line`
  * @param line: the buffer row of editor
  */
@@ -593,7 +690,7 @@ function scrollToPos(scrollTop) {
  * @param line 
  */
 function scrollToRevealSourceLine(line) {
-  if (!config.scrollSync || line == mpe.currentLine) {
+  if (!config.scrollSync || line === mpe.currentLine) {
     return 
   } else {
     mpe.currentLine = line
@@ -602,13 +699,24 @@ function scrollToRevealSourceLine(line) {
   // disable preview onscroll
   mpe.previewScrollDelay = Date.now() + 500
 
-  scrollSyncToLine(line)
+  if (mpe.presentationMode) {
+    scrollSyncToSlide(line)
+  } else {
+    scrollSyncToLine(line)
+  }
 }
 
 
 function resizeEvent() {
   // console.log('resize')
   mpe.scrollMap = null
+
+  /*
+  // nvm it doesn't work.  
+  if (this.presentationMode) { // zoom again 
+    zoomSlidesToFitScreen(document.getElementById('preview-slides'))
+  }
+  */
 }
 
 window.addEventListener('message', (event)=> {

@@ -7,6 +7,8 @@ import * as fs from "fs"
 // import * as temp from "temp"
 // temp.track()
 
+import {CustomSubjects} from "./custom-subjects"
+
 
 function createAnchor(lineNo) {
   return `\n\n<p data-line="${lineNo}" class="sync-line" style="margin:0;"></p>\n\n`
@@ -53,12 +55,12 @@ export function fileImport(inputString:string,
         if (line.match(/^(\#|\!\[|```[^`]|@import)/)) {
           outputString += createAnchor(lineNo)
         } else if (subjectMatch = line.match(/^\<!--\s+([^\s]+)/)) {
-          /*
+          
           let subject = subjectMatch[1]
-          if subjects[subject]
-            line = line.replace(subject, "#{subject} lineNo:#{lineNo} ")
+          if (subject in CustomSubjects) {
+            line = line.replace(subject, `${subject} lineNo:${lineNo} `)
             outputString += createAnchor(lineNo)
-          */
+          }
         }
       }
 

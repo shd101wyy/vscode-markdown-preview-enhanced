@@ -2,15 +2,20 @@ import * as path from "path"
 import * as fs from "fs"
 import * as cheerio from "cheerio"
 import * as uslug from "uslug"
+import * as temp from "temp"
+temp.track()
+
 const matter = require('gray-matter')
 
 import {MarkdownPreviewEnhancedConfig} from "./config"
 import * as plantumlAPI from "./puml"
-import {escapeString, unescapeString, getExtensionDirectoryPath} from "./utility"
+import {escapeString, unescapeString, getExtensionDirectoryPath, readFile} from "./utility"
+import * as utility from "./utility"
 let viz = null
 import {scopeForLanguageName} from "./extension-helper"
 import {fileImport} from "./file-import"
 import {toc} from "./toc"
+import {CustomSubjects} from "./custom-subjects"
 
 const extensionDirectoryPath = getExtensionDirectoryPath()
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
@@ -22,33 +27,33 @@ const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascr
 // import * as Prism from "prismjs"
 let Prism = null
 
-enum CustomSubjects {
-  pagebreak,
-  newpage,
-  toc,
-  tocstop,
-  slide,
-  ebook,
-  'toc-bracket'
-}
 
 interface MarkdownEngineConstructorArgs {
-  fileDirectoryPath: string,
+  filePath: string,
   projectDirectoryPath: string,
   config: MarkdownPreviewEnhancedConfig
 }
 
 interface MarkdownEngineRenderOption {
-  useRelativeImagePath?: boolean,
-  isForPreview?: boolean,
-  isForEbook?: boolean,
-  hideFrontMatter?: boolean
+  useRelativeImagePath: boolean,
+  isForPreview: boolean,
+  hideFrontMatter: boolean
 }
 
 interface MarkdownEngineOutput {
   html:string,
   markdown:string,
-  tocHTML:string
+  tocHTML:string,
+  yamlConfig: any,
+ // slideConfigs: Array<object>
+}
+
+interface HTMLTemplateOption {
+  useRelativeImagePath: boolean
+  isForPrint: boolean
+  isForPrince: boolean
+  offline: boolean
+  embedLocalImages: boolean
 }
 
 interface Heading {
@@ -68,6 +73,10 @@ const defaults = {
 }
 
 export class MarkdownEngine {
+  /**
+   * markdown file path 
+   */
+  private readonly filePath: string 
   private readonly fileDirectoryPath: string
   private readonly projectDirectoryPath: string
   private config: MarkdownPreviewEnhancedConfig
@@ -88,9 +97,11 @@ export class MarkdownEngine {
    * cachedHTML is the cache of html generated from the markdown file.  
    */
   private cachedHTML:string = '';
+  private cachedInputString:string = ''
 
   constructor(args:MarkdownEngineConstructorArgs) {
-    this.fileDirectoryPath = args.fileDirectoryPath
+    this.filePath = args.filePath
+    this.fileDirectoryPath = path.dirname(this.filePath)
     this.projectDirectoryPath = args.projectDirectoryPath || '/'
     this.config = args.config
     this.initConfig()
@@ -411,6 +422,226 @@ export class MarkdownEngine {
   }
 
   /**
+   * Generate HTML content
+   * @param html: this is the final content you want to put. 
+   * @param yamlConfig: this is the front matter.
+   * @param option: HTMLTemplateOption
+   */
+  public async generateHTMLFromTemplate(html, yamlConfig={}, options:HTMLTemplateOption):Promise<string> {
+      // get `id` and `class`
+      const elementId = yamlConfig['id'] || ''
+      let elementClass = yamlConfig['class'] || []
+      if (typeof(elementClass) == 'string')
+        elementClass = [elementClass]
+      elementClass = elementClass.join(' ')
+
+      // TODO: mermaid
+
+      // math style and script
+      let mathStyle = ''
+      if (this.config.mathRenderingOption === 'MathJax') {
+        const inline = this.config.mathInlineDelimiters
+        const block = this.config.mathBlockDelimiters
+
+        // TODO
+        const mathJaxConfig = {
+          extensions: ['tex2jax.js'],
+          jax: ['input/TeX','output/HTML-CSS'],
+          showMathMenu: false,
+          messageStyle: 'none',
+
+          tex2jax: {
+            inlineMath: this.config.mathInlineDelimiters,
+            displayMath: this.config.mathBlockDelimiters,
+            processEnvironments: false,
+            processEscapes: true,
+          },
+          TeX: {
+            extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
+          },
+          'HTML-CSS': { availableFonts: ['TeX'] },
+        }
+
+        if (options.offline) {
+          mathStyle = `
+          <script type="text/x-mathjax-config">
+            MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
+          </script>
+          <script type="text/javascript" async src="file://${path.resolve(extensionDirectoryPath, './dependencies/mathjax/MathJax.js')}"></script>
+          `
+        } else {
+          mathStyle = `
+          <script type="text/x-mathjax-config">
+            MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
+          </script>
+          <script type="text/javascript" async src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js"></script>
+          `
+        }
+      } else if (this.config.mathRenderingOption == 'KaTeX') {
+        if (options.offline) {
+          mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
+        } else {
+          mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
+        }
+      } else {
+        mathStyle = ''
+      }
+
+      // mermaid 
+      let mermaidStyle = '',
+          mermaidScript = '',
+          mermaidInitScript = ''
+      if (html.indexOf('<div class="mermaid">') >= 0) {
+        mermaidStyle = await readFile(path.resolve(extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`))
+        mermaidStyle = `<style>${mermaidStyle}</style>`
+
+        if (options.offline) {
+          mermaidScript = `<script type="text/javascript" src="file://${path.resolve(extensionDirectoryPath, './dependencies/mermaid/mermaid.min.js')}"></script>`
+        } else {
+          mermaidScript = '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/mermaid.min.js"></script>'
+        }
+      }
+
+      // presentation
+      let presentationScript = '',
+          presentationStyle = '',
+          presentationInitScript = ''
+      if (yamlConfig["isPresentationMode"]) {
+        if (options.offline) {
+          presentationScript = `
+          <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/lib/js/head.min.js')}'></script>
+          <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/js/reveal.js')}'></script>`
+        } else {
+          presentationScript = `
+          <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/lib/js/head.min.js'></script>
+          <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/js/reveal.min.js'></script>`
+        }
+
+        let presentationConfig = yamlConfig['presentation'] || {}
+        let dependencies = presentationConfig.dependencies || []
+        if (presentationConfig['enableSpeakerNotes']) {
+          if (options.offline)
+            dependencies.push({src: path.resolve(__dirname, '../dependencies/reveal/plugin/notes/notes.js'), async: true})
+          else
+            dependencies.push({src: 'revealjs_deps/notes.js', async: true}) // TODO: copy notes.js file to corresponding folder
+        }
+        presentationConfig.dependencies = dependencies
+
+        presentationStyle = `
+        <style>
+        ${fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/reveal.css'))}
+        ${options.isForPrint ? fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/pdf.css')) : ''}
+        </style>
+        `
+        presentationInitScript = `
+        <script>
+          Reveal.initialize(${JSON.stringify(Object.assign({margin: 0.1}, presentationConfig))})
+        </script>
+        `
+      }
+
+      // prince 
+      let princeClass = ""
+      if (options.isForPrince) {
+        princeClass = "prince"
+      }
+
+      let title = path.basename(this.filePath)
+      title = title.slice(0, title.length - path.extname(title).length) // remove '.md'
+
+      // prism and preview theme 
+      let styleCSS = ""
+      try{
+        const styles = await Promise.all([
+          // style template
+          readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css')),
+          // prism *.css
+          readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)),
+          // preview theme
+          readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`))
+        ])
+        styleCSS = styles.join('')
+      } catch(e) {
+        styleCSS = ''
+      }
+      html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${title}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        ${presentationStyle}
+        ${mathStyle}
+        ${mermaidStyle}
+
+        ${presentationScript}
+        ${mermaidScript}
+
+        <style> ${styleCSS} </style>
+      </head>
+      <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
+      ${html}
+      </body>
+      ${presentationInitScript}
+      ${mermaidInitScript}
+    </html>
+      `
+
+      return html
+  }
+
+  /**
+   * generate HTML file and open it in browser
+   */
+  public openInBrowser() {
+    this.parseMD(this.cachedInputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
+    .then(({html, yamlConfig})=> {
+      this.generateHTMLFromTemplate(html, yamlConfig, 
+                                    {useRelativeImagePath: false, isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )
+      .then((html)=> {      
+        // create temp file
+
+      temp.open({
+        prefix: 'markdown-preview-enhanced',
+        suffix: '.html'
+      }, (err, info)=> {
+        if (err) return utility.showErrorMessage(err.toString())
+        fs.write(info.fd, html, (err)=> {
+          if (err) return utility.showErrorMessage(err.toString())
+          /*
+          if isForPresentationPrint
+            url = 'file:///' + info.path + '?print-pdf'
+            atom.notifications.addInfo('Please copy and open the link below in Chrome.\nThen Right Click -> Print -> Save as Pdf.', dismissable: true, detail: url)
+          else
+          */
+          // open in browser
+          utility.openFile(info.path)
+        })
+      })
+      })
+    })
+  }
+
+  private resolveFilePath(filePath='', relative=false) {
+    if (  filePath.match(this.protocolsWhiteListRegExp) ||
+          filePath.startsWith('data:image/') ||
+          filePath[0] == '#') {
+      return filePath
+    } else if (filePath[0] == '/') {
+      if (relative)
+        return path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.'+filePath))
+      else
+        return 'file://'+path.resolve(this.projectDirectoryPath, '.'+filePath)
+    } else {
+      if (relative)
+        return filePath
+      else
+        return 'file://'+path.resolve(this.fileDirectoryPath, filePath)
+    }
+  }
+
+  /**
    * 
    * @param preElement the cheerio element
    * @param parameters is in the format of `lang {opt1:val1, opt2:val2}` or just `lang`       
@@ -493,19 +724,7 @@ export class MarkdownEngine {
       const img = $(imgElement)
       const src = img.attr(srcTag)
 
-      if (src &&
-        (!(src.match(this.protocolsWhiteListRegExp) ||
-          src.startsWith('data:image/') ||
-          src[0] == '#' ||
-          src[0] == '/'))) {
-        if (!options.useRelativeImagePath) 
-          img.attr(srcTag, 'file://'+path.resolve(this.fileDirectoryPath,  src))
-      } else if (src && src[0] === '/') { // absolute path
-        if (options.useRelativeImagePath)
-          img.attr(srcTag, path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.' + src)))
-        else
-          img.attr(srcTag, 'file://'+path.resolve(this.projectDirectoryPath, '.' + src))
-      }
+      img.attr(srcTag, this.resolveFilePath(src, options.useRelativeImagePath))
     })
 
     
@@ -620,9 +839,174 @@ export class MarkdownEngine {
     }
   }
 
+  /**
+   * Parse `html` to generate slides
+   * @param html 
+   * @param slideConfigs 
+   * @param yamlConfig 
+   */
+  private parseSlides(html:string, slideConfigs:Array<object>, yamlConfig) {
+    let slides = html.split('<span class="new-slide"></span>')
+    
+    let output = ''
+    let width = 960,
+        height = 700
+
+    let presentationConfig = {}
+    if (yamlConfig && yamlConfig['presentation']) {
+      presentationConfig = yamlConfig['presentation']
+      width = presentationConfig['width'] || 960
+      height = presentationConfig['height'] || 700
+    }
+
+
+    slides.forEach((slide, offset)=> {
+      if (!offset) {  // first part of html before the first <!-- slide -->
+        return output += `<div style='display: none;'>${slide}</div>`
+      }
+      offset = offset - 1
+      const slideConfig = slideConfigs[offset] || {}
+      let styleString = '',
+          videoString = '',
+          iframeString = '',
+          classString = slideConfig['class'] || '',
+          idString = slideConfig['id'] ? `id="${slideConfig['id']}"` : ''
+      if (slideConfig['data-background-image']) {
+        styleString += `background-image: url('${this.resolveFilePath(slideConfig['data-background-image'])}');`
+
+        if (slideConfig['data-background-size'])
+          styleString += `background-size: ${slideConfig['data-background-size']};`
+        else
+          styleString += "background-size: cover;"
+
+        if (slideConfig['data-background-position'])
+          styleString += `background-position: ${slideConfig['data-background-position']};`
+        else
+          styleString += "background-position: center;"
+
+        if (slideConfig['data-background-repeat'])
+          styleString += `background-repeat: ${slideConfig['data-background-repeat']};`
+        else
+          styleString += "background-repeat: no-repeat;"
+      } else if (slideConfig['data-background-color']) {
+        styleString += `background-color: ${slideConfig['data-background-color']} !important;`
+      } else if (slideConfig['data-background-video']) {
+        const videoMuted = slideConfig['data-background-video-muted']
+        const videoLoop = slideConfig['data-background-video-loop']
+
+        const muted_ = videoMuted ? 'muted' : ''
+        const loop_ = videoLoop ? 'loop' : ''
+
+        videoString = `
+        <video ${muted_} ${loop_} playsinline autoplay class="background-video" src="${this.resolveFilePath(slideConfig['data-background-video'])}">
+        </video>
+        `
+      } else if (slideConfig['data-background-iframe']) {
+        iframeString = `
+        <iframe class="background-iframe" src="${this.resolveFilePath(slideConfig['data-background-iframe'])}" frameborder="0" > </iframe>
+        <div class="background-iframe-overlay"></div>
+        `
+      }
+
+      output += `
+        <div class='slide ${classString}' ${idString} data-line="${slideConfig['lineNo']}" data-offset='${offset}' style="width: ${width}px; height: ${height}px; ${styleString}">
+          ${videoString}
+          ${iframeString}
+          <section>${slide}</section>
+        </div>
+      `
+    })
+
+    // remove <aside class="notes"> ... </aside>
+    output = output.replace(/(<aside\b[^>]*>)[^<>]*(<\/aside>)/ig, '')
+
+    return `
+    <div id="preview-slides" data-width="${width}" data-height="${height}">
+      ${output}
+    </div>
+    `
+  }
+
+  private parseSlidesForExport(html:string, slideConfigs:Array<object>, useRelativeImagePath:boolean) {
+    let slides = html.split('<span class="new-slide"></span>')
+    let before = slides[0]
+    slides = slides.slice(1)
+
+    let output = ''
+
+    const parseAttrString = (slideConfig)=> {
+      let attrString = ''
+
+      if (slideConfig['data-background-image'])
+        attrString += ` data-background-image='${this.resolveFilePath(slideConfig['data-background-image'], useRelativeImagePath)}'`
+
+      if (slideConfig['data-background-size'])
+        attrString += ` data-background-size='${slideConfig['data-background-size']}'`
+
+      if (slideConfig['data-background-position'])
+        attrString += ` data-background-position='${slideConfig['data-background-position']}'`
+
+      if (slideConfig['data-background-repeat'])
+        attrString += ` data-background-repeat='${slideConfig['data-background-repeat']}'`
+
+      if (slideConfig['data-background-color'])
+        attrString += ` data-background-color='${slideConfig['data-background-color']}'`
+
+      if (slideConfig['data-notes'])
+        attrString += ` data-notes='${slideConfig['data-notes']}'`
+
+      if (slideConfig['data-background-video'])
+        attrString += ` data-background-video='${this.resolveFilePath(slideConfig['data-background-video'], useRelativeImagePath)}'`
+
+      if (slideConfig['data-background-video-loop'])
+        attrString += ` data-background-video-loop`
+
+      if (slideConfig['data-background-video-muted'])
+        attrString += ` data-background-video-muted`
+
+      if (slideConfig['data-transition'])
+        attrString += ` data-transition='${slideConfig['data-transition']}'`
+
+      if (slideConfig['data-background-iframe'])
+        attrString += ` data-background-iframe='${this.resolveFilePath(slideConfig['data-background-iframe'], useRelativeImagePath)}'`
+      
+      return attrString
+    }
+
+    let i = 0
+    while (i < slides.length) { 
+      const slide = slides[i] 
+      const slideConfig = slideConfigs[i]
+      const attrString = parseAttrString(slideConfig)
+      const classString = slideConfig['class'] || ''
+      const idString = slideConfig['id'] ? `id="${slideConfig['id']}"` : ''
+
+      if (!slideConfig['vertical']) {
+        if (i > 0 && slideConfigs[i-1]['vertical']) // end of vertical slides
+          output += '</section>'
+        if (i < slides.length - 1 && slideConfigs[i+1]['vertical']) // start of vertical slides
+          output += "<section>"
+      }
+
+      output += `<section ${attrString} ${idString} class=\"${classString}\">${slide}</section>`
+      i += 1
+    }
+    if (i > 0 && slideConfigs[i-1]['vertical']) // end of vertical slides
+      output += "</section>"
+
+    return `
+    <div style="display:none;">${before}</div>
+    <div class="reveal">
+      <div class="slides">
+        ${output}
+      </div>
+    </div>
+    `
+  }
 
   public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
     return new Promise((resolve, reject)=> {
+      this.cachedInputString = inputString // save to cache
 
       // process front-matter
       const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
@@ -636,7 +1020,7 @@ export class MarkdownEngine {
 
         const tocTable:{[key:string]:number} = {},
               headings:Array<Heading> = [],
-              slideConfigs = []
+              slideConfigs:Array<object> = []
         let tocBracketEnabled:boolean = false
         /**
          * flag for checking whether there is change in headings.
@@ -662,13 +1046,16 @@ export class MarkdownEngine {
               tokens[idx + 1].children[0].content = heading
 
               try {
-                let opt = jsonic(optMatch[1])
+                let opt = jsonic(optMatch[0].trim())
                 
                 classes = opt.class,
                 id = opt.id,
                 ignore = opt.ignore 
               } catch(e) {
                 heading = "ParameterError: " + optMatch[1]
+
+                tokens[idx + 1].content = heading
+                tokens[idx + 1].children[0].content = heading
               }
             }
 
@@ -728,7 +1115,7 @@ export class MarkdownEngine {
         /**
          * render tocHTML
          */
-        if (headingsChanged) {
+        if (headingsChanged || headings.length !== this.headings.length) {
           const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
           this.tocHTML = this.md.render(tocObject.content)
         }
@@ -739,8 +1126,22 @@ export class MarkdownEngine {
         }
       
         return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
-          this.cachedHTML = html
-          return resolve({html: frontMatterTable+html, markdown:inputString, tocHTML: this.tocHTML})
+          html = frontMatterTable + html
+
+          /**
+           * check slides
+           */
+          if (slideConfigs.length) {
+            if (options.isForPreview) {
+              html = this.parseSlides(html, slideConfigs, yamlConfig)
+            } else {
+              html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeImagePath)
+            }
+            if (yamlConfig) yamlConfig.isPresentationMode = true // mark as presentation mode
+          }
+
+          this.cachedHTML = html // save to cache
+          return resolve({html, markdown:inputString, tocHTML: this.tocHTML, yamlConfig})
         })
       })
     })

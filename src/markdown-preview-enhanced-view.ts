@@ -121,6 +121,12 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 		const sourceUri = vscode.Uri.parse(uri.query)
     // console.log(sourceUri, uri, vscode.workspace.rootPath)
 
+		let initialLine: number | undefined = undefined;
+		const editor = vscode.window.activeTextEditor;
+		if (editor && editor.document.uri.fsPath === sourceUri.fsPath) {
+			initialLine = editor.selection.active.line;
+		}
+
     return vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
 
@@ -136,7 +142,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       if (!engine) {
         engine = new MarkdownEngine(
           {
-            fileDirectoryPath: path.dirname(sourceUri.fsPath),
+            filePath: sourceUri.fsPath,
             projectDirectoryPath: vscode.workspace.rootPath,
             config: this.config
           })
@@ -150,6 +156,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       const config = Object.assign({}, this.config, {
 				previewUri: uri.toString(),
 				sourceUri: sourceUri.toString(),
+        initialLine: initialLine
       })
 
       return `<!DOCTYPE html>
@@ -187,7 +194,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
-      engine.parseMD(text, {isForPreview: true}).then(({markdown, html, tocHTML})=> {
+      engine.parseMD(text, {isForPreview: true, useRelativeImagePath: false, hideFrontMatter: false}).then(({markdown, html, tocHTML})=> {
         vscode.commands.executeCommand(
           '_workbench.htmlPreview.postMessage',
           uri,
@@ -201,6 +208,13 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     })
   }
 
+  public openInBrowser(sourceUri: Uri) {
+    const fsPath = sourceUri.fsPath
+    const engine = this.engineMaps[fsPath]
+    if (engine) {
+      engine.openInBrowser()
+    }
+  }
 
   get onDidChange(): Event<Uri> {
     return this._onDidChange.event

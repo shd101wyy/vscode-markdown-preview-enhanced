@@ -1,4 +1,8 @@
 import * as path from "path"
+import * as fs from "fs"
+import * as vscode from "vscode"
+import {exec} from "child_process"
+
 
 export function getExtensionDirectoryPath() {
   return path.resolve(__dirname, "../../") // 
@@ -31,4 +35,37 @@ export function escapeString(str:string):string {
 
 export function unescapeString(str:string):string {
   return str.replace(/\&(amp|lt|gt|quot|apos|\#x27|\#x2F|\#x5C)\;/g, (whole)=> (TAGS_TO_REPLACE_REVERSE[whole] || whole))
+}
+
+export function readFile(filePath):Promise<string> {
+  return new Promise<string>((resolve, reject)=> {
+    fs.readFile(filePath, {encoding: 'utf-8'}, (error, data)=> {
+      if (error) return reject(error.toString())
+      else return resolve(data)
+    })
+  })
+}
+
+/**
+ * Display error messages
+ * @param msg 
+ */
+export function showErrorMessage(msg) {
+  vscode.window.showErrorMessage(msg)
+}
+
+/**
+ * open html file in browser or open pdf file in reader ... etc
+ * @param filePath 
+ */
+export function openFile(filePath) {
+  let cmd 
+  if (process.platform === 'win32')
+    cmd = 'explorer'
+  else if (process.platform === 'darwin')
+    cmd = 'open'
+  else
+    cmd = 'xdg-open'
+  
+  exec(`${cmd} ${filePath}`)
 }
