@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 import * as path from 'path'
-import {MarkdownPreviewEnhancedView, getMarkdownUri, isMarkdownFile} from './markdown-preview-enhanced-view'
+import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview} from './markdown-preview-enhanced-view'
 
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
@@ -42,24 +42,25 @@ export function activate(context: vscode.ExtensionContext) {
 
 		}
 		*/
-		const markdownURI = getMarkdownUri(resource)
+		const previewUri = getPreviewUri(resource)
 		return vscode.commands.executeCommand(
 			'vscode.previewHtml', 
-			markdownURI, 
+			previewUri, 
 			vscode.ViewColumn.Two, 
-			`Preview '${path.basename(resource.fsPath)}'`)
+			useSinglePreview() ? 'MPE Preview' : `Preview '${path.basename(resource.fsPath)}'`)
 		.then((success)=> {
-			// contentProvider.update(markdownURI)
+			// contentProvider.update(previewUri)
 			// the line above is changed to webviewFinishLoading function.
 		}, (reason)=> {
 			vscode.window.showErrorMessage(reason)
 		})
 	}
 
-	function webviewFinishLoading(previewUri) {
-		contentProvider.update(vscode.Uri.parse(previewUri))
+	function webviewFinishLoading(sourceUri) {
+		sourceUri = vscode.Uri.parse(sourceUri)
+		contentProvider.initMarkdownEngine(sourceUri)
+		contentProvider.update(sourceUri)
 	}
-
 
 	function openInBrowser(uri) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
@@ -73,15 +74,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {
-			const uri = getMarkdownUri(document.uri);
-			contentProvider.update(uri);
+			contentProvider.update(document.uri);
 		}
 	}))
 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
 		if (isMarkdownFile(event.document)) {
-			const uri = getMarkdownUri(event.document.uri);
-			contentProvider.update(uri);
+			contentProvider.update(event.document.uri);
 		}
 	}))
 
@@ -91,11 +90,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(event => {
 		if (isMarkdownFile(event.textEditor.document)) {
-			const markdownFile = getMarkdownUri(event.textEditor.document.uri);
+			const previewUri = getPreviewUri(event.textEditor.document.uri);
 			// logger.log('updatePreviewForSelection', { markdownFile: markdownFile.toString() });
       // console.log('onDidChangeTextEditorSelection', markdownFile)
       vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
-        markdownFile,
+        previewUri,
         {
           type: 'change-text-editor-selection',
           line: event.selections[0].active.line
@@ -107,6 +106,39 @@ export function activate(context: vscode.ExtensionContext) {
 	 * Open preview automatically if the `automaticallyShowPreviewOfMarkdownBeingEdited` is on.  
 	 * @param textEditor 
 	 */
+	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((textEditor)=> {
+		if (textEditor && textEditor.document && textEditor.document.uri) {
+			// console.log('onDidChangeActiveTextEditor', textEditor.document.uri)
+			if (isMarkdownFile(textEditor.document)) {
+				const sourceUri = textEditor.document.uri
+				/**
+				 * Is using single preview and the preview is on.
+				 * When we switched text editor, update preview to that text editor.
+				 */
+				if (useSinglePreview() && contentProvider.isPreviewOn(sourceUri)) { 
+					contentProvider.initMarkdownEngine(sourceUri)
+					contentProvider.updateMarkdown(sourceUri)
+				}
+			}
+		} else {
+			// console.log('onDidChangeActiveTextEditor', ' preview', textEditor)
+		}
+	}))
+
+	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(textDocument=> {
+		// console.log('onDidCloseTextDocument', textDocument.uri)
+		if (textDocument && textDocument.uri.scheme === 'markdown-preview-enhanced') {
+			contentProvider.destroyEngine(textDocument.uri)
+		}
+	}))
+
+	/*
+	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument((textDocument)=> {
+		// console.log('onDidOpenTextDocument', textDocument.uri)
+	}))
+	*/
+
+
 	/*
 	function openPreviewAutomatically(textEditor:vscode.TextEditor) {
 		if (!textEditor) return 

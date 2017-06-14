@@ -212,7 +212,7 @@ function onLoad() {
 
   window.parent.postMessage({ 
     command: 'did-click-link', // <= this has to be `did-click-link` to post message
-    data: `command:_markdown-preview-enhanced.webviewFinishLoading?${JSON.stringify([previewUri])}`
+    data: `command:_markdown-preview-enhanced.webviewFinishLoading?${JSON.stringify([sourceUri])}`
   }, 'file://')
 
 }
@@ -742,6 +742,7 @@ window.addEventListener('message', (event)=> {
   if (data.type === 'update-html') {
     mpe.totalLineCount = data.totalLineCount
     mpe.sidebarTOCHTML = data.tocHTML
+    sourceUri = data.sourceUri
     renderSidebarTOC()
     updateHTML(data.html)
   } else if (data.type === 'change-text-editor-selection') {

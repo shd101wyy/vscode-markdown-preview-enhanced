@@ -51,6 +51,11 @@
                     "default": true,
                     "type": "boolean"
                 },
+                "markdown-preview-enhanced.singlePreview": {
+                    "description": "Open Only One Preview",
+                    "default": true,
+                    "type": "boolean"
+                },
                 "markdown-preview-enhanced.enableTypographer": {
                     "description": "Enable smartypants and other sweet transforms.",
                     "default": false,
