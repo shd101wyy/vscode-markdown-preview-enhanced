@@ -4,7 +4,6 @@ import * as vscode from 'vscode'
 import * as path from 'path'
 import {MarkdownPreviewEnhancedView, getMarkdownUri, isMarkdownFile} from './markdown-preview-enhanced-view'
 
-
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -60,7 +59,6 @@ export function activate(context: vscode.ExtensionContext) {
 	function webviewFinishLoading(previewUri) {
 		contentProvider.update(vscode.Uri.parse(previewUri))
 	}
-
 
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {

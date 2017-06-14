@@ -110,7 +110,7 @@ interface MarkdownPreviewEnhancedPreview {
   /**
    * zoom of the presentation
    */
-  presentationZoom: 1
+  presentationZoom: number
 
   /**
    * setTimeout value
@@ -363,6 +363,30 @@ function renderSidebarTOC() {
 }
 
 /**
+ * zoom slides to fit screen
+ */
+function zoomSlidesToFitScreen(element:HTMLElement) {
+  const width = parseFloat(element.getAttribute('data-width')),
+        height = parseFloat(element.getAttribute('data-height'))
+  
+  // ratio = height / width * 100 + '%'
+  const zoom = (mpe.previewElement.offsetWidth - 128)/width  // 64 is 2*padding
+  
+  const slides = element.getElementsByClassName('slide') 
+  for (let i = 0; i < slides.length; i++) {
+    const slide = slides[i] as HTMLElement
+    slide.style.zoom = zoom.toString()
+  }
+  mpe.presentationZoom = zoom
+
+  console.log('width: ' + width)
+  console.log('height: ' + height)
+  console.log(zoom)
+  // mpe.previewElement.style.zoom = zoom.toString()
+  
+}
+
+/**
  * init several preview events
  */
 async function initEvents() {
@@ -394,6 +418,19 @@ function updateHTML(html) {
   mpe.previewScrollDelay = Date.now() + 500
 
   mpe.hiddenPreviewElement.innerHTML = html
+
+  let previewSlidesElement;
+  if ( previewSlidesElement = document.getElementById('preview-slides') ) {
+    mpe.previewElement.setAttribute('data-presentation-preview-mode', '')
+    mpe.presentationMode = true 
+    mpe.scrollMap = null
+    zoomSlidesToFitScreen(previewSlidesElement)
+  } else {
+    mpe.previewElement.removeAttribute('data-presentation-preview-mode')
+    mpe.presentationMode = false 
+  }
+
+  // init several events 
   initEvents()
 }
 

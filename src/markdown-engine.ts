@@ -410,6 +410,24 @@ export class MarkdownEngine {
     }
   }
 
+  private resolveFilePath(filePath='', relative=false) {
+    if (  filePath.match(this.protocolsWhiteListRegExp) ||
+          filePath.startsWith('data:image/') ||
+          filePath[0] == '#') {
+      return filePath
+    } else if (filePath[0] == '/') {
+      if (relative)
+        return path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.'+filePath))
+      else
+        return 'file://'+path.resolve(this.projectDirectoryPath, '.'+filePath)
+    } else {
+      if (relative)
+        return filePath
+      else
+        return 'file://'+path.resolve(this.fileDirectoryPath, filePath)
+    }
+  }
+
   /**
    * 
    * @param preElement the cheerio element
@@ -493,19 +511,7 @@ export class MarkdownEngine {
       const img = $(imgElement)
       const src = img.attr(srcTag)
 
-      if (src &&
-        (!(src.match(this.protocolsWhiteListRegExp) ||
-          src.startsWith('data:image/') ||
-          src[0] == '#' ||
-          src[0] == '/'))) {
-        if (!options.useRelativeImagePath) 
-          img.attr(srcTag, 'file://'+path.resolve(this.fileDirectoryPath,  src))
-      } else if (src && src[0] === '/') { // absolute path
-        if (options.useRelativeImagePath)
-          img.attr(srcTag, path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.' + src)))
-        else
-          img.attr(srcTag, 'file://'+path.resolve(this.projectDirectoryPath, '.' + src))
-      }
+      img.attr(srcTag, this.resolveFilePath(src, options.useRelativeImagePath))
     })
 
     
@@ -620,6 +626,94 @@ export class MarkdownEngine {
     }
   }
 
+  /**
+   * Parse `html` to generate slides
+   * @param html 
+   * @param slideConfigs 
+   * @param yamlConfig 
+   */
+  private parseSlides(html:string, slideConfigs:Array<object>, yamlConfig) {
+    let slides = html.split('<span class="new-slide"></span>')
+    
+    let output = ''
+    let width = 960,
+        height = 700
+
+    let presentationConfig = {}
+    if (yamlConfig && yamlConfig['presentation']) {
+      presentationConfig = yamlConfig['presentation']
+      width = presentationConfig['width'] || 960
+      height = presentationConfig['height'] || 700
+    }
+
+    // ratio = height / width * 100 + '%'
+    // const zoom = (@previewElement.offsetWidth - 128)/width ## 64 is 2*padding
+    // @presentationZoom = zoom
+    slides.forEach((slide, offset)=> {
+      if (!offset) {  // first part of html before the first <!-- slide -->
+        return output += slide
+      }
+      const slideConfig = slideConfigs[offset] || {}
+      let styleString = '',
+          videoString = '',
+          iframeString = '',
+          classString = slideConfig['class'] || '',
+          idString = slideConfig['id'] ? `id="${slideConfig['id']}"` : ''
+      if (slideConfig['data-background-image']) {
+        styleString += `background-image: url('${this.resolveFilePath(slideConfig['data-background-image'])}');`
+
+        if (slideConfig['data-background-size'])
+          styleString += `background-size: ${slideConfig['data-background-size']};`
+        else
+          styleString += "background-size: cover;"
+
+        if (slideConfig['data-background-position'])
+          styleString += `background-position: ${slideConfig['data-background-position']};`
+        else
+          styleString += "background-position: center;"
+
+        if (slideConfig['data-background-repeat'])
+          styleString += `background-repeat: ${slideConfig['data-background-repeat']};`
+        else
+          styleString += "background-repeat: no-repeat;"
+      } else if (slideConfig['data-background-color']) {
+        styleString += `background-color: ${slideConfig['data-background-color']} !important;`
+      } else if (slideConfig['data-background-video']) {
+        const videoMuted = slideConfig['data-background-video-muted']
+        const videoLoop = slideConfig['data-background-video-loop']
+
+        const muted_ = videoMuted ? 'muted' : ''
+        const loop_ = videoLoop ? 'loop' : ''
+
+        videoString = `
+        <video ${muted_} ${loop_} playsinline autoplay class="background-video" src="${this.resolveFilePath(slideConfig['data-background-video'])}">
+        </video>
+        `
+      } else if (slideConfig['data-background-iframe']) {
+        iframeString = `
+        <iframe class="background-iframe" src="${this.resolveFilePath(slideConfig['data-background-iframe'])}" frameborder="0" > </iframe>
+        <div class="background-iframe-overlay"></div>
+        `
+      }
+
+      output += `
+        <div class='slide ${classString}' ${idString} data-offset='${offset}' style="width: ${width}px; height: ${height}px; ${styleString}">
+          ${videoString}
+          ${iframeString}
+          <section>${slide}</section>
+        </div>
+      `
+    })
+
+    // remove <aside class="notes"> ... </aside>
+    output = output.replace(/(<aside\b[^>]*>)[^<>]*(<\/aside>)/ig, '')
+
+    return `
+    <div id="preview-slides" data-width="${width}" data-height="${height}">
+      ${output}
+    </div>
+    `
+  }
 
   public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
     return new Promise((resolve, reject)=> {
@@ -636,7 +730,7 @@ export class MarkdownEngine {
 
         const tocTable:{[key:string]:number} = {},
               headings:Array<Heading> = [],
-              slideConfigs = []
+              slideConfigs:Array<object> = []
         let tocBracketEnabled:boolean = false
         /**
          * flag for checking whether there is change in headings.
@@ -739,6 +833,13 @@ export class MarkdownEngine {
 
         if (tocBracketEnabled) { // [TOC]
           html = html.replace(/^\s*\[MPETOC\]\s*/gm, this.tocHTML)
+        }
+
+        /**
+         * check slides
+         */
+        if (slideConfigs.length) {
+          html = this.parseSlides(html, slideConfigs, yamlConfig)
         }
       
         return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
