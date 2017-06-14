@@ -455,13 +455,11 @@ export class MarkdownEngine {
             displayMath: this.config.mathBlockDelimiters,
             processEnvironments: false,
             processEscapes: true,
-            preview: "none"
           },
           TeX: {
             extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
           },
           'HTML-CSS': { availableFonts: ['TeX'] },
-          skipStartupTypeset: true
         }
 
         if (options.offline) {
