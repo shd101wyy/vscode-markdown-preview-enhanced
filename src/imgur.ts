@@ -1,5 +1,5 @@
 // imgur api
-// referenced from node-imgur:
+// referred from node-imgur:
 // https://github.com/kaimallea/node-imgur/blob/master/lib/imgur.js
 import * as request from "request"
 import * as fs from "fs"
