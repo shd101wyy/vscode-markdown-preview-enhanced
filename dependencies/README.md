@@ -16,7 +16,9 @@ I managed many libraries by myself instead of through npm to reduce overall file
     "remarkable": "1.7.1",
     "JavaScript-MD5": "2.7.0",
     "katex": "0.7.1",
-    "jsonic": "0.3.0"
+    "jsonic": "0.3.0",
+    "crypto-js": "3.9.1-1",
+    "jquery-modal": "0.8.0"
 }
 ```  
 

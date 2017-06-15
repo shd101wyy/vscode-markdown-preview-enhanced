@@ -3,7 +3,6 @@ import * as fs from "fs"
 import * as vscode from "vscode"
 import {exec} from "child_process"
 
-
 export function getExtensionDirectoryPath() {
   return path.resolve(__dirname, "../../") // 
 }
@@ -46,6 +45,15 @@ export function readFile(filePath):Promise<string> {
   })
 }
 
+export function writeFile(filePath, data):Promise<string> {
+  return new Promise((resolve, reject)=> {
+    fs.writeFile(filePath, data, {encoding: 'utf-8'}, (error)=> {
+      if (error) return reject(error.toString())
+      else return resolve()
+    })
+  }) 
+}
+
 /**
  * Display error messages
  * @param msg 
@@ -53,6 +61,16 @@ export function readFile(filePath):Promise<string> {
 export function showErrorMessage(msg) {
   vscode.window.showErrorMessage(msg)
 }
+
+export function showSuccessMessage(msg) {
+  vscode.window.showInformationMessage(msg)
+}
+
+export function showWarningMessage(msg) {
+  vscode.window.showWarningMessage(msg)
+}
+
+
 
 /**
  * open html file in browser or open pdf file in reader ... etc

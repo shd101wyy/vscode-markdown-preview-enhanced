@@ -28,12 +28,21 @@
             {
                 "command": "markdown-preview-enhanced.openPreview",
                 "title": "Markdown Preview Enhanced: Open Preview"
+            },
+            {
+                "command": "markdown-preview-enhanced.openImageHelper",
+                "title": "Markdown Preview Enhanced: Image Helper"
             }
         ],
         "keybindings": [
             {
                 "command": "markdown-preview-enhanced.openPreview",
                 "key": "shift+ctrl+m",
+                "when": "editorLangId == markdown"
+            },
+            {
+                "command": "markdown-preview-enhanced.openImageHelper",
+                "key": "shift+ctrl+i",
                 "when": "editorLangId == markdown"
             }
         ],
@@ -48,6 +57,11 @@
                 },
                 "markdown-preview-enhanced.scrollSync": {
                     "description": "Automatic scroll sync. This is now partially supported.",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.singlePreview": {
+                    "description": "Open Only One Preview",
                     "default": true,
                     "type": "boolean"
                 },
@@ -154,6 +168,20 @@
                     "description": "Accepted protocols followed by `://` for links.",
                     "default": "http, https, atom, file",
                     "type": "string"
+                },
+                "markdown-preview-enhanced.imageFolderPath": {
+                    "description": "When using Image Helper to copy images, by default images will be copied to root image folder path '/assets'",
+                    "default": "/assets",
+                    "type": "string"
+                },
+                "markdown-preview-enhanced.imageUploader": {
+                    "description": "You can choose different image uploader to upload image",
+                    "default": "imgur",
+                    "type": "string",
+                    "enum": [
+                        "imgur",
+                        "sm.ms"
+                    ]
                 }
             }
         }
@@ -168,6 +196,7 @@
     "dependencies": {
         "cheerio": "0.15.0",
         "gray-matter": "^2.1.1",
+        "request": "^2.81.0",
         "temp": "^0.8.3",
         "uslug": "^1.0.4"
     },

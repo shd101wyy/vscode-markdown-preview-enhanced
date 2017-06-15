@@ -4,7 +4,7 @@ import {Uri, CancellationToken, Event, ProviderResult, TextEditor} from 'vscode'
 
 import {MarkdownEngine} from './markdown-engine'
 import {MarkdownPreviewEnhancedConfig} from './config'
-import {escapeString} from './utility'
+import * as utility from './utility'
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -28,12 +28,54 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   }
 
   /**
-   * 
-   * @param mediaFile 
-   * @return path.resolve(this.context.extensionPath, `media/${mediaFile}`)
+   * return markdown engine of sourceUri
+   * @param sourceUri 
    */
-  private getMediaPath(mediaFile: string): string {
-    return vscode.Uri.file(this.context.asAbsolutePath(path.join('media', mediaFile))).toString();
+  public getEngine(sourceUri:Uri):MarkdownEngine {
+    return this.engineMaps[sourceUri.fsPath]
+  }
+
+  /**
+   * check if the markdown preview is on for the textEditor
+   * @param textEditor 
+   */
+  public isPreviewOn(sourceUri:Uri) {
+    if (useSinglePreview()) {
+      return Object.keys(this.engineMaps).length >= 1
+    }
+    return this.getEngine(sourceUri)
+  }
+
+  /**
+   * remove engine from this.engineMaps
+   * @param previewUri 
+   */
+  public destroyEngine(previewUri: Uri) {
+    if (useSinglePreview()) {
+      return this.engineMaps = {}
+    }
+    const sourceUri = vscode.Uri.parse(previewUri.query)
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      // console.log('engine destroyed')
+      this.engineMaps[sourceUri.fsPath] = null // destroy engine 
+    }
+  } 
+
+  /**
+   * Initialize MarkdownEngine for this markdown file
+   */
+  public initMarkdownEngine(sourceUri: Uri) {
+    let engine = this.getEngine(sourceUri)
+    if (!engine) {
+      engine = new MarkdownEngine(
+        {
+          filePath: sourceUri.fsPath,
+          projectDirectoryPath: vscode.workspace.rootPath,
+          config: this.config
+        })
+      this.engineMaps[sourceUri.fsPath] = engine
+    }
   }
 
   private getScripts(isForPreview:boolean) {
@@ -76,6 +118,11 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
       scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
 
+      // jquery modal 
+      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-modal/jquery.modal.min.js')}"></script>`
+
+      // crpto-js
+      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/crypto-js/crypto-js.js')}"></script>`
     }
     
     return scripts
@@ -111,15 +158,26 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     
       // jquery-contextmenu
       styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-contextmenu/jquery.contextMenu.min.css`)}">`
+    
+      // jquery-modal 
+      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-modal/jquery.modal.min.css`)}">`
+
     }
 
     return styles  
   }
 
-  public provideTextDocumentContent(uri: Uri)
+  public provideTextDocumentContent(previewUri: Uri)
   : Thenable<string> {
-		const sourceUri = vscode.Uri.parse(uri.query)
     // console.log(sourceUri, uri, vscode.workspace.rootPath)
+
+    let sourceUri
+    if (useSinglePreview()) {
+      sourceUri = vscode.window.activeTextEditor.document.uri
+    } else {
+      sourceUri = vscode.Uri.parse(previewUri.query)
+    }
+    // console.log('open preview for source: ' + sourceUri.toString())
 
 		let initialLine: number | undefined = undefined;
 		const editor = vscode.window.activeTextEditor;
@@ -130,40 +188,23 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     return vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
 
-      const settings = {
-        fsPath: sourceUri.fsPath
-      }
-
-      /**
-       * Initialize MarkdownEngine for this markdown file
-       */
-      let engine = this.engineMaps[sourceUri.fsPath]
-      let html
-      if (!engine) {
-        engine = new MarkdownEngine(
-          {
-            filePath: sourceUri.fsPath,
-            projectDirectoryPath: vscode.workspace.rootPath,
-            config: this.config
-          })
-        this.engineMaps[sourceUri.fsPath] = engine
-
-        html = '<div class="markdown-spinner"> Loading Markdown\u2026 </div>'
-      } else { // engine already initialized
-        html = engine.getCachedHTML()
-      }
-
       const config = Object.assign({}, this.config, {
-				previewUri: uri.toString(),
+				previewUri: previewUri.toString(),
 				sourceUri: sourceUri.toString(),
         initialLine: initialLine
       })
+
+      let html = '<div class="markdown-spinner"> Loading Markdown\u2026 </div>'
+      const engine = this.getEngine(sourceUri)
+      if (engine) {
+        html = engine.getCachedHTML()
+      }
 
       return `<!DOCTYPE html>
       <html>
       <head>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        <meta id="vscode-markdown-preview-enhanced-data" data-config="${escapeString(JSON.stringify(config))}">
+        <meta id="vscode-markdown-preview-enhanced-data" data-config="${utility.escapeString(JSON.stringify(config))}">
         <meta charset="UTF-8">
         ${this.getStyles(true)}
         ${this.getScripts(true)}
@@ -173,46 +214,107 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <div class="markdown-preview-enhanced" for="preview">
           ${html}
         </div>
+        
         <div class="refreshing-icon"></div>
+
         <div class="mpe-toolbar">
           <div class="back-to-top-btn btn"><span>⬆︎</span></div>
           <div class="refresh-btn btn"><span>⟳︎</span></div>
           <div class="sidebar-toc-btn btn"><span>≡</span></div>
         </div>
-        <span class="contextmenu">
-        </span>
+
+        <div id="image-helper-view">
+          <h4>Image Helper</h4>
+          <div class="upload-div">
+            <label>Link</label>
+            <input type="text" class="url-editor" placeholder="enter image URL here, then press \'Enter\' to insert.">
+
+            <div class="splitter"></div>
+
+            <label class="copy-label">Copy image to root /assets folder</label>
+            <div class="drop-area paster">
+              <p class="paster"> Drop image file here or click me </p>
+              <input class="file-uploader paster" type="file" style="display:none;" multiple="multiple" >
+            </div>
+
+            <div class="splitter"></div>
+
+            <label>Upload</label>
+            <div class="drop-area uploader">
+              <p class="uploader">Drop image file here or click me</p>
+              <input class="file-uploader uploader" type="file" style="display:none;" multiple="multiple" >
+            </div>
+            <div class="uploader-choice">
+              <span>use</span>
+              <select class="uploader-select">
+                <option>imgur</option>
+                <option>sm.ms</option>
+              </select>
+              <span> to upload images</span>
+            </div>
+          </div>
+        </div>
       </body>
       <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
       </html>`
     })
   }
 
-  public updateMarkdown(uri:Uri) {
-    const sourceUri = vscode.Uri.parse(uri.query)
-    const engine = this.engineMaps[sourceUri.fsPath]
+  public updateMarkdown(sourceUri:Uri) {
+    const engine = this.getEngine(sourceUri)
+    // console.log('updateMarkdown: ' + Object.keys(this.engineMaps).length)
     if (!engine) return 
 
     vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
+
+      vscode.commands.executeCommand(
+        '_workbench.htmlPreview.postMessage',
+        getPreviewUri(sourceUri),
+        {
+          type: 'start-parsing-markdown',
+        })
+
       engine.parseMD(text, {isForPreview: true, useRelativeImagePath: false, hideFrontMatter: false}).then(({markdown, html, tocHTML})=> {
         vscode.commands.executeCommand(
           '_workbench.htmlPreview.postMessage',
-          uri,
+          getPreviewUri(sourceUri),
           {
             type: 'update-html',
             html: html,
             tocHTML: tocHTML,
-            totalLineCount: document.lineCount
+            totalLineCount: document.lineCount,
+            sourceUri: sourceUri.toString()
           })
       })
     })
   }
 
   public openInBrowser(sourceUri: Uri) {
-    const fsPath = sourceUri.fsPath
-    const engine = this.engineMaps[fsPath]
+    const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.openInBrowser()
+    }
+  }
+
+  public saveAsHTML(sourceUri: Uri) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.saveAsHTML()
+    }
+  }
+
+  public princeExport(sourceUri: Uri) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.princeExport()
+    }
+  }
+
+  public cacheSVG(sourceUri: Uri, code:string, svg:string) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.cacheSVG(code, svg)
     }
   }
 
@@ -220,15 +322,15 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     return this._onDidChange.event
   }
 
-  public update(uri: Uri) {
+  public update(sourceUri: Uri) {
     // console.log('update')
 		if (!this._waiting) {
 			this._waiting = true;
 			setTimeout(() => {
 				this._waiting = false;
 				// this._onDidChange.fire(uri);
-        this.updateMarkdown(uri)
-			}, 300);
+        this.updateMarkdown(sourceUri)
+			}, 300)
 		}
   }
 
@@ -252,20 +354,43 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     }
   }
 
-  /**
-   * check if the markdown preview is on for the textEditor
-   * @param textEditor 
-   */
-  public isPreviewOn(textEditor:TextEditor) {
-    const fsPath = textEditor.document.fileName
-    return (fsPath in this.engineMaps)
+  public openImageHelper(sourceUri:Uri) {
+    if (sourceUri.scheme === 'markdown-preview-enhanced') {
+      return utility.showWarningMessage('Please focus a markdown file.')
+    } else if (!this.isPreviewOn(sourceUri)) {
+      return utility.showWarningMessage('Please open preview first.')
+    } else {
+      vscode.commands.executeCommand(
+        '_workbench.htmlPreview.postMessage',
+        getPreviewUri(sourceUri),
+        {
+          type: 'open-image-helper'
+        })
+    }
   }
+
 }
 
-export function getMarkdownUri(uri: vscode.Uri) {
+/**
+ * check whehter to use only one preview or not
+ */
+export function useSinglePreview() {
+  const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
+  return config.get<boolean>('singlePreview')
+}
+
+
+export function getPreviewUri(uri: vscode.Uri) {
 	if (uri.scheme === 'markdown-preview-enhanced') {
 		return uri
 	}
+
+  if (useSinglePreview()) {
+    return uri.with({
+      scheme: 'markdown-preview-enhanced',
+      path: 'single-preview.rendered' 
+    })
+  }
 
 	return uri.with({
 		scheme: 'markdown-preview-enhanced',

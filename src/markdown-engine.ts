@@ -16,12 +16,14 @@ import {scopeForLanguageName} from "./extension-helper"
 import {fileImport} from "./file-import"
 import {toc} from "./toc"
 import {CustomSubjects} from "./custom-subjects"
+import {princeConvert} from "./prince-convert"
 
 const extensionDirectoryPath = getExtensionDirectoryPath()
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
 const remarkable = require(path.resolve(extensionDirectoryPath, './dependencies/remarkable/remarkable.js'))
 const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
+const CryptoJS = require(path.resolve(extensionDirectoryPath, './dependencies/crypto-js/crypto-js.js'))
 
 // import * as uslug from "uslug"
 // import * as Prism from "prismjs"
@@ -49,7 +51,6 @@ interface MarkdownEngineOutput {
 }
 
 interface HTMLTemplateOption {
-  useRelativeImagePath: boolean
   isForPrint: boolean
   isForPrince: boolean
   offline: boolean
@@ -128,6 +129,10 @@ export class MarkdownEngine {
     this.initConfig()
 
     this.md.set({breaks: this.breakOnSingleNewLine, typographer: this.enableTypographer})
+  }
+
+  public cacheSVG(code:string, svg:string) {
+    this.graphsCache[md5(code)] = CryptoJS.AES.decrypt(svg, 'markdown-preview-enhanced').toString(CryptoJS.enc.Utf8)
   }
 
   /**
@@ -427,7 +432,7 @@ export class MarkdownEngine {
    * @param yamlConfig: this is the front matter.
    * @param option: HTMLTemplateOption
    */
-  public async generateHTMLFromTemplate(html, yamlConfig={}, options:HTMLTemplateOption):Promise<string> {
+  public async generateHTMLFromTemplate(html:string, yamlConfig={}, options:HTMLTemplateOption):Promise<string> {
       // get `id` and `class`
       const elementId = yamlConfig['id'] || ''
       let elementClass = yamlConfig['class'] || []
@@ -487,21 +492,6 @@ export class MarkdownEngine {
         mathStyle = ''
       }
 
-      // mermaid 
-      let mermaidStyle = '',
-          mermaidScript = '',
-          mermaidInitScript = ''
-      if (html.indexOf('<div class="mermaid">') >= 0) {
-        mermaidStyle = await readFile(path.resolve(extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`))
-        mermaidStyle = `<style>${mermaidStyle}</style>`
-
-        if (options.offline) {
-          mermaidScript = `<script type="text/javascript" src="file://${path.resolve(extensionDirectoryPath, './dependencies/mermaid/mermaid.min.js')}"></script>`
-        } else {
-          mermaidScript = '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/mermaid.min.js"></script>'
-        }
-      }
-
       // presentation
       let presentationScript = '',
           presentationStyle = '',
@@ -518,14 +508,14 @@ export class MarkdownEngine {
         }
 
         let presentationConfig = yamlConfig['presentation'] || {}
-        let dependencies = presentationConfig.dependencies || []
+        let dependencies = presentationConfig['dependencies'] || []
         if (presentationConfig['enableSpeakerNotes']) {
           if (options.offline)
-            dependencies.push({src: path.resolve(__dirname, '../dependencies/reveal/plugin/notes/notes.js'), async: true})
+            dependencies.push({src: path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js'), async: true})
           else
             dependencies.push({src: 'revealjs_deps/notes.js', async: true}) // TODO: copy notes.js file to corresponding folder
         }
-        presentationConfig.dependencies = dependencies
+        presentationConfig['dependencies'] = dependencies
 
         presentationStyle = `
         <style>
@@ -573,10 +563,8 @@ export class MarkdownEngine {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         ${presentationStyle}
         ${mathStyle}
-        ${mermaidStyle}
 
         ${presentationScript}
-        ${mermaidScript}
 
         <style> ${styleCSS} </style>
       </head>
@@ -584,7 +572,6 @@ export class MarkdownEngine {
       ${html}
       </body>
       ${presentationInitScript}
-      ${mermaidInitScript}
     </html>
       `
 
@@ -598,7 +585,7 @@ export class MarkdownEngine {
     this.parseMD(this.cachedInputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
     .then(({html, yamlConfig})=> {
       this.generateHTMLFromTemplate(html, yamlConfig, 
-                                    {useRelativeImagePath: false, isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )
+                                    {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )
       .then((html)=> {      
         // create temp file
 
@@ -623,6 +610,101 @@ export class MarkdownEngine {
     })
   }
 
+  /**
+   * 
+   * @param filePath 
+   */
+  public saveAsHTML() {
+    this.parseMD(this.cachedInputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
+    .then(({html, yamlConfig})=> {
+      const htmlConfig = yamlConfig['html'] || {}
+      let cdn = htmlConfig['cdn'],
+          offline = !cdn
+      let embedLocalImages = htmlConfig['embed_local_images']
+      
+      let dest = this.filePath
+      let extname = path.extname(dest) 
+      dest = dest.replace(new RegExp(extname+'$'), '.html')
+
+      this.generateHTMLFromTemplate(html, yamlConfig, {
+          isForPrint: false, 
+          isForPrince: false,
+          embedLocalImages: false,  // TODO
+          offline: !cdn
+      }).then((html)=> {
+        const htmlFileName = path.basename(dest)
+
+        // presentation speaker notes
+        // copy dependency files
+        
+        if (!offline && html.indexOf('[{"src":"revealjs_deps/notes.js","async":true}]') >= 0) {
+          const depsDirName = path.resolve(path.dirname(dest), 'revealjs_deps')
+          if (!fs.existsSync(depsDirName)) {
+            fs.mkdirSync(depsDirName)
+          }
+          fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.js')))
+          fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.html')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.html')))
+        }
+
+        utility.writeFile(dest, html)
+        .then(()=> {
+          utility.showSuccessMessage(`File ${htmlFileName} was created at path: ${dest}`)
+        })
+        .catch((error)=> {
+          utility.showErrorMessage(error)
+        })
+      })
+    })
+  }
+
+  /**
+   * prince pdf file export
+   */
+  public princeExport() {
+    this.parseMD(this.cachedInputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+    .then(({html, yamlConfig})=> {
+      let dest = this.filePath
+      let extname = path.extname(dest) 
+      dest = dest.replace(new RegExp(extname+'$'), '.pdf')
+
+      this.generateHTMLFromTemplate(html, yamlConfig, {
+          isForPrint: true, 
+          isForPrince: true,
+          embedLocalImages: false, 
+          offline: true
+      }).then((html)=> {
+        temp.open({prefix: 'markdown-preview-enhanced', suffix: '.html'}, (error, info)=> {
+          if (error) return utility.showErrorMessage(error)
+          utility.writeFile(info.fd, html).then(()=> {
+            console.log(info.path)
+            if (yamlConfig['isPresentationMode']) {
+              const url = 'file://' + info.path + '?print-pdf'
+              utility.showSuccessMessage(`Please copy and open the link: { ${url.replace(/\_/g, '\\_')} } in Chrome then Print as Pdf.`)
+            } else {
+              princeConvert(info.path, dest, (error)=> {
+                if (error) return utility.showErrorMessage(error)
+                utility.showSuccessMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+
+                //  open pdf
+                // @openFile dest if atom.config.get('markdown-preview-enhanced.pdfOpenAutomatically')
+                utility.openFile(dest)
+              })
+            }
+          })
+          .catch((error)=> {
+            utility.showErrorMessage(error)
+          })
+        })  
+      })
+    })
+
+  }
+
+  /**
+   * 
+   * @param filePath 
+   * @param relative: whether to use the path relative to filePath or not.  
+   */
   private resolveFilePath(filePath='', relative=false) {
     if (  filePath.match(this.protocolsWhiteListRegExp) ||
           filePath.startsWith('data:image/') ||
@@ -677,12 +759,19 @@ export class MarkdownEngine {
       graphsCache[checksum] = svg // store to new cache 
 
     } else if (lang.match(/^mermaid$/)) { // mermaid 
-      $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
+      const checksum = md5(code) 
+      let svg:string = this.graphsCache[checksum]
+      if (!svg) {
+        $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
+      } else {
+        $preElement.replaceWith(svg)
+        graphsCache[checksum] = svg // store to new cache 
+      }
     } else if (lang.match(/^(dot|viz)$/)) { // GraphViz
       const checksum = md5(code)
       let svg = this.graphsCache[checksum]
       if (!svg) {
-        if (!viz) viz = require(path.resolve(__dirname, '../../dependencies/viz/viz.js'))
+        if (!viz) viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
         
         try {
           let engine = parameters.engine || "dot"
@@ -1137,7 +1226,7 @@ export class MarkdownEngine {
             } else {
               html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeImagePath)
             }
-            if (yamlConfig) yamlConfig.isPresentationMode = true // mark as presentation mode
+            if (yamlConfig) yamlConfig['isPresentationMode'] = true // mark as presentation mode
           }
 
           this.cachedHTML = html // save to cache

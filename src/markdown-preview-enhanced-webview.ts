@@ -19,6 +19,9 @@ interface MarkdownConfig {
   codeBlockTheme?: string,
 
   previewTheme?: string,
+
+  imageFolderPath?: string,
+  imageUploader?: string
 }
 
 /**
@@ -87,6 +90,7 @@ interface MarkdownPreviewEnhancedPreview {
    * .refreshing-icon element
    */
   refreshingIcon:HTMLElement
+  refreshingIconTimeout
 
   /**
    * scroll map 
@@ -199,7 +203,8 @@ function onLoad() {
     sidebarTOC: null,
     sidebarTOCHTML: "",
     zoomLevel: 1,
-    refreshingIcon: document.getElementsByClassName('refreshing-icon')[0] as HTMLElement 
+    refreshingIcon: document.getElementsByClassName('refreshing-icon')[0] as HTMLElement, 
+    refreshingIconTimeout: null
   }
 
   /** init mermaid */
@@ -208,13 +213,15 @@ function onLoad() {
   /** init toolbar event */
   initToolbarEvent()
 
+  /** init image helper */
+  initImageHelper()
+
   previewElement.onscroll = scrollEvent
 
   window.parent.postMessage({ 
     command: 'did-click-link', // <= this has to be `did-click-link` to post message
-    data: `command:_markdown-preview-enhanced.webviewFinishLoading?${JSON.stringify([previewUri])}`
+    data: `command:_markdown-preview-enhanced.webviewFinishLoading?${JSON.stringify([sourceUri])}`
   }, 'file://')
-
 }
 
 /**
@@ -284,8 +291,19 @@ function initContextMenu() {
         } 
       },
       "sep1": "---------",
-      "html_export": {name: "HTML (not done)"},
-      "prince_export": {name: "PDF (prince) (not done)"},
+      "html_export": {
+        name: "HTML",
+        callback: ()=> {
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.saveAsHTML?${JSON.stringify([sourceUri])}`}, 'file://') 
+        }
+      },
+      "prince_export": 
+      {
+        name: "PDF (prince)",
+        callback: ()=> {
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.princeExport?${JSON.stringify([sourceUri])}`}, 'file://') 
+        }
+      },
       "ebook_export": {
         name: "eBook (not done)",
         items: {
@@ -300,6 +318,91 @@ function initContextMenu() {
       "sync_source": {name: "Sync Source (not done)"}
     }
   })
+}
+
+/**
+ * init image helper
+ */
+function initImageHelper() {
+  const imageHelper = document.getElementById("image-helper-view")
+
+  // url editor
+  // used to insert image url
+  const urlEditor = imageHelper.getElementsByClassName('url-editor')[0] as HTMLInputElement
+  urlEditor.addEventListener('keypress', (event:KeyboardEvent)=> {
+    if (event.keyCode === 13) { // enter key pressed 
+      let url = urlEditor.value.trim()
+      if (url.indexOf(' ') >= 0) {
+        url = `<${url}>`
+      }
+      if (url.length) {
+        $['modal'].close() // close modal
+        window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.insertImageUrl?${JSON.stringify([sourceUri, url])}`}, 'file://') 
+      }
+      return false 
+    } else {
+      return true 
+    }
+  })
+
+  const copyLabel = imageHelper.getElementsByClassName('copy-label')[0] as HTMLLabelElement
+  copyLabel.innerText = `Copy image to ${config.imageFolderPath[0] == '/' ? 'root' : 'relative'} ${config.imageFolderPath} folder`
+
+  const imageUploaderSelect = imageHelper.getElementsByClassName('uploader-select')[0] as HTMLSelectElement
+  imageUploaderSelect.value = config.imageUploader
+
+  // drop area has 2 events:
+  // 1. paste(copy) image to imageFolderPath
+  // 2. upload image
+  const dropArea = window['$']('.drop-area', imageHelper)
+  const fileUploader = window['$']('.file-uploader', imageHelper)
+  dropArea.on('drop dragend dragstart dragenter dragleave drag dragover', (e)=> {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type == "drop") {
+      if (e.target.className.indexOf('paster') >= 0) { // paste
+        const files = e.originalEvent.dataTransfer.files
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i]
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.pasteImageFile?${JSON.stringify([sourceUri, file.path])}`}, 'file://') 
+        }
+      } else { // upload
+        const files = e.originalEvent.dataTransfer.files
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i]
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.uploadImageFile?${JSON.stringify([sourceUri, file.path, imageUploaderSelect.value])}`}, 'file://') 
+        }
+      }
+      $['modal'].close() // close modal
+    }
+  })
+  dropArea.on('click', function(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      window['$'](this).find('input[type="file"]').click()
+      $['modal'].close() // close modal
+  })
+  fileUploader.on('click', (e)=>{
+    e.stopPropagation()
+  })
+  fileUploader.on('change', (e)=> {
+    if (e.target.className.indexOf('paster') >= 0) { // paste
+      const files = e.target.files
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.pasteImageFile?${JSON.stringify([sourceUri, file.path])}`}, 'file://') 
+      }
+      fileUploader.val('')
+    } else { // upload
+      const files = e.target.files
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.uploadImageFile?${JSON.stringify([sourceUri, file.path, imageUploaderSelect.value])}`}, 'file://') 
+      }
+      fileUploader.val('')
+    }
+  })
+
 }
 
 /**
@@ -321,14 +424,18 @@ function renderMermaid() {
     const mermaidGraphs = mpe.hiddenPreviewElement.getElementsByClassName('mermaid')
 
     const validMermaidGraphs = []
+    const mermaidCodes = []
     for (let i = 0; i < mermaidGraphs.length; i++) {
       const mermaidGraph = mermaidGraphs[i] as HTMLElement
+      if (mermaidGraph.getAttribute('data-processed') === 'true') continue 
+
       mermaid.parseError = function(err) {
         mermaidGraph.innerHTML = `<pre class="language-text">${err.toString()}</pre>`
       }
 
       if (mermaidAPI.parse(mermaidGraph.textContent)) {
         validMermaidGraphs.push(mermaidGraph)
+        mermaidCodes.push(mermaidGraph.textContent)
       }
     }
 
@@ -336,6 +443,18 @@ function renderMermaid() {
 
     mermaid.init(null, validMermaidGraphs, function(){
       resolve()
+
+      // send svg data
+      const CryptoJS = window["CryptoJS"]
+      validMermaidGraphs.forEach((mermaidGraph, offset)=> {
+        const code = mermaidCodes[offset],
+              svg = CryptoJS.AES.encrypt(mermaidGraph.outerHTML, "markdown-preview-enhanced").toString()
+
+        window.parent.postMessage({ 
+          command: 'did-click-link', // <= this has to be `did-click-link` to post message
+          data: `command:_markdown-preview-enhanced.cacheSVG?${JSON.stringify([sourceUri, code, svg])}`
+        }, 'file://')
+      })
     })
   })
 }
@@ -406,14 +525,6 @@ function zoomSlidesToFitScreen(element:HTMLElement) {
  * init several preview events
  */
 async function initEvents() {
-  /**
-   * show refreshingIcon after 1 second
-   * if preview hasn't finished rendering.
-   */
-  const timeout = setTimeout(()=> {
-    mpe.refreshingIcon.style.display = "block"
-  }, 1000)
-
   await Promise.all([
     renderMathJax(), 
     renderMermaid()
@@ -421,7 +532,10 @@ async function initEvents() {
   mpe.previewElement.innerHTML = mpe.hiddenPreviewElement.innerHTML
   mpe.hiddenPreviewElement.innerHTML = ""
 
-  clearTimeout(timeout)
+  if (mpe.refreshingIconTimeout) {
+    clearTimeout(mpe.refreshingIconTimeout)
+    mpe.refreshingIconTimeout = null
+  }
   mpe.refreshingIcon.style.display = "none"
 }
 
@@ -436,18 +550,22 @@ function updateHTML(html) {
   mpe.hiddenPreviewElement.innerHTML = html
 
   let previewSlidesElement;
-  if ( previewSlidesElement = document.getElementById('preview-slides') ) {
+  if ( previewSlidesElement = mpe.hiddenPreviewElement.querySelector('#preview-slides')) {
     mpe.previewElement.setAttribute('data-presentation-preview-mode', '')
+    mpe.hiddenPreviewElement.setAttribute('data-presentation-preview-mode', '')
+
     mpe.presentationMode = true 
-    mpe.scrollMap = null
     zoomSlidesToFitScreen(previewSlidesElement)
   } else {
     mpe.previewElement.removeAttribute('data-presentation-preview-mode')
+    mpe.hiddenPreviewElement.removeAttribute('data-presentation-preview-mode')
+
     mpe.presentationMode = false 
   }
 
   // init several events 
   initEvents().then(()=> {
+    mpe.scrollMap = null 
     
     // scroll to initial position 
     if (!mpe.doneLoadingPreview) {
@@ -619,12 +737,10 @@ function scrollSyncToSlide(line:number) {
   }
   
   const slideElement:HTMLElement = mpe.previewElement.querySelector(`.slide[data-offset="${i}"]`) as HTMLElement
-  console.log(slideElement)
   if (!slideElement) {
     mpe.previewElement.scrollTop = 0
   } else {
     const firstSlide = mpe.previewElement.querySelector('.slide[data-offset="0"]') as HTMLElement
-    console.log(firstSlide.offsetHeight)
     // set slide to middle of preview
     mpe.previewElement.scrollTop = -mpe.previewElement.offsetHeight/2 + (slideElement.offsetTop + slideElement.offsetHeight/2)*mpe.presentationZoom
 
@@ -728,11 +844,24 @@ window.addEventListener('message', (event)=> {
   if (data.type === 'update-html') {
     mpe.totalLineCount = data.totalLineCount
     mpe.sidebarTOCHTML = data.tocHTML
+    sourceUri = data.sourceUri
     renderSidebarTOC()
     updateHTML(data.html)
   } else if (data.type === 'change-text-editor-selection') {
     const line = parseInt(data.line)
     scrollToRevealSourceLine(line)
+  } else if (data.type === 'start-parsing-markdown') {
+    /**
+     * show refreshingIcon after 1 second
+     * if preview hasn't finished rendering.
+     */
+    if (mpe.refreshingIconTimeout) clearTimeout(mpe.refreshingIconTimeout)
+
+    mpe.refreshingIconTimeout = setTimeout(()=> {
+      mpe.refreshingIcon.style.display = "block"
+    }, 1000)
+  } else if (data.type === 'open-image-helper') {
+    window['$']('#image-helper-view').modal()
   }
 }, false);
 
@@ -750,7 +879,4 @@ if (document.readyState === 'loading') {
 } else {
   onLoad();
 }
-
-
-
 })()
