@@ -39,7 +39,7 @@
                 "command": "markdown-preview-enhanced.openPreview",
                 "key": "shift+ctrl+m",
                 "when": "editorLangId == markdown"
-            }, 
+            },
             {
                 "command": "markdown-preview-enhanced.openImageHelper",
                 "key": "shift+ctrl+i",
@@ -196,6 +196,8 @@
     "dependencies": {
         "cheerio": "0.15.0",
         "gray-matter": "^2.1.1",
+        "imgur": "^0.2.1",
+        "request": "^2.76.0",
         "temp": "^0.8.3",
         "uslug": "^1.0.4"
     },

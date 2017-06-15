@@ -330,7 +330,6 @@ function initImageHelper() {
   const urlEditor = imageHelper.getElementsByClassName('url-editor')[0] as HTMLInputElement
   urlEditor.addEventListener('keypress', (event:KeyboardEvent)=> {
     if (event.keyCode === 13) { // enter key pressed 
-      console.log('enter key pressed')
       let url = urlEditor.value.trim()
       if (url.indexOf(' ') >= 0) {
         url = `<${url}>`
@@ -351,7 +350,10 @@ function initImageHelper() {
   // drop area has 2 events:
   // 1. paste(copy) image to imageFolderPath
   // 2. upload image
-  function dropEvent(e) {
+  const dropArea = window['$']('.drop-area', imageHelper)
+  const fileUploader = window['$']('.file-uploader', imageHelper)
+  const imageUploaderSelect = imageHelper.getElementsByClassName('uploader-select')[0] as HTMLSelectElement
+  dropArea.on('drop dragend dragstart dragenter dragleave drag dragover', (e)=> {
     e.preventDefault()
     e.stopPropagation()
     if (e.type == "drop") {
@@ -365,13 +367,38 @@ function initImageHelper() {
         const files = e.originalEvent.dataTransfer.files
         for (let i = 0; i < files.length; i++) {
           const file = files[i]
-          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.uploadImageFile?${JSON.stringify([sourceUri, file.path])}`}, 'file://') 
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.uploadImageFile?${JSON.stringify([sourceUri, file.path, imageUploaderSelect.value])}`}, 'file://') 
         }
       }
       $['modal'].close() // close modal
     }
-  }
-  window['$']('.drop-area', imageHelper).on('drop dragend dragstart dragenter dragleave drag dragover', dropEvent)
+  })
+  dropArea.on('click', function(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      window['$'](this).find('input[type="file"]').click()
+      $['modal'].close() // close modal
+  })
+  fileUploader.on('click', (e)=>{
+    e.stopPropagation()
+  })
+  fileUploader.on('change', (e)=> {
+    if (e.target.className.indexOf('paster') >= 0) { // paste
+      const files = e.target.files
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.pasteImageFile?${JSON.stringify([sourceUri, file.path])}`}, 'file://') 
+      }
+      fileUploader.val('')
+    } else { // upload
+      const files = e.target.files
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.uploadImageFile?${JSON.stringify([sourceUri, file.path, imageUploaderSelect.value])}`}, 'file://') 
+      }
+      fileUploader.val('')
+    }
+  })
 
 }
 
