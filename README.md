@@ -10,26 +10,32 @@ Below is a demo of the Atom version.
 
 ## Features
 
-Right now only 20% done:   
+Right now only 50% done:   
+* <kbd>ctrl-shift-m</kbd> for `Markdown Preview Enhanced: Open Preview` command.  
+* <kbd>ctrl-shift-i</kbd> for `Markdown Preview Enhanced: Image Helper` command.    
+    * Support uploading images to either `imgur` or `sm.ms`.  
+![Screen Shot 2017-06-15 at 1.31.01 AM](https://ooo.0o0.ooo/2017/06/15/59422aa748341.png)  
 
-* Basic preview 
-    * <kbd>ctrl-shift-m</kbd> to `Open Preview`
-* Scroll sync partially done
-* Support KaTeX and MathJax
-* Support mermaid, PlantUML, viz.js 
+* **Right Click** at the Preview to see the contextmenu
+![Screen Shot 2017-06-15 at 1.36.32 AM](https://ooo.0o0.ooo/2017/06/15/59422b1ab3931.png)
 
 For more features that will be supported in the future, check [Markdown Preview Enhanced for atom](https://shd101wyy.github.io/markdown-preview-enhanced/#/).
 
-### Progress so far
-* Done supporting `mermaid`, `PlantUML` and `viz.js`.
+### Progress so far (June 14, 2017)
+* Scroll sync is partially done.
+* Done supporting `mermaid`, `PlantUML` and `viz.js` (GraphViz). 
 * Done supporting `[TOC]`.  
 * Done supporting `MathJax` and `KaTeX`.
 * Done sidebar TOC.  
 * Done back to top button.  
 * Done supporting front matter.
 * Done supporting `reveal.js` presentation mode. Try inserting `<!-- slide -->` to your markdown.  
-* Done `Open in Browser`. (**Right Click** at the Preview to see the contextmenu) 
-![screen shot 2017-06-14 at 1 35 23 am](https://user-images.githubusercontent.com/1908863/27118639-d04ad1b0-50a1-11e7-952b-ecd756894ee9.png)
+* Done `Open in Browser`. 
+* Done HTML export.  
+* Done `prince` PDF export.  
+* Done `Image Helper`.  
+* Done supporting single preview.  
+
 
 
 ## Requirements
