@@ -325,8 +325,6 @@ function initContextMenu() {
 function initImageHelper() {
   const imageHelper = document.getElementById("image-helper-view")
 
-  window['$']('#image-helper-view').modal()
-
   // url editor
   // used to insert image url
   const urlEditor = imageHelper.getElementsByClassName('url-editor')[0] as HTMLInputElement
@@ -832,6 +830,8 @@ window.addEventListener('message', (event)=> {
     mpe.refreshingIconTimeout = setTimeout(()=> {
       mpe.refreshingIcon.style.display = "block"
     }, 1000)
+  } else if (data.type === 'open-image-helper') {
+    window['$']('#image-helper-view').modal()
   }
 }, false);
 

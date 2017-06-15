@@ -28,12 +28,21 @@
             {
                 "command": "markdown-preview-enhanced.openPreview",
                 "title": "Markdown Preview Enhanced: Open Preview"
+            },
+            {
+                "command": "markdown-preview-enhanced.openImageHelper",
+                "title": "Markdown Preview Enhanced: Image Helper"
             }
         ],
         "keybindings": [
             {
                 "command": "markdown-preview-enhanced.openPreview",
                 "key": "shift+ctrl+m",
+                "when": "editorLangId == markdown"
+            }, 
+            {
+                "command": "markdown-preview-enhanced.openImageHelper",
+                "key": "shift+ctrl+i",
                 "when": "editorLangId == markdown"
             }
         ],

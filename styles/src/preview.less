@@ -143,7 +143,6 @@
     */
     .markdown-preview-enhanced[data-presentation-preview-mode] {
         background-color: #f4f4f4;
-        
         #preview-slides {
             width: 100%;
             .slide {
@@ -198,70 +197,65 @@
     }
 }
 
-
 // image helper 
 #image-helper-view {
-  @bg: #fff;
-  
-  color: #333;
-  padding: 16px;
+    @bg: #fff;
 
-  .splitter {
-    width: 100%;
-    height: 1px;
-    margin-bottom: 16px;
-    // border-bottom-style: dotted;
-    background-color: contrast(@bg, lighten(@bg, 4%), darken(@bg, 4%));
-  }
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 
-  .url-editor {
-    display: block;
-    margin: 12px 0;
-    padding: 8px;
-    width: 80%;
-  }
-
-  .drop-area {
-    margin-top: 12px;
-    text-align: center;
-    height: 64px;
-    border-style: dashed;
-    border-color: #999;
-
-    cursor: pointer;
-    margin-bottom: 32px;
-    background-color: darken(@bg, 2%);
-
-    &:hover {
-      background-color: contrast(@bg, lighten(@bg, 4%), darken(@bg, 4%));
+    color: #333;
+    padding: 16px;
+    .splitter {
+        width: 100%;
+        height: 1px;
+        margin-bottom: 16px; // border-bottom-style: dotted;
+        background-color: contrast(@bg, lighten(@bg, 4%), darken(@bg, 4%));
     }
-
-    p {
-      margin: 0;
-      position: relative;
-      top: 50%;
-      transform: translateY(-50%);
+    .url-editor {
+        display: block;
+        margin: 12px 0;
+        padding: 8px;
+        width: 80%;
     }
-
-    &.uploader {
-      margin-bottom: 12px;
+    .drop-area {
+        margin-top: 12px;
+        text-align: center;
+        height: 64px;
+        border-style: dashed;
+        border-color: #999;
+        cursor: pointer;
+        margin-bottom: 32px;
+        background-color: darken(@bg, 2%);
+        &:hover {
+            background-color: contrast(@bg, lighten(@bg, 4%), darken(@bg, 4%));
+        }
+        p {
+            margin: 0;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        &.uploader {
+            margin-bottom: 12px;
+        }
     }
-  }
-
-  .uploader-choice {
-    margin-bottom: 24px;
-
-    select {
-      background-color: darken(@bg, 4%);
-      border-color: lighten(@bg, 10%);
-      margin: 0 6px;
+    .uploader-choice {
+        margin-bottom: 24px;
+        select {
+            background-color: darken(@bg, 4%);
+            border-color: lighten(@bg, 10%);
+            margin: 0 6px;
+        }
     }
-  }
-
-  .close-btn, .add-btn {
-    margin-right: 16px;
-    width: 64px;
-    text-align: center;
-    padding: 0;
-  }
+    .close-btn,
+    .add-btn {
+        margin-right: 16px;
+        width: 64px;
+        text-align: center;
+        padding: 0;
+    }
 }

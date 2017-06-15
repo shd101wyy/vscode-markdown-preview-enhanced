@@ -59,6 +59,10 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	}
 
+	function openImageHelper() {
+		contentProvider.openImageHelper(vscode.window.activeTextEditor.document.uri)
+	}
+
 	function webviewFinishLoading(sourceUri) {
 		sourceUri = vscode.Uri.parse(sourceUri)
 		contentProvider.initMarkdownEngine(sourceUri)
@@ -268,6 +272,8 @@ export function activate(context: vscode.ExtensionContext) {
 	*/
 
   context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPreview', openPreview))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openImageHelper', openImageHelper))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 

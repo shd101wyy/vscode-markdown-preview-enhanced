@@ -4,7 +4,7 @@ import {Uri, CancellationToken, Event, ProviderResult, TextEditor} from 'vscode'
 
 import {MarkdownEngine} from './markdown-engine'
 import {MarkdownPreviewEnhancedConfig} from './config'
-import {escapeString} from './utility'
+import * as utility from './utility'
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -204,7 +204,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       <html>
       <head>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        <meta id="vscode-markdown-preview-enhanced-data" data-config="${escapeString(JSON.stringify(config))}">
+        <meta id="vscode-markdown-preview-enhanced-data" data-config="${utility.escapeString(JSON.stringify(config))}">
         <meta charset="UTF-8">
         ${this.getStyles(true)}
         ${this.getScripts(true)}
@@ -353,6 +353,22 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 			})
     }
   }
+
+  public openImageHelper(sourceUri:Uri) {
+    if (sourceUri.scheme === 'markdown-preview-enhanced') {
+      return utility.showWarningMessage('Please focus a markdown file.')
+    } else if (!this.isPreviewOn(sourceUri)) {
+      return utility.showWarningMessage('Please open preview first.')
+    } else {
+      vscode.commands.executeCommand(
+        '_workbench.htmlPreview.postMessage',
+        getPreviewUri(sourceUri),
+        {
+          type: 'open-image-helper'
+        })
+    }
+  }
+
 }
 
 /**

@@ -67,6 +67,11 @@ export function showSuccessMessage(msg) {
   vscode.window.showInformationMessage(msg)
 }
 
+export function showWarningMessage(msg) {
+  vscode.window.showWarningMessage(msg)
+}
+
+
 
 /**
  * open html file in browser or open pdf file in reader ... etc
