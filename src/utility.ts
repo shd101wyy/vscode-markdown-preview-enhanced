@@ -2,7 +2,7 @@ import * as path from "path"
 import * as fs from "fs"
 import * as vscode from "vscode"
 import {exec} from "child_process"
-
+import * as electron from "electron"
 
 export function getExtensionDirectoryPath() {
   return path.resolve(__dirname, "../../") // 

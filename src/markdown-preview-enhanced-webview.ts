@@ -210,13 +210,15 @@ function onLoad() {
   /** init toolbar event */
   initToolbarEvent()
 
+  /** init image helper */
+  initImageHelper()
+
   previewElement.onscroll = scrollEvent
 
   window.parent.postMessage({ 
     command: 'did-click-link', // <= this has to be `did-click-link` to post message
     data: `command:_markdown-preview-enhanced.webviewFinishLoading?${JSON.stringify([sourceUri])}`
   }, 'file://')
-
 }
 
 /**
@@ -313,6 +315,37 @@ function initContextMenu() {
       "sync_source": {name: "Sync Source (not done)"}
     }
   })
+}
+
+/**
+ * init image helper
+ */
+function initImageHelper() {
+  const imageHelper = document.getElementById("image-helper-view")
+
+  window['$']('#image-helper-view').modal()
+
+  // url editor
+  // used to insert image url
+  const urlEditor = imageHelper.getElementsByClassName('url-editor')[0] as HTMLInputElement
+  urlEditor.addEventListener('keypress', (event:KeyboardEvent)=> {
+    if (event.keyCode === 13) { // enter key pressed 
+      console.log('enter key pressed')
+      let url = urlEditor.value.trim()
+      if (url.indexOf(' ') >= 0) {
+        url = `<${url}>`
+      }
+      if (url.length) {
+        $['modal'].close(); // close modal
+        window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.insertImageUrl?${JSON.stringify([sourceUri, url])}`}, 'file://') 
+      }
+      return false 
+    } else {
+      return true 
+    }
+  })
+
+
 }
 
 /**
@@ -787,7 +820,4 @@ if (document.readyState === 'loading') {
 } else {
   onLoad();
 }
-
-
-
 })()

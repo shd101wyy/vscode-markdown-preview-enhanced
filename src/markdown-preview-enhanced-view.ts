@@ -118,6 +118,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
       scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
 
+      // jquery modal 
+      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-modal/jquery.modal.min.js')}"></script>`
+
       // crpto-js
       scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/crypto-js/crypto-js.js')}"></script>`
     }
@@ -155,6 +158,10 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     
       // jquery-contextmenu
       styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-contextmenu/jquery.contextMenu.min.css`)}">`
+    
+      // jquery-modal 
+      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-modal/jquery.modal.min.css`)}">`
+
     }
 
     return styles  
@@ -207,14 +214,46 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <div class="markdown-preview-enhanced" for="preview">
           ${html}
         </div>
+        
         <div class="refreshing-icon"></div>
+
         <div class="mpe-toolbar">
           <div class="back-to-top-btn btn"><span>⬆︎</span></div>
           <div class="refresh-btn btn"><span>⟳︎</span></div>
           <div class="sidebar-toc-btn btn"><span>≡</span></div>
         </div>
-        <span class="contextmenu">
-        </span>
+
+        <div id="image-helper-view">
+          <h4>Image Helper</h4>
+          <div class="upload-div">
+            <label>Link</label>
+            <input type="text" class="url-editor" placeholder="enter image URL here, then press \'Enter\' to insert.">
+
+            <div class="splitter"></div>
+
+            <label class="copy-label">Copy image to root /assets folder</label>
+            <div class="drop-area paster">
+              <p class="paster"> Drop image file here or click me </p>
+              <input class="file-uploader paster" type="file" style="display:none;" multiple="multiple" >
+            </div>
+
+            <div class="splitter"></div>
+
+            <label>Upload</label>
+            <div class="drop-area uploader">
+              <p class="uploader">Drop image file here or click me</p>
+              <input class="file-uploader uploader" type="file" style="display:none;" multiple="multiple" >
+            </div>
+            <div class="uploader-choice">
+              <span>use</span>
+              <select class="uploader-select">
+                <option>imgur</option>
+                <option>sm.ms</option>
+              </select>
+              <span> to upload images</span>
+            </div>
+          </div>
+        </div>
       </body>
       <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
       </html>`

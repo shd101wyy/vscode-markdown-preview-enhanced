@@ -62,6 +62,25 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.update(sourceUri)
 	}
 
+	/**
+	 * Insert imageUrl to markdown file
+	 * @param uri: markdown source uri
+	 * @param imageUrl: url of image to be inserted  
+	 */
+	function insertImageUrl(uri, imageUrl) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+
+		vscode.window.visibleTextEditors
+			.filter(editor => isMarkdownFile(editor.document) && editor.document.uri.fsPath === sourceUri.fsPath)
+			.forEach(editor => {
+				// const line = editor.selection.active.line
+				editor.edit((textEditorEdit)=> {
+					textEditorEdit.insert(editor.selection.active, `![enter image description here](${imageUrl})`)
+				})
+			})
+
+	}
+
 	function openInBrowser(uri) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.openInBrowser(sourceUri)
@@ -186,6 +205,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPreview', openPreview))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
+
+  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.insertImageUrl', insertImageUrl))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.openInBrowser', openInBrowser))
 
