@@ -19,6 +19,8 @@ interface MarkdownConfig {
   codeBlockTheme?: string,
 
   previewTheme?: string,
+
+  imageFolderPath?: string
 }
 
 /**
@@ -336,7 +338,7 @@ function initImageHelper() {
         url = `<${url}>`
       }
       if (url.length) {
-        $['modal'].close(); // close modal
+        $['modal'].close() // close modal
         window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.insertImageUrl?${JSON.stringify([sourceUri, url])}`}, 'file://') 
       }
       return false 
@@ -345,6 +347,33 @@ function initImageHelper() {
     }
   })
 
+  const copyLabel = imageHelper.getElementsByClassName('copy-label')[0] as HTMLLabelElement
+  copyLabel.innerText = `Copy image to ${config.imageFolderPath[0] == '/' ? 'root' : 'relative'} ${config.imageFolderPath} folder`
+
+  // drop area has 2 events:
+  // 1. paste(copy) image to imageFolderPath
+  // 2. upload image
+  function dropEvent(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type == "drop") {
+      if (e.target.className.indexOf('paster') >= 0) { // paste
+        const files = e.originalEvent.dataTransfer.files
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i]
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.pasteImageFile?${JSON.stringify([sourceUri, file.path])}`}, 'file://') 
+        }
+      } else { // upload
+        const files = e.originalEvent.dataTransfer.files
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i]
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.uploadImageFile?${JSON.stringify([sourceUri, file.path])}`}, 'file://') 
+        }
+      }
+      $['modal'].close() // close modal
+    }
+  }
+  window['$']('.drop-area', imageHelper).on('drop dragend dragstart dragenter dragleave drag dragover', dropEvent)
 
 }
 

@@ -159,6 +159,20 @@
                     "description": "Accepted protocols followed by `://` for links.",
                     "default": "http, https, atom, file",
                     "type": "string"
+                },
+                "markdown-preview-enhanced.imageFolderPath": {
+                    "description": "When using Image Helper to copy images, by default images will be copied to root image folder path '/assets'",
+                    "default": "/assets",
+                    "type": "string"
+                },
+                "markdown-preview-enhanced.imageUploader": {
+                    "description": "You can choose different image uploader to upload image",
+                    "default": "imgur",
+                    "type": "string",
+                    "enum": [
+                        "imgur",
+                        "sm.ms"
+                    ]
                 }
             }
         }

@@ -2,7 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 import * as path from 'path'
+import * as fs from 'fs'
+
 import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview} from './markdown-preview-enhanced-view'
+import * as utility from './utility'
 
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
@@ -78,7 +81,69 @@ export function activate(context: vscode.ExtensionContext) {
 					textEditorEdit.insert(editor.selection.active, `![enter image description here](${imageUrl})`)
 				})
 			})
+	}
 
+	function pasteImageFile(uri, imageFilePath) {
+		console.log('pasteImageFile: ' + imageFilePath)
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		const imageFolderPath = vscode.workspace.getConfiguration('markdown-preview-enhanced').get<string>('imageFolderPath')
+		let imageFileName = path.basename(imageFilePath)
+		const projectDirectoryPath = vscode.workspace.rootPath
+		let assetDirectoryPath, description
+		if (imageFolderPath[0] === '/') {
+			assetDirectoryPath = path.resolve(projectDirectoryPath, '.'+imageFolderPath)
+		} else {
+			assetDirectoryPath = path.resolve(path.dirname(sourceUri.fsPath), imageFolderPath)
+		}
+
+		const destPath = path.resolve(assetDirectoryPath, path.basename(imageFilePath))
+
+		vscode.window.visibleTextEditors
+			.filter(editor => isMarkdownFile(editor.document) && editor.document.uri.fsPath === sourceUri.fsPath)
+			.forEach(editor => {
+
+				fs.mkdir(assetDirectoryPath, (error)=> {
+					fs.stat(destPath, (err, stat)=> {
+						if (err == null) { // file existed 
+							const lastDotOffset = imageFileName.lastIndexOf('.')
+							const uid = '_' + Math.random().toString(36).substr(2, 9)
+
+							if (lastDotOffset > 0) {
+								description = imageFileName.slice(0, lastDotOffset)
+								imageFileName = imageFileName.slice(0, lastDotOffset) + uid + imageFileName.slice(lastDotOffset, imageFileName.length)
+							} else {
+								description = imageFileName
+								imageFileName = imageFileName + uid
+							}
+
+							fs.createReadStream(imageFilePath).pipe(fs.createWriteStream(path.resolve(assetDirectoryPath, imageFileName)))
+						} else if (err.code === 'ENOENT') { // file doesn't exist 
+						  fs.createReadStream(imageFilePath).pipe(fs.createWriteStream(destPath))
+
+							if (imageFileName.lastIndexOf('.'))
+								description = imageFileName.slice(0, imageFileName.lastIndexOf('.'))
+							else
+								description = imageFileName
+						} else {
+							return utility.showErrorMessage(err)
+						}
+
+						utility.showSuccessMessage(`Image ${imageFileName} has been copied to folder ${assetDirectoryPath}`)
+
+						let url = `${imageFolderPath}/${imageFileName}`
+						if (url.indexOf(' ') >= 0)
+							url = `<${url}>`
+
+						editor.edit((textEditorEdit)=> {
+							textEditorEdit.insert(editor.selection.active, `![${description}](${url})`)
+						})
+					})
+				})
+			})
+	}
+
+	function uploadImageFile(uri, imageFilePath) {
+		console.log('uploadImageFile: ' + imageFilePath)		
 	}
 
 	function openInBrowser(uri) {
@@ -207,6 +272,10 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.insertImageUrl', insertImageUrl))
+
+  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.pasteImageFile', pasteImageFile))
+
+  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.uploadImageFile', uploadImageFile))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.openInBrowser', openInBrowser))
 

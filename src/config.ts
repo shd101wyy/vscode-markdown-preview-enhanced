@@ -27,6 +27,12 @@ export class MarkdownPreviewEnhancedConfig {
 
   public readonly protocolsWhiteList: string
 
+  /**
+   * image helper
+   */
+  public readonly imageFolderPath: string
+  public readonly imageUploader: string
+
   private constructor() {
     const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
 
@@ -43,6 +49,8 @@ export class MarkdownPreviewEnhancedConfig {
     this.codeBlockTheme = config.get<string>('codeBlockTheme')
     this.previewTheme = config.get<string>('previewTheme')
     this.protocolsWhiteList = config.get<string>('protocolsWhiteList')
+    this.imageFolderPath = config.get<string>('imageFolderPath')
+    this.imageUploader = config.get<string>('imageUploader')
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
