@@ -176,34 +176,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 	/*
-	function openPreviewAutomatically(textEditor:vscode.TextEditor) {
-		if (!textEditor) return 
-
-		if (isMarkdownFile(textEditor.document)) {
-			const automaticallyShowPreviewOfMarkdownBeingEdited = vscode.workspace.getConfiguration('markdown-preview-enhanced')
-																														.get<boolean>("automaticallyShowPreviewOfMarkdownBeingEdited")
-
-			if (!automaticallyShowPreviewOfMarkdownBeingEdited) return
-
-			const previewUri = getMarkdownUri(textEditor.document.uri);
-			return vscode.commands.executeCommand(
-				'vscode.previewHtml', 
-				previewUri, 
-				vscode.ViewColumn.Two, 
-				`Preview '${path.basename(textEditor.document.uri.fsPath)}'`)
-			.then((success)=> {
-			}, (reason)=> {
-				vscode.window.showErrorMessage(reason)
-			})
-    }
-	}
-	
-	openPreviewAutomatically(vscode.window.activeTextEditor) // first time 
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((textEditor)=> {
-		openPreviewAutomatically(textEditor)
-	}))
-
-	
 	context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(textEditors=> {
 		// console.log('onDidChangeonDidChangeVisibleTextEditors ', textEditors)
 	}))

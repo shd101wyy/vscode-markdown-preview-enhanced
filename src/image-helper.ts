@@ -1,11 +1,11 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs"
-import * as imgur from "imgur"
 
 import {isMarkdownFile} from "./markdown-preview-enhanced-view"
 import * as utility from "./utility"
 import * as smAPI from "./sm"
+import * as imgurAPI from "./imgur"
 
 /**
  * Copy ans paste image at imageFilePath to config.imageForlderPath.
@@ -139,22 +139,22 @@ export function uploadImageFile(sourceUri: any, imageFilePath: string, imageUplo
 
     if (imageUploader === 'imgur') {
       // A single image
-      imgur.uploadFile(imageFilePath)
-      .then((json)=> {
-        setUploadedImageURL(imageFileName, json.data.link, editor, hint, curPos)
+      imgurAPI.uploadFile(imageFilePath)
+      .then((url)=> {
+        setUploadedImageURL(imageFileName, url, editor, hint, curPos)
       })
       .catch((err)=> {
-        utility.showErrorMessage(err.message.message)
+        utility.showErrorMessage(err)
       })
     } else { // sm.ms 
-      smAPI.uploadFile(imageFilePath,
-        (err, url)=> {
-          if (err)
-            return utility.showErrorMessage(err)
-          else
-            setUploadedImageURL(imageFileName, url, editor, hint, curPos)
+      smAPI.uploadFile(imageFilePath)
+      .then((url)=> {
+        setUploadedImageURL(imageFileName, url, editor, hint, curPos)
+      })
+      .catch((err)=> {
+        utility.showErrorMessage(err)
       })
     }
-
   })
 }
+

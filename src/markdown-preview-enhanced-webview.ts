@@ -20,7 +20,8 @@ interface MarkdownConfig {
 
   previewTheme?: string,
 
-  imageFolderPath?: string
+  imageFolderPath?: string,
+  imageUploader?: string
 }
 
 /**
@@ -347,12 +348,14 @@ function initImageHelper() {
   const copyLabel = imageHelper.getElementsByClassName('copy-label')[0] as HTMLLabelElement
   copyLabel.innerText = `Copy image to ${config.imageFolderPath[0] == '/' ? 'root' : 'relative'} ${config.imageFolderPath} folder`
 
+  const imageUploaderSelect = imageHelper.getElementsByClassName('uploader-select')[0] as HTMLSelectElement
+  imageUploaderSelect.value = config.imageUploader
+
   // drop area has 2 events:
   // 1. paste(copy) image to imageFolderPath
   // 2. upload image
   const dropArea = window['$']('.drop-area', imageHelper)
   const fileUploader = window['$']('.file-uploader', imageHelper)
-  const imageUploaderSelect = imageHelper.getElementsByClassName('uploader-select')[0] as HTMLSelectElement
   dropArea.on('drop dragend dragstart dragenter dragleave drag dragover', (e)=> {
     e.preventDefault()
     e.stopPropagation()
