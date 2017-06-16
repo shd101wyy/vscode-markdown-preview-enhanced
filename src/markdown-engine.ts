@@ -751,7 +751,7 @@ export class MarkdownEngine {
 
     if (ebookConfig['cover']) { // change cover to absolute path if necessary
       const cover = ebookConfig['cover']
-      ebookConfig['cover'] = this.resolveFilePath(cover, false)
+      ebookConfig['cover'] = this.resolveFilePath(cover, false).replace(/^file\:\/\/+/, '/')
     }
 
     let $ = cheerio.load(`<div>${html}</div>`, {xmlMode: true})
@@ -761,13 +761,26 @@ export class MarkdownEngine {
 
     const $toc = $(':root > ul').last()
     if ($toc.length) {
-      getStructure($toc, 0)
-
       if (ebookConfig['include_toc'] === false) { // remove itself and the heading ahead
         const $prev = $toc.prev()
         if ($prev.length && $prev[0].name.match(/^h\d$/i)) {
           $prev.remove()
         }
+      }
+
+      console.log($(':root').children('h1').length)
+      $(':root').children('h1, h2, h3, h4, h5, h6').each((offset, h)=> {
+        const $h = $(h)
+        const level = parseInt($h[0].name.slice(1)) - 1
+
+        // $h.attr('id', id)
+        $h.attr('ebook-toc-level-'+(level+1), '')
+        $h.attr('heading', $h.html())
+      })
+
+      getStructure($toc, 0) // analyze TOC
+
+      if (ebookConfig['include_toc'] === false) { // remove itself and the heading ahead
         $toc.remove()
       }
     }
@@ -929,12 +942,12 @@ export class MarkdownEngine {
       if (relative)
         return path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.'+filePath))
       else
-        return path.resolve(this.projectDirectoryPath, '.'+filePath)
+        return 'file://' + path.resolve(this.projectDirectoryPath, '.'+filePath)
     } else {
       if (relative)
         return filePath
       else
-        return path.resolve(this.fileDirectoryPath, filePath)
+        return 'file://' + path.resolve(this.fileDirectoryPath, filePath)
     }
   }
 
