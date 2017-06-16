@@ -293,82 +293,6 @@ export class MarkdownEngine {
       return `<a href="${wikiLink}">${linkText}</a>`
     }
 
-    // custom comment
-    this.md.block.ruler.before('code', 'custom-comment',
-    (state, start, end, silent)=> {
-      let pos = state.bMarks[start] + state.tShift[start],
-          max = state.eMarks[start],
-          src = state.src
-
-      if (pos >= max)
-        return false
-      if (src.startsWith('<!--', pos)) {
-        end = src.indexOf('-->', pos + 4)
-        if (end >= 0) {
-          let content = src.slice(pos + 4, end).trim()
-
-          let match = content.match(/(\s|\n)/) // find ' ' or '\n'
-          let firstIndexOfSpace:number
-          if (!match) {
-            firstIndexOfSpace = content.length
-          } else {
-            firstIndexOfSpace = match.index
-          }
-
-          let subject = content.slice(0, firstIndexOfSpace)
-
-          if (!(subject in CustomSubjects)) { // check if it is a valid subject
-            // it's not a valid subject, therefore escape it
-            state.line = start + 1 + (src.slice(pos + 4, end).match(/\n/g)||[]).length
-            return true
-          }
-
-          let rest = content.slice(firstIndexOfSpace+1).trim()
-
-          match = rest.match(/(?:[^\s\n:"']+|"[^"]*"|'[^']*')+/g) // split by space and \newline and : (not in single and double quotezz)
-
-          let option:object
-          if (match && match.length % 2 === 0) {
-            option = {}
-            let i = 0
-            while (i < match.length) {
-              const key = match[i],
-                    value = match[i+1]
-              try {
-                option[key] = JSON.parse(value)
-              } catch (e) {
-                null // do nothing
-              }
-              i += 2
-            }
-          } else {
-            option = {}
-          }
-
-          state.tokens.push({
-            type: 'custom',
-            subject: subject,
-            option: option
-          })
-
-          state.line = start + 1 + (src.slice(pos + 4, end).match(/\n/g)||[]).length
-          return true
-        } else {
-          return false
-        }
-      } else if (src[pos] === '[' && src.slice(pos, max).match(/^\[toc\]\s*$/i)) { // [TOC]
-        state.tokens.push({
-          type: 'custom',
-          subject: 'toc-bracket',
-          option: {}
-        })
-        state.line = start + 1
-        return true
-      } else {
-        return false
-      }
-    })
-
     // task list 
     this.md.renderer.rules.list_item_open = (tokens, idx)=> {
       if (tokens[idx + 2]) {
@@ -768,7 +692,6 @@ export class MarkdownEngine {
         }
       }
 
-      console.log($(':root').children('h1').length)
       $(':root').children('h1, h2, h3, h4, h5, h6').each((offset, h)=> {
         const $h = $(h)
         const level = parseInt($h[0].name.slice(1)) - 1
@@ -1331,11 +1254,10 @@ export class MarkdownEngine {
     inputString = fm.content
 
     // import external files and insert anchors if necessary 
-    const {outputString} = await transformMarkdown(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
+    const {outputString, slideConfigs} = await transformMarkdown(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
 
     const tocTable:{[key:string]:number} = {},
-          headings:Array<Heading> = [],
-          slideConfigs:Array<object> = []
+          headings:Array<Heading> = []
     let tocBracketEnabled:boolean = false
     /**
      * flag for checking whether there is change in headings.
@@ -1406,23 +1328,6 @@ export class MarkdownEngine {
       id = id ? `id=${id}` : ''
       classes = classes ? `class=${classes}` : ''
       return `<h${tokens[idx].hLevel} ${id} ${classes}>`
-    }
-
-    // <!-- subject options... -->
-    this.md.renderer.rules.custom = (tokens, idx)=> {
-      const subject = tokens[idx].subject
-
-      if (subject === 'pagebreak' || subject === 'newpage') {
-        return '<div class="pagebreak"> </div>'
-      } else if (subject == 'toc-bracket') { // [toc]
-        tocBracketEnabled = true
-        return '\n[MPETOC]\n'
-      } else if (subject == 'slide') {
-        let opt = tokens[idx].option
-        slideConfigs.push(opt)
-        return '<span class="new-slide"></span>'
-      }
-      return ''
     }
 
     let html = this.md.render(outputString)
