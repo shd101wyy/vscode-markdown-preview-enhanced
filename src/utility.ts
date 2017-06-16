@@ -2,6 +2,8 @@ import * as path from "path"
 import * as fs from "fs"
 import * as vscode from "vscode"
 import {exec} from "child_process"
+import * as temp from "temp"
+temp.track()
 
 export function getExtensionDirectoryPath() {
   return path.resolve(__dirname, "../../") // 
@@ -36,41 +38,41 @@ export function unescapeString(str:string):string {
   return str.replace(/\&(amp|lt|gt|quot|apos|\#x27|\#x2F|\#x5C)\;/g, (whole)=> (TAGS_TO_REPLACE_REVERSE[whole] || whole))
 }
 
-export function readFile(filePath):Promise<string> {
-  return new Promise<string>((resolve, reject)=> {
-    fs.readFile(filePath, {encoding: 'utf-8'}, (error, data)=> {
+export function readFile(file:string, options?):Promise<string> {
+  return new Promise((resolve, reject)=> {
+    fs.readFile(file, options, (error, text)=> {
       if (error) return reject(error.toString())
-      else return resolve(data)
+      else return resolve(text)
     })
   })
 }
 
-export function writeFile(filePath, data):Promise<string> {
+export function writeFile(file:string, text, options?) {
   return new Promise((resolve, reject)=> {
-    fs.writeFile(filePath, data, {encoding: 'utf-8'}, (error)=> {
+    fs.writeFile(file, text, options, (error)=> {
       if (error) return reject(error.toString())
       else return resolve()
+    })
+  })
+}
+
+export function write(fd:number, text:string) {
+  return new Promise((resolve, reject)=> {
+    fs.write(fd, text, (error)=> {
+      if (error) return reject(error.toString())
+      return resolve()
     })
   }) 
 }
 
-/**
- * Display error messages
- * @param msg 
- */
-export function showErrorMessage(msg) {
-  vscode.window.showErrorMessage(msg)
+export function tempOpen(options):Promise<any> {
+  return new Promise((resolve, reject)=> {
+    temp.open(options, function(error, info) {
+      if (error) return reject(error.toString())
+      return resolve(info)
+    })
+  })
 }
-
-export function showSuccessMessage(msg) {
-  vscode.window.showInformationMessage(msg)
-}
-
-export function showWarningMessage(msg) {
-  vscode.window.showWarningMessage(msg)
-}
-
-
 
 /**
  * open html file in browser or open pdf file in reader ... etc

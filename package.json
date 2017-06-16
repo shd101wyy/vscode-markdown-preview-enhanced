@@ -196,6 +196,7 @@
     "dependencies": {
         "cheerio": "0.15.0",
         "gray-matter": "^2.1.1",
+        "mkdirp": "^0.5.1",
         "request": "^2.81.0",
         "temp": "^0.8.3",
         "uslug": "^1.0.4"

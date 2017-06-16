@@ -307,9 +307,30 @@ function initContextMenu() {
       "ebook_export": {
         name: "eBook (not done)",
         items: {
-          "ebook_epub": {name: "ePub"},
-          "ebook_mobi": {name: "mobi"},
-          "ebook_pdf": {name: "PDF"}
+          "ebook_epub": {
+            name: "ePub",
+            callback: ()=> {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.eBookExport?${JSON.stringify([sourceUri, 'epub'])}`}, 'file://') 
+            }
+          },
+          "ebook_mobi": {
+            name: "mobi",
+            callback: ()=> {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.eBookExport?${JSON.stringify([sourceUri, 'mobi'])}`}, 'file://') 
+            }
+          },
+          "ebook_pdf": {
+            name: "PDF",
+            callback: ()=> {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.eBookExport?${JSON.stringify([sourceUri, 'pdf'])}`}, 'file://') 
+            }
+          },
+          "ebook_html": {
+            name: "HTML",
+            callback: ()=> {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.eBookExport?${JSON.stringify([sourceUri, 'html'])}`}, 'file://') 
+            }
+          }
         }
       },
       "pandoc_export": {name: "Pandoc (not done)"},

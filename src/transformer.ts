@@ -27,7 +27,7 @@ export function transformMarkdown(inputString:string,
                             { filesCache = null, 
                               useAbsoluteImagePath = null,
                               imageDirectoryPath = null,
-                              forPreview = false }) {
+                              forPreview = false }):Promise<{outputString:string}> {
   return new Promise((resolve, reject)=> {
     let inBlock = false // inside code block
 

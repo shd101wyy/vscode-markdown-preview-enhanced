@@ -2,8 +2,7 @@ import * as path from "path"
 import * as fs from "fs"
 import * as cheerio from "cheerio"
 import * as uslug from "uslug"
-import * as temp from "temp"
-temp.track()
+import * as request from "request"
 
 const matter = require('gray-matter')
 
@@ -17,6 +16,7 @@ import {transformMarkdown} from "./transformer"
 import {toc} from "./toc"
 import {CustomSubjects} from "./custom-subjects"
 import {princeConvert} from "./prince-convert"
+import {ebookConvert} from "./ebook-convert"
 
 const extensionDirectoryPath = getExtensionDirectoryPath()
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
@@ -427,6 +427,36 @@ export class MarkdownEngine {
   }
 
   /**
+   * Embed local images. Load the image file and display it in base64 format
+   */
+  public async embedLocalImages($) {
+    const asyncFunctions = [] 
+
+    $('img').each((i, img)=> {
+      const $img = $(img)
+      let src = this.resolveFilePath($img.attr('src'), false)
+
+      let fileProtocalMatch
+      if (fileProtocalMatch = src.match(/^file:\/\/+/)) {
+        src = src.replace(fileProtocalMatch[0], '/')
+        src = src.replace(/\?(\.|\d)+$/, '') // remove cache
+        const imageType = path.extname(src).slice(1)
+        asyncFunctions.push(new Promise((resolve, reject)=> {
+          fs.readFile(decodeURI(src), (error, data)=> {
+            if (error) return resolve(null)
+            const base64 = new Buffer(data).toString('base64')
+            $img.attr('src', `data:image/${imageType};charset=utf-8;base64,${base64}`)
+            return resolve(base64)
+          })
+        }))
+      }
+    })
+    await Promise.all(asyncFunctions)
+
+    return $
+  }
+
+  /**
    * Generate HTML content
    * @param html: this is the final content you want to put. 
    * @param yamlConfig: this is the front matter.
@@ -542,11 +572,11 @@ export class MarkdownEngine {
     try{
       const styles = await Promise.all([
         // style template
-        readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css')),
+        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css')),
         // prism *.css
-        readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)),
+        utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)),
         // preview theme
-        readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`))
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`))
       ])
       styleCSS = styles.join('')
     } catch(e) {
@@ -574,29 +604,8 @@ export class MarkdownEngine {
     `
 
     if (options.embedLocalImages) { // embed local images as Data URI
-      const asyncFunctions = [] 
-      const $ = cheerio.load(html, {xmlMode: true})
-    
-      $('img').each((i, img)=> {
-        const $img = $(img)
-        let src = this.resolveFilePath($img.attr('src'), false)
-        console.log(src)
-        let fileProtocalMatch
-        if (fileProtocalMatch = src.match(/^file:\/\/+/)) {
-          src = src.replace(fileProtocalMatch[0], '/')
-          src = src.replace(/\?(\.|\d)+$/, '') // remove cache
-          const imageType = path.extname(src).slice(1)
-          asyncFunctions.push(new Promise((resolve, reject)=> {
-            fs.readFile(decodeURI(src), (error, data)=> {
-              if (error) return resolve(null)
-              const base64 = new Buffer(data).toString('base64')
-              $img.attr('src', `data:image/${imageType};charset=utf-8;base64,${base64}`)
-              return resolve(base64)
-            })
-          }))
-        }
-      })
-      await Promise.all(asyncFunctions)
+      let $ = cheerio.load(html, {xmlMode: true})
+      $ = await this.embedLocalImages($)
       html = $.html()
     }
     
@@ -606,123 +615,304 @@ export class MarkdownEngine {
   /**
    * generate HTML file and open it in browser
    */
-  public openInBrowser() {
-    this.parseMD(this.cachedInputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
-    .then(({html, yamlConfig})=> {
-      this.generateHTMLFromTemplate(html, yamlConfig, 
-                                    {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )
-      .then((html)=> {      
-        // create temp file
-
-      temp.open({
-        prefix: 'markdown-preview-enhanced',
-        suffix: '.html'
-      }, (err, info)=> {
-        if (err) return utility.showErrorMessage(err.toString())
-        fs.write(info.fd, html, (err)=> {
-          if (err) return utility.showErrorMessage(err.toString())
-          /*
-          if isForPresentationPrint
-            url = 'file:///' + info.path + '?print-pdf'
-            atom.notifications.addInfo('Please copy and open the link below in Chrome.\nThen Right Click -> Print -> Save as Pdf.', dismissable: true, detail: url)
-          else
-          */
-          // open in browser
-          utility.openFile(info.path)
-        })
-      })
-      })
+  public async openInBrowser():Promise<void> {
+    let {html, yamlConfig} = await this.parseMD(this.cachedInputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
+    html = await this.generateHTMLFromTemplate(html, yamlConfig, 
+                                    {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )   
+    // create temp file
+    const info = await utility.tempOpen({
+      prefix: 'markdown-preview-enhanced',
+      suffix: '.html'
     })
+
+    await utility.write(info.fd, html)
+    
+    // open in browser
+    utility.openFile(info.path)
+    return 
   }
 
   /**
    * 
    * @param filePath 
+   * @return dest if success, error if failure
    */
-  public saveAsHTML() {
-    this.parseMD(this.cachedInputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
-    .then(({html, yamlConfig})=> {
-      const htmlConfig = yamlConfig['html'] || {}
-      let cdn = htmlConfig['cdn'],
-          offline = !cdn
-      let embedLocalImages = htmlConfig['embed_local_images']
-      
-      let dest = this.filePath
-      let extname = path.extname(dest) 
-      dest = dest.replace(new RegExp(extname+'$'), '.html')
+  public async saveAsHTML():Promise<string> {
+    let {html, yamlConfig} = await this.parseMD(this.cachedInputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
+    const htmlConfig = yamlConfig['html'] || {}
+    let cdn = htmlConfig['cdn'],
+        offline = !cdn
+    let embedLocalImages = htmlConfig['embed_local_images']
+    
+    let dest = this.filePath
+    let extname = path.extname(dest) 
+    dest = dest.replace(new RegExp(extname+'$'), '.html')
 
-      this.generateHTMLFromTemplate(html, yamlConfig, {
-          isForPrint: false, 
-          isForPrince: false,
-          embedLocalImages: embedLocalImages,
-          offline: !cdn
-      }).then((html)=> {
-        const htmlFileName = path.basename(dest)
-
-        // presentation speaker notes
-        // copy dependency files
-        
-        if (!offline && html.indexOf('[{"src":"revealjs_deps/notes.js","async":true}]') >= 0) {
-          const depsDirName = path.resolve(path.dirname(dest), 'revealjs_deps')
-          if (!fs.existsSync(depsDirName)) {
-            fs.mkdirSync(depsDirName)
-          }
-          fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.js')))
-          fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.html')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.html')))
-        }
-
-        utility.writeFile(dest, html)
-        .then(()=> {
-          utility.showSuccessMessage(`File ${htmlFileName} was created at path: ${dest}`)
-        })
-        .catch((error)=> {
-          utility.showErrorMessage(error)
-        })
-      })
+    html = await this.generateHTMLFromTemplate(html, yamlConfig, {
+        isForPrint: false, 
+        isForPrince: false,
+        embedLocalImages: embedLocalImages,
+        offline: !cdn
     })
+
+    const htmlFileName = path.basename(dest)
+
+    // presentation speaker notes
+    // copy dependency files
+    if (!offline && html.indexOf('[{"src":"revealjs_deps/notes.js","async":true}]') >= 0) {
+      const depsDirName = path.resolve(path.dirname(dest), 'revealjs_deps')
+      if (!fs.existsSync(depsDirName)) {
+        fs.mkdirSync(depsDirName)
+      }
+      fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.js')))
+      fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.html')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.html')))
+    }
+
+    await utility.writeFile(dest, html)
+    return dest
   }
 
   /**
    * prince pdf file export
+   * @return dest if success, error if failure
    */
-  public princeExport() {
-    this.parseMD(this.cachedInputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
-    .then(({html, yamlConfig})=> {
-      let dest = this.filePath
-      let extname = path.extname(dest) 
-      dest = dest.replace(new RegExp(extname+'$'), '.pdf')
+  public async princeExport():Promise<string> {
+    let {html, yamlConfig} = await this.parseMD(this.cachedInputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+    let dest = this.filePath
+    let extname = path.extname(dest) 
+    dest = dest.replace(new RegExp(extname+'$'), '.pdf')
 
-      this.generateHTMLFromTemplate(html, yamlConfig, {
-          isForPrint: true, 
-          isForPrince: true,
-          embedLocalImages: false, 
-          offline: true
-      }).then((html)=> {
-        temp.open({prefix: 'markdown-preview-enhanced', suffix: '.html'}, (error, info)=> {
-          if (error) return utility.showErrorMessage(error)
-          utility.writeFile(info.fd, html).then(()=> {
-            console.log(info.path)
-            if (yamlConfig['isPresentationMode']) {
-              const url = 'file://' + info.path + '?print-pdf'
-              utility.showSuccessMessage(`Please copy and open the link: { ${url.replace(/\_/g, '\\_')} } in Chrome then Print as Pdf.`)
-            } else {
-              princeConvert(info.path, dest, (error)=> {
-                if (error) return utility.showErrorMessage(error)
-                utility.showSuccessMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+    html = await this.generateHTMLFromTemplate(html, yamlConfig, {
+        isForPrint: true, 
+        isForPrince: true,
+        embedLocalImages: false, 
+        offline: true
+    })
 
-                //  open pdf
-                // @openFile dest if atom.config.get('markdown-preview-enhanced.pdfOpenAutomatically')
-                utility.openFile(dest)
-              })
-            }
-          })
-          .catch((error)=> {
-            utility.showErrorMessage(error)
-          })
-        })  
+    const info = await utility.tempOpen({prefix: 'markdown-preview-enhanced', suffix: '.html'})
+    await utility.writeFile(info.fd, html)
+
+    if (yamlConfig['isPresentationMode']) {
+      const url = 'file://' + info.path + '?print-pdf'
+      return url
+    } else {
+      await princeConvert(info.path, dest)
+      
+      //  open pdf
+      utility.openFile(dest)
+      return dest
+    }
+  }
+
+  private async eBookDownloadImages($, dest):Promise<Array<string>> {
+    const imagesToDownload = []
+    if (path.extname(dest) === '.epub' || path.extname('dest') === '.mobi') {
+      $('img').each((offset, img)=> {
+        const $img = $(img)
+        const src = $img.attr('src') || ''
+        if (src.match(/^https?\:\/\//)) 
+          imagesToDownload.push($img)
+      })
+    }
+
+    const asyncFunctions = imagesToDownload.map(($img)=> {
+      return new Promise<string>((resolve, reject)=> {
+        const httpSrc = $img.attr('src')
+        let savePath = Math.random().toString(36).substr(2, 9) + '_' + path.basename(httpSrc)
+        savePath = path.resolve(this.fileDirectoryPath, savePath)
+
+        const stream = request(httpSrc).pipe(fs.createWriteStream(savePath))
+
+        stream.on('finish', ()=> {
+          $img.attr('src', 'file:///' + savePath) 
+          return resolve(savePath)
+        })
       })
     })
 
+    return await Promise.all(asyncFunctions)
+  }
+
+  /**
+   * 
+   * @param fileType: `epub`, `pdf`, `mobi` or `html`
+   * @return dest if success, error if failure
+   */
+  public async eBookExport(fileType='epub'):Promise<string> {
+    const inputString = await utility.readFile(this.filePath)
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+
+    let dest = this.filePath
+    let extname = path.extname(dest) 
+    dest = dest.replace(new RegExp(extname+'$'), '.'+fileType.toLowerCase())
+
+    let ebookConfig = yamlConfig['ebook']
+    if (!ebookConfig) throw 'eBook config not found. Please insert ebook front-matter to your markdown file.'
+
+    if (ebookConfig['cover']) { // change cover to absolute path if necessary
+      const cover = ebookConfig['cover']
+      ebookConfig['cover'] = this.resolveFilePath(cover, false)
+    }
+
+    let $ = cheerio.load(`<div>${html}</div>`, {xmlMode: true})
+
+    const tocStructure:Array<{level:number, filePath:string, heading:string, id:string}> = []
+    let headingOffset = 0
+
+    const $toc = $(':root > ul').last()
+    if ($toc.length) {
+      getStructure($toc, 0)
+
+      if (ebookConfig['include_toc'] === false) { // remove itself and the heading ahead
+        const $prev = $toc.prev()
+        if ($prev.length && $prev[0].name.match(/^h\d$/i)) {
+          $prev.remove()
+        }
+        $toc.remove()
+      }
+    }
+
+    // load the last ul as TOC, analyze toc links 
+    function getStructure($ul, level) {
+      $ul.children('li').each((offset, li)=> {
+        const $li = $(li)
+        const $a = $li.children('a').first()
+        if (!$a.length) return 
+
+        const filePath = $a.attr('href') // markdown file path 
+        const heading = $a.html()
+        const id = 'ebook-heading-id-' + headingOffset
+
+        tocStructure.push({level, filePath, heading, id})
+        headingOffset += 1
+
+        $a.attr('href', '#'+id) // change id 
+        if ($li.children().length > 1) {
+          getStructure($li.children().last(), level+1)
+        }
+      })
+    }
+
+    // load each markdown files according to `tocStructure`
+    const asyncFunctions = tocStructure.map(({heading, id, level, filePath}, offset)=> {
+      return new Promise((resolve, reject)=> {
+        let fileProtocalMatch
+        if (fileProtocalMatch = filePath.match(/^file:\/\/+/)) 
+          filePath = filePath.replace(fileProtocalMatch[0], '/')
+        
+        fs.readFile(filePath, {encoding: 'utf-8'}, (error, text)=> {
+          if (error) return reject(error.toString())
+          this.parseMD(text, {useRelativeImagePath: false, isForPreview: false, hideFrontMatter:true})
+          .then(({html})=> {
+            return resolve({heading, id, level, filePath, html, offset})
+          })
+        })
+      })
+    })
+
+    let outputHTML = $.html().replace(/^<div>(.+)<\/div>$/, '$1')
+    let results = await Promise.all(asyncFunctions)
+    results = results.sort((a, b)=> a['offset'] - b['offset'])
+
+    results.forEach(({heading, id, level, filePath, html})=> {
+      const $ = cheerio.load(`<div>${html}</div>`, {xmlMode:true})
+      const $firstChild = $(':root').children().first()
+      if ($firstChild.length) {
+        $firstChild.attr('id', id)
+        $firstChild.attr('ebook-toc-level-'+(level+1), '')
+        $firstChild.attr('heading', heading)
+      }
+
+      outputHTML += $.html().replace(/^<div>(.+)<\/div>$/, '$1') // append new content
+    })
+
+    $ = cheerio.load(outputHTML, {xmlMode: true})
+    const downloadedImagePaths = await this.eBookDownloadImages($, dest)
+
+    // convert image to base64 if output html 
+    if (path.extname(dest) === '.html') {
+      // check cover 
+      let coverImage = ''
+      if (ebookConfig['cover']) {
+        const cover = ebookConfig['cover'][0] === '/' ? ('file:///' + ebookConfig['cover']) : ebookConfig['cover']
+        $(':root').children().first().prepend(`<img style="display:block; margin-bottom: 24px;" src="${cover}">`)
+      }
+
+      $ = await this.embedLocalImages($)
+    }
+
+    // retrieve html 
+    outputHTML = $.html()
+    const title = ebookConfig['title'] || 'no title'
+
+    // math
+    let mathStyle = ''
+    if (outputHTML.indexOf('class="katex"') > 0) {
+      if (path.extname(dest) == '.html' && ebookConfig['html'] && ebookConfig['html'].cdn){
+        mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
+      } else {
+        mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
+      }
+    }
+    
+    // prism and preview theme 
+    let styleCSS = ""
+    try{
+      const styles = await Promise.all([
+        // style template
+        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css')),
+        // prism *.css
+        utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)),
+        // preview theme
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`))
+      ])
+      styleCSS = styles.join('')
+    } catch(e) {
+      styleCSS = ''
+    }
+
+    // only use github-light style for ebook
+    html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>${title}</title>
+    <meta charset=\"utf-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <style> ${styleCSS} </style>
+    ${mathStyle}
+  </head>
+  <body class="markdown-preview-enhanced">
+  ${outputHTML}
+  </body>
+</html>            
+`
+    const fileName = path.basename(dest)
+
+    // save as html 
+    if (path.extname(dest) === '.html') {
+      await utility.writeFile(dest, html)
+      return dest
+    }
+
+    // this function will be called later 
+    function deleteDownloadedImages() {
+      downloadedImagePaths.forEach((imagePath)=> {
+        fs.unlink(imagePath, (error)=> {})
+      })
+    }
+
+    try {
+      const info = await utility.tempOpen({prefix: 'markdown-preview-enhanced', suffix: '.html'})
+
+      await utility.write(info.fd, html)
+      await ebookConvert(info.path, dest, ebookConfig)
+      deleteDownloadedImages()
+      return dest 
+    } catch(error) {
+      deleteDownloadedImages()
+      throw error
+    }
   }
 
   /**
@@ -730,7 +920,7 @@ export class MarkdownEngine {
    * @param filePath 
    * @param relative: whether to use the path relative to filePath or not.  
    */
-  private resolveFilePath(filePath='', relative=false) {
+  private resolveFilePath(filePath:string='', relative:boolean) {
     if (  filePath.match(this.protocolsWhiteListRegExp) ||
           filePath.startsWith('data:image/') ||
           filePath[0] == '#') {
@@ -739,12 +929,12 @@ export class MarkdownEngine {
       if (relative)
         return path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.'+filePath))
       else
-        return 'file://'+path.resolve(this.projectDirectoryPath, '.'+filePath)
+        return path.resolve(this.projectDirectoryPath, '.'+filePath)
     } else {
       if (relative)
         return filePath
       else
-        return 'file://'+path.resolve(this.fileDirectoryPath, filePath)
+        return path.resolve(this.fileDirectoryPath, filePath)
     }
   }
 
@@ -986,7 +1176,7 @@ export class MarkdownEngine {
           classString = slideConfig['class'] || '',
           idString = slideConfig['id'] ? `id="${slideConfig['id']}"` : ''
       if (slideConfig['data-background-image']) {
-        styleString += `background-image: url('${this.resolveFilePath(slideConfig['data-background-image'])}');`
+        styleString += `background-image: url('${this.resolveFilePath(slideConfig['data-background-image'], false)}');`
 
         if (slideConfig['data-background-size'])
           styleString += `background-size: ${slideConfig['data-background-size']};`
@@ -1012,12 +1202,12 @@ export class MarkdownEngine {
         const loop_ = videoLoop ? 'loop' : ''
 
         videoString = `
-        <video ${muted_} ${loop_} playsinline autoplay class="background-video" src="${this.resolveFilePath(slideConfig['data-background-video'])}">
+        <video ${muted_} ${loop_} playsinline autoplay class="background-video" src="${this.resolveFilePath(slideConfig['data-background-video'], false)}">
         </video>
         `
       } else if (slideConfig['data-background-iframe']) {
         iframeString = `
-        <iframe class="background-iframe" src="${this.resolveFilePath(slideConfig['data-background-iframe'])}" frameborder="0" > </iframe>
+        <iframe class="background-iframe" src="${this.resolveFilePath(slideConfig['data-background-iframe'], false)}" frameborder="0" > </iframe>
         <div class="background-iframe-overlay"></div>
         `
       }
@@ -1118,146 +1308,140 @@ export class MarkdownEngine {
     `
   }
 
-  public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
-    return new Promise((resolve, reject)=> {
-      this.cachedInputString = inputString // save to cache
+  public async parseMD(inputString:string, options:MarkdownEngineRenderOption):Promise<MarkdownEngineOutput> {
+    this.cachedInputString = inputString // save to cache
 
-      // process front-matter
-      const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
-      const frontMatterTable = fm.table,
-            yamlConfig = fm.data 
-      inputString = fm.content
+    // process front-matter
+    const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
+    const frontMatterTable = fm.table,
+          yamlConfig = fm.data || {} 
+    inputString = fm.content
 
-      // import external files and insert anchors if necessary 
-      transformMarkdown(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
-      .then(({outputString})=> {
+    // import external files and insert anchors if necessary 
+    const {outputString} = await transformMarkdown(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
 
-        const tocTable:{[key:string]:number} = {},
-              headings:Array<Heading> = [],
-              slideConfigs:Array<object> = []
-        let tocBracketEnabled:boolean = false
-        /**
-         * flag for checking whether there is change in headings.
-         */
-        let headingsChanged = false,
-            headingOffset = 0
+    const tocTable:{[key:string]:number} = {},
+          headings:Array<Heading> = [],
+          slideConfigs:Array<object> = []
+    let tocBracketEnabled:boolean = false
+    /**
+     * flag for checking whether there is change in headings.
+     */
+    let headingsChanged = false,
+        headingOffset = 0
 
-        // overwrite remarkable heading parse function
-        this.md.renderer.rules.heading_open = (tokens, idx)=> {
-          let line = null
-          let id = null
-          let classes = null
+    // overwrite remarkable heading parse function
+    this.md.renderer.rules.heading_open = (tokens, idx)=> {
+      let line = null
+      let id = null
+      let classes = null
 
-          if (tokens[idx + 1] && tokens[idx + 1].content) {
-            let ignore = false
-            let heading = tokens[idx + 1].content
+      if (tokens[idx + 1] && tokens[idx + 1].content) {
+        let ignore = false
+        let heading = tokens[idx + 1].content
 
-            // check {class:string, id:string, ignore:boolean}
-            let optMatch = null
-            if (optMatch = heading.match(/[^\\]\{(.+?)\}(\s*)$/)) {
-              heading = heading.replace(optMatch[0], '')
-              tokens[idx + 1].content = heading
-              tokens[idx + 1].children[0].content = heading
+        // check {class:string, id:string, ignore:boolean}
+        let optMatch = null
+        if (optMatch = heading.match(/[^\\]\{(.+?)\}(\s*)$/)) {
+          heading = heading.replace(optMatch[0], '')
+          tokens[idx + 1].content = heading
+          tokens[idx + 1].children[0].content = heading
 
-              try {
-                let opt = jsonic(optMatch[0].trim())
-                
-                classes = opt.class,
-                id = opt.id,
-                ignore = opt.ignore 
-              } catch(e) {
-                heading = "ParameterError: " + optMatch[1]
+          try {
+            let opt = jsonic(optMatch[0].trim())
+            
+            classes = opt.class,
+            id = opt.id,
+            ignore = opt.ignore 
+          } catch(e) {
+            heading = "ParameterError: " + optMatch[1]
 
-                tokens[idx + 1].content = heading
-                tokens[idx + 1].children[0].content = heading
-              }
-            }
-
-            if (!id) {
-              id = uslug(heading)
-            }
-
-            if (tocTable[id] >= 0) {
-              tocTable[id] += 1
-              id = id + '-' + tocTable[id]
-            } else {
-              tocTable[id] = 0
-            }
-
-            if (!ignore) {
-              const heading1:Heading = {content: heading, level: tokens[idx].hLevel, id:id}
-              headings.push(heading1)
-
-              /**
-               * check whether the heading is changed compared to the old one
-               */
-              if (headingOffset >= this.headings.length) headingsChanged = true
-              if (!headingsChanged && headingOffset < this.headings.length) {
-                const heading2 = this.headings[headingOffset]
-                if (heading1.content !== heading2.content || heading1.level !== heading2.level) {
-                  headingsChanged = true
-                }
-              }
-              headingOffset += 1
-            }
+            tokens[idx + 1].content = heading
+            tokens[idx + 1].children[0].content = heading
           }
-
-          id = id ? `id=${id}` : ''
-          classes = classes ? `class=${classes}` : ''
-          return `<h${tokens[idx].hLevel} ${id} ${classes}>`
         }
 
-        // <!-- subject options... -->
-        this.md.renderer.rules.custom = (tokens, idx)=> {
-          const subject = tokens[idx].subject
-
-          if (subject === 'pagebreak' || subject === 'newpage') {
-            return '<div class="pagebreak"> </div>'
-          } else if (subject == 'toc-bracket') { // [toc]
-            tocBracketEnabled = true
-            return '\n[MPETOC]\n'
-          } else if (subject == 'slide') {
-            let opt = tokens[idx].option
-            slideConfigs.push(opt)
-            return '<span class="new-slide"></span>'
-          }
-          return ''
+        if (!id) {
+          id = uslug(heading)
         }
-  
-        let html = this.md.render(outputString)
 
-        /**
-         * render tocHTML
-         */
-        if (headingsChanged || headings.length !== this.headings.length) {
-          const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
-          this.tocHTML = this.md.render(tocObject.content)
+        if (tocTable[id] >= 0) {
+          tocTable[id] += 1
+          id = id + '-' + tocTable[id]
+        } else {
+          tocTable[id] = 0
         }
-        this.headings = headings // reset headings information
 
-        if (tocBracketEnabled) { // [TOC]
-          html = html.replace(/^\s*\[MPETOC\]\s*/gm, this.tocHTML)
-        }
-      
-        return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
-          html = frontMatterTable + html
+        if (!ignore) {
+          const heading1:Heading = {content: heading, level: tokens[idx].hLevel, id:id}
+          headings.push(heading1)
 
           /**
-           * check slides
+           * check whether the heading is changed compared to the old one
            */
-          if (slideConfigs.length) {
-            if (options.isForPreview) {
-              html = this.parseSlides(html, slideConfigs, yamlConfig)
-            } else {
-              html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeImagePath)
+          if (headingOffset >= this.headings.length) headingsChanged = true
+          if (!headingsChanged && headingOffset < this.headings.length) {
+            const heading2 = this.headings[headingOffset]
+            if (heading1.content !== heading2.content || heading1.level !== heading2.level) {
+              headingsChanged = true
             }
-            if (yamlConfig) yamlConfig['isPresentationMode'] = true // mark as presentation mode
           }
+          headingOffset += 1
+        }
+      }
 
-          this.cachedHTML = html // save to cache
-          return resolve({html, markdown:inputString, tocHTML: this.tocHTML, yamlConfig})
-        })
-      })
-    })
+      id = id ? `id=${id}` : ''
+      classes = classes ? `class=${classes}` : ''
+      return `<h${tokens[idx].hLevel} ${id} ${classes}>`
+    }
+
+    // <!-- subject options... -->
+    this.md.renderer.rules.custom = (tokens, idx)=> {
+      const subject = tokens[idx].subject
+
+      if (subject === 'pagebreak' || subject === 'newpage') {
+        return '<div class="pagebreak"> </div>'
+      } else if (subject == 'toc-bracket') { // [toc]
+        tocBracketEnabled = true
+        return '\n[MPETOC]\n'
+      } else if (subject == 'slide') {
+        let opt = tokens[idx].option
+        slideConfigs.push(opt)
+        return '<span class="new-slide"></span>'
+      }
+      return ''
+    }
+
+    let html = this.md.render(outputString)
+
+    /**
+     * render tocHTML
+     */
+    if (headingsChanged || headings.length !== this.headings.length) {
+      const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
+      this.tocHTML = this.md.render(tocObject.content)
+    }
+    this.headings = headings // reset headings information
+
+    if (tocBracketEnabled) { // [TOC]
+      html = html.replace(/^\s*\[MPETOC\]\s*/gm, this.tocHTML)
+    }
+
+    html = frontMatterTable + await this.resolveImagePathAndCodeBlock(html, options)
+
+    /**
+     * check slides
+     */
+    if (slideConfigs.length) {
+      if (options.isForPreview) {
+        html = this.parseSlides(html, slideConfigs, yamlConfig)
+      } else {
+        html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeImagePath)
+      }
+      if (yamlConfig) yamlConfig['isPresentationMode'] = true // mark as presentation mode
+    }
+
+    this.cachedHTML = html // save to cache
+    return {html, markdown:inputString, tocHTML: this.tocHTML, yamlConfig}
   }
 }

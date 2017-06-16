@@ -294,6 +294,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.openInBrowser()
+      .catch((error)=> {
+        vscode.window.showErrorMessage(error)
+      })
     }
   }
 
@@ -301,6 +304,12 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.saveAsHTML()
+      .then((dest)=> {
+        vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+      })
+      .catch((error)=> {
+        vscode.window.showErrorMessage(error)
+      })
     }
   }
 
@@ -308,6 +317,28 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.princeExport()
+      .then((dest)=> {
+        if (dest.endsWith('?print-pdf'))  // presentation pdf
+          vscode.window.showInformationMessage(`Please copy and open the link: { ${dest.replace(/\_/g, '\\_')} } in Chrome then Print as Pdf.`)
+        else 
+          vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+      })
+      .catch((error)=> {
+        vscode.window.showErrorMessage(error)
+      })
+    }
+  }
+
+  public eBookExport(sourceUri: Uri, fileType:string) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.eBookExport(fileType)
+      .then((dest)=> {
+        vscode.window.showInformationMessage(`eBook ${path.basename(dest)} was created as path: ${dest}`)
+      })
+      .catch((error)=> {
+        vscode.window.showErrorMessage(error)
+      })
     }
   }
 
@@ -356,9 +387,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
   public openImageHelper(sourceUri:Uri) {
     if (sourceUri.scheme === 'markdown-preview-enhanced') {
-      return utility.showWarningMessage('Please focus a markdown file.')
+      return vscode.window.showWarningMessage('Please focus a markdown file.')
     } else if (!this.isPreviewOn(sourceUri)) {
-      return utility.showWarningMessage('Please open preview first.')
+      return vscode.window.showWarningMessage('Please open preview first.')
     } else {
       vscode.commands.executeCommand(
         '_workbench.htmlPreview.postMessage',
