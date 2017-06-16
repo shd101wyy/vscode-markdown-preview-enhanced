@@ -16,7 +16,14 @@ function createAnchor(lineNo) {
 
 interface TransformMarkdownOutput {
   outputString: string,
-  slideConfigs: Array<object>
+  /**
+   * An array of slide configs.  
+   */
+  slideConfigs: Array<object>,
+  /**
+   * whehter we found [TOC] in markdown file or not.  
+   */
+  tocBracketEnabled: boolean
 }
 
 /**
@@ -36,10 +43,11 @@ export async function transformMarkdown(inputString:string,
     let inBlock = false // inside code block
     const tocConfigs = [],
           slideConfigs = []
+    let tocBracketEnabled = false 
 
     function helper(i, lineNo=0, outputString=""):TransformMarkdownOutput {
       if (i >= inputString.length) { // done 
-        return {outputString, slideConfigs}
+        return {outputString, slideConfigs, tocBracketEnabled}
       }
 
       if (inputString[i] == '\n')
@@ -108,6 +116,7 @@ export async function transformMarkdown(inputString:string,
         }
       } else if (line.match(/^\s*\[toc\]\s*$/i)) { // [TOC]
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
+        tocBracketEnabled = true 
         return helper(end+1, lineNo+1, outputString + `\n[MPETOC]\n\n`)
       }
 

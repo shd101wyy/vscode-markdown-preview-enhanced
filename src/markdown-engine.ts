@@ -98,7 +98,7 @@ export class MarkdownEngine {
    * cachedHTML is the cache of html generated from the markdown file.  
    */
   private cachedHTML:string = '';
-  private cachedInputString:string = ''
+  // private cachedInputString:string = '' // <= this is wrong
 
   constructor(args:MarkdownEngineConstructorArgs) {
     this.filePath = args.filePath
@@ -540,7 +540,8 @@ export class MarkdownEngine {
    * generate HTML file and open it in browser
    */
   public async openInBrowser():Promise<void> {
-    let {html, yamlConfig} = await this.parseMD(this.cachedInputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
+    const inputString = await utility.readFile(this.filePath)
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
     html = await this.generateHTMLFromTemplate(html, yamlConfig, 
                                     {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )   
     // create temp file
@@ -562,7 +563,8 @@ export class MarkdownEngine {
    * @return dest if success, error if failure
    */
   public async saveAsHTML():Promise<string> {
-    let {html, yamlConfig} = await this.parseMD(this.cachedInputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
+    const inputString = await utility.readFile(this.filePath)
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
     const htmlConfig = yamlConfig['html'] || {}
     let cdn = htmlConfig['cdn'],
         offline = !cdn
@@ -601,7 +603,8 @@ export class MarkdownEngine {
    * @return dest if success, error if failure
    */
   public async princeExport():Promise<string> {
-    let {html, yamlConfig} = await this.parseMD(this.cachedInputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+    const inputString = await utility.readFile(this.filePath)
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
     let dest = this.filePath
     let extname = path.extname(dest) 
     dest = dest.replace(new RegExp(extname+'$'), '.pdf')
@@ -1245,8 +1248,6 @@ export class MarkdownEngine {
   }
 
   public async parseMD(inputString:string, options:MarkdownEngineRenderOption):Promise<MarkdownEngineOutput> {
-    this.cachedInputString = inputString // save to cache
-
     // process front-matter
     const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
     const frontMatterTable = fm.table,
@@ -1254,11 +1255,10 @@ export class MarkdownEngine {
     inputString = fm.content
 
     // import external files and insert anchors if necessary 
-    const {outputString, slideConfigs} = await transformMarkdown(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
+    const {outputString, slideConfigs, tocBracketEnabled} = await transformMarkdown(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
 
     const tocTable:{[key:string]:number} = {},
           headings:Array<Heading> = []
-    let tocBracketEnabled:boolean = false
     /**
      * flag for checking whether there is change in headings.
      */
@@ -1342,7 +1342,7 @@ export class MarkdownEngine {
     this.headings = headings // reset headings information
 
     if (tocBracketEnabled) { // [TOC]
-      html = html.replace(/^\s*\[MPETOC\]\s*/gm, this.tocHTML)
+      html = html.replace(/^\s*<p>\[MPETOC\]<\/p>\s*/gm, this.tocHTML)
     }
 
     html = frontMatterTable + await this.resolveImagePathAndCodeBlock(html, options)
