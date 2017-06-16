@@ -305,7 +305,7 @@ function initContextMenu() {
         }
       },
       "ebook_export": {
-        name: "eBook (not done)",
+        name: "eBook",
         items: {
           "ebook_epub": {
             name: "ePub",
@@ -507,6 +507,54 @@ function renderMathJax() {
   })
 }
 
+function runCodeChunk(id:string) {
+  const codeChunk = document.querySelector(`.code-chunk[data-id="${id}"]`)
+  const running = codeChunk.classList.contains('running')
+  if (running) return 
+  codeChunk.classList.add('running')
+
+  window.parent.postMessage({ 
+    command: 'did-click-link', // <= this has to be `did-click-link` to post message
+    data: `command:_markdown-preview-enhanced.runCodeChunk?${JSON.stringify([sourceUri, id])}`
+  }, 'file://')
+}
+
+function runAllCodeChunks() {
+    window.parent.postMessage({ 
+    command: 'did-click-link', // <= this has to be `did-click-link` to post message
+    data: `command:_markdown-preview-enhanced.runAllCodeChunks?${JSON.stringify([sourceUri])}`
+  }, 'file://')
+}
+
+/**
+ * Setup code chunks
+ */
+function setupCodeChunks() {
+  const codeChunks = mpe.previewElement.getElementsByClassName('code-chunk')
+  if (!codeChunks.length) return 
+
+  let needToSetupCodeChunkId = false 
+
+  for (let i = 0; i < codeChunks.length; i++) {
+    const codeChunk = codeChunks[i],
+          id = codeChunk.getAttribute('data-id')
+
+    // bind click event 
+    const runBtn = codeChunk.getElementsByClassName('run-btn')[0]
+    const runAllBtn = codeChunk.getElementsByClassName('run-all-btn')[0]
+    if (runBtn) {
+      runBtn.addEventListener('click', ()=> {
+        runCodeChunk(id)
+      })
+    }
+    if (runAllBtn) {
+      runAllBtn.addEventListener('click', ()=> {
+        runAllCodeChunks()
+      })
+    }
+  }
+}
+
 /**
  * render sidebar toc 
  */
@@ -552,6 +600,8 @@ async function initEvents() {
   ])
   mpe.previewElement.innerHTML = mpe.hiddenPreviewElement.innerHTML
   mpe.hiddenPreviewElement.innerHTML = ""
+
+  setupCodeChunks()
 
   if (mpe.refreshingIconTimeout) {
     clearTimeout(mpe.refreshingIconTimeout)

@@ -113,6 +113,16 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.cacheSVG(sourceUri, code, svg)
 	}
 
+	function runCodeChunk(uri, codeChunkId) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.runCodeChunk(sourceUri, codeChunkId)
+	}
+
+	function runAllCodeChunks(uri) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.runAllCodeChunks(sourceUri)
+	}
+
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {
 			contentProvider.update(document.uri);
@@ -209,6 +219,10 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.webviewFinishLoading', webviewFinishLoading))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheSVG', cacheSVG))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runCodeChunk', runCodeChunk))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunks))
 
   context.subscriptions.push(contentProviderRegistration)
 }

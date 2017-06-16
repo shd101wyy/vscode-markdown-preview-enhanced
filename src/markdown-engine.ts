@@ -17,6 +17,7 @@ import {toc} from "./toc"
 import {CustomSubjects} from "./custom-subjects"
 import {princeConvert} from "./prince-convert"
 import {ebookConvert} from "./ebook-convert"
+import * as CodeChunkAPI from "./code-chunk"
 
 const extensionDirectoryPath = getExtensionDirectoryPath()
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
@@ -63,6 +64,33 @@ interface Heading {
   id:string
 }
 
+interface CodeChunkData {
+  /**
+   * id of the code chunk
+   */
+  id: string,
+  /**
+   * code content of the code chunk
+   */
+  code: string,
+  /**
+   * code chunk options
+   */
+  options: object,
+  /**
+   * result after running code chunk
+   */
+  result: string,
+  /**
+   * whether is running the code chunk or not
+   */
+  running: boolean,
+  /**
+   * last code chunk
+   */
+  prev: string
+}
+
 const defaults = {
   html:         true,        // Enable HTML tags in source
   xhtmlOut:     false,       // Use '/' to close single tags (<br />)
@@ -94,6 +122,9 @@ export class MarkdownEngine {
   // caches 
   private graphsCache:{[key:string]:string} = {}
 
+  // code chunks 
+  private codeChunksData:{[key:string]:CodeChunkData}
+
   /**
    * cachedHTML is the cache of html generated from the markdown file.  
    */
@@ -108,6 +139,8 @@ export class MarkdownEngine {
     this.initConfig()
     this.headings = []
     this.tocHTML = ''
+    this.graphsCache = {}
+    this.codeChunksData = {}
 
     this.md = new remarkable('full', 
       Object.assign({}, defaults, {typographer: this.enableTypographer, breaks: this.breakOnSingleNewLine}))
@@ -878,29 +911,70 @@ export class MarkdownEngine {
   }
 
   /**
+   * Run code chunk of `id`
+   * @param id 
+   */
+  public async runCodeChunk(id):Promise<String> {
+    let codeChunkData = this.codeChunksData[id]
+    if (!codeChunkData) return ''
+
+    codeChunkData.running = true
+    let result = await CodeChunkAPI.run(codeChunkData.code, this.fileDirectoryPath, codeChunkData.options)
+
+    const outputFormat = codeChunkData.options['output'] || 'text'
+    if (outputFormat === 'html') {
+      result = result 
+    } else if (outputFormat === 'png') {
+      const base64 = new Buffer(result).toString('base64')
+      result = `<img src="data:image/png;charset=utf-8;base64,${base64}">`
+    } else if (outputFormat === 'markdown') {
+      const {html} = await this.parseMD(result, {useRelativeImagePath:true, isForPreview:false, hideFrontMatter: true} )
+      result = html 
+    } else if (outputFormat === 'none') {
+      result = ''
+    } else {
+      result = `<pre class="language-text">${result}</pre>`
+    }
+
+    codeChunkData.running = false 
+    codeChunkData.result = result // save result.
+    return result
+  }
+
+  public async runAllCodeChunks() {
+    const asyncFunctions = []
+    for (let id in this.codeChunksData) {
+      asyncFunctions.push(this.runCodeChunk(id))
+    }
+    return await Promise.all(asyncFunctions)
+  }
+
+  /**
    * 
    * @param preElement the cheerio element
    * @param parameters is in the format of `lang {opt1:val1, opt2:val2}` or just `lang`       
    * @param text 
    */
-  private async renderCodeBlock($preElement, code, parameters, {graphsCache}) {
-    let match, lang 
+  private async renderCodeBlock($, $preElement, code, parameters, 
+  { graphsCache, 
+    codeChunksArray}:{graphsCache:object, codeChunksArray:CodeChunkData[]}) {
+    let match, lang, optionsStr:string, options:object 
     if (match = parameters.match(/\s*([^\s]+)\s+\{(.+?)\}/)) {
       lang = match[1]
-      parameters = match[2]
+      optionsStr = match[2]
     } else {
       lang = parameters
-      parameters = ''
+      optionsStr = ''
     }
 
-    if (parameters) {
+    if (optionsStr) {
       try {
-        parameters = jsonic('{'+parameters+'}')
+        options = jsonic('{'+optionsStr+'}')
       } catch (e) {
-        return $preElement.replaceWith(`<pre class="language-text">ParameterError: ${'{'+parameters+'}'}<br>${e.toString()}</pre>`)
+        return $preElement.replaceWith(`<pre class="language-text">OptionsError: ${'{'+optionsStr+'}'}<br>${e.toString()}</pre>`)
       }
     } else {
-      parameters = {}
+      options = {}
     }
 
     if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
@@ -928,7 +1002,7 @@ export class MarkdownEngine {
         if (!viz) viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
         
         try {
-          let engine = parameters.engine || "dot"
+          let engine = options['engine'] || "dot"
           svg = viz(code, {engine})
         } catch(e) {
           $preElement.replaceWith(`<pre>${e.toString()}</pre>`)
@@ -937,6 +1011,68 @@ export class MarkdownEngine {
 
       $preElement.replaceWith(`<p>${svg}</p>`)
       graphsCache[checksum] = svg // store to new cache
+    } else if (options['cmd']) {
+      const $el = $("<div class=\"code-chunk\"></div>") // create code chunk
+      if (!options['id']) {
+        options['id'] = 'mpe-code-chunk-id-' + codeChunksArray.length
+      }
+
+      if (options['cmd'] === true) {
+        options['cmd'] = lang
+      }
+
+      $el.attr({
+        'data-id': options['id']
+      })
+
+      let highlightedBlock = ''
+      if (!options['hide']) {
+        try {
+          if (!Prism) {
+            Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
+          }
+          highlightedBlock = `<pre class="language-${lang}">${Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])}</pre>`
+        } catch(e) {
+          // do nothing
+          highlightedBlock = `<pre class="language-text">${code}</pre>`
+        }
+      }
+      /*
+      if (!options['id']) { // id is required for code chunk
+        highlightedBlock = `<pre class="language-text">'id' is required for code chunk</pre>`
+      }*/
+
+      let codeChunkData:CodeChunkData = this.codeChunksData[options['id']]
+      let previousCodeChunkDataId = codeChunksArray.length ? codeChunksArray[codeChunksArray.length - 1].id : ''
+      if (!codeChunkData) {
+        codeChunkData = {
+          id: options['id'],
+          code,
+          options: options,
+          result: '',
+          running: false,
+          prev: previousCodeChunkDataId
+        }
+        this.codeChunksData[options['id']] = codeChunkData
+      } else {
+        codeChunkData.code = code 
+        codeChunkData.options = options
+        codeChunkData.prev = previousCodeChunkDataId
+      }
+      codeChunksArray.push(codeChunkData)
+
+      if (codeChunkData.running) {
+        $el.addClass('running')
+      }
+      const statusDiv = `<div class="status">running...</div>`
+      const buttonGroup = '<div class="btn-group"><div class="run-btn btn"><span>▶︎</span></div><div class=\"run-all-btn btn\">all</div></div>'
+      const outputDiv = `<div class="output-div">${codeChunkData.result}</div>`
+
+      $el.append(highlightedBlock)
+      $el.append(buttonGroup)
+      $el.append(statusDiv)
+      $el.append(outputDiv)
+      $preElement.replaceWith($el)
     } else { // normal code block  // TODO: code chunk
       try {
         if (!Prism) {
@@ -974,6 +1110,7 @@ export class MarkdownEngine {
     // new caches
     // which will be set when this.renderCodeBlocks is called
     const newGraphsCache:{[key:string]:string} = {}
+    const codeChunksArray:CodeChunkData[] = []
 
     const asyncFunctions = []
     $('pre').each((i, preElement)=> {
@@ -996,14 +1133,14 @@ export class MarkdownEngine {
         $preElement.attr('class', 'language-text')
       }
       
-      asyncFunctions.push(this.renderCodeBlock($preElement, code, lang, {graphsCache: newGraphsCache }))
+      asyncFunctions.push(this.renderCodeBlock($, $preElement, code, lang, {graphsCache: newGraphsCache, codeChunksArray}))
     })
 
     await Promise.all(asyncFunctions)
 
     // reset caches 
+    // the line below actually has problem.
     this.graphsCache = newGraphsCache
-
     return $.html()
   }
 
@@ -1289,7 +1426,7 @@ export class MarkdownEngine {
             id = opt.id,
             ignore = opt.ignore 
           } catch(e) {
-            heading = "ParameterError: " + optMatch[1]
+            heading = "OptionsError: " + optMatch[1]
 
             tokens[idx + 1].content = heading
             tokens[idx + 1].children[0].content = heading

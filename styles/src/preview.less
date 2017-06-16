@@ -137,6 +137,72 @@
         font-size: 16px;
         display: block;
         position: absolute;
+
+        // code chunk
+        .code-chunk {
+            position: relative;
+
+            .output-div {
+                overflow-x: auto;
+
+                svg {
+                    display: block;
+                }
+            }
+
+            pre {
+                cursor: text;
+            }
+
+            .btn-group {
+                position: absolute;
+                right: 0;
+                top: 0;
+                display: none;
+
+                .run-btn, .run-all-btn {
+                float: right;
+                margin-left: 4px;
+                border-radius: 3px;
+                font-size: 0.8em;
+                color: #eee;
+                background-color: #528bff;
+                background-image: none;
+                border: none;
+
+                &:hover {
+                    background-color: #4b7fe8;
+                    cursor: pointer;
+                }
+                }
+            }
+
+            &:hover {
+                .btn-group {
+                display: block;
+                }
+            }
+
+            .status {
+                position: absolute;
+                right: 0;
+                top: 0;
+                font-size: 0.85em;
+                color: inherit;
+                padding: 2px 6px;
+                background-color: rgba(0, 0, 0, 0.04);
+                display: none;
+            }
+
+            &.running {
+                .btn-group {
+                    display: none;
+                }
+                .status {
+                    display: block;
+                }
+            }
+        }
     }
     /*
     * Reveal.js styles

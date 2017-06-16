@@ -349,6 +349,26 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     }
   }
 
+  public runCodeChunk(sourceUri: Uri, codeChunkId: string) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.runCodeChunk(codeChunkId)
+      .then(()=> {
+        this.updateMarkdown(sourceUri)
+      })
+    }
+  }
+
+  public runAllCodeChunks(sourceUri) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.runAllCodeChunks()
+      .then(()=> {
+        this.updateMarkdown(sourceUri)
+      })
+    }
+  }
+
   get onDidChange(): Event<Uri> {
     return this._onDidChange.event
   }
