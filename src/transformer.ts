@@ -21,7 +21,7 @@ function createAnchor(lineNo) {
  * @param projectDirectoryPath 
  * @param param3 
  */
-export function fileImport(inputString:string, 
+export function transformMarkdown(inputString:string, 
                             fileDirectoryPath:string, 
                             projectDirectoryPath:string, 
                             { filesCache = null, 

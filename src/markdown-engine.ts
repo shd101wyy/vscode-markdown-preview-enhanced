@@ -13,7 +13,7 @@ import {escapeString, unescapeString, getExtensionDirectoryPath, readFile} from 
 import * as utility from "./utility"
 let viz = null
 import {scopeForLanguageName} from "./extension-helper"
-import {fileImport} from "./file-import"
+import {transformMarkdown} from "./transformer"
 import {toc} from "./toc"
 import {CustomSubjects} from "./custom-subjects"
 import {princeConvert} from "./prince-convert"
@@ -433,149 +433,174 @@ export class MarkdownEngine {
    * @param option: HTMLTemplateOption
    */
   public async generateHTMLFromTemplate(html:string, yamlConfig={}, options:HTMLTemplateOption):Promise<string> {
-      // get `id` and `class`
-      const elementId = yamlConfig['id'] || ''
-      let elementClass = yamlConfig['class'] || []
-      if (typeof(elementClass) == 'string')
-        elementClass = [elementClass]
-      elementClass = elementClass.join(' ')
+    // get `id` and `class`
+    const elementId = yamlConfig['id'] || ''
+    let elementClass = yamlConfig['class'] || []
+    if (typeof(elementClass) == 'string')
+      elementClass = [elementClass]
+    elementClass = elementClass.join(' ')
 
-      // TODO: mermaid
+    // math style and script
+    let mathStyle = ''
+    if (this.config.mathRenderingOption === 'MathJax') {
+      const inline = this.config.mathInlineDelimiters
+      const block = this.config.mathBlockDelimiters
 
-      // math style and script
-      let mathStyle = ''
-      if (this.config.mathRenderingOption === 'MathJax') {
-        const inline = this.config.mathInlineDelimiters
-        const block = this.config.mathBlockDelimiters
+      // TODO
+      const mathJaxConfig = {
+        extensions: ['tex2jax.js'],
+        jax: ['input/TeX','output/HTML-CSS'],
+        showMathMenu: false,
+        messageStyle: 'none',
 
-        // TODO
-        const mathJaxConfig = {
-          extensions: ['tex2jax.js'],
-          jax: ['input/TeX','output/HTML-CSS'],
-          showMathMenu: false,
-          messageStyle: 'none',
-
-          tex2jax: {
-            inlineMath: this.config.mathInlineDelimiters,
-            displayMath: this.config.mathBlockDelimiters,
-            processEnvironments: false,
-            processEscapes: true,
-          },
-          TeX: {
-            extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
-          },
-          'HTML-CSS': { availableFonts: ['TeX'] },
-        }
-
-        if (options.offline) {
-          mathStyle = `
-          <script type="text/x-mathjax-config">
-            MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
-          </script>
-          <script type="text/javascript" async src="file://${path.resolve(extensionDirectoryPath, './dependencies/mathjax/MathJax.js')}"></script>
-          `
-        } else {
-          mathStyle = `
-          <script type="text/x-mathjax-config">
-            MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
-          </script>
-          <script type="text/javascript" async src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js"></script>
-          `
-        }
-      } else if (this.config.mathRenderingOption == 'KaTeX') {
-        if (options.offline) {
-          mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
-        } else {
-          mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
-        }
-      } else {
-        mathStyle = ''
+        tex2jax: {
+          inlineMath: this.config.mathInlineDelimiters,
+          displayMath: this.config.mathBlockDelimiters,
+          processEnvironments: false,
+          processEscapes: true,
+        },
+        TeX: {
+          extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
+        },
+        'HTML-CSS': { availableFonts: ['TeX'] },
       }
 
-      // presentation
-      let presentationScript = '',
-          presentationStyle = '',
-          presentationInitScript = ''
-      if (yamlConfig["isPresentationMode"]) {
-        if (options.offline) {
-          presentationScript = `
-          <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/lib/js/head.min.js')}'></script>
-          <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/js/reveal.js')}'></script>`
-        } else {
-          presentationScript = `
-          <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/lib/js/head.min.js'></script>
-          <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/js/reveal.min.js'></script>`
-        }
-
-        let presentationConfig = yamlConfig['presentation'] || {}
-        let dependencies = presentationConfig['dependencies'] || []
-        if (presentationConfig['enableSpeakerNotes']) {
-          if (options.offline)
-            dependencies.push({src: path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js'), async: true})
-          else
-            dependencies.push({src: 'revealjs_deps/notes.js', async: true}) // TODO: copy notes.js file to corresponding folder
-        }
-        presentationConfig['dependencies'] = dependencies
-
-        presentationStyle = `
-        <style>
-        ${fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/reveal.css'))}
-        ${options.isForPrint ? fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/pdf.css')) : ''}
-        </style>
-        `
-        presentationInitScript = `
-        <script>
-          Reveal.initialize(${JSON.stringify(Object.assign({margin: 0.1}, presentationConfig))})
+      if (options.offline) {
+        mathStyle = `
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
         </script>
+        <script type="text/javascript" async src="file://${path.resolve(extensionDirectoryPath, './dependencies/mathjax/MathJax.js')}"></script>
+        `
+      } else {
+        mathStyle = `
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
+        </script>
+        <script type="text/javascript" async src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js"></script>
         `
       }
+    } else if (this.config.mathRenderingOption == 'KaTeX') {
+      if (options.offline) {
+        mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
+      } else {
+        mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
+      }
+    } else {
+      mathStyle = ''
+    }
 
-      // prince 
-      let princeClass = ""
-      if (options.isForPrince) {
-        princeClass = "prince"
+    // presentation
+    let presentationScript = '',
+        presentationStyle = '',
+        presentationInitScript = ''
+    if (yamlConfig["isPresentationMode"]) {
+      if (options.offline) {
+        presentationScript = `
+        <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/lib/js/head.min.js')}'></script>
+        <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/js/reveal.js')}'></script>`
+      } else {
+        presentationScript = `
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/lib/js/head.min.js'></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/js/reveal.min.js'></script>`
       }
 
-      let title = path.basename(this.filePath)
-      title = title.slice(0, title.length - path.extname(title).length) // remove '.md'
-
-      // prism and preview theme 
-      let styleCSS = ""
-      try{
-        const styles = await Promise.all([
-          // style template
-          readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css')),
-          // prism *.css
-          readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)),
-          // preview theme
-          readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`))
-        ])
-        styleCSS = styles.join('')
-      } catch(e) {
-        styleCSS = ''
+      let presentationConfig = yamlConfig['presentation'] || {}
+      let dependencies = presentationConfig['dependencies'] || []
+      if (presentationConfig['enableSpeakerNotes']) {
+        if (options.offline)
+          dependencies.push({src: path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js'), async: true})
+        else
+          dependencies.push({src: 'revealjs_deps/notes.js', async: true}) // TODO: copy notes.js file to corresponding folder
       }
-      html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>${title}</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        ${presentationStyle}
-        ${mathStyle}
+      presentationConfig['dependencies'] = dependencies
 
-        ${presentationScript}
-
-        <style> ${styleCSS} </style>
-      </head>
-      <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
-      ${html}
-      </body>
-      ${presentationInitScript}
-    </html>
+      presentationStyle = `
+      <style>
+      ${fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/reveal.css'))}
+      ${options.isForPrint ? fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/pdf.css')) : ''}
+      </style>
       `
+      presentationInitScript = `
+      <script>
+        Reveal.initialize(${JSON.stringify(Object.assign({margin: 0.1}, presentationConfig))})
+      </script>
+      `
+    }
 
-      return html
+    // prince 
+    let princeClass = ""
+    if (options.isForPrince) {
+      princeClass = "prince"
+    }
+
+    let title = path.basename(this.filePath)
+    title = title.slice(0, title.length - path.extname(title).length) // remove '.md'
+
+    // prism and preview theme 
+    let styleCSS = ""
+    try{
+      const styles = await Promise.all([
+        // style template
+        readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css')),
+        // prism *.css
+        readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)),
+        // preview theme
+        readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`))
+      ])
+      styleCSS = styles.join('')
+    } catch(e) {
+      styleCSS = ''
+    }
+    html = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>${title}</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      ${presentationStyle}
+      ${mathStyle}
+
+      ${presentationScript}
+
+      <style> ${styleCSS} </style>
+    </head>
+    <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
+    ${html}
+    </body>
+    ${presentationInitScript}
+  </html>
+    `
+
+    if (options.embedLocalImages) { // embed local images as Data URI
+      const asyncFunctions = [] 
+      const $ = cheerio.load(html, {xmlMode: true})
+    
+      $('img').each((i, img)=> {
+        const $img = $(img)
+        let src = this.resolveFilePath($img.attr('src'), false)
+        console.log(src)
+        let fileProtocalMatch
+        if (fileProtocalMatch = src.match(/^file:\/\/+/)) {
+          src = src.replace(fileProtocalMatch[0], '/')
+          src = src.replace(/\?(\.|\d)+$/, '') // remove cache
+          const imageType = path.extname(src).slice(1)
+          asyncFunctions.push(new Promise((resolve, reject)=> {
+            fs.readFile(decodeURI(src), (error, data)=> {
+              if (error) return resolve(null)
+              const base64 = new Buffer(data).toString('base64')
+              $img.attr('src', `data:image/${imageType};charset=utf-8;base64,${base64}`)
+              return resolve(base64)
+            })
+          }))
+        }
+      })
+      await Promise.all(asyncFunctions)
+      html = $.html()
+    }
+    
+    return html
   }
 
   /**
@@ -629,7 +654,7 @@ export class MarkdownEngine {
       this.generateHTMLFromTemplate(html, yamlConfig, {
           isForPrint: false, 
           isForPrince: false,
-          embedLocalImages: false,  // TODO
+          embedLocalImages: embedLocalImages,
           offline: !cdn
       }).then((html)=> {
         const htmlFileName = path.basename(dest)
@@ -1104,7 +1129,7 @@ export class MarkdownEngine {
       inputString = fm.content
 
       // import external files and insert anchors if necessary 
-      fileImport(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
+      transformMarkdown(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
       .then(({outputString})=> {
 
         const tocTable:{[key:string]:number} = {},
