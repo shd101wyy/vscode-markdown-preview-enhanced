@@ -123,7 +123,10 @@ export class MarkdownEngine {
   private graphsCache:{[key:string]:string} = {}
 
   // code chunks 
-  private codeChunksData:{[key:string]:CodeChunkData}
+  private codeChunksData:{[key:string]:CodeChunkData} = {}
+
+  // files cache 
+  private filesCache:{[key:string]:string} = {}
 
   /**
    * cachedHTML is the cache of html generated from the markdown file.  
@@ -139,8 +142,6 @@ export class MarkdownEngine {
     this.initConfig()
     this.headings = []
     this.tocHTML = ''
-    this.graphsCache = {}
-    this.codeChunksData = {}
 
     this.md = new remarkable('full', 
       Object.assign({}, defaults, {typographer: this.enableTypographer, breaks: this.breakOnSingleNewLine}))
@@ -529,11 +530,11 @@ export class MarkdownEngine {
     try{
       const styles = await Promise.all([
         // style template
-        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css')),
+        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css'), {encoding:'utf-8'}),
         // prism *.css
-        utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)),
+        utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`), {encoding:'utf-8'}),
         // preview theme
-        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`))
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`), {encoding:'utf-8'})
       ])
       styleCSS = styles.join('')
     } catch(e) {
@@ -573,7 +574,7 @@ export class MarkdownEngine {
    * generate HTML file and open it in browser
    */
   public async openInBrowser():Promise<void> {
-    const inputString = await utility.readFile(this.filePath)
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
     let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
     html = await this.generateHTMLFromTemplate(html, yamlConfig, 
                                     {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )   
@@ -596,7 +597,7 @@ export class MarkdownEngine {
    * @return dest if success, error if failure
    */
   public async saveAsHTML():Promise<string> {
-    const inputString = await utility.readFile(this.filePath)
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
     let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
     const htmlConfig = yamlConfig['html'] || {}
     let cdn = htmlConfig['cdn'],
@@ -636,7 +637,7 @@ export class MarkdownEngine {
    * @return dest if success, error if failure
    */
   public async princeExport():Promise<string> {
-    const inputString = await utility.readFile(this.filePath)
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
     let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
     let dest = this.filePath
     let extname = path.extname(dest) 
@@ -699,7 +700,7 @@ export class MarkdownEngine {
    * @return dest if success, error if failure
    */
   public async eBookExport(fileType='epub'):Promise<string> {
-    const inputString = await utility.readFile(this.filePath)
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
     let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
 
     let dest = this.filePath
@@ -832,11 +833,11 @@ export class MarkdownEngine {
     try{
       const styles = await Promise.all([
         // style template
-        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css')),
+        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css'), {encoding:'utf-8'}),
         // prism *.css
-        utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)),
+        utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`), {encoding:'utf-8'}),
         // preview theme
-        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`))
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`), {encoding:'utf-8'})
       ])
       styleCSS = styles.join('')
     } catch(e) {
@@ -977,7 +978,22 @@ export class MarkdownEngine {
       options = {}
     }
 
-    if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
+    function renderPlainCodeBlock() {
+      try {
+        if (!Prism) {
+          Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
+        }
+        const html = Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])
+        $preElement.html(html)  
+      } catch(e) {
+        // do nothing
+      }
+    }
+
+    const codeBlockOnly = options['code_block']
+    if (codeBlockOnly) {
+      renderPlainCodeBlock()
+    } else if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
       const checksum = md5(code)
       let svg:string = this.graphsCache[checksum] 
       if (!svg) {
@@ -1074,15 +1090,7 @@ export class MarkdownEngine {
       $el.append(outputDiv)
       $preElement.replaceWith($el)
     } else { // normal code block  // TODO: code chunk
-      try {
-        if (!Prism) {
-          Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
-        }
-        const html = Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])
-        $preElement.html(html)  
-      } catch(e) {
-        // do nothing
-      }
+      renderPlainCodeBlock()
     }
   }
 
@@ -1392,7 +1400,15 @@ export class MarkdownEngine {
     inputString = fm.content
 
     // import external files and insert anchors if necessary 
-    const {outputString, slideConfigs, tocBracketEnabled} = await transformMarkdown(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
+    const {outputString, slideConfigs, tocBracketEnabled} = await transformMarkdown(inputString, 
+    {
+      fileDirectoryPath: this.fileDirectoryPath, 
+      projectDirectoryPath: this.projectDirectoryPath,
+      forPreview: options.isForPreview,
+      protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
+      useRelativeImagePath: options.useRelativeImagePath,
+      filesCache: this.filesCache
+    })
 
     const tocTable:{[key:string]:number} = {},
           headings:Array<Heading> = []
