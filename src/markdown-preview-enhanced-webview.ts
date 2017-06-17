@@ -662,6 +662,7 @@ function updateHTML(html) {
     mpe.presentationMode = false 
   }
 
+  const scrollTop = mpe.previewElement.scrollTop
   // init several events 
   initEvents().then(()=> {
     mpe.scrollMap = null 
@@ -670,6 +671,8 @@ function updateHTML(html) {
     if (!mpe.doneLoadingPreview) {
       mpe.doneLoadingPreview = true
       scrollToRevealSourceLine(config['initialLine'])
+    } else { // restore scrollTop
+      mpe.previewElement.scrollTop = scrollTop // <= This line is necessary...
     }
   })
 }
