@@ -530,7 +530,12 @@ function runCodeChunk(id:string) {
 }
 
 function runAllCodeChunks() {
-    window.parent.postMessage({ 
+  const codeChunks = mpe.previewElement.getElementsByClassName('code-chunk')
+  for (let i = 0; i < codeChunks.length; i++) {
+    codeChunks[i].classList.add('running')
+  }
+
+  window.parent.postMessage({ 
     command: 'did-click-link', // <= this has to be `did-click-link` to post message
     data: `command:_markdown-preview-enhanced.runAllCodeChunks?${JSON.stringify([sourceUri])}`
   }, 'file://')
@@ -943,6 +948,8 @@ window.addEventListener('message', (event)=> {
     }, 1000)
   } else if (data.type === 'open-image-helper') {
     window['$']('#image-helper-view').modal()
+  } else if (data.type === 'run-all-code-chunks') {
+    runAllCodeChunks()
   }
 }, false);
 

@@ -918,6 +918,7 @@ export class MarkdownEngine {
   public async runCodeChunk(id):Promise<String> {
     let codeChunkData = this.codeChunksData[id]
     if (!codeChunkData) return ''
+    if (codeChunkData.running) return ''
 
     codeChunkData.running = true
     let result = await CodeChunkAPI.run(codeChunkData.code, this.fileDirectoryPath, codeChunkData.options)

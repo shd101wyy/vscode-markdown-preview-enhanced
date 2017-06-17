@@ -128,6 +128,22 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.runAllCodeChunks(sourceUri)
 	}
 
+	function runAllCodeChunksCommand() {
+		const textEditor = vscode.window.activeTextEditor
+		if (!textEditor.document) return 
+		if (!isMarkdownFile(textEditor.document)) return
+
+		const previewUri = getPreviewUri(textEditor.document.uri)
+		if (!previewUri) return
+
+		vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
+			previewUri,
+			{
+				type: 'run-all-code-chunks'
+			})
+	}
+	
+
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {
 			contentProvider.update(document.uri);
@@ -204,6 +220,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPreview', openPreview))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openImageHelper', openImageHelper))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunksCommand))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 
