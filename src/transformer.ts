@@ -4,6 +4,7 @@ import * as fs from "fs"
 import * as less from "less"
 import * as request from "request"
 import * as Baby from "babyparse"
+import * as temp from "temp"
 
 // import * as request from 'request'
 // import * as less from "less"
@@ -16,6 +17,7 @@ const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/json
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 
 import {CustomSubjects} from "./custom-subjects"
+import * as PDF from "./pdf"
 
 interface TransformMarkdownOutput {
   outputString: string,
@@ -80,6 +82,33 @@ function createAnchor(lineNo) {
   return `\n\n<p data-line="${lineNo}" class="sync-line" style="margin:0;"></p>\n\n`
 }
 
+let DOWNLOADS_TEMP_FOLDER = null
+/** 
+ * download file and return its local path
+ */
+function downloadFileIfNecessary(filePath:string):Promise<string> {
+  return new Promise((resolve, reject)=> {
+    if (!filePath.match(/^https?\:\/\//))
+      return resolve(filePath)
+
+    if (!DOWNLOADS_TEMP_FOLDER) DOWNLOADS_TEMP_FOLDER = temp.mkdirSync('mpe_downloads')
+    request.get({url: filePath, encoding: 'binary'}, (error, response, body)=> {
+      if (error)
+        return reject(error)
+      else {
+        const localFilePath = path.resolve(DOWNLOADS_TEMP_FOLDER, md5(filePath)) + path.extname(filePath)
+        fs.writeFile(localFilePath, body, 'binary', (error)=> {
+          if (error)
+            return reject(error)
+          else
+            return resolve(localFilePath)
+        })
+      }
+    })
+  })
+}
+
+
 /**
  * 
  * Load file by `filePath`
@@ -100,17 +129,12 @@ async function loadFile(filePath:string, {fileDirectoryPath, forPreview}, filesC
       })
     })
   }
+  else if (filePath.endsWith('.pdf')) { // pdf file
+    const localFilePath = await downloadFileIfNecessary(filePath)
+    const svgMarkdown = await PDF.toSVGMarkdown(localFilePath, {markdownDirectoryPath: fileDirectoryPath})
+    return svgMarkdown 
+  }
   /*
-  else if filePath.endsWith('.pdf') # pdf file
-    downloadFileIfNecessary(filePath)
-    .then (localFilePath)->
-      PDF ?= require('./pdf')
-      PDF.toSVGMarkdown localFilePath, {svgDirectoryPath: imageDirectoryPath, markdownDirectoryPath: fileDirectoryPath}, (error, svgMarkdown)->
-        if error
-          return reject error
-        else
-          return resolve(svgMarkdown)
-  
   else if filePath.endsWith('.js') # javascript file
     requiresJavaScriptFiles(filePath, forPreview).then (jsCode)->
       return resolve(jsCode)
@@ -283,7 +307,7 @@ export async function transformMarkdown(inputString:string,
           }
 
           if (config) {
-            if (config.width || config.height || config.class || config.id) {
+            if (config['width'] || config['height'] || config['class'] || config['id']) {
               output = `<img src="${imageSrc}" `
               for (let key in config) {
                 output += ` ${key}="${config[key]}" `
@@ -295,7 +319,7 @@ export async function transformMarkdown(inputString:string,
                 output += config['alt']
               output += `](${imageSrc}`
               if (config['title'])
-                output += ` "${config.title}"`
+                output += ` "${config['title']}"`
               output += ")  "
             }
           } else {
@@ -341,22 +365,24 @@ export async function transformMarkdown(inputString:string,
             else if (extname === '.css' || extname === '.less') { // css or less file
               output = `<style>${fileContent}</style>`
             }
-            /*
-            else if extname == '.pdf'
-              if config?.page_no # only disply the nth page. 1-indexed
-                pages = fileContent.split('\n')
-                pageNo = parseInt(config.page_no) - 1
-                pageNo = 0 if pageNo < 0
-                output = pages[pageNo] or ''
-              else if config?.page_begin or config?.page_end
-                pages = fileContent.split('\n')
-                pageBegin = parseInt(config.page_begin) - 1 or 0
-                pageEnd = config.page_end or pages.length - 1
-                pageBegin = 0 if pageBegin < 0
-                output = pages.slice(pageBegin, pageEnd).join('\n') or ''
-              else
+            else if (extname === '.pdf') {
+              if (config && config['page_no']) { // only disply the nth page. 1-indexed
+                const pages = fileContent.split('\n')
+                let pageNo = parseInt(config['page_no']) - 1
+                if (pageNo < 0) pageNo = 0
+                output = pages[pageNo] || ''
+              }
+              else if (config && (config['page_begin'] || config['page_end'])) {
+                const pages = fileContent.split('\n')
+                let pageBegin = parseInt(config['page_begin']) - 1 || 0
+                const pageEnd = config['page_end'] || pages.length - 1
+                if (pageBegin < 0) pageBegin = 0 
+                output = pages.slice(pageBegin, pageEnd).join('\n') || ''
+              } 
+              else {
                 output = fileContent
-            */
+              }
+            }
             else if (extname === '.dot' || extname === '.gv' || extname === '.viz') { // graphviz
               output = `\`\`\`dot\n${fileContent}\n\`\`\`  `
             }
