@@ -159,7 +159,7 @@ export class MarkdownEngine {
   }
 
   public updateConfiguration(config) {
-    this.config = config 
+    this.config = Object.assign({}, this.config, config) 
     this.initConfig()
 
     this.md.set({breaks: this.breakOnSingleNewLine, typographer: this.enableTypographer})
@@ -1157,6 +1157,15 @@ export class MarkdownEngine {
    */
   public getCachedHTML() {
     return this.cachedHTML
+  }
+
+  /**
+   * clearCaches will clear filesCache, codeChunksData, graphsCache
+   */
+  public clearCaches() {
+    this.filesCache = {}
+    this.codeChunksData = {}
+    this.graphsCache = {}
   }
 
   /**

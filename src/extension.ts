@@ -88,6 +88,11 @@ export function activate(context: vscode.ExtensionContext) {
 			})
 	}
 
+	function refreshPreview(uri) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.refreshPreview(sourceUri)		
+	}
+
 	function openInBrowser(uri) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.openInBrowser(sourceUri)
@@ -207,6 +212,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.pasteImageFile', pasteImageFile))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.uploadImageFile', uploadImageFile))
+
+  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.refreshPreview', refreshPreview))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.openInBrowser', openInBrowser))
 

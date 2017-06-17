@@ -290,6 +290,14 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     })
   }
 
+  public refreshPreview(sourceUri: Uri) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.clearCaches()
+      this.updateMarkdown(sourceUri)
+    }
+  }
+
   public openInBrowser(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri)
     if (engine) {

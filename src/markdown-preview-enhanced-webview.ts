@@ -236,6 +236,7 @@ function initToolbarEvent() {
 
     initSideBarTOCButton()
     initBackToTopButton()
+    initRefreshButton()
 
     return toolbar
 }
@@ -272,6 +273,15 @@ function initSideBarTOCButton() {
 function initBackToTopButton() {
   mpe.toolbar.backToTopBtn.onclick = ()=> {
     mpe.previewElement.scrollTop = 0
+  }
+}
+
+/**
+ * init .refresh-btn
+ */
+function initRefreshButton() {
+  mpe.toolbar.refreshBtn.onclick = ()=> {
+    window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.refreshPreview?${JSON.stringify([sourceUri])}`}, 'file://') 
   }
 }
 
