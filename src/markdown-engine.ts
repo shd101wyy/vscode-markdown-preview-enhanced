@@ -1128,10 +1128,11 @@ export class MarkdownEngine {
         codeBlock = $preElement.children().first()
         lang = 'text'
         let classes = codeBlock.attr('class')
-        if (classes)
-          lang = classes.replace(/^language-/, '') || 'text'
+        if (!classes) classes = 'language-text'
+        lang = classes.replace(/^language-/, '')
         code = codeBlock.text()
         $preElement.attr('class', classes)
+        $preElement.children().first().addClass(classes)
       } else {
         lang = 'text'
         if (preElement.children[0])

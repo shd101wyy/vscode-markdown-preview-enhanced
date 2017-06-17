@@ -78,8 +78,21 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     }
   }
 
-  private getScripts(isForPreview:boolean) {
+  private getScripts() {
     let scripts = ""
+
+    // jquery 
+    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery/jquery.js')}"></script>`
+  
+    // jquery contextmenu
+    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
+    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
+
+    // jquery modal 
+    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-modal/jquery.modal.min.js')}"></script>`
+
+    // crpto-js
+    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/crypto-js/crypto-js.js')}"></script>`
 
     // mermaid
     scripts += `<script src="file://${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>`
@@ -109,21 +122,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       scripts += `<script type="text/javascript" async src="file://${path.resolve(this.context.extensionPath, './dependencies/mathjax/MathJax.js')}"></script>`
       scripts += `<script type="text/x-mathjax-config"> MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)}); </script>`
     }
-
-    if  (isForPreview) {
-      // jquery 
-      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery/jquery.js')}"></script>`
-    
-      // jquery contextmenu
-      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
-      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
-
-      // jquery modal 
-      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-modal/jquery.modal.min.js')}"></script>`
-
-      // crpto-js
-      scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/crypto-js/crypto-js.js')}"></script>`
-    }
     
     return scripts
   }
@@ -132,8 +130,20 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    * @param isForPreview: whether to getStyles for rendering preview.  
    * @return a string of <link ...> that links to css files
    */
-  private getStyles(isForPreview:boolean) {
+  private getStyles() {
     let styles = `<link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">`
+
+    // preview.css 
+    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/preview.css')}">`
+
+    // loading.css 
+    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/loading.css')}">`
+  
+    // jquery-contextmenu
+    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-contextmenu/jquery.contextMenu.min.css`)}">`
+  
+    // jquery-modal 
+    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-modal/jquery.modal.min.css`)}">`
 
     // check math 
     if (this.config.mathRenderingOption === "KaTeX") {
@@ -148,21 +158,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // check preview theme 
     styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
-
-    if (isForPreview) {
-      // preview.css 
-      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/preview.css')}">`
-
-      // loading.css 
-      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/loading.css')}">`
-    
-      // jquery-contextmenu
-      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-contextmenu/jquery.contextMenu.min.css`)}">`
-    
-      // jquery-modal 
-      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-modal/jquery.modal.min.css`)}">`
-
-    }
 
     return styles  
   }
@@ -206,8 +201,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
         <meta id="vscode-markdown-preview-enhanced-data" data-config="${utility.escapeString(JSON.stringify(config))}">
         <meta charset="UTF-8">
-        ${this.getStyles(true)}
-        ${this.getScripts(true)}
+        ${this.getStyles()}
+        ${this.getScripts()}
         <base href="${document.uri.toString(true)}">
       </head>
       <body class="markdown-preview-enhanced-container">
@@ -406,6 +401,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       // update all generated md documents
 			vscode.workspace.textDocuments.forEach(document => {
 				if (document.uri.scheme === 'markdown-preview-enhanced') {
+          console.log(document.uri)
 					// this.update(document.uri);
           this._onDidChange.fire(document.uri)
 				}
