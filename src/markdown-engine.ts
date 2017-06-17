@@ -921,21 +921,26 @@ export class MarkdownEngine {
     if (codeChunkData.running) return ''
 
     codeChunkData.running = true
-    let result = await CodeChunkAPI.run(codeChunkData.code, this.fileDirectoryPath, codeChunkData.options)
+    let result
+    try {
+      result = await CodeChunkAPI.run(codeChunkData.code, this.fileDirectoryPath, codeChunkData.options)
 
-    const outputFormat = codeChunkData.options['output'] || 'text'
-    if (outputFormat === 'html') {
-      result = result 
-    } else if (outputFormat === 'png') {
-      const base64 = new Buffer(result).toString('base64')
-      result = `<img src="data:image/png;charset=utf-8;base64,${base64}">`
-    } else if (outputFormat === 'markdown') {
-      const {html} = await this.parseMD(result, {useRelativeImagePath:true, isForPreview:false, hideFrontMatter: true} )
-      result = html 
-    } else if (outputFormat === 'none') {
-      result = ''
-    } else {
-      result = `<pre class="language-text">${result}</pre>`
+      const outputFormat = codeChunkData.options['output'] || 'text'
+      if (outputFormat === 'html') {
+        result = result 
+      } else if (outputFormat === 'png') {
+        const base64 = new Buffer(result).toString('base64')
+        result = `<img src="data:image/png;charset=utf-8;base64,${base64}">`
+      } else if (outputFormat === 'markdown') {
+        const {html} = await this.parseMD(result, {useRelativeImagePath:true, isForPreview:false, hideFrontMatter: true} )
+        result = html 
+      } else if (outputFormat === 'none') {
+        result = ''
+      } else {
+        result = `<pre class="language-text">${result}</pre>`
+      }
+    } catch(error) {
+      result = `<pre class="language-text">${error}</pre>`
     }
 
     codeChunkData.running = false 
@@ -1102,19 +1107,6 @@ export class MarkdownEngine {
    */
   private async resolveImagePathAndCodeBlock(html, options:MarkdownEngineRenderOption) {
     let $ = cheerio.load(html, {xmlMode:true})
-
-    // resolve image paths
-    $('img, a').each((i, imgElement)=> {
-      let srcTag = 'src'
-      if (imgElement.name === 'a')
-        srcTag = 'href'
-
-      const img = $(imgElement)
-      const src = img.attr(srcTag)
-
-      img.attr(srcTag, this.resolveFilePath(src, options.useRelativeImagePath))
-    })
-
     
     // new caches
     // which will be set when this.renderCodeBlocks is called
@@ -1147,6 +1139,19 @@ export class MarkdownEngine {
     })
 
     await Promise.all(asyncFunctions)
+
+
+    // resolve image paths
+    $('img, a').each((i, imgElement)=> {
+      let srcTag = 'src'
+      if (imgElement.name === 'a')
+        srcTag = 'href'
+
+      const img = $(imgElement)
+      const src = img.attr(srcTag)
+
+      img.attr(srcTag, this.resolveFilePath(src, options.useRelativeImagePath))
+    })
 
     // reset caches 
     // the line below actually has problem.
