@@ -32,6 +32,14 @@
             {
                 "command": "markdown-preview-enhanced.openImageHelper",
                 "title": "Markdown Preview Enhanced: Image Helper"
+            },
+            {
+                "command": "markdown-preview-enhanced.runAllCodeChunks",
+                "title": "Markdown Preview Enhanced: Run All Code Chunks"
+            },
+            {
+                "command": "markdown-preview-enhanced.runCodeChunk",
+                "title": "Markdown Preview Enhanced: Run Code Chunk"
             }
         ],
         "keybindings": [
@@ -43,6 +51,16 @@
             {
                 "command": "markdown-preview-enhanced.openImageHelper",
                 "key": "shift+ctrl+i",
+                "when": "editorLangId == markdown"
+            },
+            {
+                "command": "markdown-preview-enhanced.runAllCodeChunks",
+                "key": "ctrl+shift+enter",
+                "when": "editorLangId == markdown"
+            },
+            {
+                "command": "markdown-preview-enhanced.runCodeChunk",
+                "key": "shift+enter",
                 "when": "editorLangId == markdown"
             }
         ],
@@ -194,8 +212,11 @@
         "package": "vsce package"
     },
     "dependencies": {
+        "babyparse": "^0.4.6",
         "cheerio": "0.15.0",
         "gray-matter": "^2.1.1",
+        "less": "^2.7.2",
+        "mkdirp": "^0.5.1",
         "request": "^2.81.0",
         "temp": "^0.8.3",
         "uslug": "^1.0.4"

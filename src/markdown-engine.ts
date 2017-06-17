@@ -2,8 +2,7 @@ import * as path from "path"
 import * as fs from "fs"
 import * as cheerio from "cheerio"
 import * as uslug from "uslug"
-import * as temp from "temp"
-temp.track()
+import * as request from "request"
 
 const matter = require('gray-matter')
 
@@ -13,10 +12,12 @@ import {escapeString, unescapeString, getExtensionDirectoryPath, readFile} from 
 import * as utility from "./utility"
 let viz = null
 import {scopeForLanguageName} from "./extension-helper"
-import {fileImport} from "./file-import"
+import {transformMarkdown} from "./transformer"
 import {toc} from "./toc"
 import {CustomSubjects} from "./custom-subjects"
 import {princeConvert} from "./prince-convert"
+import {ebookConvert} from "./ebook-convert"
+import * as CodeChunkAPI from "./code-chunk"
 
 const extensionDirectoryPath = getExtensionDirectoryPath()
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
@@ -63,6 +64,33 @@ interface Heading {
   id:string
 }
 
+interface CodeChunkData {
+  /**
+   * id of the code chunk
+   */
+  id: string,
+  /**
+   * code content of the code chunk
+   */
+  code: string,
+  /**
+   * code chunk options
+   */
+  options: object,
+  /**
+   * result after running code chunk
+   */
+  result: string,
+  /**
+   * whether is running the code chunk or not
+   */
+  running: boolean,
+  /**
+   * last code chunk
+   */
+  prev: string
+}
+
 const defaults = {
   html:         true,        // Enable HTML tags in source
   xhtmlOut:     false,       // Use '/' to close single tags (<br />)
@@ -94,11 +122,17 @@ export class MarkdownEngine {
   // caches 
   private graphsCache:{[key:string]:string} = {}
 
+  // code chunks 
+  private codeChunksData:{[key:string]:CodeChunkData} = {}
+
+  // files cache 
+  private filesCache:{[key:string]:string} = {}
+
   /**
    * cachedHTML is the cache of html generated from the markdown file.  
    */
   private cachedHTML:string = '';
-  private cachedInputString:string = ''
+  // private cachedInputString:string = '' // <= this is wrong
 
   constructor(args:MarkdownEngineConstructorArgs) {
     this.filePath = args.filePath
@@ -125,7 +159,7 @@ export class MarkdownEngine {
   }
 
   public updateConfiguration(config) {
-    this.config = config 
+    this.config = Object.assign({}, this.config, config) 
     this.initConfig()
 
     this.md.set({breaks: this.breakOnSingleNewLine, typographer: this.enableTypographer})
@@ -293,82 +327,6 @@ export class MarkdownEngine {
       return `<a href="${wikiLink}">${linkText}</a>`
     }
 
-    // custom comment
-    this.md.block.ruler.before('code', 'custom-comment',
-    (state, start, end, silent)=> {
-      let pos = state.bMarks[start] + state.tShift[start],
-          max = state.eMarks[start],
-          src = state.src
-
-      if (pos >= max)
-        return false
-      if (src.startsWith('<!--', pos)) {
-        end = src.indexOf('-->', pos + 4)
-        if (end >= 0) {
-          let content = src.slice(pos + 4, end).trim()
-
-          let match = content.match(/(\s|\n)/) // find ' ' or '\n'
-          let firstIndexOfSpace:number
-          if (!match) {
-            firstIndexOfSpace = content.length
-          } else {
-            firstIndexOfSpace = match.index
-          }
-
-          let subject = content.slice(0, firstIndexOfSpace)
-
-          if (!(subject in CustomSubjects)) { // check if it is a valid subject
-            // it's not a valid subject, therefore escape it
-            state.line = start + 1 + (src.slice(pos + 4, end).match(/\n/g)||[]).length
-            return true
-          }
-
-          let rest = content.slice(firstIndexOfSpace+1).trim()
-
-          match = rest.match(/(?:[^\s\n:"']+|"[^"]*"|'[^']*')+/g) // split by space and \newline and : (not in single and double quotezz)
-
-          let option:object
-          if (match && match.length % 2 === 0) {
-            option = {}
-            let i = 0
-            while (i < match.length) {
-              const key = match[i],
-                    value = match[i+1]
-              try {
-                option[key] = JSON.parse(value)
-              } catch (e) {
-                null // do nothing
-              }
-              i += 2
-            }
-          } else {
-            option = {}
-          }
-
-          state.tokens.push({
-            type: 'custom',
-            subject: subject,
-            option: option
-          })
-
-          state.line = start + 1 + (src.slice(pos + 4, end).match(/\n/g)||[]).length
-          return true
-        } else {
-          return false
-        }
-      } else if (src[pos] === '[' && src.slice(pos, max).match(/^\[toc\]\s*$/i)) { // [TOC]
-        state.tokens.push({
-          type: 'custom',
-          subject: 'toc-bracket',
-          option: {}
-        })
-        state.line = start + 1
-        return true
-      } else {
-        return false
-      }
-    })
-
     // task list 
     this.md.renderer.rules.list_item_open = (tokens, idx)=> {
       if (tokens[idx + 2]) {
@@ -427,277 +385,507 @@ export class MarkdownEngine {
   }
 
   /**
+   * Embed local images. Load the image file and display it in base64 format
+   */
+  public async embedLocalImages($) {
+    const asyncFunctions = [] 
+
+    $('img').each((i, img)=> {
+      const $img = $(img)
+      let src = this.resolveFilePath($img.attr('src'), false)
+
+      let fileProtocalMatch
+      if (fileProtocalMatch = src.match(/^file:\/\/+/)) {
+        src = src.replace(fileProtocalMatch[0], '/')
+        src = src.replace(/\?(\.|\d)+$/, '') // remove cache
+        const imageType = path.extname(src).slice(1)
+        asyncFunctions.push(new Promise((resolve, reject)=> {
+          fs.readFile(decodeURI(src), (error, data)=> {
+            if (error) return resolve(null)
+            const base64 = new Buffer(data).toString('base64')
+            $img.attr('src', `data:image/${imageType};charset=utf-8;base64,${base64}`)
+            return resolve(base64)
+          })
+        }))
+      }
+    })
+    await Promise.all(asyncFunctions)
+
+    return $
+  }
+
+  /**
    * Generate HTML content
    * @param html: this is the final content you want to put. 
    * @param yamlConfig: this is the front matter.
    * @param option: HTMLTemplateOption
    */
   public async generateHTMLFromTemplate(html:string, yamlConfig={}, options:HTMLTemplateOption):Promise<string> {
-      // get `id` and `class`
-      const elementId = yamlConfig['id'] || ''
-      let elementClass = yamlConfig['class'] || []
-      if (typeof(elementClass) == 'string')
-        elementClass = [elementClass]
-      elementClass = elementClass.join(' ')
+    // get `id` and `class`
+    const elementId = yamlConfig['id'] || ''
+    let elementClass = yamlConfig['class'] || []
+    if (typeof(elementClass) == 'string')
+      elementClass = [elementClass]
+    elementClass = elementClass.join(' ')
 
-      // TODO: mermaid
+    // math style and script
+    let mathStyle = ''
+    if (this.config.mathRenderingOption === 'MathJax') {
+      const inline = this.config.mathInlineDelimiters
+      const block = this.config.mathBlockDelimiters
 
-      // math style and script
-      let mathStyle = ''
-      if (this.config.mathRenderingOption === 'MathJax') {
-        const inline = this.config.mathInlineDelimiters
-        const block = this.config.mathBlockDelimiters
+      // TODO
+      const mathJaxConfig = {
+        extensions: ['tex2jax.js'],
+        jax: ['input/TeX','output/HTML-CSS'],
+        showMathMenu: false,
+        messageStyle: 'none',
 
-        // TODO
-        const mathJaxConfig = {
-          extensions: ['tex2jax.js'],
-          jax: ['input/TeX','output/HTML-CSS'],
-          showMathMenu: false,
-          messageStyle: 'none',
-
-          tex2jax: {
-            inlineMath: this.config.mathInlineDelimiters,
-            displayMath: this.config.mathBlockDelimiters,
-            processEnvironments: false,
-            processEscapes: true,
-          },
-          TeX: {
-            extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
-          },
-          'HTML-CSS': { availableFonts: ['TeX'] },
-        }
-
-        if (options.offline) {
-          mathStyle = `
-          <script type="text/x-mathjax-config">
-            MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
-          </script>
-          <script type="text/javascript" async src="file://${path.resolve(extensionDirectoryPath, './dependencies/mathjax/MathJax.js')}"></script>
-          `
-        } else {
-          mathStyle = `
-          <script type="text/x-mathjax-config">
-            MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
-          </script>
-          <script type="text/javascript" async src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js"></script>
-          `
-        }
-      } else if (this.config.mathRenderingOption == 'KaTeX') {
-        if (options.offline) {
-          mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
-        } else {
-          mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
-        }
-      } else {
-        mathStyle = ''
+        tex2jax: {
+          inlineMath: this.config.mathInlineDelimiters,
+          displayMath: this.config.mathBlockDelimiters,
+          processEnvironments: false,
+          processEscapes: true,
+        },
+        TeX: {
+          extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
+        },
+        'HTML-CSS': { availableFonts: ['TeX'] },
       }
 
-      // presentation
-      let presentationScript = '',
-          presentationStyle = '',
-          presentationInitScript = ''
-      if (yamlConfig["isPresentationMode"]) {
-        if (options.offline) {
-          presentationScript = `
-          <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/lib/js/head.min.js')}'></script>
-          <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/js/reveal.js')}'></script>`
-        } else {
-          presentationScript = `
-          <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/lib/js/head.min.js'></script>
-          <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/js/reveal.min.js'></script>`
-        }
-
-        let presentationConfig = yamlConfig['presentation'] || {}
-        let dependencies = presentationConfig['dependencies'] || []
-        if (presentationConfig['enableSpeakerNotes']) {
-          if (options.offline)
-            dependencies.push({src: path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js'), async: true})
-          else
-            dependencies.push({src: 'revealjs_deps/notes.js', async: true}) // TODO: copy notes.js file to corresponding folder
-        }
-        presentationConfig['dependencies'] = dependencies
-
-        presentationStyle = `
-        <style>
-        ${fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/reveal.css'))}
-        ${options.isForPrint ? fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/pdf.css')) : ''}
-        </style>
-        `
-        presentationInitScript = `
-        <script>
-          Reveal.initialize(${JSON.stringify(Object.assign({margin: 0.1}, presentationConfig))})
+      if (options.offline) {
+        mathStyle = `
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
         </script>
+        <script type="text/javascript" async src="file://${path.resolve(extensionDirectoryPath, './dependencies/mathjax/MathJax.js')}"></script>
+        `
+      } else {
+        mathStyle = `
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
+        </script>
+        <script type="text/javascript" async src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js"></script>
         `
       }
+    } else if (this.config.mathRenderingOption == 'KaTeX') {
+      if (options.offline) {
+        mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
+      } else {
+        mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
+      }
+    } else {
+      mathStyle = ''
+    }
 
-      // prince 
-      let princeClass = ""
-      if (options.isForPrince) {
-        princeClass = "prince"
+    // presentation
+    let presentationScript = '',
+        presentationStyle = '',
+        presentationInitScript = ''
+    if (yamlConfig["isPresentationMode"]) {
+      if (options.offline) {
+        presentationScript = `
+        <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/lib/js/head.min.js')}'></script>
+        <script src='file:///${path.resolve(extensionDirectoryPath, './dependencies/reveal/js/reveal.js')}'></script>`
+      } else {
+        presentationScript = `
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/lib/js/head.min.js'></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/js/reveal.min.js'></script>`
       }
 
-      let title = path.basename(this.filePath)
-      title = title.slice(0, title.length - path.extname(title).length) // remove '.md'
-
-      // prism and preview theme 
-      let styleCSS = ""
-      try{
-        const styles = await Promise.all([
-          // style template
-          readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css')),
-          // prism *.css
-          readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)),
-          // preview theme
-          readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`))
-        ])
-        styleCSS = styles.join('')
-      } catch(e) {
-        styleCSS = ''
+      let presentationConfig = yamlConfig['presentation'] || {}
+      let dependencies = presentationConfig['dependencies'] || []
+      if (presentationConfig['enableSpeakerNotes']) {
+        if (options.offline)
+          dependencies.push({src: path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js'), async: true})
+        else
+          dependencies.push({src: 'revealjs_deps/notes.js', async: true}) // TODO: copy notes.js file to corresponding folder
       }
-      html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>${title}</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        ${presentationStyle}
-        ${mathStyle}
+      presentationConfig['dependencies'] = dependencies
 
-        ${presentationScript}
-
-        <style> ${styleCSS} </style>
-      </head>
-      <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
-      ${html}
-      </body>
-      ${presentationInitScript}
-    </html>
+      presentationStyle = `
+      <style>
+      ${fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/reveal.css'))}
+      ${options.isForPrint ? fs.readFileSync(path.resolve(extensionDirectoryPath, './dependencies/reveal/pdf.css')) : ''}
+      </style>
       `
+      presentationInitScript = `
+      <script>
+        Reveal.initialize(${JSON.stringify(Object.assign({margin: 0.1}, presentationConfig))})
+      </script>
+      `
+    }
 
-      return html
+    // prince 
+    let princeClass = ""
+    if (options.isForPrince) {
+      princeClass = "prince"
+    }
+
+    let title = path.basename(this.filePath)
+    title = title.slice(0, title.length - path.extname(title).length) // remove '.md'
+
+    // prism and preview theme 
+    let styleCSS = ""
+    try{
+      const styles = await Promise.all([
+        // style template
+        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css'), {encoding:'utf-8'}),
+        // prism *.css
+        utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`), {encoding:'utf-8'}),
+        // preview theme
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`), {encoding:'utf-8'})
+      ])
+      styleCSS = styles.join('')
+    } catch(e) {
+      styleCSS = ''
+    }
+    html = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>${title}</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      ${presentationStyle}
+      ${mathStyle}
+
+      ${presentationScript}
+
+      <style> ${styleCSS} </style>
+    </head>
+    <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
+    ${html}
+    </body>
+    ${presentationInitScript}
+  </html>
+    `
+
+    if (options.embedLocalImages) { // embed local images as Data URI
+      let $ = cheerio.load(html, {xmlMode: true})
+      $ = await this.embedLocalImages($)
+      html = $.html()
+    }
+    
+    return html
   }
 
   /**
    * generate HTML file and open it in browser
    */
-  public openInBrowser() {
-    this.parseMD(this.cachedInputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
-    .then(({html, yamlConfig})=> {
-      this.generateHTMLFromTemplate(html, yamlConfig, 
-                                    {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )
-      .then((html)=> {      
-        // create temp file
-
-      temp.open({
-        prefix: 'markdown-preview-enhanced',
-        suffix: '.html'
-      }, (err, info)=> {
-        if (err) return utility.showErrorMessage(err.toString())
-        fs.write(info.fd, html, (err)=> {
-          if (err) return utility.showErrorMessage(err.toString())
-          /*
-          if isForPresentationPrint
-            url = 'file:///' + info.path + '?print-pdf'
-            atom.notifications.addInfo('Please copy and open the link below in Chrome.\nThen Right Click -> Print -> Save as Pdf.', dismissable: true, detail: url)
-          else
-          */
-          // open in browser
-          utility.openFile(info.path)
-        })
-      })
-      })
+  public async openInBrowser():Promise<void> {
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
+    html = await this.generateHTMLFromTemplate(html, yamlConfig, 
+                                    {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )   
+    // create temp file
+    const info = await utility.tempOpen({
+      prefix: 'markdown-preview-enhanced',
+      suffix: '.html'
     })
+
+    await utility.write(info.fd, html)
+    
+    // open in browser
+    utility.openFile(info.path)
+    return 
   }
 
   /**
    * 
    * @param filePath 
+   * @return dest if success, error if failure
    */
-  public saveAsHTML() {
-    this.parseMD(this.cachedInputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
-    .then(({html, yamlConfig})=> {
-      const htmlConfig = yamlConfig['html'] || {}
-      let cdn = htmlConfig['cdn'],
-          offline = !cdn
-      let embedLocalImages = htmlConfig['embed_local_images']
-      
-      let dest = this.filePath
-      let extname = path.extname(dest) 
-      dest = dest.replace(new RegExp(extname+'$'), '.html')
+  public async saveAsHTML():Promise<string> {
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
+    const htmlConfig = yamlConfig['html'] || {}
+    let cdn = htmlConfig['cdn'],
+        offline = !cdn
+    let embedLocalImages = htmlConfig['embed_local_images']
+    
+    let dest = this.filePath
+    let extname = path.extname(dest) 
+    dest = dest.replace(new RegExp(extname+'$'), '.html')
 
-      this.generateHTMLFromTemplate(html, yamlConfig, {
-          isForPrint: false, 
-          isForPrince: false,
-          embedLocalImages: false,  // TODO
-          offline: !cdn
-      }).then((html)=> {
-        const htmlFileName = path.basename(dest)
-
-        // presentation speaker notes
-        // copy dependency files
-        
-        if (!offline && html.indexOf('[{"src":"revealjs_deps/notes.js","async":true}]') >= 0) {
-          const depsDirName = path.resolve(path.dirname(dest), 'revealjs_deps')
-          if (!fs.existsSync(depsDirName)) {
-            fs.mkdirSync(depsDirName)
-          }
-          fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.js')))
-          fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.html')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.html')))
-        }
-
-        utility.writeFile(dest, html)
-        .then(()=> {
-          utility.showSuccessMessage(`File ${htmlFileName} was created at path: ${dest}`)
-        })
-        .catch((error)=> {
-          utility.showErrorMessage(error)
-        })
-      })
+    html = await this.generateHTMLFromTemplate(html, yamlConfig, {
+        isForPrint: false, 
+        isForPrince: false,
+        embedLocalImages: embedLocalImages,
+        offline: !cdn
     })
+
+    const htmlFileName = path.basename(dest)
+
+    // presentation speaker notes
+    // copy dependency files
+    if (!offline && html.indexOf('[{"src":"revealjs_deps/notes.js","async":true}]') >= 0) {
+      const depsDirName = path.resolve(path.dirname(dest), 'revealjs_deps')
+      if (!fs.existsSync(depsDirName)) {
+        fs.mkdirSync(depsDirName)
+      }
+      fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.js')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.js')))
+      fs.createReadStream(path.resolve(extensionDirectoryPath, './dependencies/reveal/plugin/notes/notes.html')).pipe(fs.createWriteStream(path.resolve(depsDirName, 'notes.html')))
+    }
+
+    await utility.writeFile(dest, html)
+    return dest
   }
 
   /**
    * prince pdf file export
+   * @return dest if success, error if failure
    */
-  public princeExport() {
-    this.parseMD(this.cachedInputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
-    .then(({html, yamlConfig})=> {
-      let dest = this.filePath
-      let extname = path.extname(dest) 
-      dest = dest.replace(new RegExp(extname+'$'), '.pdf')
+  public async princeExport():Promise<string> {
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+    let dest = this.filePath
+    let extname = path.extname(dest) 
+    dest = dest.replace(new RegExp(extname+'$'), '.pdf')
 
-      this.generateHTMLFromTemplate(html, yamlConfig, {
-          isForPrint: true, 
-          isForPrince: true,
-          embedLocalImages: false, 
-          offline: true
-      }).then((html)=> {
-        temp.open({prefix: 'markdown-preview-enhanced', suffix: '.html'}, (error, info)=> {
-          if (error) return utility.showErrorMessage(error)
-          utility.writeFile(info.fd, html).then(()=> {
-            console.log(info.path)
-            if (yamlConfig['isPresentationMode']) {
-              const url = 'file://' + info.path + '?print-pdf'
-              utility.showSuccessMessage(`Please copy and open the link: { ${url.replace(/\_/g, '\\_')} } in Chrome then Print as Pdf.`)
-            } else {
-              princeConvert(info.path, dest, (error)=> {
-                if (error) return utility.showErrorMessage(error)
-                utility.showSuccessMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+    html = await this.generateHTMLFromTemplate(html, yamlConfig, {
+        isForPrint: true, 
+        isForPrince: true,
+        embedLocalImages: false, 
+        offline: true
+    })
 
-                //  open pdf
-                // @openFile dest if atom.config.get('markdown-preview-enhanced.pdfOpenAutomatically')
-                utility.openFile(dest)
-              })
-            }
-          })
-          .catch((error)=> {
-            utility.showErrorMessage(error)
-          })
-        })  
+    const info = await utility.tempOpen({prefix: 'markdown-preview-enhanced', suffix: '.html'})
+    await utility.writeFile(info.fd, html)
+
+    if (yamlConfig['isPresentationMode']) {
+      const url = 'file://' + info.path + '?print-pdf'
+      return url
+    } else {
+      await princeConvert(info.path, dest)
+      
+      //  open pdf
+      utility.openFile(dest)
+      return dest
+    }
+  }
+
+  private async eBookDownloadImages($, dest):Promise<Array<string>> {
+    const imagesToDownload = []
+    if (path.extname(dest) === '.epub' || path.extname('dest') === '.mobi') {
+      $('img').each((offset, img)=> {
+        const $img = $(img)
+        const src = $img.attr('src') || ''
+        if (src.match(/^https?\:\/\//)) 
+          imagesToDownload.push($img)
+      })
+    }
+
+    const asyncFunctions = imagesToDownload.map(($img)=> {
+      return new Promise<string>((resolve, reject)=> {
+        const httpSrc = $img.attr('src')
+        let savePath = Math.random().toString(36).substr(2, 9) + '_' + path.basename(httpSrc)
+        savePath = path.resolve(this.fileDirectoryPath, savePath)
+
+        const stream = request(httpSrc).pipe(fs.createWriteStream(savePath))
+
+        stream.on('finish', ()=> {
+          $img.attr('src', 'file:///' + savePath) 
+          return resolve(savePath)
+        })
       })
     })
 
+    return await Promise.all(asyncFunctions)
+  }
+
+  /**
+   * 
+   * @param fileType: `epub`, `pdf`, `mobi` or `html`
+   * @return dest if success, error if failure
+   */
+  public async eBookExport(fileType='epub'):Promise<string> {
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+
+    let dest = this.filePath
+    let extname = path.extname(dest) 
+    dest = dest.replace(new RegExp(extname+'$'), '.'+fileType.toLowerCase())
+
+    let ebookConfig = yamlConfig['ebook']
+    if (!ebookConfig) throw 'eBook config not found. Please insert ebook front-matter to your markdown file.'
+
+    if (ebookConfig['cover']) { // change cover to absolute path if necessary
+      const cover = ebookConfig['cover']
+      ebookConfig['cover'] = this.resolveFilePath(cover, false).replace(/^file\:\/\/+/, '/')
+    }
+
+    let $ = cheerio.load(`<div>${html}</div>`, {xmlMode: true})
+
+    const tocStructure:Array<{level:number, filePath:string, heading:string, id:string}> = []
+    let headingOffset = 0
+
+    const $toc = $(':root > ul').last()
+    if ($toc.length) {
+      if (ebookConfig['include_toc'] === false) { // remove itself and the heading ahead
+        const $prev = $toc.prev()
+        if ($prev.length && $prev[0].name.match(/^h\d$/i)) {
+          $prev.remove()
+        }
+      }
+
+      $(':root').children('h1, h2, h3, h4, h5, h6').each((offset, h)=> {
+        const $h = $(h)
+        const level = parseInt($h[0].name.slice(1)) - 1
+
+        // $h.attr('id', id)
+        $h.attr('ebook-toc-level-'+(level+1), '')
+        $h.attr('heading', $h.html())
+      })
+
+      getStructure($toc, 0) // analyze TOC
+
+      if (ebookConfig['include_toc'] === false) { // remove itself and the heading ahead
+        $toc.remove()
+      }
+    }
+
+    // load the last ul as TOC, analyze toc links 
+    function getStructure($ul, level) {
+      $ul.children('li').each((offset, li)=> {
+        const $li = $(li)
+        const $a = $li.children('a').first()
+        if (!$a.length) return 
+
+        const filePath = $a.attr('href') // markdown file path 
+        const heading = $a.html()
+        const id = 'ebook-heading-id-' + headingOffset
+
+        tocStructure.push({level, filePath, heading, id})
+        headingOffset += 1
+
+        $a.attr('href', '#'+id) // change id 
+        if ($li.children().length > 1) {
+          getStructure($li.children().last(), level+1)
+        }
+      })
+    }
+
+    // load each markdown files according to `tocStructure`
+    const asyncFunctions = tocStructure.map(({heading, id, level, filePath}, offset)=> {
+      return new Promise((resolve, reject)=> {
+        let fileProtocalMatch
+        if (fileProtocalMatch = filePath.match(/^file:\/\/+/)) 
+          filePath = filePath.replace(fileProtocalMatch[0], '/')
+        
+        fs.readFile(filePath, {encoding: 'utf-8'}, (error, text)=> {
+          if (error) return reject(error.toString())
+          this.parseMD(text, {useRelativeImagePath: false, isForPreview: false, hideFrontMatter:true})
+          .then(({html})=> {
+            return resolve({heading, id, level, filePath, html, offset})
+          })
+        })
+      })
+    })
+
+    let outputHTML = $.html().replace(/^<div>(.+)<\/div>$/, '$1')
+    let results = await Promise.all(asyncFunctions)
+    results = results.sort((a, b)=> a['offset'] - b['offset'])
+
+    results.forEach(({heading, id, level, filePath, html})=> {
+      const $ = cheerio.load(`<div>${html}</div>`, {xmlMode:true})
+      const $firstChild = $(':root').children().first()
+      if ($firstChild.length) {
+        $firstChild.attr('id', id)
+        $firstChild.attr('ebook-toc-level-'+(level+1), '')
+        $firstChild.attr('heading', heading)
+      }
+
+      outputHTML += $.html().replace(/^<div>(.+)<\/div>$/, '$1') // append new content
+    })
+
+    $ = cheerio.load(outputHTML, {xmlMode: true})
+    const downloadedImagePaths = await this.eBookDownloadImages($, dest)
+
+    // convert image to base64 if output html 
+    if (path.extname(dest) === '.html') {
+      // check cover 
+      let coverImage = ''
+      if (ebookConfig['cover']) {
+        const cover = ebookConfig['cover'][0] === '/' ? ('file:///' + ebookConfig['cover']) : ebookConfig['cover']
+        $(':root').children().first().prepend(`<img style="display:block; margin-bottom: 24px;" src="${cover}">`)
+      }
+
+      $ = await this.embedLocalImages($)
+    }
+
+    // retrieve html 
+    outputHTML = $.html()
+    const title = ebookConfig['title'] || 'no title'
+
+    // math
+    let mathStyle = ''
+    if (outputHTML.indexOf('class="katex"') > 0) {
+      if (path.extname(dest) == '.html' && ebookConfig['html'] && ebookConfig['html'].cdn){
+        mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
+      } else {
+        mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
+      }
+    }
+    
+    // prism and preview theme 
+    let styleCSS = ""
+    try{
+      const styles = await Promise.all([
+        // style template
+        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css'), {encoding:'utf-8'}),
+        // prism *.css
+        utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`), {encoding:'utf-8'}),
+        // preview theme
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`), {encoding:'utf-8'})
+      ])
+      styleCSS = styles.join('')
+    } catch(e) {
+      styleCSS = ''
+    }
+
+    // only use github-light style for ebook
+    html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>${title}</title>
+    <meta charset=\"utf-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <style> ${styleCSS} </style>
+    ${mathStyle}
+  </head>
+  <body class="markdown-preview-enhanced">
+  ${outputHTML}
+  </body>
+</html>            
+`
+    const fileName = path.basename(dest)
+
+    // save as html 
+    if (path.extname(dest) === '.html') {
+      await utility.writeFile(dest, html)
+      return dest
+    }
+
+    // this function will be called later 
+    function deleteDownloadedImages() {
+      downloadedImagePaths.forEach((imagePath)=> {
+        fs.unlink(imagePath, (error)=> {})
+      })
+    }
+
+    try {
+      const info = await utility.tempOpen({prefix: 'markdown-preview-enhanced', suffix: '.html'})
+
+      await utility.write(info.fd, html)
+      await ebookConvert(info.path, dest, ebookConfig)
+      deleteDownloadedImages()
+      return dest 
+    } catch(error) {
+      deleteDownloadedImages()
+      throw error
+    }
   }
 
   /**
@@ -705,7 +893,7 @@ export class MarkdownEngine {
    * @param filePath 
    * @param relative: whether to use the path relative to filePath or not.  
    */
-  private resolveFilePath(filePath='', relative=false) {
+  private resolveFilePath(filePath:string='', relative:boolean) {
     if (  filePath.match(this.protocolsWhiteListRegExp) ||
           filePath.startsWith('data:image/') ||
           filePath[0] == '#') {
@@ -714,13 +902,53 @@ export class MarkdownEngine {
       if (relative)
         return path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.'+filePath))
       else
-        return 'file://'+path.resolve(this.projectDirectoryPath, '.'+filePath)
+        return 'file://' + path.resolve(this.projectDirectoryPath, '.'+filePath)
     } else {
       if (relative)
         return filePath
       else
-        return 'file://'+path.resolve(this.fileDirectoryPath, filePath)
+        return 'file://' + path.resolve(this.fileDirectoryPath, filePath)
     }
+  }
+
+  /**
+   * Run code chunk of `id`
+   * @param id 
+   */
+  public async runCodeChunk(id):Promise<String> {
+    let codeChunkData = this.codeChunksData[id]
+    if (!codeChunkData) return ''
+    if (codeChunkData.running) return ''
+
+    codeChunkData.running = true
+    let result = await CodeChunkAPI.run(codeChunkData.code, this.fileDirectoryPath, codeChunkData.options)
+
+    const outputFormat = codeChunkData.options['output'] || 'text'
+    if (outputFormat === 'html') {
+      result = result 
+    } else if (outputFormat === 'png') {
+      const base64 = new Buffer(result).toString('base64')
+      result = `<img src="data:image/png;charset=utf-8;base64,${base64}">`
+    } else if (outputFormat === 'markdown') {
+      const {html} = await this.parseMD(result, {useRelativeImagePath:true, isForPreview:false, hideFrontMatter: true} )
+      result = html 
+    } else if (outputFormat === 'none') {
+      result = ''
+    } else {
+      result = `<pre class="language-text">${result}</pre>`
+    }
+
+    codeChunkData.running = false 
+    codeChunkData.result = result // save result.
+    return result
+  }
+
+  public async runAllCodeChunks() {
+    const asyncFunctions = []
+    for (let id in this.codeChunksData) {
+      asyncFunctions.push(this.runCodeChunk(id))
+    }
+    return await Promise.all(asyncFunctions)
   }
 
   /**
@@ -729,27 +957,44 @@ export class MarkdownEngine {
    * @param parameters is in the format of `lang {opt1:val1, opt2:val2}` or just `lang`       
    * @param text 
    */
-  private async renderCodeBlock($preElement, code, parameters, {graphsCache}) {
-    let match, lang 
+  private async renderCodeBlock($, $preElement, code, parameters, 
+  { graphsCache, 
+    codeChunksArray}:{graphsCache:object, codeChunksArray:CodeChunkData[]}) {
+    let match, lang, optionsStr:string, options:object 
     if (match = parameters.match(/\s*([^\s]+)\s+\{(.+?)\}/)) {
       lang = match[1]
-      parameters = match[2]
+      optionsStr = match[2]
     } else {
       lang = parameters
-      parameters = ''
+      optionsStr = ''
     }
 
-    if (parameters) {
+    if (optionsStr) {
       try {
-        parameters = jsonic('{'+parameters+'}')
+        options = jsonic('{'+optionsStr+'}')
       } catch (e) {
-        return $preElement.replaceWith(`<pre class="language-text">ParameterError: ${'{'+parameters+'}'}<br>${e.toString()}</pre>`)
+        return $preElement.replaceWith(`<pre class="language-text">OptionsError: ${'{'+optionsStr+'}'}<br>${e.toString()}</pre>`)
       }
     } else {
-      parameters = {}
+      options = {}
     }
 
-    if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
+    function renderPlainCodeBlock() {
+      try {
+        if (!Prism) {
+          Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
+        }
+        const html = Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])
+        $preElement.html(html)  
+      } catch(e) {
+        // do nothing
+      }
+    }
+
+    const codeBlockOnly = options['code_block']
+    if (codeBlockOnly) {
+      renderPlainCodeBlock()
+    } else if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
       const checksum = md5(code)
       let svg:string = this.graphsCache[checksum] 
       if (!svg) {
@@ -774,7 +1019,7 @@ export class MarkdownEngine {
         if (!viz) viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
         
         try {
-          let engine = parameters.engine || "dot"
+          let engine = options['engine'] || "dot"
           svg = viz(code, {engine})
         } catch(e) {
           $preElement.replaceWith(`<pre>${e.toString()}</pre>`)
@@ -783,16 +1028,70 @@ export class MarkdownEngine {
 
       $preElement.replaceWith(`<p>${svg}</p>`)
       graphsCache[checksum] = svg // store to new cache
-    } else { // normal code block  // TODO: code chunk
-      try {
-        if (!Prism) {
-          Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
-        }
-        const html = Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])
-        $preElement.html(html)  
-      } catch(e) {
-        // do nothing
+    } else if (options['cmd']) {
+      const $el = $("<div class=\"code-chunk\"></div>") // create code chunk
+      if (!options['id']) {
+        options['id'] = 'mpe-code-chunk-id-' + codeChunksArray.length
       }
+
+      if (options['cmd'] === true) {
+        options['cmd'] = lang
+      }
+
+      $el.attr({
+        'data-id': options['id']
+      })
+
+      let highlightedBlock = ''
+      if (!options['hide']) {
+        try {
+          if (!Prism) {
+            Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
+          }
+          highlightedBlock = `<pre class="language-${lang}">${Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])}</pre>`
+        } catch(e) {
+          // do nothing
+          highlightedBlock = `<pre class="language-text">${code}</pre>`
+        }
+      }
+      /*
+      if (!options['id']) { // id is required for code chunk
+        highlightedBlock = `<pre class="language-text">'id' is required for code chunk</pre>`
+      }*/
+
+      let codeChunkData:CodeChunkData = this.codeChunksData[options['id']]
+      let previousCodeChunkDataId = codeChunksArray.length ? codeChunksArray[codeChunksArray.length - 1].id : ''
+      if (!codeChunkData) {
+        codeChunkData = {
+          id: options['id'],
+          code,
+          options: options,
+          result: '',
+          running: false,
+          prev: previousCodeChunkDataId
+        }
+        this.codeChunksData[options['id']] = codeChunkData
+      } else {
+        codeChunkData.code = code 
+        codeChunkData.options = options
+        codeChunkData.prev = previousCodeChunkDataId
+      }
+      codeChunksArray.push(codeChunkData)
+
+      if (codeChunkData.running) {
+        $el.addClass('running')
+      }
+      const statusDiv = `<div class="status">running...</div>`
+      const buttonGroup = '<div class="btn-group"><div class="run-btn btn"><span>▶︎</span></div><div class=\"run-all-btn btn\">all</div></div>'
+      const outputDiv = `<div class="output-div">${codeChunkData.result}</div>`
+
+      $el.append(highlightedBlock)
+      $el.append(buttonGroup)
+      $el.append(statusDiv)
+      $el.append(outputDiv)
+      $preElement.replaceWith($el)
+    } else { // normal code block  // TODO: code chunk
+      renderPlainCodeBlock()
     }
   }
 
@@ -820,6 +1119,7 @@ export class MarkdownEngine {
     // new caches
     // which will be set when this.renderCodeBlocks is called
     const newGraphsCache:{[key:string]:string} = {}
+    const codeChunksArray:CodeChunkData[] = []
 
     const asyncFunctions = []
     $('pre').each((i, preElement)=> {
@@ -829,10 +1129,11 @@ export class MarkdownEngine {
         codeBlock = $preElement.children().first()
         lang = 'text'
         let classes = codeBlock.attr('class')
-        if (classes)
-          lang = classes.replace(/^language-/, '') || 'text'
+        if (!classes) classes = 'language-text'
+        lang = classes.replace(/^language-/, '')
         code = codeBlock.text()
         $preElement.attr('class', classes)
+        $preElement.children().first().addClass(classes)
       } else {
         lang = 'text'
         if (preElement.children[0])
@@ -842,14 +1143,14 @@ export class MarkdownEngine {
         $preElement.attr('class', 'language-text')
       }
       
-      asyncFunctions.push(this.renderCodeBlock($preElement, code, lang, {graphsCache: newGraphsCache }))
+      asyncFunctions.push(this.renderCodeBlock($, $preElement, code, lang, {graphsCache: newGraphsCache, codeChunksArray}))
     })
 
     await Promise.all(asyncFunctions)
 
     // reset caches 
+    // the line below actually has problem.
     this.graphsCache = newGraphsCache
-
     return $.html()
   }
 
@@ -858,6 +1159,15 @@ export class MarkdownEngine {
    */
   public getCachedHTML() {
     return this.cachedHTML
+  }
+
+  /**
+   * clearCaches will clear filesCache, codeChunksData, graphsCache
+   */
+  public clearCaches() {
+    this.filesCache = {}
+    this.codeChunksData = {}
+    this.graphsCache = {}
   }
 
   /**
@@ -961,7 +1271,7 @@ export class MarkdownEngine {
           classString = slideConfig['class'] || '',
           idString = slideConfig['id'] ? `id="${slideConfig['id']}"` : ''
       if (slideConfig['data-background-image']) {
-        styleString += `background-image: url('${this.resolveFilePath(slideConfig['data-background-image'])}');`
+        styleString += `background-image: url('${this.resolveFilePath(slideConfig['data-background-image'], false)}');`
 
         if (slideConfig['data-background-size'])
           styleString += `background-size: ${slideConfig['data-background-size']};`
@@ -987,12 +1297,12 @@ export class MarkdownEngine {
         const loop_ = videoLoop ? 'loop' : ''
 
         videoString = `
-        <video ${muted_} ${loop_} playsinline autoplay class="background-video" src="${this.resolveFilePath(slideConfig['data-background-video'])}">
+        <video ${muted_} ${loop_} playsinline autoplay class="background-video" src="${this.resolveFilePath(slideConfig['data-background-video'], false)}">
         </video>
         `
       } else if (slideConfig['data-background-iframe']) {
         iframeString = `
-        <iframe class="background-iframe" src="${this.resolveFilePath(slideConfig['data-background-iframe'])}" frameborder="0" > </iframe>
+        <iframe class="background-iframe" src="${this.resolveFilePath(slideConfig['data-background-iframe'], false)}" frameborder="0" > </iframe>
         <div class="background-iframe-overlay"></div>
         `
       }
@@ -1093,146 +1403,127 @@ export class MarkdownEngine {
     `
   }
 
-  public parseMD(inputString:string, options:MarkdownEngineRenderOption):Thenable<MarkdownEngineOutput> {
-    return new Promise((resolve, reject)=> {
-      this.cachedInputString = inputString // save to cache
+  public async parseMD(inputString:string, options:MarkdownEngineRenderOption):Promise<MarkdownEngineOutput> {
+    // process front-matter
+    const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
+    const frontMatterTable = fm.table,
+          yamlConfig = fm.data || {} 
+    inputString = fm.content
 
-      // process front-matter
-      const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
-      const frontMatterTable = fm.table,
-            yamlConfig = fm.data 
-      inputString = fm.content
+    // import external files and insert anchors if necessary 
+    const {outputString, slideConfigs, tocBracketEnabled} = await transformMarkdown(inputString, 
+    {
+      fileDirectoryPath: this.fileDirectoryPath, 
+      projectDirectoryPath: this.projectDirectoryPath,
+      forPreview: options.isForPreview,
+      protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
+      useRelativeImagePath: options.useRelativeImagePath,
+      filesCache: this.filesCache
+    })
 
-      // import external files and insert anchors if necessary 
-      fileImport(inputString, this.fileDirectoryPath, this.projectDirectoryPath, {forPreview: options.isForPreview})
-      .then(({outputString})=> {
+    const tocTable:{[key:string]:number} = {},
+          headings:Array<Heading> = []
+    /**
+     * flag for checking whether there is change in headings.
+     */
+    let headingsChanged = false,
+        headingOffset = 0
 
-        const tocTable:{[key:string]:number} = {},
-              headings:Array<Heading> = [],
-              slideConfigs:Array<object> = []
-        let tocBracketEnabled:boolean = false
-        /**
-         * flag for checking whether there is change in headings.
-         */
-        let headingsChanged = false,
-            headingOffset = 0
+    // overwrite remarkable heading parse function
+    this.md.renderer.rules.heading_open = (tokens, idx)=> {
+      let line = null
+      let id = null
+      let classes = null
 
-        // overwrite remarkable heading parse function
-        this.md.renderer.rules.heading_open = (tokens, idx)=> {
-          let line = null
-          let id = null
-          let classes = null
+      if (tokens[idx + 1] && tokens[idx + 1].content) {
+        let ignore = false
+        let heading = tokens[idx + 1].content
 
-          if (tokens[idx + 1] && tokens[idx + 1].content) {
-            let ignore = false
-            let heading = tokens[idx + 1].content
+        // check {class:string, id:string, ignore:boolean}
+        let optMatch = null
+        if (optMatch = heading.match(/[^\\]\{(.+?)\}(\s*)$/)) {
+          heading = heading.replace(optMatch[0], '')
+          tokens[idx + 1].content = heading
+          tokens[idx + 1].children[0].content = heading
 
-            // check {class:string, id:string, ignore:boolean}
-            let optMatch = null
-            if (optMatch = heading.match(/[^\\]\{(.+?)\}(\s*)$/)) {
-              heading = heading.replace(optMatch[0], '')
-              tokens[idx + 1].content = heading
-              tokens[idx + 1].children[0].content = heading
+          try {
+            let opt = jsonic(optMatch[0].trim())
+            
+            classes = opt.class,
+            id = opt.id,
+            ignore = opt.ignore 
+          } catch(e) {
+            heading = "OptionsError: " + optMatch[1]
 
-              try {
-                let opt = jsonic(optMatch[0].trim())
-                
-                classes = opt.class,
-                id = opt.id,
-                ignore = opt.ignore 
-              } catch(e) {
-                heading = "ParameterError: " + optMatch[1]
-
-                tokens[idx + 1].content = heading
-                tokens[idx + 1].children[0].content = heading
-              }
-            }
-
-            if (!id) {
-              id = uslug(heading)
-            }
-
-            if (tocTable[id] >= 0) {
-              tocTable[id] += 1
-              id = id + '-' + tocTable[id]
-            } else {
-              tocTable[id] = 0
-            }
-
-            if (!ignore) {
-              const heading1:Heading = {content: heading, level: tokens[idx].hLevel, id:id}
-              headings.push(heading1)
-
-              /**
-               * check whether the heading is changed compared to the old one
-               */
-              if (headingOffset >= this.headings.length) headingsChanged = true
-              if (!headingsChanged && headingOffset < this.headings.length) {
-                const heading2 = this.headings[headingOffset]
-                if (heading1.content !== heading2.content || heading1.level !== heading2.level) {
-                  headingsChanged = true
-                }
-              }
-              headingOffset += 1
-            }
+            tokens[idx + 1].content = heading
+            tokens[idx + 1].children[0].content = heading
           }
-
-          id = id ? `id=${id}` : ''
-          classes = classes ? `class=${classes}` : ''
-          return `<h${tokens[idx].hLevel} ${id} ${classes}>`
         }
 
-        // <!-- subject options... -->
-        this.md.renderer.rules.custom = (tokens, idx)=> {
-          const subject = tokens[idx].subject
-
-          if (subject === 'pagebreak' || subject === 'newpage') {
-            return '<div class="pagebreak"> </div>'
-          } else if (subject == 'toc-bracket') { // [toc]
-            tocBracketEnabled = true
-            return '\n[MPETOC]\n'
-          } else if (subject == 'slide') {
-            let opt = tokens[idx].option
-            slideConfigs.push(opt)
-            return '<span class="new-slide"></span>'
-          }
-          return ''
+        if (!id) {
+          id = uslug(heading)
         }
-  
-        let html = this.md.render(outputString)
 
-        /**
-         * render tocHTML
-         */
-        if (headingsChanged || headings.length !== this.headings.length) {
-          const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
-          this.tocHTML = this.md.render(tocObject.content)
+        if (tocTable[id] >= 0) {
+          tocTable[id] += 1
+          id = id + '-' + tocTable[id]
+        } else {
+          tocTable[id] = 0
         }
-        this.headings = headings // reset headings information
 
-        if (tocBracketEnabled) { // [TOC]
-          html = html.replace(/^\s*\[MPETOC\]\s*/gm, this.tocHTML)
-        }
-      
-        return this.resolveImagePathAndCodeBlock(html, options).then((html)=> {
-          html = frontMatterTable + html
+        if (!ignore) {
+          const heading1:Heading = {content: heading, level: tokens[idx].hLevel, id:id}
+          headings.push(heading1)
 
           /**
-           * check slides
+           * check whether the heading is changed compared to the old one
            */
-          if (slideConfigs.length) {
-            if (options.isForPreview) {
-              html = this.parseSlides(html, slideConfigs, yamlConfig)
-            } else {
-              html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeImagePath)
+          if (headingOffset >= this.headings.length) headingsChanged = true
+          if (!headingsChanged && headingOffset < this.headings.length) {
+            const heading2 = this.headings[headingOffset]
+            if (heading1.content !== heading2.content || heading1.level !== heading2.level) {
+              headingsChanged = true
             }
-            if (yamlConfig) yamlConfig['isPresentationMode'] = true // mark as presentation mode
           }
+          headingOffset += 1
+        }
+      }
 
-          this.cachedHTML = html // save to cache
-          return resolve({html, markdown:inputString, tocHTML: this.tocHTML, yamlConfig})
-        })
-      })
-    })
+      id = id ? `id=${id}` : ''
+      classes = classes ? `class=${classes}` : ''
+      return `<h${tokens[idx].hLevel} ${id} ${classes}>`
+    }
+
+    let html = this.md.render(outputString)
+
+    /**
+     * render tocHTML
+     */
+    if (headingsChanged || headings.length !== this.headings.length) {
+      const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
+      this.tocHTML = this.md.render(tocObject.content)
+    }
+    this.headings = headings // reset headings information
+
+    if (tocBracketEnabled) { // [TOC]
+      html = html.replace(/^\s*<p>\[MPETOC\]<\/p>\s*/gm, this.tocHTML)
+    }
+
+    html = frontMatterTable + await this.resolveImagePathAndCodeBlock(html, options)
+
+    /**
+     * check slides
+     */
+    if (slideConfigs.length) {
+      if (options.isForPreview) {
+        html = this.parseSlides(html, slideConfigs, yamlConfig)
+      } else {
+        html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeImagePath)
+      }
+      if (yamlConfig) yamlConfig['isPresentationMode'] = true // mark as presentation mode
+    }
+
+    this.cachedHTML = html // save to cache
+    return {html, markdown:inputString, tocHTML: this.tocHTML, yamlConfig}
   }
 }

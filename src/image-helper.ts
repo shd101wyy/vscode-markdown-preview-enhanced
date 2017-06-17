@@ -57,10 +57,10 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
             else
               description = imageFileName
           } else {
-            return utility.showErrorMessage(err)
+            return vscode.window.showErrorMessage(err.toString())
           }
 
-          utility.showSuccessMessage(`Image ${imageFileName} has been copied to folder ${assetDirectoryPath}`)
+          vscode.window.showInformationMessage(`Image ${imageFileName} has been copied to folder ${assetDirectoryPath}`)
 
           let url = `${imageFolderPath}/${imageFileName}`
           if (url.indexOf(' ') >= 0)
@@ -144,7 +144,7 @@ export function uploadImageFile(sourceUri: any, imageFilePath: string, imageUplo
         setUploadedImageURL(imageFileName, url, editor, hint, curPos)
       })
       .catch((err)=> {
-        utility.showErrorMessage(err)
+        vscode.window.showErrorMessage(err)
       })
     } else { // sm.ms 
       smAPI.uploadFile(imageFilePath)
@@ -152,7 +152,7 @@ export function uploadImageFile(sourceUri: any, imageFilePath: string, imageUplo
         setUploadedImageURL(imageFileName, url, editor, hint, curPos)
       })
       .catch((err)=> {
-        utility.showErrorMessage(err)
+        vscode.window.showErrorMessage(err)
       })
     }
   })

@@ -88,6 +88,11 @@ export function activate(context: vscode.ExtensionContext) {
 			})
 	}
 
+	function refreshPreview(uri) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.refreshPreview(sourceUri)		
+	}
+
 	function openInBrowser(uri) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.openInBrowser(sourceUri)
@@ -103,10 +108,56 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.princeExport(sourceUri)
 	}
 
+	function eBookExport(uri, fileType) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.eBookExport(sourceUri, fileType)
+	}
+
 	function cacheSVG(uri, code, svg) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.cacheSVG(sourceUri, code, svg)
 	}
+
+	function runCodeChunk(uri, codeChunkId) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.runCodeChunk(sourceUri, codeChunkId)
+	}
+
+	function runAllCodeChunks(uri) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.runAllCodeChunks(sourceUri)
+	}
+
+	function runAllCodeChunksCommand() {
+		const textEditor = vscode.window.activeTextEditor
+		if (!textEditor.document) return 
+		if (!isMarkdownFile(textEditor.document)) return
+
+		const previewUri = getPreviewUri(textEditor.document.uri)
+		if (!previewUri) return
+
+		vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
+			previewUri,
+			{
+				type: 'run-all-code-chunks'
+			})
+	}
+
+	function runCodeChunkCommand() {
+		const textEditor = vscode.window.activeTextEditor
+		if (!textEditor.document) return 
+		if (!isMarkdownFile(textEditor.document)) return
+
+		const previewUri = getPreviewUri(textEditor.document.uri)
+		if (!previewUri) return
+
+		vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
+			previewUri,
+			{
+				type: 'run-code-chunk'
+			})
+	}
+	
 
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {
@@ -185,6 +236,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openImageHelper', openImageHelper))
 
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunksCommand))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.runCodeChunk', runCodeChunkCommand))
+
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.insertImageUrl', insertImageUrl))
@@ -193,16 +248,23 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.uploadImageFile', uploadImageFile))
 
+  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.refreshPreview', refreshPreview))
+
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.openInBrowser', openInBrowser))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.saveAsHTML', saveAsHTML))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.princeExport', princeExport))
 
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.eBookExport', eBookExport))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.webviewFinishLoading', webviewFinishLoading))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheSVG', cacheSVG))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runCodeChunk', runCodeChunk))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunks))
 
   context.subscriptions.push(contentProviderRegistration)
 }

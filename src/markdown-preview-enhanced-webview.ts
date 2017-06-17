@@ -236,6 +236,7 @@ function initToolbarEvent() {
 
     initSideBarTOCButton()
     initBackToTopButton()
+    initRefreshButton()
 
     return toolbar
 }
@@ -276,6 +277,15 @@ function initBackToTopButton() {
 }
 
 /**
+ * init .refresh-btn
+ */
+function initRefreshButton() {
+  mpe.toolbar.refreshBtn.onclick = ()=> {
+    window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.refreshPreview?${JSON.stringify([sourceUri])}`}, 'file://') 
+  }
+}
+
+/**
  * init contextmenu
  * check markdown-preview-enhanced-view.ts
  * reference: http://jsfiddle.net/w33z4bo0/1/
@@ -305,11 +315,32 @@ function initContextMenu() {
         }
       },
       "ebook_export": {
-        name: "eBook (not done)",
+        name: "eBook",
         items: {
-          "ebook_epub": {name: "ePub"},
-          "ebook_mobi": {name: "mobi"},
-          "ebook_pdf": {name: "PDF"}
+          "ebook_epub": {
+            name: "ePub",
+            callback: ()=> {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.eBookExport?${JSON.stringify([sourceUri, 'epub'])}`}, 'file://') 
+            }
+          },
+          "ebook_mobi": {
+            name: "mobi",
+            callback: ()=> {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.eBookExport?${JSON.stringify([sourceUri, 'mobi'])}`}, 'file://') 
+            }
+          },
+          "ebook_pdf": {
+            name: "PDF",
+            callback: ()=> {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.eBookExport?${JSON.stringify([sourceUri, 'pdf'])}`}, 'file://') 
+            }
+          },
+          "ebook_html": {
+            name: "HTML",
+            callback: ()=> {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.eBookExport?${JSON.stringify([sourceUri, 'html'])}`}, 'file://') 
+            }
+          }
         }
       },
       "pandoc_export": {name: "Pandoc (not done)"},
@@ -486,6 +517,72 @@ function renderMathJax() {
   })
 }
 
+function runCodeChunk(id:string) {
+  const codeChunk = document.querySelector(`.code-chunk[data-id="${id}"]`)
+  const running = codeChunk.classList.contains('running')
+  if (running) return 
+  codeChunk.classList.add('running')
+
+  window.parent.postMessage({ 
+    command: 'did-click-link', // <= this has to be `did-click-link` to post message
+    data: `command:_markdown-preview-enhanced.runCodeChunk?${JSON.stringify([sourceUri, id])}`
+  }, 'file://')
+}
+
+function runAllCodeChunks() {
+  const codeChunks = mpe.previewElement.getElementsByClassName('code-chunk')
+  for (let i = 0; i < codeChunks.length; i++) {
+    codeChunks[i].classList.add('running')
+  }
+
+  window.parent.postMessage({ 
+    command: 'did-click-link', // <= this has to be `did-click-link` to post message
+    data: `command:_markdown-preview-enhanced.runAllCodeChunks?${JSON.stringify([sourceUri])}`
+  }, 'file://')
+}
+
+function runNearestCodeChunk() {
+  const currentLine = mpe.currentLine
+  const elements = mpe.previewElement.children
+  for (let i = elements.length - 1; i >= 0; i--) {
+    if (elements[i].classList.contains('sync-line') && elements[i + 1] && elements[i + 1].classList.contains('code-chunk')) {
+      if (currentLine >= parseInt(elements[i].getAttribute('data-line'))) {
+        const codeChunkId = elements[i + 1].getAttribute('data-id')
+        return runCodeChunk(codeChunkId)
+      }
+    }
+  }
+}
+
+/**
+ * Setup code chunks
+ */
+function setupCodeChunks() {
+  const codeChunks = mpe.previewElement.getElementsByClassName('code-chunk')
+  if (!codeChunks.length) return 
+
+  let needToSetupCodeChunkId = false 
+
+  for (let i = 0; i < codeChunks.length; i++) {
+    const codeChunk = codeChunks[i],
+          id = codeChunk.getAttribute('data-id')
+
+    // bind click event 
+    const runBtn = codeChunk.getElementsByClassName('run-btn')[0]
+    const runAllBtn = codeChunk.getElementsByClassName('run-all-btn')[0]
+    if (runBtn) {
+      runBtn.addEventListener('click', ()=> {
+        runCodeChunk(id)
+      })
+    }
+    if (runAllBtn) {
+      runAllBtn.addEventListener('click', ()=> {
+        runAllCodeChunks()
+      })
+    }
+  }
+}
+
 /**
  * render sidebar toc 
  */
@@ -532,6 +629,8 @@ async function initEvents() {
   mpe.previewElement.innerHTML = mpe.hiddenPreviewElement.innerHTML
   mpe.hiddenPreviewElement.innerHTML = ""
 
+  setupCodeChunks()
+
   if (mpe.refreshingIconTimeout) {
     clearTimeout(mpe.refreshingIconTimeout)
     mpe.refreshingIconTimeout = null
@@ -563,6 +662,7 @@ function updateHTML(html) {
     mpe.presentationMode = false 
   }
 
+  const scrollTop = mpe.previewElement.scrollTop
   // init several events 
   initEvents().then(()=> {
     mpe.scrollMap = null 
@@ -571,6 +671,8 @@ function updateHTML(html) {
     if (!mpe.doneLoadingPreview) {
       mpe.doneLoadingPreview = true
       scrollToRevealSourceLine(config['initialLine'])
+    } else { // restore scrollTop
+      mpe.previewElement.scrollTop = scrollTop // <= This line is necessary...
     }
   })
 }
@@ -862,6 +964,10 @@ window.addEventListener('message', (event)=> {
     }, 1000)
   } else if (data.type === 'open-image-helper') {
     window['$']('#image-helper-view').modal()
+  } else if (data.type === 'run-all-code-chunks') {
+    runAllCodeChunks()
+  } else if (data.type === 'run-code-chunk') {
+    runNearestCodeChunk()
   }
 }, false);
 

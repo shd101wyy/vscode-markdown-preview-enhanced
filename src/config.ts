@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 
-export class MarkdownPreviewEnhancedConfig {
+export class MarkdownPreviewEnhancedConfig implements MPEConfig {
   public static getCurrentConfig() {
     return new MarkdownPreviewEnhancedConfig()
   }
