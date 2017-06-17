@@ -932,10 +932,22 @@ export class MarkdownEngine {
     if (!codeChunkData) return ''
     if (codeChunkData.running) return ''
 
+    let code = codeChunkData.code
+    let cc = codeChunkData
+    while (cc.options['continue']) {
+      let id = cc.options['continue']
+      if (id === true) {
+        id = cc.prev
+      }
+      cc = this.codeChunksData[id]
+      if (!cc) break 
+      code = cc.code + code
+    }
+
     codeChunkData.running = true
     let result
     try {
-      result = await CodeChunkAPI.run(codeChunkData.code, this.fileDirectoryPath, codeChunkData.options)
+      result = await CodeChunkAPI.run(code, this.fileDirectoryPath, codeChunkData.options)
 
       const outputFormat = codeChunkData.options['output'] || 'text'
       if (outputFormat === 'html') {
