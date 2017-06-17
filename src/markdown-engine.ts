@@ -175,6 +175,12 @@ export class MarkdownEngine {
     this.graphsCache[md5(code)] = CryptoJS.AES.decrypt(svg, 'markdown-preview-enhanced').toString(CryptoJS.enc.Utf8)
   }
 
+  public cacheCodeChunkResult(id:string, result:string) {
+    const codeChunkData = this.codeChunksData[id]
+    if (!codeChunkData) return
+    codeChunkData.result = CryptoJS.AES.decrypt(result, 'markdown-preview-enhanced').toString(CryptoJS.enc.Utf8)
+  }
+
   /**
    * 
    * @param content the math expression 
@@ -970,7 +976,8 @@ export class MarkdownEngine {
    */
   private async renderCodeBlock($, $preElement, code, parameters, 
   { graphsCache, 
-    codeChunksArray}:{graphsCache:object, codeChunksArray:CodeChunkData[]}) {
+    codeChunksArray, 
+    isForPreview }:{graphsCache:object, codeChunksArray:CodeChunkData[], isForPreview:boolean}) {
     let match, lang, optionsStr:string, options:object 
     if (match = parameters.match(/\s*([^\s]+)\s+\{(.+?)\}/)) {
       lang = match[1]
@@ -1050,7 +1057,9 @@ export class MarkdownEngine {
       }
 
       $el.attr({
-        'data-id': options['id']
+        'data-id': options['id'],
+        'data-cmd': options['cmd'],
+        'data-code': options['cmd'] === 'javascript' ? code : '' 
       })
 
       let highlightedBlock = ''
@@ -1065,6 +1074,7 @@ export class MarkdownEngine {
           highlightedBlock = `<pre class="language-text">${code}</pre>`
         }
       }
+
       /*
       if (!options['id']) { // id is required for code chunk
         highlightedBlock = `<pre class="language-text">'id' is required for code chunk</pre>`
@@ -1087,6 +1097,14 @@ export class MarkdownEngine {
         codeChunkData.options = options
         codeChunkData.prev = previousCodeChunkDataId
       }
+
+      let result = codeChunkData.result
+      // element option 
+      if (!result && codeChunkData.options['element']) {
+        result = codeChunkData.options['element']
+        codeChunkData.result = result 
+      }
+
       codeChunksArray.push(codeChunkData)
 
       if (codeChunkData.running) {
@@ -1094,7 +1112,13 @@ export class MarkdownEngine {
       }
       const statusDiv = `<div class="status">running...</div>`
       const buttonGroup = '<div class="btn-group"><div class="run-btn btn"><span>▶︎</span></div><div class=\"run-all-btn btn\">all</div></div>'
-      const outputDiv = `<div class="output-div">${codeChunkData.result}</div>`
+      let outputDiv = `<div class="output-div">${result}</div>`
+
+      // check javascript code chunk
+      if (!isForPreview && options['cmd'] === 'javascript') {
+        outputDiv += `<script>${code}</script>`
+        result = codeChunkData.options['element'] || ''
+      }
 
       $el.append(highlightedBlock)
       $el.append(buttonGroup)
@@ -1141,7 +1165,8 @@ export class MarkdownEngine {
         $preElement.attr('class', 'language-text')
       }
       
-      asyncFunctions.push(this.renderCodeBlock($, $preElement, code, lang, {graphsCache: newGraphsCache, codeChunksArray}))
+      asyncFunctions.push(this.renderCodeBlock($, $preElement, code, lang, 
+        {graphsCache: newGraphsCache, codeChunksArray, isForPreview:options.isForPreview}))
     })
 
     await Promise.all(asyncFunctions)

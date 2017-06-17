@@ -523,10 +523,29 @@ function runCodeChunk(id:string) {
   if (running) return 
   codeChunk.classList.add('running')
 
-  window.parent.postMessage({ 
-    command: 'did-click-link', // <= this has to be `did-click-link` to post message
-    data: `command:_markdown-preview-enhanced.runCodeChunk?${JSON.stringify([sourceUri, id])}`
-  }, 'file://')
+  if (codeChunk.getAttribute('data-cmd') === 'javascript') { // javascript code chunk
+    const code = codeChunk.getAttribute('data-code')
+    try {
+      eval(`((function(){${code}$})())`)
+      codeChunk.classList.remove('running') // done running javascript code 
+
+      const CryptoJS = window["CryptoJS"]
+      const result = CryptoJS.AES.encrypt(codeChunk.getElementsByClassName('output-div')[0].outerHTML, "markdown-preview-enhanced").toString()
+
+      window.parent.postMessage({ 
+        command: 'did-click-link', // <= this has to be `did-click-link` to post message
+        data: `command:_markdown-preview-enhanced.cacheCodeChunkResult?${JSON.stringify([sourceUri, id, result])}`
+      }, 'file://')
+    } catch(e) {
+      const outputDiv = codeChunk.getElementsByClassName('output-div')[0]
+      outputDiv.innerHTML = `<pre>${e.toString()}</pre>`
+    }
+  } else {
+    window.parent.postMessage({ 
+      command: 'did-click-link', // <= this has to be `did-click-link` to post message
+      data: `command:_markdown-preview-enhanced.runCodeChunk?${JSON.stringify([sourceUri, id])}`
+    }, 'file://')
+  }
 }
 
 function runAllCodeChunks() {

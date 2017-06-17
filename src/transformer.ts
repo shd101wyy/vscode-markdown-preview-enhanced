@@ -374,6 +374,23 @@ export async function transformMarkdown(inputString:string,
               }
             }
             else if (extname === '.css' || extname === '.js') {
+              if (!forPreview) { // not for preview, so convert to corresponding HTML tag directly.
+                let sourcePath
+                if (filePath.match(protocolsWhiteListRegExp))
+                  sourcePath = filePath
+                else if (useRelativeImagePath)
+                  sourcePath = path.relative(fileDirectoryPath, absoluteFilePath)
+                else 
+                  sourcePath = 'file://' + absoluteFilePath
+
+                if (extname === '.js') {
+                  output = `<script type="text/javascript" src="${sourcePath}"></script>`
+                } else {
+                  output = `<link rel="stylesheet" href="${sourcePath}">`
+                }
+              } else {
+                output = ''
+              } 
               JSAndCssFiles.push(filePath)
             }
             else if (/*extname === '.css' || */ extname === '.less') { // css or less file
