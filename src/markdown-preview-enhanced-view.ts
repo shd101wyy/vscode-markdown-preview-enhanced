@@ -6,6 +6,8 @@ import {MarkdownEngine} from './markdown-engine'
 import {MarkdownPreviewEnhancedConfig} from './config'
 import * as utility from './utility'
 
+let singlePreviewSouceUri:Uri = null
+
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
 // https://github.com/Microsoft/vscode/tree/master/extensions/markdown/src
@@ -20,6 +22,12 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    * value is MarkdownEngine
    */
   private engineMaps:{[key:string]: MarkdownEngine} = {} 
+
+  /**
+   * The key is markdown file fsPath
+   * value is JSAndCssFiles
+   */
+  private jsAndCssFilesMaps: {[key:string]: string[]} = {}
 
   private config:MarkdownPreviewEnhancedConfig
 
@@ -51,6 +59,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    * @param previewUri 
    */
   public destroyEngine(previewUri: Uri) {
+    delete(previewUri['markdown_source'])
+
     if (useSinglePreview()) {
       return this.engineMaps = {}
     }
@@ -162,16 +172,40 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     return styles  
   }
 
+  private getJSAndCssFiles(fsPath:string) {
+    if (!this.jsAndCssFilesMaps[fsPath]) return ''
+
+    let output = ''
+    this.jsAndCssFilesMaps[fsPath].forEach((sourcePath)=> {
+      let absoluteFilePath = sourcePath
+      if (sourcePath[0] === '/') {
+        absoluteFilePath = 'file://' + path.resolve(vscode.workspace.rootPath, '.' + sourcePath)
+      } else if (sourcePath.match(/^file:\/\//) || sourcePath.match(/^https?\:\/\//)) {
+        // do nothing 
+      } else {
+        absoluteFilePath = 'file://' + path.resolve(path.dirname(fsPath), sourcePath)
+      }
+
+      if (absoluteFilePath.endsWith('.js')) {
+        output += `<script type="text/javascript" src="${absoluteFilePath}"></script>`
+      } else { // css
+        output += `<link rel="stylesheet" href="${absoluteFilePath}">`
+      }
+    })
+    return output
+  }
+
   public provideTextDocumentContent(previewUri: Uri)
   : Thenable<string> {
     // console.log(sourceUri, uri, vscode.workspace.rootPath)
 
-    let sourceUri
+    let sourceUri:Uri
     if (useSinglePreview()) {
-      sourceUri = vscode.window.activeTextEditor.document.uri
+      sourceUri = singlePreviewSouceUri
     } else {
       sourceUri = vscode.Uri.parse(previewUri.query)
     }
+
     // console.log('open preview for source: ' + sourceUri.toString())
 
 		let initialLine: number | undefined = undefined;
@@ -203,6 +237,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <meta charset="UTF-8">
         ${this.getStyles()}
         ${this.getScripts()}
+        ${this.getJSAndCssFiles(sourceUri.fsPath)}
         <base href="${document.uri.toString(true)}">
       </head>
       <body class="markdown-preview-enhanced-container">
@@ -270,17 +305,26 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
           type: 'start-parsing-markdown',
         })
 
-      engine.parseMD(text, {isForPreview: true, useRelativeImagePath: false, hideFrontMatter: false}).then(({markdown, html, tocHTML})=> {
-        vscode.commands.executeCommand(
-          '_workbench.htmlPreview.postMessage',
-          getPreviewUri(sourceUri),
-          {
-            type: 'update-html',
-            html: html,
-            tocHTML: tocHTML,
-            totalLineCount: document.lineCount,
-            sourceUri: sourceUri.toString()
-          })
+      engine.parseMD(text, {isForPreview: true, useRelativeImagePath: false, hideFrontMatter: false})
+      .then(({markdown, html, tocHTML, JSAndCssFiles})=> {
+
+        // check JSAndCssFiles 
+        if (JSON.stringify(JSAndCssFiles) !== JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath])) {
+          this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles
+          // restart iframe 
+          this._onDidChange.fire(getPreviewUri(sourceUri))
+        } else {
+          vscode.commands.executeCommand(
+            '_workbench.htmlPreview.postMessage',
+            getPreviewUri(sourceUri),
+            {
+              type: 'update-html',
+              html: html,
+              tocHTML: tocHTML,
+              totalLineCount: document.lineCount,
+              sourceUri: sourceUri.toString()
+            })
+        }
       })
     })
   }
@@ -401,7 +445,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       // update all generated md documents
 			vscode.workspace.textDocuments.forEach(document => {
 				if (document.uri.scheme === 'markdown-preview-enhanced') {
-          console.log(document.uri)
 					// this.update(document.uri);
           this._onDidChange.fire(document.uri)
 				}
@@ -439,19 +482,23 @@ export function getPreviewUri(uri: vscode.Uri) {
 	if (uri.scheme === 'markdown-preview-enhanced') {
 		return uri
 	}
-
+  
+  
+  let previewUri:Uri
   if (useSinglePreview()) {
-    return uri.with({
+    previewUri = uri.with({
       scheme: 'markdown-preview-enhanced',
-      path: 'single-preview.rendered' 
+      path: 'single-preview.rendered', 
+    })
+    singlePreviewSouceUri = uri
+  } else {
+    previewUri = uri.with({
+      scheme: 'markdown-preview-enhanced',
+      path: uri.path + '.rendered',
+      query: uri.toString()
     })
   }
-
-	return uri.with({
-		scheme: 'markdown-preview-enhanced',
-		path: uri.path + '.rendered',
-		query: uri.toString()
-	});
+  return previewUri
 }
 
 

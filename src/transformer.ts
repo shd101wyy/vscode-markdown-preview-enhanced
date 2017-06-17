@@ -29,6 +29,13 @@ interface TransformMarkdownOutput {
    * whehter we found [TOC] in markdown file or not.  
    */
   tocBracketEnabled: boolean
+
+  /**
+   * imported javascript and css files
+   * convert .js file to <script src='...'></script>
+   * convert .css file to <link href='...'></link>
+   */
+  JSAndCssFiles: string[] 
 }
 
 interface TransformMarkdownOptions {
@@ -134,6 +141,9 @@ async function loadFile(filePath:string, {fileDirectoryPath, forPreview}, filesC
     const svgMarkdown = await PDF.toSVGMarkdown(localFilePath, {markdownDirectoryPath: fileDirectoryPath})
     return svgMarkdown 
   }
+  else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+    return filePath
+  }
   /*
   else if filePath.endsWith('.js') # javascript file
     requiresJavaScriptFiles(filePath, forPreview).then (jsCode)->
@@ -178,12 +188,13 @@ export async function transformMarkdown(inputString:string,
                               protocolsWhiteListRegExp = null }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
     let inBlock = false // inside code block
     const tocConfigs = [],
-          slideConfigs = []
+          slideConfigs = [],
+          JSAndCssFiles = []
     let tocBracketEnabled = false 
 
     async function helper(i, lineNo=0, outputString=""):Promise<TransformMarkdownOutput> {
       if (i >= inputString.length) { // done 
-        return {outputString, slideConfigs, tocBracketEnabled}
+        return {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles}
       }
 
       if (inputString[i] == '\n')
@@ -362,7 +373,10 @@ export async function transformMarkdown(inputString:string,
                 output = _2DArrayToMarkdownTable(parseResult.data)
               }
             }
-            else if (extname === '.css' || extname === '.less') { // css or less file
+            else if (extname === '.css' || extname === '.js') {
+              JSAndCssFiles.push(filePath)
+            }
+            else if (/*extname === '.css' || */ extname === '.less') { // css or less file
               output = `<style>${fileContent}</style>`
             }
             else if (extname === '.pdf') {

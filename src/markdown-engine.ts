@@ -48,6 +48,12 @@ interface MarkdownEngineOutput {
   markdown:string,
   tocHTML:string,
   yamlConfig: any,
+  /**
+   * imported javascript and css files
+   * convert .js file to <script src='...'></script>
+   * convert .css file to <link href='...'></link>
+   */
+  JSAndCssFiles: string[]
  // slideConfigs: Array<object>
 }
 
@@ -1416,7 +1422,7 @@ export class MarkdownEngine {
     inputString = fm.content
 
     // import external files and insert anchors if necessary 
-    const {outputString, slideConfigs, tocBracketEnabled} = await transformMarkdown(inputString, 
+    const {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles} = await transformMarkdown(inputString, 
     {
       fileDirectoryPath: this.fileDirectoryPath, 
       projectDirectoryPath: this.projectDirectoryPath,
@@ -1529,6 +1535,6 @@ export class MarkdownEngine {
     }
 
     this.cachedHTML = html // save to cache
-    return {html, markdown:inputString, tocHTML: this.tocHTML, yamlConfig}
+    return {html, markdown:inputString, tocHTML: this.tocHTML, yamlConfig, JSAndCssFiles}
   }
 }
