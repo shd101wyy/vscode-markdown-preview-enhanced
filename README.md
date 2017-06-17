@@ -15,13 +15,26 @@ Right now only 50% done:
 * <kbd>ctrl-shift-i</kbd> for `Markdown Preview Enhanced: Image Helper` command.    
     * Support uploading images to either `imgur` or `sm.ms`.  
 ![Screen Shot 2017-06-15 at 1.31.01 AM](https://ooo.0o0.ooo/2017/06/15/59422aa748341.png)  
+* <kbd>shift-enter</kbd> for `Markdown Preview Enhanced: Run Code Chunk` command.  
+* <kbd>ctrl-shift-enter</kbd> for `Markdown Preview Enhanced: Run All Code Chunks` command.  
 
 * **Right Click** at the Preview to see the contextmenu
 ![Screen Shot 2017-06-15 at 1.36.32 AM](https://ooo.0o0.ooo/2017/06/15/59422b1ab3931.png)
 
 For more features that will be supported in the future, check [Markdown Preview Enhanced for atom](https://shd101wyy.github.io/markdown-preview-enhanced/#/).
 
-### Progress so far (June 14, 2017)
+### Progress so far 
+#### June 16, 2017
+* Done supporting [eBook export](https://shd101wyy.github.io/markdown-preview-enhanced/#/ebook).  
+* [@import](https://shd101wyy.github.io/markdown-preview-enhanced/#/file-imports) 70% done. Now support importing every external files except `.js` and `.pdf` files.  
+* Done implementing refresh button in preview.  
+* [Code Chunk](https://shd101wyy.github.io/markdown-preview-enhanced/#/code-chunk) implementation is now 60% done. LaTeX and JavaScript don't work yet.    
+Please note that Code Chunk of [Markdown Preview Enhanced for Atom](https://shd101wyy.github.io/markdown-preview-enhanced/#/code-chunk) is outdated. The syntax of the vscode version is the newest. You need to have `cmd` set to declare a code chunk.  
+
+![Screen Shot 2017-06-16 at 10.23.49 PM](https://ooo.0o0.ooo/2017/06/17/5944a2b03d954.png).  
+
+
+#### June 14, 2017
 * Scroll sync is partially done.
 * Done supporting `mermaid`, `PlantUML` and `viz.js` (GraphViz). 
 * Done supporting `[TOC]`.  
@@ -35,6 +48,7 @@ For more features that will be supported in the future, check [Markdown Preview 
 * Done `prince` PDF export.  
 * Done `Image Helper`.  
 * Done supporting single preview.  
+
 
 
 
