@@ -170,6 +170,7 @@ export async function transformMarkdown(inputString:string,
       let line = inputString.substring(i, end)
 
       if (line.match(/^\s*```/)) {
+        if (!inBlock && forPreview) outputString += createAnchor(lineNo)
         inBlock = !inBlock
         return helper(end+1, lineNo+1, outputString+line+'\n')
       }
@@ -179,7 +180,7 @@ export async function transformMarkdown(inputString:string,
 
       let subjectMatch
 
-      if (line.match(/^(\#|\!\[|```[^`]|@import)/)) {
+      if (line.match(/^(\#|\!\[|@import)/)) {
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
       } else if (subjectMatch = line.match(/^\<!--\s+([^\s]+)/)) {
         if (forPreview) outputString += createAnchor(lineNo)

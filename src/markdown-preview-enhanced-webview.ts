@@ -541,6 +541,19 @@ function runAllCodeChunks() {
   }, 'file://')
 }
 
+function runNearestCodeChunk() {
+  const currentLine = mpe.currentLine
+  const elements = mpe.previewElement.children
+  for (let i = elements.length - 1; i >= 0; i--) {
+    if (elements[i].classList.contains('sync-line') && elements[i + 1] && elements[i + 1].classList.contains('code-chunk')) {
+      if (currentLine >= parseInt(elements[i].getAttribute('data-line'))) {
+        const codeChunkId = elements[i + 1].getAttribute('data-id')
+        return runCodeChunk(codeChunkId)
+      }
+    }
+  }
+}
+
 /**
  * Setup code chunks
  */
@@ -950,6 +963,8 @@ window.addEventListener('message', (event)=> {
     window['$']('#image-helper-view').modal()
   } else if (data.type === 'run-all-code-chunks') {
     runAllCodeChunks()
+  } else if (data.type === 'run-code-chunk') {
+    runNearestCodeChunk()
   }
 }, false);
 
