@@ -1,6 +1,7 @@
 import * as path from "path"
 import * as fs from "fs"
 import {spawn} from "child_process"
+import * as vm from "vm"
 
 import * as utility from "./utility"
 import * as LaTeX from "./latex"
@@ -28,6 +29,17 @@ async function compileLaTeX(content:string, fileDirectoryPath:string, options:ob
   }
 }
 
+/**
+ * 
+ * @param code should be a javascript function string
+ * @param options 
+ */
+async function runInVm(code:string, options:object):Promise<string> {
+  const script = new vm.Script(`((${code})())`)
+  const context = vm.createContext( options['context'] || {})
+  return script.runInContext(context)
+}
+
 export async function run(content:string, fileDirectoryPath:string, options:object):Promise<string> {
   const cmd = options['cmd']
   let args = options['args'] || []
@@ -40,6 +52,10 @@ export async function run(content:string, fileDirectoryPath:string, options:obje
 
   if (cmd.match(/(la)?tex/) || cmd === 'pdflatex') {
     return compileLaTeX(content, fileDirectoryPath, options)
+  }
+
+  if (cmd === 'node.vm') {
+    return runInVm(content, options)
   }
 
 

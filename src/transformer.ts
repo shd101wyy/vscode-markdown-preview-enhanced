@@ -141,9 +141,6 @@ async function loadFile(filePath:string, {fileDirectoryPath, forPreview}, filesC
     const svgMarkdown = await PDF.toSVGMarkdown(localFilePath, {markdownDirectoryPath: fileDirectoryPath})
     return svgMarkdown 
   }
-  else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
-    return filePath
-  }
   /*
   else if filePath.endsWith('.js') # javascript file
     requiresJavaScriptFiles(filePath, forPreview).then (jsCode)->
@@ -221,7 +218,12 @@ export async function transformMarkdown(inputString:string,
         if (forPreview) outputString += createAnchor(lineNo)
         
         let subject = subjectMatch[1]
-        if (subject in CustomSubjects) {
+        if (subject === '@import') {
+          const commentEnd = line.indexOf('-->')
+          if (commentEnd > 0)
+            line = line.slice(4, commentEnd).trim()
+        }
+        else if (subject in CustomSubjects) {
           let commentEnd = inputString.indexOf('-->', i + 4)
 
           if (commentEnd < 0) { // didn't find -->
@@ -351,7 +353,6 @@ export async function transformMarkdown(inputString:string,
               if (!config['id']) { // create `id` for code chunk
                 config['id'] = md5(absoluteFilePath)
               }
-
               const fileExtension = extname.slice(1, extname.length)
               output = `\`\`\`${fileExtensionToLanguageMap[fileExtension] || fileExtension} ${JSON.stringify(config)}  \n${fileContent}\n\`\`\`  `
             }
