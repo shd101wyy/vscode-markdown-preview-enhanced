@@ -38,6 +38,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     mpe.init() // init markdown-preview-enhanced
     .then(()=> {
       mpe.onDidChangeGlobalStyles(this.refreshAllPreviews.bind(this))
+
+      MarkdownEngine.onModifySource(this.modifySource.bind(this))
     })
   }
 
@@ -48,6 +50,79 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         this._onDidChange.fire(document.uri)
       }
     })
+  }
+
+  /**
+   * modify markdown source, append `result` after corresponding code chunk.
+   * @param codeChunkData 
+   * @param result 
+   * @param filePath 
+   */
+  private async modifySource(codeChunkData:CodeChunkData, result:string, filePath:string):Promise<string> {
+    function insertResult(i:number, editor:TextEditor) {
+      const lineCount = editor.document.lineCount
+      if (i + 2 < lineCount && editor.document.lineAt(i + 2).text.startsWith('<!-- code_chunk_output -->')) {
+        // TODO: modify exited output 
+        let start = i + 2
+        let end = i + 3
+        while (end < lineCount) {
+          if (editor.document.lineAt(end).text.startsWith('<!-- /code_chunk_output -->')){
+            break
+          }
+          end += 1
+        }
+        editor.edit((edit)=> {
+          edit.replace(new vscode.Range(
+            new vscode.Position(start + 1, 0),
+            new vscode.Position(end, 0)
+          ), result+'\n')
+        })
+        return ""
+      } else {
+        editor.edit((edit)=> {
+          edit.insert(new vscode.Position(i+1, 0), `\n<!-- code_chunk_output -->\n${result}\n<!-- /code_chunk_output -->\n`)
+        })
+        return ""
+      }
+    }
+
+    const visibleTextEditors = vscode.window.visibleTextEditors
+    for (let i = 0; i < visibleTextEditors.length; i++) {
+      const editor = visibleTextEditors[i]
+      if (editor.document.uri.fsPath === filePath) {
+
+        let codeChunkOffset = 0,
+            targetCodeChunkOffset = codeChunkData.options['code_chunk_offset']
+
+        const lineCount = editor.document.lineCount
+        for (let i = 0; i < lineCount; i++) {
+          const line = editor.document.lineAt(i)
+          if (line.text.match(/^```(.+)\"?cmd\"?\s*\:/)) {
+            if (codeChunkOffset === targetCodeChunkOffset) {
+              i = i + 1
+              while (i < lineCount) {
+                if (editor.document.lineAt(i).text.match(/^\`\`\`\s*/)) {
+                  break
+                }
+                i += 1
+              }
+              return insertResult(i, editor)
+            } else {
+              codeChunkOffset++
+            }
+          } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*\:/)) {
+            if (codeChunkOffset === targetCodeChunkOffset) {
+              // console.log('find code chunk' )
+              return insertResult(i, editor)
+            } else {
+              codeChunkOffset++
+            }
+          }
+        }
+        break
+      }
+    }
+    return ""
   }
 
   /**

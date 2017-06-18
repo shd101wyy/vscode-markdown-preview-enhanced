@@ -73,33 +73,6 @@ interface Heading {
   id:string
 }
 
-interface CodeChunkData {
-  /**
-   * id of the code chunk
-   */
-  id: string,
-  /**
-   * code content of the code chunk
-   */
-  code: string,
-  /**
-   * code chunk options
-   */
-  options: object,
-  /**
-   * result after running code chunk
-   */
-  result: string,
-  /**
-   * whether is running the code chunk or not
-   */
-  running: boolean,
-  /**
-   * last code chunk
-   */
-  prev: string
-}
-
 const defaults = {
   html:         true,        // Enable HTML tags in source
   xhtmlOut:     false,       // Use '/' to close single tags (<br />)
@@ -110,7 +83,33 @@ const defaults = {
   typographer:  true,        // Enable smartypants and other sweet transforms
 }
 
+let MODIFY_SOURCE:(codeChunkData:CodeChunkData, result:string, filePath:string)=>Promise<string> = null
+
 export class MarkdownEngine {
+  /**
+   * Modify markdown source, append `result` after corresponding code chunk.
+   * @param codeChunkData 
+   * @param result 
+   */
+  public static async modifySource(codeChunkData:CodeChunkData, result:string, filePath:string) {
+    if (MODIFY_SOURCE) {
+      await MODIFY_SOURCE(codeChunkData, result, filePath)
+    } else {
+      // TODO: direcly modify the local file.
+    }
+
+    codeChunkData.running = false
+    return result
+  }
+
+  /**
+   * Bind cb to MODIFY_SOURCE
+   * @param cb 
+   */
+  public static onModifySource(cb:(codeChunkData:CodeChunkData, result:string, filePath:string)=>Promise<string>) {
+    MODIFY_SOURCE = cb
+  }
+
   /**
    * markdown file path 
    */
@@ -994,6 +993,11 @@ export class MarkdownEngine {
     try {
       result = await CodeChunkAPI.run(code, this.fileDirectoryPath, codeChunkData.options)
 
+      if (codeChunkData.options['modify_source'] && ('code_chunk_offset' in codeChunkData.options)) {
+        codeChunkData.result = ''
+        return MarkdownEngine.modifySource(codeChunkData, result, this.filePath)
+      } 
+      
       const outputFormat = codeChunkData.options['output'] || 'text'
       if (!result) { // do nothing
         result = ''
@@ -1014,8 +1018,8 @@ export class MarkdownEngine {
       result = `<pre class="language-text">${error}</pre>`
     }
 
-    codeChunkData.running = false 
     codeChunkData.result = result // save result.
+    codeChunkData.running = false 
     return result
   }
 
@@ -1251,7 +1255,10 @@ export class MarkdownEngine {
 
     // reset caches 
     // the line below actually has problem.
-    this.graphsCache = newGraphsCache
+    if (options.isForPreview) {
+      this.graphsCache = newGraphsCache
+    } 
+
     return $.html()
   }
 
@@ -1505,6 +1512,8 @@ export class MarkdownEngine {
   }
 
   public async parseMD(inputString:string, options:MarkdownEngineRenderOption):Promise<MarkdownEngineOutput> {
+    if (!inputString) inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
+
     // process front-matter
     const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
     const frontMatterTable = fm.table,
