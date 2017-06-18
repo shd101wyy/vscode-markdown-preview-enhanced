@@ -71,11 +71,19 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
           }
           end += 1
         }
+
+        // if output not changed, then no need to modify editor buffer
+        let r = ""
+        for (let i = start+1; i < end-1; i++) {
+          r += editor.document.lineAt(i).text+'\n'
+        }
+        if (r === result) return "" // no need to modify output
+
         editor.edit((edit)=> {
           edit.replace(new vscode.Range(
             new vscode.Position(start + 1, 0),
-            new vscode.Position(end, 0)
-          ), result+'\n')
+            new vscode.Position(end-1, 0)
+          ), result)
         })
         return ""
       } else {
