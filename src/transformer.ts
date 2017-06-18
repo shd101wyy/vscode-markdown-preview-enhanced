@@ -12,7 +12,7 @@ import * as temp from "temp"
 // import * as temp from "temp"
 // temp.track()
 import * as utility from "./utility"
-const extensionDirectoryPath = utility.getExtensionDirectoryPath()
+const extensionDirectoryPath = utility.extensionDirectoryPath
 const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 
@@ -42,7 +42,7 @@ interface TransformMarkdownOptions {
   fileDirectoryPath: string 
   projectDirectoryPath: string 
   filesCache: {[key:string]: string}
-  useRelativeImagePath: boolean
+  useRelativeFilePath: boolean
   forPreview: boolean
   protocolsWhiteListRegExp: RegExp
 }
@@ -183,7 +183,7 @@ export async function transformMarkdown(inputString:string,
                             { fileDirectoryPath = '', 
                               projectDirectoryPath = '', 
                               filesCache = {}, 
-                              useRelativeImagePath = null,
+                              useRelativeFilePath = null,
                               forPreview = false,
                               protocolsWhiteListRegExp = null }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
     let inBlock = false // inside code block
@@ -306,7 +306,7 @@ export async function transformMarkdown(inputString:string,
           if (!imageSrc) {
             if (filePath.match(protocolsWhiteListRegExp))
               imageSrc = filePath
-            else if (useRelativeImagePath)
+            else if (useRelativeFilePath)
               imageSrc = path.relative(fileDirectoryPath, absoluteFilePath) + '?' + Math.random()
             else 
               imageSrc = '/' + path.relative(projectDirectoryPath, absoluteFilePath) + '?' + Math.random()
@@ -357,7 +357,7 @@ export async function transformMarkdown(inputString:string,
             }
             else if (['.md', '.markdown', '.mmark'].indexOf(extname) >= 0) { // markdown files
               // this return here is necessary
-              let {outputString:output} = await transformMarkdown(fileContent, {fileDirectoryPath: path.dirname(absoluteFilePath), projectDirectoryPath, filesCache, useRelativeImagePath: false, forPreview: false, protocolsWhiteListRegExp})
+              let {outputString:output} = await transformMarkdown(fileContent, {fileDirectoryPath: path.dirname(absoluteFilePath), projectDirectoryPath, filesCache, useRelativeFilePath: false, forPreview: false, protocolsWhiteListRegExp})
               output = '\n' + output + '  '
               return helper(end+1, lineNo+1, outputString+output+'\n')
             }
@@ -378,7 +378,7 @@ export async function transformMarkdown(inputString:string,
                 let sourcePath
                 if (filePath.match(protocolsWhiteListRegExp))
                   sourcePath = filePath
-                else if (useRelativeImagePath)
+                else if (useRelativeFilePath)
                   sourcePath = path.relative(fileDirectoryPath, absoluteFilePath)
                 else 
                   sourcePath = 'file://' + absoluteFilePath

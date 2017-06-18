@@ -5,10 +5,6 @@ import {exec} from "child_process"
 import * as temp from "temp"
 temp.track()
 
-export function getExtensionDirectoryPath() {
-  return path.resolve(__dirname, "../../") // 
-}
-
 const TAGS_TO_REPLACE = {
     '&': '&amp;',
     '<': '&lt;',
@@ -94,3 +90,8 @@ export function openFile(filePath) {
  * get "~/.markdown-preview-enhanced" path
  */
 export const extensionConfigDirectoryPath = path.resolve(os.homedir(), './.markdown-preview-enhanced')
+
+/**
+ * get the directory path of this extension.
+ */
+export const extensionDirectoryPath = path.resolve(__dirname, "../../")

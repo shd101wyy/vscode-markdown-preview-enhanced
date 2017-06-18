@@ -16,7 +16,6 @@ async function compileLaTeX(content:string, fileDirectoryPath:string, options:ob
 
   await utility.writeFile(texFilePath, content)
 
-
   try {
     const svgMarkdown = await LaTeX.toSVGMarkdown(texFilePath, {latexEngine, markdownDirectoryPath:fileDirectoryPath, svgDirectoryPath:latexSVGDir, svgZoom:latexZoom, svgWidth:latexWidth, svgHeight:latexHeight})
     fs.unlink(texFilePath, (error)=> {})

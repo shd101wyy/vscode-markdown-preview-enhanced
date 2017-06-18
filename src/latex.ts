@@ -8,14 +8,14 @@ import * as PDF from "./pdf"
 function cleanUpFiles(texFilePath:string) {
   const directoryPath = path.dirname(texFilePath)
   const extensionName = path.extname(texFilePath)
-  const filePrefix = texFilePath.replace(new RegExp(extensionName + '$'), '')
+  const filePrefix = path.basename(texFilePath).replace(new RegExp(extensionName + '$'), '')
 
   fs.readdir(directoryPath, (error, items)=> {
     if (error) return 
 
     items.forEach((fileName)=> {
       if (fileName.startsWith(filePrefix) && !fileName.match(/\.(la)?tex/))
-        fs.unlink(path.resolve(directoryPath, fileName))
+        fs.unlink(path.resolve(directoryPath, fileName), ()=>{})
     })
   })
 }

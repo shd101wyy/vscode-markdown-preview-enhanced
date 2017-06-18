@@ -323,7 +323,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
           type: 'start-parsing-markdown',
         })
 
-      engine.parseMD(text, {isForPreview: true, useRelativeImagePath: false, hideFrontMatter: false})
+      engine.parseMD(text, {isForPreview: true, useRelativeFilePath: false, hideFrontMatter: false})
       .then(({markdown, html, tocHTML, JSAndCssFiles})=> {
 
         // check JSAndCssFiles 

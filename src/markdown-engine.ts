@@ -8,7 +8,7 @@ const matter = require('gray-matter')
 
 import {MarkdownPreviewEnhancedConfig} from "./config"
 import * as plantumlAPI from "./puml"
-import {escapeString, unescapeString, getExtensionDirectoryPath, readFile} from "./utility"
+import {escapeString, unescapeString, readFile} from "./utility"
 import * as utility from "./utility"
 let viz = null
 import {scopeForLanguageName} from "./extension-helper"
@@ -20,7 +20,7 @@ import {ebookConvert} from "./ebook-convert"
 import * as CodeChunkAPI from "./code-chunk"
 import * as GlobalStyles from "./global_style"
 
-const extensionDirectoryPath = getExtensionDirectoryPath()
+const extensionDirectoryPath = utility.extensionDirectoryPath
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
 const remarkable = require(path.resolve(extensionDirectoryPath, './dependencies/remarkable/remarkable.js'))
 const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
@@ -39,7 +39,7 @@ interface MarkdownEngineConstructorArgs {
 }
 
 interface MarkdownEngineRenderOption {
-  useRelativeImagePath: boolean,
+  useRelativeFilePath: boolean,
   isForPreview: boolean,
   hideFrontMatter: boolean
 }
@@ -597,7 +597,7 @@ export class MarkdownEngine {
    */
   public async openInBrowser():Promise<void> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath: false, hideFrontMatter: true, isForPreview: false})
     html = await this.generateHTMLFromTemplate(html, yamlConfig, 
                                     {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )   
     // create temp file
@@ -620,7 +620,7 @@ export class MarkdownEngine {
    */
   public async saveAsHTML():Promise<string> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:true, hideFrontMatter:true, isForPreview: false})
     const htmlConfig = yamlConfig['html'] || {}
     let cdn = htmlConfig['cdn'],
         offline = !cdn
@@ -660,7 +660,7 @@ export class MarkdownEngine {
    */
   public async princeExport():Promise<string> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:false, hideFrontMatter:true, isForPreview: false})
     let dest = this.filePath
     let extname = path.extname(dest) 
     dest = dest.replace(new RegExp(extname+'$'), '.pdf')
@@ -723,7 +723,7 @@ export class MarkdownEngine {
    */
   public async eBookExport(fileType='epub'):Promise<string> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:false, hideFrontMatter:true, isForPreview: false})
 
     let dest = this.filePath
     let extname = path.extname(dest) 
@@ -797,7 +797,7 @@ export class MarkdownEngine {
         
         fs.readFile(filePath, {encoding: 'utf-8'}, (error, text)=> {
           if (error) return reject(error.toString())
-          this.parseMD(text, {useRelativeImagePath: false, isForPreview: false, hideFrontMatter:true})
+          this.parseMD(text, {useRelativeFilePath: false, isForPreview: false, hideFrontMatter:true})
           .then(({html})=> {
             return resolve({heading, id, level, filePath, html, offset})
           })
@@ -976,7 +976,7 @@ export class MarkdownEngine {
         const base64 = new Buffer(result).toString('base64')
         result = `<img src="data:image/png;charset=utf-8;base64,${base64}">`
       } else if (outputFormat === 'markdown') {
-        const {html} = await this.parseMD(result, {useRelativeImagePath:true, isForPreview:false, hideFrontMatter: true} )
+        const {html} = await this.parseMD(result, {useRelativeFilePath:true, isForPreview:false, hideFrontMatter: true} )
         result = html 
       } else if (outputFormat === 'none') {
         result = ''
@@ -1032,7 +1032,7 @@ export class MarkdownEngine {
     function renderPlainCodeBlock() {
       try {
         if (!Prism) {
-          Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
+          Prism = require(path.resolve(extensionDirectoryPath, './dependencies/prism/prism.js'))
         }
         const html = Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])
         $preElement.html(html)  
@@ -1098,7 +1098,7 @@ export class MarkdownEngine {
       if (!options['hide']) {
         try {
           if (!Prism) {
-            Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
+            Prism = require(path.resolve(extensionDirectoryPath, './dependencies/prism/prism.js'))
           }
           highlightedBlock = `<pre class="language-${lang}">${Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])}</pre>`
         } catch(e) {
@@ -1213,7 +1213,7 @@ export class MarkdownEngine {
       const img = $(imgElement)
       const src = img.attr(srcTag)
 
-      img.attr(srcTag, this.resolveFilePath(src, options.useRelativeImagePath))
+      img.attr(srcTag, this.resolveFilePath(src, options.useRelativeFilePath))
     })
 
     // reset caches 
@@ -1394,7 +1394,7 @@ export class MarkdownEngine {
     `
   }
 
-  private parseSlidesForExport(html:string, slideConfigs:Array<object>, useRelativeImagePath:boolean) {
+  private parseSlidesForExport(html:string, slideConfigs:Array<object>, useRelativeFilePath:boolean) {
     let slides = html.split('<span class="new-slide"></span>')
     let before = slides[0]
     slides = slides.slice(1)
@@ -1405,7 +1405,7 @@ export class MarkdownEngine {
       let attrString = ''
 
       if (slideConfig['data-background-image'])
-        attrString += ` data-background-image='${this.resolveFilePath(slideConfig['data-background-image'], useRelativeImagePath)}'`
+        attrString += ` data-background-image='${this.resolveFilePath(slideConfig['data-background-image'], useRelativeFilePath)}'`
 
       if (slideConfig['data-background-size'])
         attrString += ` data-background-size='${slideConfig['data-background-size']}'`
@@ -1423,7 +1423,7 @@ export class MarkdownEngine {
         attrString += ` data-notes='${slideConfig['data-notes']}'`
 
       if (slideConfig['data-background-video'])
-        attrString += ` data-background-video='${this.resolveFilePath(slideConfig['data-background-video'], useRelativeImagePath)}'`
+        attrString += ` data-background-video='${this.resolveFilePath(slideConfig['data-background-video'], useRelativeFilePath)}'`
 
       if (slideConfig['data-background-video-loop'])
         attrString += ` data-background-video-loop`
@@ -1435,7 +1435,7 @@ export class MarkdownEngine {
         attrString += ` data-transition='${slideConfig['data-transition']}'`
 
       if (slideConfig['data-background-iframe'])
-        attrString += ` data-background-iframe='${this.resolveFilePath(slideConfig['data-background-iframe'], useRelativeImagePath)}'`
+        attrString += ` data-background-iframe='${this.resolveFilePath(slideConfig['data-background-iframe'], useRelativeFilePath)}'`
       
       return attrString
     }
@@ -1485,7 +1485,7 @@ export class MarkdownEngine {
       projectDirectoryPath: this.projectDirectoryPath,
       forPreview: options.isForPreview,
       protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
-      useRelativeImagePath: options.useRelativeImagePath,
+      useRelativeFilePath: options.useRelativeFilePath,
       filesCache: this.filesCache
     })
 
@@ -1586,7 +1586,7 @@ export class MarkdownEngine {
       if (options.isForPreview) {
         html = this.parseSlides(html, slideConfigs, yamlConfig)
       } else {
-        html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeImagePath)
+        html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeFilePath)
       }
       if (yamlConfig) yamlConfig['isPresentationMode'] = true // mark as presentation mode
     }

@@ -8,7 +8,7 @@ import {spawn} from "child_process"
 import * as temp from "temp"
 
 import * as utility from "./utility"
-const extensionDirectoryPath = utility.getExtensionDirectoryPath()
+const extensionDirectoryPath = utility.extensionDirectoryPath
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 
 let SVG_DIRECTORY_PATH:string = null 
