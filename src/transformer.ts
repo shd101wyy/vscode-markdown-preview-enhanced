@@ -44,7 +44,8 @@ interface TransformMarkdownOptions {
   filesCache: {[key:string]: string}
   useRelativeFilePath: boolean
   forPreview: boolean
-  protocolsWhiteListRegExp: RegExp
+  protocolsWhiteListRegExp: RegExp,
+  notSourceFile?: boolean
 }
 
 const fileExtensionToLanguageMap = {
@@ -182,8 +183,10 @@ export async function transformMarkdown(inputString:string,
                               filesCache = {}, 
                               useRelativeFilePath = null,
                               forPreview = false,
-                              protocolsWhiteListRegExp = null }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
+                              protocolsWhiteListRegExp = null,
+                              notSourceFile = false }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
     let inBlock = false // inside code block
+    let codeChunkOffset = 0
     const tocConfigs = [],
           slideConfigs = [],
           JSAndCssFiles = []
@@ -203,6 +206,12 @@ export async function transformMarkdown(inputString:string,
 
       if (line.match(/^\s*```/)) {
         if (!inBlock && forPreview) outputString += createAnchor(lineNo)
+
+        let match;
+        if (!inBlock && !notSourceFile && (match = line.match(/\"?cmd\"?\s*:/)))  { // it's code chunk, so mark its offset
+          line = line.replace('{', `{code_chunk_offset:${codeChunkOffset}, `)
+          codeChunkOffset++
+        }
         inBlock = !inBlock
         return helper(end+1, lineNo+1, outputString+line+'\n')
       }
@@ -219,7 +228,7 @@ export async function transformMarkdown(inputString:string,
         
         let subject = subjectMatch[1]
         if (subject === '@import') {
-          const commentEnd = line.indexOf('-->')
+          const commentEnd = line.lastIndexOf('-->')
           if (commentEnd > 0)
             line = line.slice(4, commentEnd).trim()
         }
@@ -353,12 +362,24 @@ export async function transformMarkdown(inputString:string,
               if (!config['id']) { // create `id` for code chunk
                 config['id'] = md5(absoluteFilePath)
               }
+              if (!notSourceFile) { // mark code_chunk_offset
+                config['code_chunk_offset'] = codeChunkOffset
+                codeChunkOffset++
+              }
               const fileExtension = extname.slice(1, extname.length)
               output = `\`\`\`${fileExtensionToLanguageMap[fileExtension] || fileExtension} ${JSON.stringify(config)}  \n${fileContent}\n\`\`\`  `
             }
             else if (['.md', '.markdown', '.mmark'].indexOf(extname) >= 0) { // markdown files
               // this return here is necessary
-              let {outputString:output} = await transformMarkdown(fileContent, {fileDirectoryPath: path.dirname(absoluteFilePath), projectDirectoryPath, filesCache, useRelativeFilePath: false, forPreview: false, protocolsWhiteListRegExp})
+              let {outputString:output} = await transformMarkdown(fileContent, {
+                fileDirectoryPath: path.dirname(absoluteFilePath), 
+                projectDirectoryPath, 
+                filesCache, 
+                useRelativeFilePath: false, 
+                forPreview: false, 
+                protocolsWhiteListRegExp,
+                notSourceFile: true // <= this is not the sourcefile
+              })
               output = '\n' + output + '  '
               return helper(end+1, lineNo+1, outputString+output+'\n')
             }
