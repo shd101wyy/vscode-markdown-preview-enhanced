@@ -56,6 +56,10 @@
             {
                 "command": "markdown-preview-enhanced.insertPagebreak",
                 "title": "Markdown Preview Enhanced: Insert Page Break"
+            },
+            {
+                "command": "markdown-preview-enhanced.createTOC",
+                "title": "Markdown Preview Enhanced: Create TOC"
             }
         ],
         "keybindings": [

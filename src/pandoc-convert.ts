@@ -218,7 +218,10 @@ callback(err, outputFilePath)
 /**
  * @return outputFilePath
  */
-export async function pandocConvert(text, {fileDirectoryPath, projectDirectoryPath, sourceFilePath, filesCache, protocolsWhiteListRegExp, deleteImages=true}, config={}):Promise<string> {
+export async function pandocConvert(text, 
+  {fileDirectoryPath, projectDirectoryPath, sourceFilePath, filesCache, protocolsWhiteListRegExp, deleteImages=true}, 
+  config={}):Promise<string> {
+    
   config = loadOutputYAML(fileDirectoryPath, config)
   // TODO =>
   //     args = ['-f', atom.config.get('markdown-preview-enhanced.pandocMarkdownFlavor').replace(/\-raw\_tex/, '')]
@@ -237,9 +240,9 @@ export async function pandocConvert(text, {fileDirectoryPath, projectDirectoryPa
       extension = getFileExtension(documentFormat)
       outputConfig = config['output'][documentFormat]
     }
-  }
-  else
+  } else {
     throw "Output format needs to be specified."
+  }
 
   if (extension === null) throw "Invalid document type."
 

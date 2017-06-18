@@ -84,6 +84,15 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
+	function createTOC() {
+		const editor = vscode.window.activeTextEditor
+		if (editor && editor.document && editor.edit) {
+			editor.edit((textEdit)=> {
+				textEdit.insert(editor.selection.active, '\n<!-- toc orderedList:0 depthFrom:1 depthTo:6 -->\n<!-- tocstop -->\n')
+			})
+		}
+	}
+
 	function insertTable() {
 		const editor = vscode.window.activeTextEditor
 		if (editor && editor.document && editor.edit) {
@@ -208,7 +217,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {
-			contentProvider.update(document.uri);
+			// contentProvider.update(document.uri, true);
+			contentProvider.updateMarkdown(document.uri, true)
 		}
 	}))
 
@@ -294,6 +304,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.insertTable', insertTable))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.insertPagebreak', insertPagebreak))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.createTOC', createTOC))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 

@@ -42,7 +42,8 @@ interface MarkdownEngineConstructorArgs {
 interface MarkdownEngineRenderOption {
   useRelativeFilePath: boolean,
   isForPreview: boolean,
-  hideFrontMatter: boolean
+  hideFrontMatter: boolean,
+  triggeredBySave?: boolean
 }
 
 interface MarkdownEngineOutput {
@@ -1035,7 +1036,9 @@ export class MarkdownEngine {
   private async renderCodeBlock($, $preElement, code, parameters, 
   { graphsCache, 
     codeChunksArray, 
-    isForPreview }:{graphsCache:object, codeChunksArray:CodeChunkData[], isForPreview:boolean}) {
+    isForPreview,
+    triggeredBySave }:{graphsCache:object, codeChunksArray:CodeChunkData[], isForPreview:boolean, triggeredBySave:boolean}) {
+    
     let match, lang, optionsStr:string, options:object 
     if (match = parameters.match(/\s*([^\s]+)\s+\{(.+?)\}/)) {
       lang = match[1]
@@ -1156,6 +1159,10 @@ export class MarkdownEngine {
         codeChunkData.prev = previousCodeChunkDataId
       }
 
+      if (triggeredBySave && options['run_on_save']) {
+        await this.runCodeChunk(options['id'])
+      }
+
       let result = codeChunkData.result
       // element option 
       if (!result && codeChunkData.options['element']) {
@@ -1224,7 +1231,7 @@ export class MarkdownEngine {
       }
       
       asyncFunctions.push(this.renderCodeBlock($, $preElement, code, lang, 
-        {graphsCache: newGraphsCache, codeChunksArray, isForPreview:options.isForPreview}))
+        {graphsCache: newGraphsCache, codeChunksArray, isForPreview:options.isForPreview, triggeredBySave: options.triggeredBySave}))
     })
 
     await Promise.all(asyncFunctions)

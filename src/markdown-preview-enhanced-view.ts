@@ -308,7 +308,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     })
   }
 
-  public updateMarkdown(sourceUri:Uri) {
+  public updateMarkdown(sourceUri:Uri, triggeredBySave?:boolean) {
     const engine = this.getEngine(sourceUri)
     // console.log('updateMarkdown: ' + Object.keys(this.engineMaps).length)
     if (!engine) return 
@@ -323,7 +323,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
           type: 'start-parsing-markdown',
         })
 
-      engine.parseMD(text, {isForPreview: true, useRelativeFilePath: false, hideFrontMatter: false})
+      engine.parseMD(text, {isForPreview: true, useRelativeFilePath: false, hideFrontMatter: false, triggeredBySave})
       .then(({markdown, html, tocHTML, JSAndCssFiles})=> {
 
         // check JSAndCssFiles 
