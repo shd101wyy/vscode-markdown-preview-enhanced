@@ -18,6 +18,7 @@ import {CustomSubjects} from "./custom-subjects"
 import {princeConvert} from "./prince-convert"
 import {ebookConvert} from "./ebook-convert"
 import * as CodeChunkAPI from "./code-chunk"
+import * as GlobalStyles from "./global_style"
 
 const extensionDirectoryPath = getExtensionDirectoryPath()
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
@@ -552,6 +553,15 @@ export class MarkdownEngine {
     } catch(e) {
       styleCSS = ''
     }
+
+    // global styles 
+    let globalStyles = ""
+    try {
+      globalStyles = await GlobalStyles.getGlobalStyles()
+    } catch(error) {
+      // ignore it 
+    }
+
     html = `
   <!DOCTYPE html>
   <html>
@@ -564,7 +574,7 @@ export class MarkdownEngine {
 
       ${presentationScript}
 
-      <style> ${styleCSS} </style>
+      <style> ${styleCSS}${globalStyles} </style>
     </head>
     <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
     ${html}
@@ -856,6 +866,14 @@ export class MarkdownEngine {
       styleCSS = ''
     }
 
+    // global styles 
+    let globalStyles = ""
+    try {
+      globalStyles = await GlobalStyles.getGlobalStyles()
+    } catch(error) {
+      // ignore it 
+    }
+
     // only use github-light style for ebook
     html = `
 <!DOCTYPE html>
@@ -864,7 +882,7 @@ export class MarkdownEngine {
     <title>${title}</title>
     <meta charset=\"utf-8\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <style> ${styleCSS} </style>
+    <style> ${styleCSS} ${globalStyles} </style>
     ${mathStyle}
   </head>
   <body class="markdown-preview-enhanced">
@@ -950,7 +968,9 @@ export class MarkdownEngine {
       result = await CodeChunkAPI.run(code, this.fileDirectoryPath, codeChunkData.options)
 
       const outputFormat = codeChunkData.options['output'] || 'text'
-      if (outputFormat === 'html') {
+      if (!result) { // do nothing
+        result = ''
+      } else if (outputFormat === 'html') {
         result = result 
       } else if (outputFormat === 'png') {
         const base64 = new Buffer(result).toString('base64')

@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import * as path from 'path'
 import {Uri, CancellationToken, Event, ProviderResult, TextEditor} from 'vscode'
 
+import * as mpe from "./mpe"
 import {MarkdownEngine} from './markdown-engine'
 import {MarkdownPreviewEnhancedConfig} from './config'
 import * as utility from './utility'
@@ -33,6 +34,20 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
   public constructor(private context: vscode.ExtensionContext) {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig()
+
+    mpe.init() // init markdown-preview-enhanced
+    .then(()=> {
+      mpe.onDidChangeGlobalStyles(this.refreshAllPreviews.bind(this))
+    })
+  }
+
+  private refreshAllPreviews() {
+    vscode.workspace.textDocuments.forEach(document => {
+      if (document.uri.scheme === 'markdown-preview-enhanced') {
+        // this.update(document.uri);
+        this._onDidChange.fire(document.uri)
+      }
+    })
   }
 
   /**
@@ -168,6 +183,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // check preview theme 
     styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
+
+    // global styles
+    styles += `<style>${mpe.getGlobalStyles()}</style>`
 
     return styles  
   }

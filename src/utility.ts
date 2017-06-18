@@ -1,6 +1,6 @@
 import * as path from "path"
 import * as fs from "fs"
-import * as vscode from "vscode"
+import * as os from "os"
 import {exec} from "child_process"
 import * as temp from "temp"
 temp.track()
@@ -89,3 +89,8 @@ export function openFile(filePath) {
   
   exec(`${cmd} ${filePath}`)
 }
+
+/**
+ * get "~/.markdown-preview-enhanced" path
+ */
+export const extensionConfigDirectoryPath = path.resolve(os.homedir(), './.markdown-preview-enhanced')

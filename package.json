@@ -40,6 +40,10 @@
             {
                 "command": "markdown-preview-enhanced.runCodeChunk",
                 "title": "Markdown Preview Enhanced: Run Code Chunk"
+            },
+            {
+                "command": "markdown-preview-enhanced.customizeCss",
+                "title": "Markdown Preview Enhanced: Customize CSS"
             }
         ],
         "keybindings": [

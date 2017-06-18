@@ -60,6 +60,12 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	}
 
+	function customizeCSS() {
+		console.log('customizeCSS')
+		const globalStyleLessFile = 'file://'+path.resolve(utility.extensionConfigDirectoryPath, './style.less')
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(globalStyleLessFile))
+	}
+
 	function openImageHelper() {
 		contentProvider.openImageHelper(vscode.window.activeTextEditor.document.uri)
 	}
@@ -244,6 +250,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunksCommand))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.runCodeChunk', runCodeChunkCommand))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.customizeCss', customizeCSS))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 
