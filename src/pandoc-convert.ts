@@ -239,7 +239,7 @@ export async function pandocConvert(text, {fileDirectoryPath, projectDirectoryPa
     }
   }
   else
-    throw 'Output format needs to be specified.'
+    throw "Output format needs to be specified."
 
   if (extension === null) throw "Invalid document type."
 

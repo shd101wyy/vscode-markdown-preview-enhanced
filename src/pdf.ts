@@ -6,6 +6,8 @@ import * as path from "path"
 import * as fs from "fs"
 import {spawn} from "child_process"
 import * as temp from "temp"
+// import * as gm from "gm"
+// gm.subClass({imageMagick: true})
 
 import * as utility from "./utility"
 const extensionDirectoryPath = utility.extensionDirectoryPath
@@ -57,12 +59,24 @@ return new Promise<string>((resolve, reject)=> {
         items.forEach((fileName)=> {
           let match 
           if (match = fileName.match(new RegExp(`^${svgFilePrefix}(\\d+)\.svg`))) {
-            const filePath = path.relative(markdownDirectoryPath, path.resolve(svgDirectoryPath, fileName))
+            const svgFilePath = path.relative(markdownDirectoryPath, path.resolve(svgDirectoryPath, fileName))
+
+            // nvm, the converted result looks so ugly
+            /*
+            const pngFilePath = svgFilePath.replace(/\.svg$/, '.png')
+            
+            // convert svg to png 
+            gm(svgFilePath)
+            .noProfile()
+            .write(pngFilePath, function(error) {
+              console.log(error, pngFilePath)
+            })
+            */
 
             if (svgZoom || svgWidth || svgHeight)
-              svgMarkdown += `<img src=\"${filePath}\" ${svgWidth ? `width="${svgWidth}"` : ""} ${svgHeight ? `height="${svgHeight}"` : ''} ${svgZoom ? `style="zoom:${svgZoom};"` : ""}>`
+              svgMarkdown += `<img src=\"${svgFilePath}\" ${svgWidth ? `width="${svgWidth}"` : ""} ${svgHeight ? `height="${svgHeight}"` : ''} ${svgZoom ? `style="zoom:${svgZoom};"` : ""}>`
             else
-              svgMarkdown += `![](${filePath}?${r})\n`
+              svgMarkdown += `![](${svgFilePath}?${r})\n`
           }
         })
 

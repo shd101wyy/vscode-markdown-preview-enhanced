@@ -17,6 +17,7 @@ import {toc} from "./toc"
 import {CustomSubjects} from "./custom-subjects"
 import {princeConvert} from "./prince-convert"
 import {ebookConvert} from "./ebook-convert"
+import {pandocConvert} from "./pandoc-convert"
 import * as CodeChunkAPI from "./code-chunk"
 import * as GlobalStyles from "./global_style"
 
@@ -919,6 +920,31 @@ export class MarkdownEngine {
   }
 
   /**
+   * pandoc export
+   */
+  public async pandocExport():Promise<string> {
+    const inputString = await utility.readFile(this.filePath, {encoding: 'utf-8'})
+    const {data:config} = this.processFrontMatter(inputString, false)
+    let content = inputString
+    if (content.match(/\-\-\-\s+/)) {
+      const end = content.indexOf('---\n', 4)
+      content = content.slice(end+4)
+    }
+
+    const outputFilePath = await pandocConvert(content, {
+      fileDirectoryPath: this.fileDirectoryPath,
+      projectDirectoryPath: this.projectDirectoryPath,
+      sourceFilePath: this.filePath,
+      protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
+      deleteImages: true,
+      filesCache: this.filesCache
+    }, config)
+
+    utility.openFile(outputFilePath)
+    return outputFilePath
+  }
+
+  /**
    * 
    * @param filePath 
    * @param relative: whether to use the path relative to filePath or not.  
@@ -1045,7 +1071,7 @@ export class MarkdownEngine {
     if (codeBlockOnly) {
       renderPlainCodeBlock()
     } else if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
-      const checksum = md5(code)
+      const checksum = md5(optionsStr + code)
       let svg:string = this.graphsCache[checksum] 
       if (!svg) {
         svg = await plantumlAPI.render(code, this.fileDirectoryPath)
@@ -1054,7 +1080,7 @@ export class MarkdownEngine {
       graphsCache[checksum] = svg // store to new cache 
 
     } else if (lang.match(/^mermaid$/)) { // mermaid 
-      const checksum = md5(code) 
+      const checksum = md5(optionsStr + code) 
       let svg:string = this.graphsCache[checksum]
       if (!svg) {
         $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
@@ -1063,7 +1089,7 @@ export class MarkdownEngine {
         graphsCache[checksum] = svg // store to new cache 
       }
     } else if (lang.match(/^(dot|viz)$/)) { // GraphViz
-      const checksum = md5(code)
+      const checksum = md5(optionsStr + code)
       let svg = this.graphsCache[checksum]
       if (!svg) {
         if (!viz) viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))

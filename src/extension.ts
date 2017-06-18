@@ -150,6 +150,11 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.eBookExport(sourceUri, fileType)
 	}
 
+	function pandocExport(uri) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.pandocExport(sourceUri)
+	}
+
 	function cacheSVG(uri, code, svg) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.cacheSVG(sourceUri, code, svg)
@@ -307,6 +312,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.princeExport', princeExport))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.eBookExport', eBookExport))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.pandocExport', pandocExport))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.webviewFinishLoading', webviewFinishLoading))
 

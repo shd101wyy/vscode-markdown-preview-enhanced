@@ -343,7 +343,12 @@ function initContextMenu() {
           }
         }
       },
-      "pandoc_export": {name: "Pandoc (not done)"},
+      "pandoc_export": {
+        name: "Pandoc",
+        callback: ()=> {
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.pandocExport?${JSON.stringify([sourceUri])}`}, 'file://') 
+        }
+      },
       "save_as_markdown": {name: "Save as Markdown (not done)"},
       "sep2": "---------",
       "sync_source": {name: "Sync Source (not done)"}
