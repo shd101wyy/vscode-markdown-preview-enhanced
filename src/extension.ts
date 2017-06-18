@@ -66,6 +66,37 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(globalStyleLessFile))
 	}
 
+	function insertNewSlide() {
+		const editor = vscode.window.activeTextEditor
+		if (editor && editor.document && editor.edit) {
+			editor.edit((textEdit)=> {
+				textEdit.insert(editor.selection.active, '<!-- slide -->\n')
+			})
+		}
+	}
+
+	function insertPagebreak() {
+		const editor = vscode.window.activeTextEditor
+		if (editor && editor.document && editor.edit) {
+			editor.edit((textEdit)=> {
+				textEdit.insert(editor.selection.active, '<!-- pagebreak -->\n')
+			})
+		}
+	}
+
+	function insertTable() {
+		const editor = vscode.window.activeTextEditor
+		if (editor && editor.document && editor.edit) {
+			editor.edit((textEdit)=> {
+				textEdit.insert(editor.selection.active, 
+`|   |   |
+|---|---|
+|   |   |
+`)
+			})
+		}
+	}
+
 	function openImageHelper() {
 		contentProvider.openImageHelper(vscode.window.activeTextEditor.document.uri)
 	}
@@ -252,6 +283,12 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.runCodeChunk', runCodeChunkCommand))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.customizeCss', customizeCSS))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.insertNewSlide', insertNewSlide))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.insertTable', insertTable))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.insertPagebreak', insertPagebreak))
 
   context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
 

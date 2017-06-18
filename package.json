@@ -44,6 +44,18 @@
             {
                 "command": "markdown-preview-enhanced.customizeCss",
                 "title": "Markdown Preview Enhanced: Customize CSS"
+            },
+            {
+                "command": "markdown-preview-enhanced.insertNewSlide",
+                "title": "Markdown Preview Enhanced: Insert New Slide"
+            },
+            {
+                "command": "markdown-preview-enhanced.insertTable",
+                "title": "Markdown Preview Enhanced: Insert Table"
+            },
+            {
+                "command": "markdown-preview-enhanced.insertPagebreak",
+                "title": "Markdown Preview Enhanced: Insert Page Break"
             }
         ],
         "keybindings": [
