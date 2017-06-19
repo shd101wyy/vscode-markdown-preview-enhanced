@@ -61,10 +61,10 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   private async modifySource(codeChunkData:CodeChunkData, result:string, filePath:string):Promise<string> {
     function insertResult(i:number, editor:TextEditor) {
       const lineCount = editor.document.lineCount
-      if (i + 2 < lineCount && editor.document.lineAt(i + 2).text.startsWith('<!-- code_chunk_output -->')) {
+      if (i + 1 < lineCount && editor.document.lineAt(i + 1).text.startsWith('<!-- code_chunk_output -->')) {
         // TODO: modify exited output 
-        let start = i + 2
-        let end = i + 3
+        let start = i + 1
+        let end = i + 2
         while (end < lineCount) {
           if (editor.document.lineAt(end).text.startsWith('<!-- /code_chunk_output -->')){
             break
@@ -74,21 +74,21 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
         // if output not changed, then no need to modify editor buffer
         let r = ""
-        for (let i = start+1; i < end-1; i++) {
+        for (let i = start+2; i < end-1; i++) {
           r += editor.document.lineAt(i).text+'\n'
         }
-        if (r === result) return "" // no need to modify output
+        if (r === result+'\n') return "" // no need to modify output
 
         editor.edit((edit)=> {
           edit.replace(new vscode.Range(
-            new vscode.Position(start + 1, 0),
+            new vscode.Position(start + 2, 0),
             new vscode.Position(end-1, 0)
-          ), result)
+          ), result+'\n')
         })
         return ""
       } else {
         editor.edit((edit)=> {
-          edit.insert(new vscode.Position(i+1, 0), `\n<!-- code_chunk_output -->\n${result}\n<!-- /code_chunk_output -->\n`)
+          edit.insert(new vscode.Position(i+1, 0), `<!-- code_chunk_output -->\n\n${result}\n\n<!-- /code_chunk_output -->\n`)
         })
         return ""
       }

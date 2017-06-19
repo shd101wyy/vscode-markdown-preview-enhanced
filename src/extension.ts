@@ -61,9 +61,18 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	function customizeCSS() {
-		console.log('customizeCSS')
 		const globalStyleLessFile = 'file://'+path.resolve(utility.extensionConfigDirectoryPath, './style.less')
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(globalStyleLessFile))
+	}
+
+	function openMermaidConfig() {
+		const mermaidConfigFilePath = 'file://'+path.resolve(utility.extensionConfigDirectoryPath, './mermaid_config.js')
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(mermaidConfigFilePath))
+	}
+
+	function openMathJaxConfig() {
+		const mathjaxConfigFilePath = 'file://'+path.resolve(utility.extensionConfigDirectoryPath, './mathjax_config.js')
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(mathjaxConfigFilePath))
 	}
 
 	function insertNewSlide() {
@@ -88,7 +97,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const editor = vscode.window.activeTextEditor
 		if (editor && editor.document && editor.edit) {
 			editor.edit((textEdit)=> {
-				textEdit.insert(editor.selection.active, '\n<!-- toc orderedList:0 depthFrom:1 depthTo:6 -->\n<!-- tocstop -->\n')
+				textEdit.insert(editor.selection.active, '\n<!-- @import "[TOC]" {cmd:"toc", depthFrom:1, depthTo:6, orderedList:false} -->\n')
 			})
 		}
 	}
@@ -298,6 +307,10 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.runCodeChunk', runCodeChunkCommand))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.customizeCss', customizeCSS))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openMermaidConfig', openMermaidConfig))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openMathJaxConfig', openMathJaxConfig))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.insertNewSlide', insertNewSlide))
 

@@ -60,6 +60,14 @@
             {
                 "command": "markdown-preview-enhanced.createTOC",
                 "title": "Markdown Preview Enhanced: Create TOC"
+            },
+            {
+                "command": "markdown-preview-enhanced.openMermaidConfig",
+                "title": "Markdown Preview Enhanced: Open Mermaid Config"
+            },
+            {
+                "command": "markdown-preview-enhanced.openMathJaxConfig",
+                "title": "Markdown Preview Enhanced: Open MathJax Config"
             }
         ],
         "keybindings": [

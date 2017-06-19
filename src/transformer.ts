@@ -349,6 +349,26 @@ export async function transformMarkdown(inputString:string,
           }
           return helper(end+1, lineNo+1, outputString+output+'\n')
         }
+        else if (filePath === '[TOC]') {
+          if (!config) {
+            config = {
+              depthFrom: 1,
+              depthTo: 6,
+              orderedList: true
+            }
+          }
+          config['cmd'] = 'toc'
+          config['hide'] = true
+          config['run_on_save'] = true 
+          config['modify_source'] = true
+          if (!notSourceFile) { // mark code_chunk_offset
+            config['code_chunk_offset'] = codeChunkOffset
+            codeChunkOffset++          
+          }
+
+          const output = `\`\`\`text ${JSON.stringify(config)}  \n\`\`\`  `
+          return helper(end+1, lineNo+1, outputString+output+'\n')
+        }
         else {
           try {
             const fileContent = await loadFile(absoluteFilePath, {fileDirectoryPath, forPreview}, filesCache)

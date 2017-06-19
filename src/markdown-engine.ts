@@ -976,7 +976,13 @@ export class MarkdownEngine {
     codeChunkData.running = true
     let result
     try {
-      result = await CodeChunkAPI.run(code, this.fileDirectoryPath, codeChunkData.options)
+      const options = codeChunkData.options
+      if (options['cmd'] === 'toc') { // toc code chunk. <= this is a special code chunk.  
+        const tocObject = toc(this.headings, {ordered: options['orderedList'], depthFrom: options['depthFrom'], depthTo: options['depthTo'], tab: options['tab'] || '\t'})
+        result = tocObject.content
+      } else {
+        result = await CodeChunkAPI.run(code, this.fileDirectoryPath, codeChunkData.options)
+      }
 
       if (codeChunkData.options['modify_source'] && ('code_chunk_offset' in codeChunkData.options)) {
         codeChunkData.result = ''
@@ -1148,6 +1154,8 @@ export class MarkdownEngine {
         codeChunkData.prev = previousCodeChunkDataId
       }
 
+      codeChunksArray.push(codeChunkData) // this line has to be put above the `if` statement.
+
       if (triggeredBySave && options['run_on_save']) {
         await this.runCodeChunk(options['id'])
       }
@@ -1158,8 +1166,6 @@ export class MarkdownEngine {
         result = codeChunkData.options['element']
         codeChunkData.result = result 
       }
-
-      codeChunksArray.push(codeChunkData)
 
       if (codeChunkData.running) {
         $el.addClass('running')
