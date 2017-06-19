@@ -60,7 +60,11 @@ interface CodeChunkData {
    */
   running: boolean,
   /**
-   * last code chunk
+   * previous code chunk
    */
-  prev: string
+  prev: string,
+  /**
+   * next code chunk
+   */
+  next: string,
 }

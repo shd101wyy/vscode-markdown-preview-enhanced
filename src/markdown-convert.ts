@@ -10,6 +10,9 @@ import * as mkdirp from "mkdirp"
 // CACHE = require './cache'
 import {transformMarkdown} from "./transformer"
 import * as utility from "./utility"
+import {processGraphs} from "./process-graphs"
+const md5 = require(path.resolve(utility.extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
+
 
 /**
  * Convert all math expressions inside markdown to images.  
@@ -126,8 +129,9 @@ function processPaths(text, fileDirectoryPath, projectDirectoryPath, useRelative
 }
 
 export async function markdownConvert(text, 
-{projectDirectoryPath, fileDirectoryPath, protocolsWhiteListRegExp, filesCache, mathInlineDelimiters, mathBlockDelimiters}, 
-config={}):Promise<string> {
+{projectDirectoryPath, fileDirectoryPath, protocolsWhiteListRegExp, filesCache, mathInlineDelimiters, mathBlockDelimiters, codeChunksData}:
+{projectDirectoryPath:string, fileDirectoryPath:string, protocolsWhiteListRegExp:RegExp, filesCache:{[key:string]:string}, mathInlineDelimiters:string[][], mathBlockDelimiters:string[][], codeChunksData:{[key:string]:CodeChunkData}}, 
+config:object):Promise<string> {
   if (!config['path'])
     throw '{path} has to be specified'
 
@@ -142,7 +146,7 @@ config={}):Promise<string> {
     outputFilePath = path.resolve(fileDirectoryPath, config['path'])
 
   // TODO: create imageFolder
-  let imageDirectoryPath
+  let imageDirectoryPath:string
   if (config['image_dir'][0] === '/')
     imageDirectoryPath = path.resolve(projectDirectoryPath, '.' + config['image_dir'])
   else
@@ -163,11 +167,18 @@ config={}):Promise<string> {
   return await new Promise<string>((resolve, reject)=> {
     mkdirp(imageDirectoryPath, (error, made)=> {
       if (error) return reject(error.toString())
-      //       processGraphs text, {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix: encrypt(outputFilePath), useAbsoluteImagePath}, (text, imagePaths=[])->
-      fs.writeFile(outputFilePath, text, {encoding: 'utf-8'}, (error)=> {
-        if (error) return reject(error.toString())
-        return resolve(outputFilePath)
+
+      processGraphs(text, 
+      {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix: md5(outputFilePath), useRelativeFilePath, codeChunksData})
+      .then(({outputString})=> {
+        fs.writeFile(outputFilePath, outputString, {encoding: 'utf-8'}, (error)=> {
+          if (error) return reject(error.toString())
+          return resolve(outputFilePath)
+        })
       })
     })
   })
 }
+
+
+

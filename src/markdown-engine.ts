@@ -17,6 +17,7 @@ import {CustomSubjects} from "./custom-subjects"
 import {princeConvert} from "./prince-convert"
 import {ebookConvert} from "./ebook-convert"
 import {pandocConvert} from "./pandoc-convert"
+import {markdownConvert} from "./markdown-convert"
 import * as CodeChunkAPI from "./code-chunk"
 
 const extensionDirectoryPath = utility.extensionDirectoryPath
@@ -928,6 +929,47 @@ export class MarkdownEngine {
   }
 
   /**
+   * markdown(gfm) export 
+   */
+  public async markdownExport():Promise<string> {
+    let inputString = await utility.readFile(this.filePath, {encoding: 'utf-8'})
+    let {data:config} = this.processFrontMatter(inputString, false)
+
+    if (inputString.startsWith('---\n')) {
+      const end = inputString.indexOf('---\n', 4)
+      inputString = inputString.slice(end+4)
+    }
+
+    config = config['markdown'] || {}
+    if (!config['image_dir']) {
+      config['image_dir'] = this.config.imageFolderPath
+    }
+
+    if (!config['path']) {
+      if (this.filePath.match(/\.src\./)) {
+        config['path'] = this.filePath.replace(/\.src\./, '.')
+      } else {
+        config['path'] = this.filePath.replace(new RegExp(path.extname(this.filePath)), '_'+path.extname(this.filePath))
+      }
+      config['path']  = path.basename(config['path'])
+    }
+
+    if (config['front_matter']) {
+      inputString = matter.stringify(inputString, config['front-matter'])
+    }
+
+    return await markdownConvert(inputString, {
+      projectDirectoryPath: this.projectDirectoryPath,
+      fileDirectoryPath: this.fileDirectoryPath,
+      protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
+      filesCache: this.filesCache,
+      mathInlineDelimiters: this.config.mathInlineDelimiters,
+      mathBlockDelimiters: this.config.mathBlockDelimiters,
+      codeChunksData: this.codeChunksData
+    }, config)
+  }
+
+  /**
    * 
    * @param filePath 
    * @param relative: whether to use the path relative to filePath or not.  
@@ -1143,7 +1185,8 @@ export class MarkdownEngine {
           options: options,
           result: '',
           running: false,
-          prev: previousCodeChunkDataId
+          prev: previousCodeChunkDataId,
+          next: null
         }
         this.codeChunksData[options['id']] = codeChunkData
       } else {
@@ -1151,6 +1194,7 @@ export class MarkdownEngine {
         codeChunkData.options = options
         codeChunkData.prev = previousCodeChunkDataId
       }
+      this.codeChunksData[previousCodeChunkDataId].next = options['id']
 
       codeChunksArray.push(codeChunkData) // this line has to be put above the `if` statement.
 
