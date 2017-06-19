@@ -19,7 +19,6 @@ import {princeConvert} from "./prince-convert"
 import {ebookConvert} from "./ebook-convert"
 import {pandocConvert} from "./pandoc-convert"
 import * as CodeChunkAPI from "./code-chunk"
-import * as GlobalStyles from "./global_style"
 
 const extensionDirectoryPath = utility.extensionDirectoryPath
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
@@ -449,23 +448,9 @@ export class MarkdownEngine {
       const block = this.config.mathBlockDelimiters
 
       // TODO
-      const mathJaxConfig = {
-        extensions: ['tex2jax.js'],
-        jax: ['input/TeX','output/HTML-CSS'],
-        showMathMenu: false,
-        messageStyle: 'none',
-
-        tex2jax: {
-          inlineMath: this.config.mathInlineDelimiters,
-          displayMath: this.config.mathBlockDelimiters,
-          processEnvironments: false,
-          processEscapes: true,
-        },
-        TeX: {
-          extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
-        },
-        'HTML-CSS': { availableFonts: ['TeX'] },
-      }
+      const mathJaxConfig = await utility.getMathJaxConfig()
+      mathJaxConfig['tex2jax']['inlineMath'] = this.config.mathInlineDelimiters
+      mathJaxConfig['tex2jax']['displayMath'] = this.config.mathBlockDelimiters
 
       if (options.offline) {
         mathStyle = `
@@ -558,7 +543,7 @@ export class MarkdownEngine {
     // global styles 
     let globalStyles = ""
     try {
-      globalStyles = await GlobalStyles.getGlobalStyles()
+      globalStyles = await utility.getGlobalStyles()
     } catch(error) {
       // ignore it 
     }
@@ -870,7 +855,7 @@ export class MarkdownEngine {
     // global styles 
     let globalStyles = ""
     try {
-      globalStyles = await GlobalStyles.getGlobalStyles()
+      globalStyles = await utility.getGlobalStyles()
     } catch(error) {
       // ignore it 
     }

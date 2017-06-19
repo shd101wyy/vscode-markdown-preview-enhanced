@@ -37,7 +37,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     mpe.init() // init markdown-preview-enhanced
     .then(()=> {
-      mpe.onDidChangeGlobalStyles(this.refreshAllPreviews.bind(this))
+      mpe.onDidChangeConfigFile(this.refreshAllPreviews.bind(this))
 
       MarkdownEngine.onModifySource(this.modifySource.bind(this))
     })
@@ -207,25 +207,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     
     // math 
     if (this.config.mathRenderingOption === 'MathJax') {
-      const mathJaxConfig = {
-        extensions: ['tex2jax.js'],
-        jax: ['input/TeX','output/HTML-CSS'],
-        showMathMenu: false,
-        messageStyle: 'none',
-
-        tex2jax: {
-          inlineMath: this.config.mathInlineDelimiters,
-          displayMath: this.config.mathBlockDelimiters,
-          processEnvironments: false,
-          processEscapes: true,
-          preview: "none"
-        },
-        TeX: {
-          extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
-        },
-        'HTML-CSS': { availableFonts: ['TeX'] },
-        skipStartupTypeset: true
-      }
+      const mathJaxConfig = mpe.extensionConfig.mathjaxConfig
+      mathJaxConfig['tex2jax']['inlineMath'] = this.config.mathInlineDelimiters
+      mathJaxConfig['tex2jax']['displayMath'] = this.config.mathBlockDelimiters
 
       scripts += `<script type="text/javascript" async src="file://${path.resolve(this.context.extensionPath, './dependencies/mathjax/MathJax.js')}"></script>`
       scripts += `<script type="text/x-mathjax-config"> MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)}); </script>`
@@ -268,7 +252,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
 
     // global styles
-    styles += `<style>${mpe.getGlobalStyles()}</style>`
+    styles += `<style>${mpe.extensionConfig.globalStyle}</style>`
 
     return styles  
   }

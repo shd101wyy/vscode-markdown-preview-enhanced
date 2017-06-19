@@ -8,12 +8,21 @@ import * as less from "less"
 
 import * as utility from "./utility"
 
-import * as globalStyle from "./global_style"
-
 let INITIALIZED = false
-let GLOBAL_LESS_CHANGE_CALLBACK = null
-let GLOBAL_STYLES = ''
+let CONFIG_CHANGE_CALLBACK:()=>void = null
 
+/**
+ * style.less, mathjax_config.js, and mermaid_config.js files
+ */
+export const extensionConfig:{globalStyle:string, mathjaxConfig:object, mermaidConfig: object} = {
+  globalStyle: "",
+  mathjaxConfig: null,
+  mermaidConfig: null
+}
+
+/**
+ * init markdown-preview-enhanced config folder at ~/.markdown-preview-enhanced
+ */
 export async function init():Promise<void> {
   if (INITIALIZED) return 
 
@@ -23,18 +32,31 @@ export async function init():Promise<void> {
     fs.mkdirSync(extensionConfigDirectoryPath)
   }
 
-  GLOBAL_STYLES = await globalStyle.getGlobalStyles()
+  extensionConfig.globalStyle = await utility.getGlobalStyles()
+  extensionConfig.mermaidConfig = await utility.getMermaidConfig()
+  extensionConfig.mathjaxConfig = await utility.getMathJaxConfig()
 
-  fs.watch(path.resolve(extensionConfigDirectoryPath, './style.less'), (eventType, fileName)=> {
-    if (eventType === 'change') {
-       globalStyle.getGlobalStyles()
-      .then((css)=> {
-        GLOBAL_STYLES = css
-        if (GLOBAL_LESS_CHANGE_CALLBACK) GLOBAL_LESS_CHANGE_CALLBACK(null, css)
-      })
-      .catch((error)=> {
-        if(GLOBAL_LESS_CHANGE_CALLBACK) GLOBAL_LESS_CHANGE_CALLBACK(error, null)
-      })
+  fs.watch(extensionConfigDirectoryPath, (eventType, fileName)=> {
+    if (eventType === 'change' && CONFIG_CHANGE_CALLBACK) {
+      if (fileName === 'style.less') { // || fileName==='mermaid_config.js' || fileName==='mathjax_config')
+        utility.getGlobalStyles()
+        .then((css)=> {
+          extensionConfig.globalStyle = css
+          CONFIG_CHANGE_CALLBACK()
+        })
+      } else if (fileName === 'mermaid_config.js') {
+        utility.getMermaidConfig()
+        .then((mermaidConfig)=> {
+          extensionConfig.mermaidConfig = mermaidConfig
+          CONFIG_CHANGE_CALLBACK()
+        })
+      } else if (fileName === 'mathjax_config.js') {
+        utility.getMathJaxConfig()
+        .then((mathjaxConfig)=> {
+          extensionConfig.mathjaxConfig = mathjaxConfig
+          CONFIG_CHANGE_CALLBACK()
+        })
+      }
     }
   })
 
@@ -43,15 +65,11 @@ export async function init():Promise<void> {
 }
 
 
-export function getGlobalStyles() {
-  return GLOBAL_STYLES
-} 
-
 /**
  * cb will be called when global style.less file is changed.
  * @param cb function(error, css){}
  */
 
-export function onDidChangeGlobalStyles(cb) {
-  GLOBAL_LESS_CHANGE_CALLBACK = cb
+export function onDidChangeConfigFile(cb:()=>void) {
+  CONFIG_CHANGE_CALLBACK = cb
 }
