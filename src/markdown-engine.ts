@@ -6,7 +6,6 @@ import * as request from "request"
 
 const matter = require('gray-matter')
 
-import {MarkdownPreviewEnhancedConfig} from "./config"
 import * as plantumlAPI from "./puml"
 import {escapeString, unescapeString, readFile} from "./utility"
 import * as utility from "./utility"
@@ -31,11 +30,10 @@ const CryptoJS = require(path.resolve(extensionDirectoryPath, './dependencies/cr
 // import * as Prism from "prismjs"
 let Prism = null
 
-
 interface MarkdownEngineConstructorArgs {
   filePath: string,
   projectDirectoryPath: string,
-  config: MarkdownPreviewEnhancedConfig
+  config: MarkdownEngineConfig
 }
 
 interface MarkdownEngineRenderOption {
@@ -115,7 +113,7 @@ export class MarkdownEngine {
   private readonly filePath: string 
   private readonly fileDirectoryPath: string
   private readonly projectDirectoryPath: string
-  private config: MarkdownPreviewEnhancedConfig
+  private config: MarkdownEngineConfig
 
   private breakOnSingleNewLine: boolean
   private enableTypographer: boolean

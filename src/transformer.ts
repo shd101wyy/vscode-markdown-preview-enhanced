@@ -45,7 +45,8 @@ interface TransformMarkdownOptions {
   useRelativeFilePath: boolean
   forPreview: boolean
   protocolsWhiteListRegExp: RegExp,
-  notSourceFile?: boolean
+  notSourceFile?: boolean,
+  imageDirectoryPath?: string
 }
 
 const fileExtensionToLanguageMap = {
@@ -124,7 +125,7 @@ function downloadFileIfNecessary(filePath:string):Promise<string> {
  * @param param1 
  * @param filesCache 
  */
-async function loadFile(filePath:string, {fileDirectoryPath, forPreview}, filesCache={}):Promise<string> {
+async function loadFile(filePath:string, {fileDirectoryPath, forPreview, imageDirectoryPath}, filesCache={}):Promise<string> {
   if (filesCache[filePath])
     return filesCache[filePath]
 
@@ -139,7 +140,7 @@ async function loadFile(filePath:string, {fileDirectoryPath, forPreview}, filesC
   }
   else if (filePath.endsWith('.pdf')) { // pdf file
     const localFilePath = await downloadFileIfNecessary(filePath)
-    const svgMarkdown = await PDF.toSVGMarkdown(localFilePath, {markdownDirectoryPath: fileDirectoryPath})
+    const svgMarkdown = await PDF.toSVGMarkdown(localFilePath, {markdownDirectoryPath: fileDirectoryPath, svgDirectoryPath: imageDirectoryPath})
     return svgMarkdown 
   }
   /*
@@ -184,7 +185,8 @@ export async function transformMarkdown(inputString:string,
                               useRelativeFilePath = null,
                               forPreview = false,
                               protocolsWhiteListRegExp = null,
-                              notSourceFile = false }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
+                              notSourceFile = false,
+                              imageDirectoryPath = '' }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
     let inBlock = false // inside code block
     let codeChunkOffset = 0
     const tocConfigs = [],
@@ -371,7 +373,7 @@ export async function transformMarkdown(inputString:string,
         }
         else {
           try {
-            const fileContent = await loadFile(absoluteFilePath, {fileDirectoryPath, forPreview}, filesCache)
+            const fileContent = await loadFile(absoluteFilePath, {fileDirectoryPath, forPreview, imageDirectoryPath}, filesCache)
             filesCache[absoluteFilePath] = fileContent
 
             if (config && config['code_block']) {
@@ -398,7 +400,8 @@ export async function transformMarkdown(inputString:string,
                 useRelativeFilePath: false, 
                 forPreview: false, 
                 protocolsWhiteListRegExp,
-                notSourceFile: true // <= this is not the sourcefile
+                notSourceFile: true, // <= this is not the sourcefile
+                imageDirectoryPath
               })
               output = '\n' + output + '  '
               return helper(end+1, lineNo+1, outputString+output+'\n')

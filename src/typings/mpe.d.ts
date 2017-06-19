@@ -1,3 +1,4 @@
+/*
 interface MPEConfig {
   breakOnSingleNewLine: boolean
   enableTypographer: boolean
@@ -6,27 +7,36 @@ interface MPEConfig {
   frontMatterRenderingOption:string
   scrollSync: boolean
   mermaidTheme: string
+  mathRenderingOption: string
+  mathInlineDelimiters: Array<string[]>
+  mathBlockDelimiters: Array<string[]>
+  codeBlockTheme: string
+  previewTheme: string
+  protocolsWhiteList: string
+  imageFolderPath: string
+  imageUploader: string
+}
+*/
+
+interface MarkdownEngineConfig {
+  breakOnSingleNewLine: boolean
+  enableTypographer: boolean
+  enableWikiLinkSyntax: boolean
+  wikiLinkFileExtension: string
+  protocolsWhiteList: string
   /**
    * "KaTeX", "MathJax", or "None"
    */
   mathRenderingOption: string
-  mathInlineDelimiters: Array<string[]>
-  mathBlockDelimiters: Array<string[]>
-
-  /**
-   * Themes
-   */
+  mathInlineDelimiters: string[][]
+  mathBlockDelimiters: string[][]
   codeBlockTheme: string
   previewTheme: string
-
-  protocolsWhiteList: string
-
-  /**
-   * image helper
-   */
+  mermaidTheme: string
+  frontMatterRenderingOption: string 
   imageFolderPath: string
-  imageUploader: string
 }
+
 
 interface CodeChunkData {
   /**

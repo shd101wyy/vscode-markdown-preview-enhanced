@@ -36,6 +36,10 @@ function processOutputConfig(config:object, args:string[]) {
     args.push('--highlight-style='+config['highlight'])
   }
 
+  if (config['reference_docx']) { // issue #448
+    args.push('--reference_docx=' + config['reference_docx'])
+  }
+
   if (config['highlight'] === null)
     args.push('--no-highlight')
 
