@@ -204,7 +204,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // mermaid
     scripts += `<script src="file://${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>`
-    scripts += `<script>mermaidAPI.initialize(${mpe.extensionConfig.mermaidConfig})</script>`
+    scripts += `<script>mermaidAPI.initialize(${JSON.stringify(mpe.extensionConfig.mermaidConfig || {})})</script>`
 
     // math 
     if (this.config.mathRenderingOption === 'MathJax') {
@@ -315,7 +315,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         html = engine.getCachedHTML()
       }
 
-      return `<!DOCTYPE html>
+      const htmlTemplate = `<!DOCTYPE html>
       <html>
       <head>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
@@ -373,6 +373,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       </body>
       <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
       </html>`
+
+      return htmlTemplate
     })
   }
 
