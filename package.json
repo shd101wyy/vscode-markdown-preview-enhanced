@@ -68,6 +68,10 @@
             {
                 "command": "markdown-preview-enhanced.openMathJaxConfig",
                 "title": "Markdown Preview Enhanced: Open MathJax Config"
+            },
+            {
+                "command": "markdown-preview-enhanced.showUploadedImages",
+                "title": "Markdown Preview Enhanced: Show Uploaded Images"
             }
         ],
         "keybindings": [

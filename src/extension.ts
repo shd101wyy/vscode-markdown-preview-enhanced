@@ -75,6 +75,11 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(mathjaxConfigFilePath))
 	}
 
+	function showUploadedImages() {
+		const imageHistoryFilePath = 'file://'+path.resolve(utility.extensionConfigDirectoryPath, './image_history.md')
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(imageHistoryFilePath))		
+	}
+
 	function insertNewSlide() {
 		const editor = vscode.window.activeTextEditor
 		if (editor && editor.document && editor.edit) {
@@ -311,6 +316,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openMermaidConfig', openMermaidConfig))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openMathJaxConfig', openMathJaxConfig))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.showUploadedImages', showUploadedImages))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.insertNewSlide', insertNewSlide))
 
