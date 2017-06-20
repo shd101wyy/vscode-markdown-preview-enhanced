@@ -1,8 +1,44 @@
 import * as path from "path"
 import * as fs from "fs"
 import {spawn} from "child_process"
+import * as vm from "vm"
 
 import * as utility from "./utility"
+import * as LaTeX from "./latex"
+
+async function compileLaTeX(content:string, fileDirectoryPath:string, options:object):Promise<string> {
+  const latexEngine = options['latex_engine'] || 'pdflatex'
+  const latexSVGDir = options['latex_svg_dir'] // if not provided, the svg files will be stored in temp folder and will be deleted automatically
+  const latexZoom = options['latex_zoom']
+  const latexWidth = options['latex_width']
+  const latexHeight = options['latex_height']
+
+  const texFilePath = path.resolve(fileDirectoryPath, Math.random().toString(36).substr(2, 9) + '_code_chunk.tex')
+
+  await utility.writeFile(texFilePath, content)
+
+  try {
+    const svgMarkdown = await LaTeX.toSVGMarkdown(texFilePath, {latexEngine, markdownDirectoryPath:fileDirectoryPath, svgDirectoryPath:latexSVGDir, svgZoom:latexZoom, svgWidth:latexWidth, svgHeight:latexHeight})
+    fs.unlink(texFilePath, (error)=> {})
+
+    options['output'] = 'markdown' // set output as markdown
+    return svgMarkdown
+  } catch(e) {
+    fs.unlink(texFilePath, (error)=> {})
+    throw e
+  }
+}
+
+/**
+ * 
+ * @param code should be a javascript function string
+ * @param options 
+ */
+async function runInVm(code:string, options:object):Promise<string> {
+  const script = new vm.Script(`((${code})())`)
+  const context = vm.createContext( options['context'] || {})
+  return script.runInContext(context)
+}
 
 export async function run(content:string, fileDirectoryPath:string, options:object):Promise<string> {
   const cmd = options['cmd']
@@ -13,6 +49,14 @@ export async function run(content:string, fileDirectoryPath:string, options:obje
 
   const savePath = path.resolve(fileDirectoryPath, Math.random().toString(36).substr(2, 9) + '_code_chunk')
   content = content.replace(/\u00A0/g, ' ')
+
+  if (cmd.match(/(la)?tex/) || cmd === 'pdflatex') {
+    return compileLaTeX(content, fileDirectoryPath, options)
+  }
+
+  if (cmd === 'node.vm') {
+    return runInVm(content, options)
+  }
 
 
   if (cmd.match(/python/) && (options['matplotlib'] || options['mpl'])) {

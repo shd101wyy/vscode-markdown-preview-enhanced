@@ -32,8 +32,8 @@
     color: @fg-strong;
   }
 
-  h1 { font-size: 2.25em; font-weight: 300; padding-bottom: 0.3em; border-bottom: 1px solid @border;}
-  h2 { font-size: 1.75em; font-weight: 400; padding-bottom: 0.3em; border-bottom: 1px solid @border;}
+  h1 { font-size: 2.25em; font-weight: 300; padding-bottom: 0.3em; }
+  h2 { font-size: 1.75em; font-weight: 400; padding-bottom: 0.3em; }
   h3 { font-size: 1.5em; font-weight: 500; }
   h4 { font-size: 1.25em; font-weight: 600; }
   h5 { font-size: 1.1em; font-weight: 600; }
@@ -43,9 +43,11 @@
   h5 { font-size: 1em; }
   h6 { color: @fg-subtle; }
 
+  /*
   h1, h2 {
     border-bottom: 1px solid @border;
   }
+  */
 
   // Emphasis --------------------
 
@@ -293,6 +295,47 @@
     margin-top: 0;
     margin-bottom: @margin;
     // word-wrap: break-word;
+  }
+
+  // code block line numbers 
+  pre.line-numbers {
+    position: relative;
+	  padding-left: 3.8em;
+	  counter-reset: linenumber;
+
+    & > code {
+      position: relative;
+    }
+
+    .line-numbers-rows {
+      position: absolute;
+      pointer-events: none;
+      top: 1em;
+      font-size: 100%;
+      left: 0; //-3.8em;
+      width: 3em; /* works for line-numbers below 1000 lines */
+      letter-spacing: -1px;
+      border-right: 1px solid #999;
+
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+
+      & > span {
+        pointer-events: none;
+		    display: block;
+		    counter-increment: linenumber;
+      }
+
+      & > span:before {
+        content: counter(linenumber);
+        color: #999;
+        display: block;
+        padding-right: 0.8em;
+        text-align: right;
+      }
+    }
   }
 
   // KBD --------------------

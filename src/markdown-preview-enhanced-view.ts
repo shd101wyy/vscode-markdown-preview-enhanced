@@ -2,9 +2,12 @@ import * as vscode from 'vscode'
 import * as path from 'path'
 import {Uri, CancellationToken, Event, ProviderResult, TextEditor} from 'vscode'
 
+import * as mpe from "./mpe"
 import {MarkdownEngine} from './markdown-engine'
 import {MarkdownPreviewEnhancedConfig} from './config'
 import * as utility from './utility'
+
+let singlePreviewSouceUri:Uri = null
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -21,10 +24,113 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    */
   private engineMaps:{[key:string]: MarkdownEngine} = {} 
 
+  /**
+   * The key is markdown file fsPath
+   * value is JSAndCssFiles
+   */
+  private jsAndCssFilesMaps: {[key:string]: string[]} = {}
+
   private config:MarkdownPreviewEnhancedConfig
 
   public constructor(private context: vscode.ExtensionContext) {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig()
+
+    mpe.init() // init markdown-preview-enhanced
+    .then(()=> {
+      mpe.onDidChangeConfigFile(this.refreshAllPreviews.bind(this))
+
+      MarkdownEngine.onModifySource(this.modifySource.bind(this))
+    })
+  }
+
+  private refreshAllPreviews() {
+    vscode.workspace.textDocuments.forEach(document => {
+      if (document.uri.scheme === 'markdown-preview-enhanced') {
+        // this.update(document.uri);
+        this._onDidChange.fire(document.uri)
+      }
+    })
+  }
+
+  /**
+   * modify markdown source, append `result` after corresponding code chunk.
+   * @param codeChunkData 
+   * @param result 
+   * @param filePath 
+   */
+  private async modifySource(codeChunkData:CodeChunkData, result:string, filePath:string):Promise<string> {
+    function insertResult(i:number, editor:TextEditor) {
+      const lineCount = editor.document.lineCount
+      if (i + 1 < lineCount && editor.document.lineAt(i + 1).text.startsWith('<!-- code_chunk_output -->')) {
+        // TODO: modify exited output 
+        let start = i + 1
+        let end = i + 2
+        while (end < lineCount) {
+          if (editor.document.lineAt(end).text.startsWith('<!-- /code_chunk_output -->')){
+            break
+          }
+          end += 1
+        }
+
+        // if output not changed, then no need to modify editor buffer
+        let r = ""
+        for (let i = start+2; i < end-1; i++) {
+          r += editor.document.lineAt(i).text+'\n'
+        }
+        if (r === result+'\n') return "" // no need to modify output
+
+        editor.edit((edit)=> {
+          edit.replace(new vscode.Range(
+            new vscode.Position(start + 2, 0),
+            new vscode.Position(end-1, 0)
+          ), result+'\n')
+        })
+        return ""
+      } else {
+        editor.edit((edit)=> {
+          edit.insert(new vscode.Position(i+1, 0), `<!-- code_chunk_output -->\n\n${result}\n\n<!-- /code_chunk_output -->\n`)
+        })
+        return ""
+      }
+    }
+
+    const visibleTextEditors = vscode.window.visibleTextEditors
+    for (let i = 0; i < visibleTextEditors.length; i++) {
+      const editor = visibleTextEditors[i]
+      if (editor.document.uri.fsPath === filePath) {
+
+        let codeChunkOffset = 0,
+            targetCodeChunkOffset = codeChunkData.options['code_chunk_offset']
+
+        const lineCount = editor.document.lineCount
+        for (let i = 0; i < lineCount; i++) {
+          const line = editor.document.lineAt(i)
+          if (line.text.match(/^```(.+)\"?cmd\"?\s*\:/)) {
+            if (codeChunkOffset === targetCodeChunkOffset) {
+              i = i + 1
+              while (i < lineCount) {
+                if (editor.document.lineAt(i).text.match(/^\`\`\`\s*/)) {
+                  break
+                }
+                i += 1
+              }
+              return insertResult(i, editor)
+            } else {
+              codeChunkOffset++
+            }
+          } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*\:/)) {
+            if (codeChunkOffset === targetCodeChunkOffset) {
+              // console.log('find code chunk' )
+              return insertResult(i, editor)
+            } else {
+              codeChunkOffset++
+            }
+          }
+        }
+        break
+      }
+    }
+    return ""
   }
 
   /**
@@ -51,6 +157,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    * @param previewUri 
    */
   public destroyEngine(previewUri: Uri) {
+    delete(previewUri['markdown_source'])
+
     if (useSinglePreview()) {
       return this.engineMaps = {}
     }
@@ -96,28 +204,13 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // mermaid
     scripts += `<script src="file://${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>`
-    
+    scripts += `<script>mermaidAPI.initialize(${JSON.stringify(mpe.extensionConfig.mermaidConfig || {})})</script>`
+
     // math 
     if (this.config.mathRenderingOption === 'MathJax') {
-      const mathJaxConfig = {
-        extensions: ['tex2jax.js'],
-        jax: ['input/TeX','output/HTML-CSS'],
-        showMathMenu: false,
-        messageStyle: 'none',
-
-        tex2jax: {
-          inlineMath: this.config.mathInlineDelimiters,
-          displayMath: this.config.mathBlockDelimiters,
-          processEnvironments: false,
-          processEscapes: true,
-          preview: "none"
-        },
-        TeX: {
-          extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
-        },
-        'HTML-CSS': { availableFonts: ['TeX'] },
-        skipStartupTypeset: true
-      }
+      const mathJaxConfig = mpe.extensionConfig.mathjaxConfig
+      mathJaxConfig['tex2jax']['inlineMath'] = this.config.mathInlineDelimiters
+      mathJaxConfig['tex2jax']['displayMath'] = this.config.mathBlockDelimiters
 
       scripts += `<script type="text/javascript" async src="file://${path.resolve(this.context.extensionPath, './dependencies/mathjax/MathJax.js')}"></script>`
       scripts += `<script type="text/x-mathjax-config"> MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)}); </script>`
@@ -159,19 +252,46 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     // check preview theme 
     styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
 
+    // global styles
+    styles += `<style>${mpe.extensionConfig.globalStyle}</style>`
+
     return styles  
+  }
+
+  private getJSAndCssFiles(fsPath:string) {
+    if (!this.jsAndCssFilesMaps[fsPath]) return ''
+
+    let output = ''
+    this.jsAndCssFilesMaps[fsPath].forEach((sourcePath)=> {
+      let absoluteFilePath = sourcePath
+      if (sourcePath[0] === '/') {
+        absoluteFilePath = 'file://' + path.resolve(vscode.workspace.rootPath, '.' + sourcePath)
+      } else if (sourcePath.match(/^file:\/\//) || sourcePath.match(/^https?\:\/\//)) {
+        // do nothing 
+      } else {
+        absoluteFilePath = 'file://' + path.resolve(path.dirname(fsPath), sourcePath)
+      }
+
+      if (absoluteFilePath.endsWith('.js')) {
+        output += `<script type="text/javascript" src="${absoluteFilePath}"></script>`
+      } else { // css
+        output += `<link rel="stylesheet" href="${absoluteFilePath}">`
+      }
+    })
+    return output
   }
 
   public provideTextDocumentContent(previewUri: Uri)
   : Thenable<string> {
     // console.log(sourceUri, uri, vscode.workspace.rootPath)
 
-    let sourceUri
+    let sourceUri:Uri
     if (useSinglePreview()) {
-      sourceUri = vscode.window.activeTextEditor.document.uri
+      sourceUri = singlePreviewSouceUri
     } else {
       sourceUri = vscode.Uri.parse(previewUri.query)
     }
+
     // console.log('open preview for source: ' + sourceUri.toString())
 
 		let initialLine: number | undefined = undefined;
@@ -195,7 +315,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         html = engine.getCachedHTML()
       }
 
-      return `<!DOCTYPE html>
+      const htmlTemplate = `<!DOCTYPE html>
       <html>
       <head>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
@@ -203,6 +323,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <meta charset="UTF-8">
         ${this.getStyles()}
         ${this.getScripts()}
+        ${this.getJSAndCssFiles(sourceUri.fsPath)}
         <base href="${document.uri.toString(true)}">
       </head>
       <body class="markdown-preview-enhanced-container">
@@ -215,7 +336,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <div class="mpe-toolbar">
           <div class="back-to-top-btn btn"><span>⬆︎</span></div>
           <div class="refresh-btn btn"><span>⟳︎</span></div>
-          <div class="sidebar-toc-btn btn"><span>≡</span></div>
+          <div class="sidebar-toc-btn btn"><span>§</span></div>
         </div>
 
         <div id="image-helper-view">
@@ -252,10 +373,12 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       </body>
       <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
       </html>`
+
+      return htmlTemplate
     })
   }
 
-  public updateMarkdown(sourceUri:Uri) {
+  public updateMarkdown(sourceUri:Uri, triggeredBySave?:boolean) {
     const engine = this.getEngine(sourceUri)
     // console.log('updateMarkdown: ' + Object.keys(this.engineMaps).length)
     if (!engine) return 
@@ -270,17 +393,26 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
           type: 'start-parsing-markdown',
         })
 
-      engine.parseMD(text, {isForPreview: true, useRelativeImagePath: false, hideFrontMatter: false}).then(({markdown, html, tocHTML})=> {
-        vscode.commands.executeCommand(
-          '_workbench.htmlPreview.postMessage',
-          getPreviewUri(sourceUri),
-          {
-            type: 'update-html',
-            html: html,
-            tocHTML: tocHTML,
-            totalLineCount: document.lineCount,
-            sourceUri: sourceUri.toString()
-          })
+      engine.parseMD(text, {isForPreview: true, useRelativeFilePath: false, hideFrontMatter: false, triggeredBySave})
+      .then(({markdown, html, tocHTML, JSAndCssFiles})=> {
+
+        // check JSAndCssFiles 
+        if (JSON.stringify(JSAndCssFiles) !== JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath])) {
+          this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles
+          // restart iframe 
+          this._onDidChange.fire(getPreviewUri(sourceUri))
+        } else {
+          vscode.commands.executeCommand(
+            '_workbench.htmlPreview.postMessage',
+            getPreviewUri(sourceUri),
+            {
+              type: 'update-html',
+              html: html,
+              tocHTML: tocHTML,
+              totalLineCount: document.lineCount,
+              sourceUri: sourceUri.toString()
+            })
+        }
       })
     })
   }
@@ -345,10 +477,43 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     }
   }
 
+  public pandocExport(sourceUri) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.pandocExport()
+      .then((dest)=> {
+        vscode.window.showInformationMessage(`Document ${path.basename(dest)} was created as path: ${dest}`)
+      })
+      .catch((error)=> {
+        vscode.window.showErrorMessage(error)
+      })
+    }
+  }
+
+  public markdownExport(sourceUri) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.markdownExport()
+      .then((dest)=> {
+        vscode.window.showInformationMessage(`Document ${path.basename(dest)} was created as path: ${dest}`)
+      })
+      .catch((error)=> {
+        vscode.window.showErrorMessage(error)
+      })
+    }
+  }
+
   public cacheSVG(sourceUri: Uri, code:string, svg:string) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.cacheSVG(code, svg)
+    }
+  }
+
+  public cacheCodeChunkResult(sourceUri: Uri, id:string, result:string) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.cacheCodeChunkResult(id, result)
     }
   }
 
@@ -401,7 +566,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       // update all generated md documents
 			vscode.workspace.textDocuments.forEach(document => {
 				if (document.uri.scheme === 'markdown-preview-enhanced') {
-          console.log(document.uri)
 					// this.update(document.uri);
           this._onDidChange.fire(document.uri)
 				}
@@ -439,19 +603,23 @@ export function getPreviewUri(uri: vscode.Uri) {
 	if (uri.scheme === 'markdown-preview-enhanced') {
 		return uri
 	}
-
+  
+  
+  let previewUri:Uri
   if (useSinglePreview()) {
-    return uri.with({
+    previewUri = uri.with({
       scheme: 'markdown-preview-enhanced',
-      path: 'single-preview.rendered' 
+      path: 'single-preview.rendered', 
+    })
+    singlePreviewSouceUri = uri
+  } else {
+    previewUri = uri.with({
+      scheme: 'markdown-preview-enhanced',
+      path: uri.path + '.rendered',
+      query: uri.toString()
     })
   }
-
-	return uri.with({
-		scheme: 'markdown-preview-enhanced',
-		path: uri.path + '.rendered',
-		query: uri.toString()
-	});
+  return previewUri
 }
 
 

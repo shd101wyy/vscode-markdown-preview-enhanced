@@ -4,6 +4,7 @@ import * as fs from "fs"
 import * as less from "less"
 import * as request from "request"
 import * as Baby from "babyparse"
+import * as temp from "temp"
 
 // import * as request from 'request'
 // import * as less from "less"
@@ -11,11 +12,12 @@ import * as Baby from "babyparse"
 // import * as temp from "temp"
 // temp.track()
 import * as utility from "./utility"
-const extensionDirectoryPath = utility.getExtensionDirectoryPath()
+const extensionDirectoryPath = utility.extensionDirectoryPath
 const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 
 import {CustomSubjects} from "./custom-subjects"
+import * as PDF from "./pdf"
 
 interface TransformMarkdownOutput {
   outputString: string,
@@ -27,15 +29,24 @@ interface TransformMarkdownOutput {
    * whehter we found [TOC] in markdown file or not.  
    */
   tocBracketEnabled: boolean
+
+  /**
+   * imported javascript and css files
+   * convert .js file to <script src='...'></script>
+   * convert .css file to <link href='...'></link>
+   */
+  JSAndCssFiles: string[] 
 }
 
 interface TransformMarkdownOptions {
   fileDirectoryPath: string 
   projectDirectoryPath: string 
   filesCache: {[key:string]: string}
-  useRelativeImagePath: boolean
+  useRelativeFilePath: boolean
   forPreview: boolean
-  protocolsWhiteListRegExp: RegExp
+  protocolsWhiteListRegExp: RegExp,
+  notSourceFile?: boolean,
+  imageDirectoryPath?: string
 }
 
 const fileExtensionToLanguageMap = {
@@ -80,6 +91,33 @@ function createAnchor(lineNo) {
   return `\n\n<p data-line="${lineNo}" class="sync-line" style="margin:0;"></p>\n\n`
 }
 
+let DOWNLOADS_TEMP_FOLDER = null
+/** 
+ * download file and return its local path
+ */
+function downloadFileIfNecessary(filePath:string):Promise<string> {
+  return new Promise((resolve, reject)=> {
+    if (!filePath.match(/^https?\:\/\//))
+      return resolve(filePath)
+
+    if (!DOWNLOADS_TEMP_FOLDER) DOWNLOADS_TEMP_FOLDER = temp.mkdirSync('mpe_downloads')
+    request.get({url: filePath, encoding: 'binary'}, (error, response, body)=> {
+      if (error)
+        return reject(error)
+      else {
+        const localFilePath = path.resolve(DOWNLOADS_TEMP_FOLDER, md5(filePath)) + path.extname(filePath)
+        fs.writeFile(localFilePath, body, 'binary', (error)=> {
+          if (error)
+            return reject(error)
+          else
+            return resolve(localFilePath)
+        })
+      }
+    })
+  })
+}
+
+
 /**
  * 
  * Load file by `filePath`
@@ -87,7 +125,7 @@ function createAnchor(lineNo) {
  * @param param1 
  * @param filesCache 
  */
-async function loadFile(filePath:string, {fileDirectoryPath, forPreview}, filesCache={}):Promise<string> {
+async function loadFile(filePath:string, {fileDirectoryPath, forPreview, imageDirectoryPath}, filesCache={}):Promise<string> {
   if (filesCache[filePath])
     return filesCache[filePath]
 
@@ -100,17 +138,12 @@ async function loadFile(filePath:string, {fileDirectoryPath, forPreview}, filesC
       })
     })
   }
+  else if (filePath.endsWith('.pdf')) { // pdf file
+    const localFilePath = await downloadFileIfNecessary(filePath)
+    const svgMarkdown = await PDF.toSVGMarkdown(localFilePath, {markdownDirectoryPath: fileDirectoryPath, svgDirectoryPath: imageDirectoryPath})
+    return svgMarkdown 
+  }
   /*
-  else if filePath.endsWith('.pdf') # pdf file
-    downloadFileIfNecessary(filePath)
-    .then (localFilePath)->
-      PDF ?= require('./pdf')
-      PDF.toSVGMarkdown localFilePath, {svgDirectoryPath: imageDirectoryPath, markdownDirectoryPath: fileDirectoryPath}, (error, svgMarkdown)->
-        if error
-          return reject error
-        else
-          return resolve(svgMarkdown)
-  
   else if filePath.endsWith('.js') # javascript file
     requiresJavaScriptFiles(filePath, forPreview).then (jsCode)->
       return resolve(jsCode)
@@ -149,17 +182,21 @@ export async function transformMarkdown(inputString:string,
                             { fileDirectoryPath = '', 
                               projectDirectoryPath = '', 
                               filesCache = {}, 
-                              useRelativeImagePath = null,
+                              useRelativeFilePath = null,
                               forPreview = false,
-                              protocolsWhiteListRegExp = null }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
+                              protocolsWhiteListRegExp = null,
+                              notSourceFile = false,
+                              imageDirectoryPath = '' }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
     let inBlock = false // inside code block
+    let codeChunkOffset = 0
     const tocConfigs = [],
-          slideConfigs = []
+          slideConfigs = [],
+          JSAndCssFiles = []
     let tocBracketEnabled = false 
 
     async function helper(i, lineNo=0, outputString=""):Promise<TransformMarkdownOutput> {
       if (i >= inputString.length) { // done 
-        return {outputString, slideConfigs, tocBracketEnabled}
+        return {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles}
       }
 
       if (inputString[i] == '\n')
@@ -169,8 +206,14 @@ export async function transformMarkdown(inputString:string,
       if (end < 0) end = inputString.length
       let line = inputString.substring(i, end)
 
-      if (line.match(/^\s*```/)) {
+      if (line.match(/^```/)) {
         if (!inBlock && forPreview) outputString += createAnchor(lineNo)
+
+        let match;
+        if (!inBlock && !notSourceFile && (match = line.match(/\"?cmd\"?\s*:/)))  { // it's code chunk, so mark its offset
+          line = line.replace('{', `{code_chunk_offset:${codeChunkOffset}, `)
+          codeChunkOffset++
+        }
         inBlock = !inBlock
         return helper(end+1, lineNo+1, outputString+line+'\n')
       }
@@ -186,7 +229,12 @@ export async function transformMarkdown(inputString:string,
         if (forPreview) outputString += createAnchor(lineNo)
         
         let subject = subjectMatch[1]
-        if (subject in CustomSubjects) {
+        if (subject === '@import') {
+          const commentEnd = line.lastIndexOf('-->')
+          if (commentEnd > 0)
+            line = line.slice(4, commentEnd).trim()
+        }
+        else if (subject in CustomSubjects) {
           let commentEnd = inputString.indexOf('-->', i + 4)
 
           if (commentEnd < 0) { // didn't find -->
@@ -271,7 +319,7 @@ export async function transformMarkdown(inputString:string,
           if (!imageSrc) {
             if (filePath.match(protocolsWhiteListRegExp))
               imageSrc = filePath
-            else if (useRelativeImagePath)
+            else if (useRelativeFilePath)
               imageSrc = path.relative(fileDirectoryPath, absoluteFilePath) + '?' + Math.random()
             else 
               imageSrc = '/' + path.relative(projectDirectoryPath, absoluteFilePath) + '?' + Math.random()
@@ -283,7 +331,7 @@ export async function transformMarkdown(inputString:string,
           }
 
           if (config) {
-            if (config.width || config.height || config.class || config.id) {
+            if (config['width'] || config['height'] || config['class'] || config['id']) {
               output = `<img src="${imageSrc}" `
               for (let key in config) {
                 output += ` ${key}="${config[key]}" `
@@ -295,7 +343,7 @@ export async function transformMarkdown(inputString:string,
                 output += config['alt']
               output += `](${imageSrc}`
               if (config['title'])
-                output += ` "${config.title}"`
+                output += ` "${config['title']}"`
               output += ")  "
             }
           } else {
@@ -303,9 +351,29 @@ export async function transformMarkdown(inputString:string,
           }
           return helper(end+1, lineNo+1, outputString+output+'\n')
         }
+        else if (filePath === '[TOC]') {
+          if (!config) {
+            config = {
+              depthFrom: 1,
+              depthTo: 6,
+              orderedList: true
+            }
+          }
+          config['cmd'] = 'toc'
+          config['hide'] = true
+          config['run_on_save'] = true 
+          config['modify_source'] = true
+          if (!notSourceFile) { // mark code_chunk_offset
+            config['code_chunk_offset'] = codeChunkOffset
+            codeChunkOffset++          
+          }
+
+          const output = `\`\`\`text ${JSON.stringify(config)}  \n\`\`\`  `
+          return helper(end+1, lineNo+1, outputString+output+'\n')
+        }
         else {
           try {
-            const fileContent = await loadFile(absoluteFilePath, {fileDirectoryPath, forPreview}, filesCache)
+            const fileContent = await loadFile(absoluteFilePath, {fileDirectoryPath, forPreview, imageDirectoryPath}, filesCache)
             filesCache[absoluteFilePath] = fileContent
 
             if (config && config['code_block']) {
@@ -316,13 +384,25 @@ export async function transformMarkdown(inputString:string,
               if (!config['id']) { // create `id` for code chunk
                 config['id'] = md5(absoluteFilePath)
               }
-
+              if (!notSourceFile) { // mark code_chunk_offset
+                config['code_chunk_offset'] = codeChunkOffset
+                codeChunkOffset++
+              }
               const fileExtension = extname.slice(1, extname.length)
               output = `\`\`\`${fileExtensionToLanguageMap[fileExtension] || fileExtension} ${JSON.stringify(config)}  \n${fileContent}\n\`\`\`  `
             }
             else if (['.md', '.markdown', '.mmark'].indexOf(extname) >= 0) { // markdown files
               // this return here is necessary
-              let {outputString:output} = await transformMarkdown(fileContent, {fileDirectoryPath: path.dirname(absoluteFilePath), projectDirectoryPath, filesCache, useRelativeImagePath: false, forPreview: false, protocolsWhiteListRegExp})
+              let {outputString:output} = await transformMarkdown(fileContent, {
+                fileDirectoryPath: path.dirname(absoluteFilePath), 
+                projectDirectoryPath, 
+                filesCache, 
+                useRelativeFilePath: false, 
+                forPreview: false, 
+                protocolsWhiteListRegExp,
+                notSourceFile: true, // <= this is not the sourcefile
+                imageDirectoryPath
+              })
               output = '\n' + output + '  '
               return helper(end+1, lineNo+1, outputString+output+'\n')
             }
@@ -338,25 +418,47 @@ export async function transformMarkdown(inputString:string,
                 output = _2DArrayToMarkdownTable(parseResult.data)
               }
             }
-            else if (extname === '.css' || extname === '.less') { // css or less file
+            else if (extname === '.css' || extname === '.js') {
+              if (!forPreview) { // not for preview, so convert to corresponding HTML tag directly.
+                let sourcePath
+                if (filePath.match(protocolsWhiteListRegExp))
+                  sourcePath = filePath
+                else if (useRelativeFilePath)
+                  sourcePath = path.relative(fileDirectoryPath, absoluteFilePath)
+                else 
+                  sourcePath = 'file://' + absoluteFilePath
+
+                if (extname === '.js') {
+                  output = `<script type="text/javascript" src="${sourcePath}"></script>`
+                } else {
+                  output = `<link rel="stylesheet" href="${sourcePath}">`
+                }
+              } else {
+                output = ''
+              } 
+              JSAndCssFiles.push(filePath)
+            }
+            else if (/*extname === '.css' || */ extname === '.less') { // css or less file
               output = `<style>${fileContent}</style>`
             }
-            /*
-            else if extname == '.pdf'
-              if config?.page_no # only disply the nth page. 1-indexed
-                pages = fileContent.split('\n')
-                pageNo = parseInt(config.page_no) - 1
-                pageNo = 0 if pageNo < 0
-                output = pages[pageNo] or ''
-              else if config?.page_begin or config?.page_end
-                pages = fileContent.split('\n')
-                pageBegin = parseInt(config.page_begin) - 1 or 0
-                pageEnd = config.page_end or pages.length - 1
-                pageBegin = 0 if pageBegin < 0
-                output = pages.slice(pageBegin, pageEnd).join('\n') or ''
-              else
+            else if (extname === '.pdf') {
+              if (config && config['page_no']) { // only disply the nth page. 1-indexed
+                const pages = fileContent.split('\n')
+                let pageNo = parseInt(config['page_no']) - 1
+                if (pageNo < 0) pageNo = 0
+                output = pages[pageNo] || ''
+              }
+              else if (config && (config['page_begin'] || config['page_end'])) {
+                const pages = fileContent.split('\n')
+                let pageBegin = parseInt(config['page_begin']) - 1 || 0
+                const pageEnd = config['page_end'] || pages.length - 1
+                if (pageBegin < 0) pageBegin = 0 
+                output = pages.slice(pageBegin, pageEnd).join('\n') || ''
+              } 
+              else {
                 output = fileContent
-            */
+              }
+            }
             else if (extname === '.dot' || extname === '.gv' || extname === '.viz') { // graphviz
               output = `\`\`\`dot\n${fileContent}\n\`\`\`  `
             }

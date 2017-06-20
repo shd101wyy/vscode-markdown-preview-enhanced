@@ -1,8 +1,8 @@
 import * as path from "path"
-import {getExtensionDirectoryPath} from './utility'
+import {extensionDirectoryPath} from './utility'
 import {spawn} from "child_process"
 
-const PlantUMLJarPath = path.resolve(getExtensionDirectoryPath(), './dependencies/plantuml/plantuml.jar')
+const PlantUMLJarPath = path.resolve(extensionDirectoryPath, './dependencies/plantuml/plantuml.jar')
 
 /**
  * key is fileDirectoryPath, value is PlantUMLTask

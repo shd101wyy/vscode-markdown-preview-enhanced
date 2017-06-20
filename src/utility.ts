@@ -1,13 +1,13 @@
 import * as path from "path"
 import * as fs from "fs"
-import * as vscode from "vscode"
+import * as os from "os"
 import {exec} from "child_process"
+import * as child_process from "child_process"
+import * as less from "less"
+import * as mkdirp_ from "mkdirp"
+
 import * as temp from "temp"
 temp.track()
-
-export function getExtensionDirectoryPath() {
-  return path.resolve(__dirname, "../../") // 
-}
 
 const TAGS_TO_REPLACE = {
     '&': '&amp;',
@@ -74,6 +74,25 @@ export function tempOpen(options):Promise<any> {
   })
 }
 
+export function execFile(file:string, args:string[], options?:object):Promise<string> {
+  return new Promise((resolve, reject)=> {
+    child_process.execFile(file, args, options, (error, stdout, stderr)=> {
+      if (error) return reject(error.toString())
+      else if (stderr) return reject(stderr)
+      else return resolve(stdout)
+    })
+  })
+}
+
+export function mkdirp(dir:string):Promise<boolean> {
+  return new Promise((resolve, reject)=> {
+    mkdirp_(dir, (error, made)=> {
+      if (error) return reject(error)
+      return resolve(made)
+    })
+  })
+}
+
 /**
  * open html file in browser or open pdf file in reader ... etc
  * @param filePath 
@@ -88,4 +107,128 @@ export function openFile(filePath) {
     cmd = 'xdg-open'
   
   exec(`${cmd} ${filePath}`)
+}
+
+/**
+ * get "~/.markdown-preview-enhanced" path
+ */
+export const extensionConfigDirectoryPath = path.resolve(os.homedir(), './.markdown-preview-enhanced')
+
+/**
+ * get the directory path of this extension.
+ */
+export const extensionDirectoryPath = path.resolve(__dirname, "../../")
+
+
+/**
+ * compile ~/.markdown-preview-enhanced/style.less and return 'css' content.
+ */
+export async function getGlobalStyles():Promise<string> {
+  const homeDir = os.homedir()
+  const globalLessFilePath = path.resolve(homeDir, './.markdown-preview-enhanced/style.less')
+
+  let fileContent:string
+  try {
+    fileContent = await readFile(globalLessFilePath, {encoding: 'utf-8'})
+  } catch(e) {
+        // create style.less file 
+    fileContent = `
+.markdown-preview-enhanced.markdown-preview-enhanced {
+  // modify your style here
+  // eg: background-color: blue;
+}    `
+    await writeFile(globalLessFilePath, fileContent, {encoding: 'utf-8'})
+  }
+
+  return await new Promise<string>((resolve, reject)=> {
+    less.render(fileContent, {paths: [path.dirname(globalLessFilePath)]}, (error, output)=> {
+      if (error) return reject(error)
+      return resolve(output.css || '')
+    })
+  })
+}
+
+/**
+ * load ~/.markdown-preview-enhanced/mermaid_config.js file.  
+ */
+export async function getMermaidConfig():Promise<object> {
+  const homeDir = os.homedir()
+  const mermaidConfigPath = path.resolve(homeDir, './.markdown-preview-enhanced/mermaid_config.js')
+
+  let mermaidConfig:object
+  if (fs.existsSync(mermaidConfigPath)) {
+    try {
+      delete require.cache[mermaidConfigPath] // return uncached
+      mermaidConfig = require(mermaidConfigPath)
+    } catch(e) {
+      mermaidConfig = { startOnLoad: false }
+    }
+  } else {
+    const fileContent = `// config mermaid init call
+// http://knsv.github.io/mermaid/#configuration
+//
+// You can edit the 'config' variable below.
+let config = {
+  startOnLoad: false
+}
+
+module.exports = config || {startOnLoad: false}
+`
+    await writeFile(mermaidConfigPath, fileContent, {encoding: 'utf-8'})
+    mermaidConfig = { startOnLoad: false }
+  }
+
+  return mermaidConfig
+}
+
+const defaultMathjaxConfig = {
+  extensions: ['tex2jax.js'],
+  jax: ['input/TeX','output/HTML-CSS'],
+  messageStyle: 'none',
+  tex2jax: {
+    processEnvironments: false,
+    processEscapes: true
+  },
+  TeX: {
+    extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
+  },
+  'HTML-CSS': { availableFonts: ['TeX'] }
+}
+
+/**
+ * load ~/.markdown-preview-enhanced/mermaid_config.js file.  
+ */
+export async function getMathJaxConfig():Promise<object> {
+  const homeDir = os.homedir()
+  const mathjaxConfigPath = path.resolve(homeDir, './.markdown-preview-enhanced/mathjax_config.js')
+
+  let mathjaxConfig:object
+  if (fs.existsSync(mathjaxConfigPath)) {
+    try {
+      delete require.cache[mathjaxConfigPath] // return uncached
+      mathjaxConfig = require(mathjaxConfigPath)
+    } catch(e) {
+      mathjaxConfig = defaultMathjaxConfig
+    }
+  } else {
+    const fileContent = `
+module.exports = {
+  extensions: ['tex2jax.js'],
+  jax: ['input/TeX','output/HTML-CSS'],
+  messageStyle: 'none',
+  tex2jax: {
+    processEnvironments: false,
+    processEscapes: true
+  },
+  TeX: {
+    extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
+  },
+  'HTML-CSS': { availableFonts: ['TeX'] }
+}
+`
+    await writeFile(mathjaxConfigPath, fileContent, {encoding: 'utf-8'})
+    mathjaxConfig = defaultMathjaxConfig
+  }
+
+  return mathjaxConfig
 }

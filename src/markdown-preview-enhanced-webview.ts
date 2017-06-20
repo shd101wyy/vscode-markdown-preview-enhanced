@@ -343,8 +343,18 @@ function initContextMenu() {
           }
         }
       },
-      "pandoc_export": {name: "Pandoc (not done)"},
-      "save_as_markdown": {name: "Save as Markdown (not done)"},
+      "pandoc_export": {
+        name: "Pandoc",
+        callback: ()=> {
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.pandocExport?${JSON.stringify([sourceUri])}`}, 'file://') 
+        }
+      },
+      "save_as_markdown": {
+        name: "Save as Markdown",
+        callback: ()=> {
+          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.markdownExport?${JSON.stringify([sourceUri])}`}, 'file://') 
+        }
+      },
       "sep2": "---------",
       "sync_source": {name: "Sync Source (not done)"}
     }
@@ -523,10 +533,29 @@ function runCodeChunk(id:string) {
   if (running) return 
   codeChunk.classList.add('running')
 
-  window.parent.postMessage({ 
-    command: 'did-click-link', // <= this has to be `did-click-link` to post message
-    data: `command:_markdown-preview-enhanced.runCodeChunk?${JSON.stringify([sourceUri, id])}`
-  }, 'file://')
+  if (codeChunk.getAttribute('data-cmd') === 'javascript') { // javascript code chunk
+    const code = codeChunk.getAttribute('data-code')
+    try {
+      eval(`((function(){${code}$})())`)
+      codeChunk.classList.remove('running') // done running javascript code 
+
+      const CryptoJS = window["CryptoJS"]
+      const result = CryptoJS.AES.encrypt(codeChunk.getElementsByClassName('output-div')[0].outerHTML, "markdown-preview-enhanced").toString()
+
+      window.parent.postMessage({ 
+        command: 'did-click-link', // <= this has to be `did-click-link` to post message
+        data: `command:_markdown-preview-enhanced.cacheCodeChunkResult?${JSON.stringify([sourceUri, id, result])}`
+      }, 'file://')
+    } catch(e) {
+      const outputDiv = codeChunk.getElementsByClassName('output-div')[0]
+      outputDiv.innerHTML = `<pre>${e.toString()}</pre>`
+    }
+  } else {
+    window.parent.postMessage({ 
+      command: 'did-click-link', // <= this has to be `did-click-link` to post message
+      data: `command:_markdown-preview-enhanced.runCodeChunk?${JSON.stringify([sourceUri, id])}`
+    }, 'file://')
+  }
 }
 
 function runAllCodeChunks() {
@@ -638,6 +667,27 @@ async function initEvents() {
   mpe.refreshingIcon.style.display = "none"
 }
 
+function bindTagAClickEvent() {
+  const as = mpe.previewElement.getElementsByTagName('a')
+  for (let i = 0; i < as.length; i++) {
+    const a = as[i]
+    const href =  a.getAttribute('href')
+    if (href && href[0] === '#') {
+      // anchor, do nothing 
+    } else {
+      a.onclick = (event)=> {
+        event.preventDefault()
+        event.stopPropagation()
+
+        window.parent.postMessage({ 
+          command: 'did-click-link', // <= this has to be `did-click-link` to post message
+          data: `command:_markdown-preview-enhanced.clickTagA?${JSON.stringify([sourceUri, href])}`
+        }, 'file://')
+      }
+    }
+  }
+}
+
 /**
  * update previewElement innerHTML content
  * @param html 
@@ -666,6 +716,8 @@ function updateHTML(html) {
   // init several events 
   initEvents().then(()=> {
     mpe.scrollMap = null 
+
+    bindTagAClickEvent()
     
     // scroll to initial position 
     if (!mpe.doneLoadingPreview) {

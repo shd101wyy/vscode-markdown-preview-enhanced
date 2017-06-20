@@ -74,8 +74,26 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
     })
 }
 
-function addImageURLToHistory(markdown) {
+async function addImageURLToHistory(markdownImage) {
   // TODO: save to history
+  const imageHistoryPath = path.resolve(utility.extensionConfigDirectoryPath, './image_history.md')
+  let data:string
+  try {
+    data = await utility.readFile(imageHistoryPath, {encoding: 'utf-8'})
+  } catch(e) {
+    data = ''
+  }
+  data = `
+${markdownImage}
+
+\`${markdownImage}\`
+
+${(new Date()).toString()}
+
+---
+
+` + data 
+  utility.writeFile(imageHistoryPath, data, {encoding: 'utf-8'})
 }
 
 function replaceHint(editor:vscode.TextEditor, line:number, hint:string, withStr:string):boolean {

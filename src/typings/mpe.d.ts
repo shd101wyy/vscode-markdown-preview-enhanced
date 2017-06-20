@@ -1,3 +1,4 @@
+/*
 interface MPEConfig {
   breakOnSingleNewLine: boolean
   enableTypographer: boolean
@@ -6,24 +7,69 @@ interface MPEConfig {
   frontMatterRenderingOption:string
   scrollSync: boolean
   mermaidTheme: string
+  mathRenderingOption: string
+  mathInlineDelimiters: Array<string[]>
+  mathBlockDelimiters: Array<string[]>
+  codeBlockTheme: string
+  previewTheme: string
+  protocolsWhiteList: string
+  imageFolderPath: string
+  imageUploader: string
+}
+*/
+
+interface MarkdownEngineConfig {
+  breakOnSingleNewLine: boolean
+  enableTypographer: boolean
+  enableWikiLinkSyntax: boolean
+  wikiLinkFileExtension: string
+  protocolsWhiteList: string
   /**
    * "KaTeX", "MathJax", or "None"
    */
   mathRenderingOption: string
-  mathInlineDelimiters: Array<string[]>
-  mathBlockDelimiters: Array<string[]>
-
-  /**
-   * Themes
-   */
+  mathInlineDelimiters: string[][]
+  mathBlockDelimiters: string[][]
   codeBlockTheme: string
   previewTheme: string
+  mermaidTheme: string
+  frontMatterRenderingOption: string 
+  imageFolderPath: string
+}
 
-  protocolsWhiteList: string
+
+interface CodeChunkData {
+  /**
+   * id of the code chunk
+   */
+  id: string,
+  /**
+   * code content of the code chunk
+   */
+  code: string,
+  /**
+   * code chunk options
+   */
+  options: object,
+  /**
+   * result after running code chunk
+   */
+  plainResult: string,
 
   /**
-   * image helper
+   * result after formatting according to options['output'] format
    */
-  imageFolderPath: string
-  imageUploader: string
+  result: string,
+  /**
+   * whether is running the code chunk or not
+   */
+  running: boolean,
+  /**
+   * previous code chunk
+   */
+  prev: string,
+  /**
+   * next code chunk
+   */
+  next: string,
 }

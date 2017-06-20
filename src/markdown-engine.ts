@@ -6,41 +6,42 @@ import * as request from "request"
 
 const matter = require('gray-matter')
 
-import {MarkdownPreviewEnhancedConfig} from "./config"
 import * as plantumlAPI from "./puml"
-import {escapeString, unescapeString, getExtensionDirectoryPath, readFile} from "./utility"
+import {escapeString, unescapeString, readFile} from "./utility"
 import * as utility from "./utility"
-let viz = null
 import {scopeForLanguageName} from "./extension-helper"
 import {transformMarkdown} from "./transformer"
 import {toc} from "./toc"
 import {CustomSubjects} from "./custom-subjects"
 import {princeConvert} from "./prince-convert"
 import {ebookConvert} from "./ebook-convert"
+import {pandocConvert} from "./pandoc-convert"
+import {markdownConvert} from "./markdown-convert"
 import * as CodeChunkAPI from "./code-chunk"
 
-const extensionDirectoryPath = getExtensionDirectoryPath()
+const extensionDirectoryPath = utility.extensionDirectoryPath
 const katex = require(path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.js'))
 const remarkable = require(path.resolve(extensionDirectoryPath, './dependencies/remarkable/remarkable.js'))
 const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 const CryptoJS = require(path.resolve(extensionDirectoryPath, './dependencies/crypto-js/crypto-js.js'))
+const Viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
 
 // import * as uslug from "uslug"
 // import * as Prism from "prismjs"
 let Prism = null
 
-
 interface MarkdownEngineConstructorArgs {
   filePath: string,
   projectDirectoryPath: string,
-  config: MarkdownPreviewEnhancedConfig
+  config: MarkdownEngineConfig
 }
 
 interface MarkdownEngineRenderOption {
-  useRelativeImagePath: boolean,
+  useRelativeFilePath: boolean,
   isForPreview: boolean,
-  hideFrontMatter: boolean
+  hideFrontMatter: boolean,
+  triggeredBySave?: boolean
 }
 
 interface MarkdownEngineOutput {
@@ -48,6 +49,12 @@ interface MarkdownEngineOutput {
   markdown:string,
   tocHTML:string,
   yamlConfig: any,
+  /**
+   * imported javascript and css files
+   * convert .js file to <script src='...'></script>
+   * convert .css file to <link href='...'></link>
+   */
+  JSAndCssFiles: string[]
  // slideConfigs: Array<object>
 }
 
@@ -64,33 +71,6 @@ interface Heading {
   id:string
 }
 
-interface CodeChunkData {
-  /**
-   * id of the code chunk
-   */
-  id: string,
-  /**
-   * code content of the code chunk
-   */
-  code: string,
-  /**
-   * code chunk options
-   */
-  options: object,
-  /**
-   * result after running code chunk
-   */
-  result: string,
-  /**
-   * whether is running the code chunk or not
-   */
-  running: boolean,
-  /**
-   * last code chunk
-   */
-  prev: string
-}
-
 const defaults = {
   html:         true,        // Enable HTML tags in source
   xhtmlOut:     false,       // Use '/' to close single tags (<br />)
@@ -101,14 +81,40 @@ const defaults = {
   typographer:  true,        // Enable smartypants and other sweet transforms
 }
 
+let MODIFY_SOURCE:(codeChunkData:CodeChunkData, result:string, filePath:string)=>Promise<string> = null
+
 export class MarkdownEngine {
+  /**
+   * Modify markdown source, append `result` after corresponding code chunk.
+   * @param codeChunkData 
+   * @param result 
+   */
+  public static async modifySource(codeChunkData:CodeChunkData, result:string, filePath:string) {
+    if (MODIFY_SOURCE) {
+      await MODIFY_SOURCE(codeChunkData, result, filePath)
+    } else {
+      // TODO: direcly modify the local file.
+    }
+
+    codeChunkData.running = false
+    return result
+  }
+
+  /**
+   * Bind cb to MODIFY_SOURCE
+   * @param cb 
+   */
+  public static onModifySource(cb:(codeChunkData:CodeChunkData, result:string, filePath:string)=>Promise<string>) {
+    MODIFY_SOURCE = cb
+  }
+
   /**
    * markdown file path 
    */
   private readonly filePath: string 
   private readonly fileDirectoryPath: string
   private readonly projectDirectoryPath: string
-  private config: MarkdownPreviewEnhancedConfig
+  private config: MarkdownEngineConfig
 
   private breakOnSingleNewLine: boolean
   private enableTypographer: boolean
@@ -167,6 +173,12 @@ export class MarkdownEngine {
 
   public cacheSVG(code:string, svg:string) {
     this.graphsCache[md5(code)] = CryptoJS.AES.decrypt(svg, 'markdown-preview-enhanced').toString(CryptoJS.enc.Utf8)
+  }
+
+  public cacheCodeChunkResult(id:string, result:string) {
+    const codeChunkData = this.codeChunksData[id]
+    if (!codeChunkData) return
+    codeChunkData.result = CryptoJS.AES.decrypt(result, 'markdown-preview-enhanced').toString(CryptoJS.enc.Utf8)
   }
 
   /**
@@ -435,23 +447,9 @@ export class MarkdownEngine {
       const block = this.config.mathBlockDelimiters
 
       // TODO
-      const mathJaxConfig = {
-        extensions: ['tex2jax.js'],
-        jax: ['input/TeX','output/HTML-CSS'],
-        showMathMenu: false,
-        messageStyle: 'none',
-
-        tex2jax: {
-          inlineMath: this.config.mathInlineDelimiters,
-          displayMath: this.config.mathBlockDelimiters,
-          processEnvironments: false,
-          processEscapes: true,
-        },
-        TeX: {
-          extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
-        },
-        'HTML-CSS': { availableFonts: ['TeX'] },
-      }
+      const mathJaxConfig = await utility.getMathJaxConfig()
+      mathJaxConfig['tex2jax']['inlineMath'] = this.config.mathInlineDelimiters
+      mathJaxConfig['tex2jax']['displayMath'] = this.config.mathBlockDelimiters
 
       if (options.offline) {
         mathStyle = `
@@ -540,6 +538,15 @@ export class MarkdownEngine {
     } catch(e) {
       styleCSS = ''
     }
+
+    // global styles 
+    let globalStyles = ""
+    try {
+      globalStyles = await utility.getGlobalStyles()
+    } catch(error) {
+      // ignore it 
+    }
+
     html = `
   <!DOCTYPE html>
   <html>
@@ -552,7 +559,7 @@ export class MarkdownEngine {
 
       ${presentationScript}
 
-      <style> ${styleCSS} </style>
+      <style> ${styleCSS}${globalStyles} </style>
     </head>
     <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
     ${html}
@@ -575,7 +582,7 @@ export class MarkdownEngine {
    */
   public async openInBrowser():Promise<void> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath: false, hideFrontMatter: true, isForPreview: false})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath: false, hideFrontMatter: true, isForPreview: false})
     html = await this.generateHTMLFromTemplate(html, yamlConfig, 
                                     {isForPrint: false, isForPrince: false, offline: true, embedLocalImages: false} )   
     // create temp file
@@ -598,7 +605,7 @@ export class MarkdownEngine {
    */
   public async saveAsHTML():Promise<string> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:true, hideFrontMatter:true, isForPreview: false})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:true, hideFrontMatter:true, isForPreview: false})
     const htmlConfig = yamlConfig['html'] || {}
     let cdn = htmlConfig['cdn'],
         offline = !cdn
@@ -638,7 +645,7 @@ export class MarkdownEngine {
    */
   public async princeExport():Promise<string> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:false, hideFrontMatter:true, isForPreview: false})
     let dest = this.filePath
     let extname = path.extname(dest) 
     dest = dest.replace(new RegExp(extname+'$'), '.pdf')
@@ -701,7 +708,7 @@ export class MarkdownEngine {
    */
   public async eBookExport(fileType='epub'):Promise<string> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeImagePath:false, hideFrontMatter:true, isForPreview: false})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:false, hideFrontMatter:true, isForPreview: false})
 
     let dest = this.filePath
     let extname = path.extname(dest) 
@@ -775,7 +782,7 @@ export class MarkdownEngine {
         
         fs.readFile(filePath, {encoding: 'utf-8'}, (error, text)=> {
           if (error) return reject(error.toString())
-          this.parseMD(text, {useRelativeImagePath: false, isForPreview: false, hideFrontMatter:true})
+          this.parseMD(text, {useRelativeFilePath: false, isForPreview: false, hideFrontMatter:true})
           .then(({html})=> {
             return resolve({heading, id, level, filePath, html, offset})
           })
@@ -844,6 +851,14 @@ export class MarkdownEngine {
       styleCSS = ''
     }
 
+    // global styles 
+    let globalStyles = ""
+    try {
+      globalStyles = await utility.getGlobalStyles()
+    } catch(error) {
+      // ignore it 
+    }
+
     // only use github-light style for ebook
     html = `
 <!DOCTYPE html>
@@ -852,7 +867,7 @@ export class MarkdownEngine {
     <title>${title}</title>
     <meta charset=\"utf-8\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <style> ${styleCSS} </style>
+    <style> ${styleCSS} ${globalStyles} </style>
     ${mathStyle}
   </head>
   <body class="markdown-preview-enhanced">
@@ -889,6 +904,76 @@ export class MarkdownEngine {
   }
 
   /**
+   * pandoc export
+   */
+  public async pandocExport():Promise<string> {
+    const inputString = await utility.readFile(this.filePath, {encoding: 'utf-8'})
+    const {data:config} = this.processFrontMatter(inputString, false)
+    let content = inputString
+    if (content.match(/\-\-\-\s+/)) {
+      const end = content.indexOf('---\n', 4)
+      content = content.slice(end+4)
+    }
+
+    const outputFilePath = await pandocConvert(content, {
+      fileDirectoryPath: this.fileDirectoryPath,
+      projectDirectoryPath: this.projectDirectoryPath,
+      sourceFilePath: this.filePath,
+      protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
+      // deleteImages: true,
+      filesCache: this.filesCache,
+      codeChunksData: this.codeChunksData,
+      graphsCache: this.graphsCache,
+      imageDirectoryPath: this.config.imageFolderPath
+    }, config)
+
+    utility.openFile(outputFilePath)
+    return outputFilePath
+  }
+
+  /**
+   * markdown(gfm) export 
+   */
+  public async markdownExport():Promise<string> {
+    let inputString = await utility.readFile(this.filePath, {encoding: 'utf-8'})
+    let {data:config} = this.processFrontMatter(inputString, false)
+
+    if (inputString.startsWith('---\n')) {
+      const end = inputString.indexOf('---\n', 4)
+      inputString = inputString.slice(end+4)
+    }
+
+    config = config['markdown'] || {}
+    if (!config['image_dir']) {
+      config['image_dir'] = this.config.imageFolderPath
+    }
+
+    if (!config['path']) {
+      if (this.filePath.match(/\.src\./)) {
+        config['path'] = this.filePath.replace(/\.src\./, '.')
+      } else {
+        config['path'] = this.filePath.replace(new RegExp(path.extname(this.filePath)), '_'+path.extname(this.filePath))
+      }
+      config['path']  = path.basename(config['path'])
+    }
+
+    if (config['front_matter']) {
+      inputString = matter.stringify(inputString, config['front-matter'])
+    }
+
+    return await markdownConvert(inputString, {
+      projectDirectoryPath: this.projectDirectoryPath,
+      fileDirectoryPath: this.fileDirectoryPath,
+      protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
+      filesCache: this.filesCache,
+      mathInlineDelimiters: this.config.mathInlineDelimiters,
+      mathBlockDelimiters: this.config.mathBlockDelimiters,
+      codeChunksData: this.codeChunksData,
+      graphsCache: this.graphsCache
+    }, config)
+  }
+
+  /**
    * 
    * @param filePath 
    * @param relative: whether to use the path relative to filePath or not.  
@@ -920,26 +1005,57 @@ export class MarkdownEngine {
     if (!codeChunkData) return ''
     if (codeChunkData.running) return ''
 
-    codeChunkData.running = true
-    let result = await CodeChunkAPI.run(codeChunkData.code, this.fileDirectoryPath, codeChunkData.options)
-
-    const outputFormat = codeChunkData.options['output'] || 'text'
-    if (outputFormat === 'html') {
-      result = result 
-    } else if (outputFormat === 'png') {
-      const base64 = new Buffer(result).toString('base64')
-      result = `<img src="data:image/png;charset=utf-8;base64,${base64}">`
-    } else if (outputFormat === 'markdown') {
-      const {html} = await this.parseMD(result, {useRelativeImagePath:true, isForPreview:false, hideFrontMatter: true} )
-      result = html 
-    } else if (outputFormat === 'none') {
-      result = ''
-    } else {
-      result = `<pre class="language-text">${result}</pre>`
+    let code = codeChunkData.code
+    let cc = codeChunkData
+    while (cc.options['continue']) {
+      let id = cc.options['continue']
+      if (id === true) {
+        id = cc.prev
+      }
+      cc = this.codeChunksData[id]
+      if (!cc) break 
+      code = cc.code + code
     }
 
-    codeChunkData.running = false 
+    codeChunkData.running = true
+    let result
+    try {
+      const options = codeChunkData.options
+      if (options['cmd'] === 'toc') { // toc code chunk. <= this is a special code chunk.  
+        const tocObject = toc(this.headings, {ordered: options['orderedList'], depthFrom: options['depthFrom'], depthTo: options['depthTo'], tab: options['tab'] || '\t'})
+        result = tocObject.content
+      } else {
+        result = await CodeChunkAPI.run(code, this.fileDirectoryPath, codeChunkData.options)
+      }
+      codeChunkData.plainResult = result
+
+      if (codeChunkData.options['modify_source'] && ('code_chunk_offset' in codeChunkData.options)) {
+        codeChunkData.result = ''
+        return MarkdownEngine.modifySource(codeChunkData, result, this.filePath)
+      } 
+      
+      const outputFormat = codeChunkData.options['output'] || 'text'
+      if (!result) { // do nothing
+        result = ''
+      } else if (outputFormat === 'html') {
+        result = result 
+      } else if (outputFormat === 'png') {
+        const base64 = new Buffer(result).toString('base64')
+        result = `<img src="data:image/png;charset=utf-8;base64,${base64}">`
+      } else if (outputFormat === 'markdown') {
+        const {html} = await this.parseMD(result, {useRelativeFilePath:true, isForPreview:false, hideFrontMatter: true} )
+        result = html 
+      } else if (outputFormat === 'none') {
+        result = ''
+      } else {
+        result = `<pre class="language-text">${result}</pre>`
+      }
+    } catch(error) {
+      result = `<pre class="language-text">${error}</pre>`
+    }
+
     codeChunkData.result = result // save result.
+    codeChunkData.running = false 
     return result
   }
 
@@ -950,7 +1066,23 @@ export class MarkdownEngine {
     }
     return await Promise.all(asyncFunctions)
   }
-
+  /**
+   * Add line numbers to code block <pre> element
+   * @param  
+   * @param code 
+   */  
+  private addLineNumbersIfNecessary($preElement, code:string):void {
+    if ($preElement.hasClass('line-numbers')) {
+      const match = code.match(/\n(?!$)/g)
+      const linesNum = match ? (match.length + 1) : 1
+      let lines = ''
+      for (let i = 0; i < linesNum; i++) {
+        lines += '<span></span>'
+      }
+      $preElement.append(`<span aria-hidden="true" class="line-numbers-rows">${lines}</span>`)
+    }
+  }
+  
   /**
    * 
    * @param preElement the cheerio element
@@ -959,7 +1091,10 @@ export class MarkdownEngine {
    */
   private async renderCodeBlock($, $preElement, code, parameters, 
   { graphsCache, 
-    codeChunksArray}:{graphsCache:object, codeChunksArray:CodeChunkData[]}) {
+    codeChunksArray, 
+    isForPreview,
+    triggeredBySave }:{graphsCache:object, codeChunksArray:CodeChunkData[], isForPreview:boolean, triggeredBySave:boolean}) {
+    
     let match, lang, optionsStr:string, options:object 
     if (match = parameters.match(/\s*([^\s]+)\s+\{(.+?)\}/)) {
       lang = match[1]
@@ -979,15 +1114,19 @@ export class MarkdownEngine {
       options = {}
     }
 
-    function renderPlainCodeBlock() {
+    const renderPlainCodeBlock = ()=> {
       try {
         if (!Prism) {
-          Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
+          Prism = require(path.resolve(extensionDirectoryPath, './dependencies/prism/prism.js'))
         }
         const html = Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])
         $preElement.html(html)  
       } catch(e) {
         // do nothing
+      }
+      if (options['class']) {
+        $preElement.addClass(options['class'])
+        this.addLineNumbersIfNecessary($preElement, code)
       }
     }
 
@@ -995,7 +1134,7 @@ export class MarkdownEngine {
     if (codeBlockOnly) {
       renderPlainCodeBlock()
     } else if (lang.match(/^(puml|plantuml)$/)) { // PlantUML 
-      const checksum = md5(code)
+      const checksum = md5(optionsStr + code)
       let svg:string = this.graphsCache[checksum] 
       if (!svg) {
         svg = await plantumlAPI.render(code, this.fileDirectoryPath)
@@ -1004,7 +1143,7 @@ export class MarkdownEngine {
       graphsCache[checksum] = svg // store to new cache 
 
     } else if (lang.match(/^mermaid$/)) { // mermaid 
-      const checksum = md5(code) 
+      const checksum = md5(optionsStr + code) 
       let svg:string = this.graphsCache[checksum]
       if (!svg) {
         $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
@@ -1013,21 +1152,22 @@ export class MarkdownEngine {
         graphsCache[checksum] = svg // store to new cache 
       }
     } else if (lang.match(/^(dot|viz)$/)) { // GraphViz
-      const checksum = md5(code)
+      const checksum = md5(optionsStr + code)
       let svg = this.graphsCache[checksum]
-      if (!svg) {
-        if (!viz) viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
-        
+      if (!svg) {        
         try {
           let engine = options['engine'] || "dot"
-          svg = viz(code, {engine})
+          svg = Viz(code, {engine})
+          
+          $preElement.replaceWith(`<p>${svg}</p>`)
+          graphsCache[checksum] = svg // store to new cache
         } catch(e) {
-          $preElement.replaceWith(`<pre>${e.toString()}</pre>`)
+          $preElement.replaceWith(`<pre class="language-text">${e.toString()}</pre>`)
         }
-      } 
-
-      $preElement.replaceWith(`<p>${svg}</p>`)
-      graphsCache[checksum] = svg // store to new cache
+      } else {
+        $preElement.replaceWith(`<p>${svg}</p>`)
+        graphsCache[checksum] = svg // store to new cache
+      }
     } else if (options['cmd']) {
       const $el = $("<div class=\"code-chunk\"></div>") // create code chunk
       if (!options['id']) {
@@ -1039,21 +1179,28 @@ export class MarkdownEngine {
       }
 
       $el.attr({
-        'data-id': options['id']
+        'data-id': options['id'],
+        'data-cmd': options['cmd'],
+        'data-code': options['cmd'] === 'javascript' ? code : '' 
       })
 
       let highlightedBlock = ''
       if (!options['hide']) {
         try {
           if (!Prism) {
-            Prism = require(path.resolve(getExtensionDirectoryPath(), './dependencies/prism/prism.js'))
+            Prism = require(path.resolve(extensionDirectoryPath, './dependencies/prism/prism.js'))
           }
-          highlightedBlock = `<pre class="language-${lang}">${Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])}</pre>`
+          highlightedBlock = `<pre class="language-${lang} ${options['class'] || ''}">${Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])}</pre>`
         } catch(e) {
           // do nothing
-          highlightedBlock = `<pre class="language-text">${code}</pre>`
+          highlightedBlock = `<pre class="language-text ${options['class'] || ''}">${code}</pre>`
         }
+
+        const $highlightedBlock = $(highlightedBlock)
+        this.addLineNumbersIfNecessary($highlightedBlock, code)
+        highlightedBlock = $.html($highlightedBlock)
       }
+
       /*
       if (!options['id']) { // id is required for code chunk
         highlightedBlock = `<pre class="language-text">'id' is required for code chunk</pre>`
@@ -1067,8 +1214,10 @@ export class MarkdownEngine {
           code,
           options: options,
           result: '',
+          plainResult: '',
           running: false,
-          prev: previousCodeChunkDataId
+          prev: previousCodeChunkDataId,
+          next: null
         }
         this.codeChunksData[options['id']] = codeChunkData
       } else {
@@ -1076,14 +1225,34 @@ export class MarkdownEngine {
         codeChunkData.options = options
         codeChunkData.prev = previousCodeChunkDataId
       }
-      codeChunksArray.push(codeChunkData)
+      if (previousCodeChunkDataId && this.codeChunksData[previousCodeChunkDataId]) 
+        this.codeChunksData[previousCodeChunkDataId].next = options['id']
+
+      codeChunksArray.push(codeChunkData) // this line has to be put above the `if` statement.
+
+      if (triggeredBySave && options['run_on_save']) {
+        await this.runCodeChunk(options['id'])
+      }
+
+      let result = codeChunkData.result
+      // element option 
+      if (!result && codeChunkData.options['element']) {
+        result = codeChunkData.options['element']
+        codeChunkData.result = result 
+      }
 
       if (codeChunkData.running) {
         $el.addClass('running')
       }
       const statusDiv = `<div class="status">running...</div>`
       const buttonGroup = '<div class="btn-group"><div class="run-btn btn"><span>▶︎</span></div><div class=\"run-all-btn btn\">all</div></div>'
-      const outputDiv = `<div class="output-div">${codeChunkData.result}</div>`
+      let outputDiv = `<div class="output-div">${result}</div>`
+
+      // check javascript code chunk
+      if (!isForPreview && options['cmd'] === 'javascript') {
+        outputDiv += `<script>${code}</script>`
+        result = codeChunkData.options['element'] || ''
+      }
 
       $el.append(highlightedBlock)
       $el.append(buttonGroup)
@@ -1102,19 +1271,6 @@ export class MarkdownEngine {
    */
   private async resolveImagePathAndCodeBlock(html, options:MarkdownEngineRenderOption) {
     let $ = cheerio.load(html, {xmlMode:true})
-
-    // resolve image paths
-    $('img, a').each((i, imgElement)=> {
-      let srcTag = 'src'
-      if (imgElement.name === 'a')
-        srcTag = 'href'
-
-      const img = $(imgElement)
-      const src = img.attr(srcTag)
-
-      img.attr(srcTag, this.resolveFilePath(src, options.useRelativeImagePath))
-    })
-
     
     // new caches
     // which will be set when this.renderCodeBlocks is called
@@ -1143,14 +1299,31 @@ export class MarkdownEngine {
         $preElement.attr('class', 'language-text')
       }
       
-      asyncFunctions.push(this.renderCodeBlock($, $preElement, code, lang, {graphsCache: newGraphsCache, codeChunksArray}))
+      asyncFunctions.push(this.renderCodeBlock($, $preElement, code, lang, 
+        {graphsCache: newGraphsCache, codeChunksArray, isForPreview:options.isForPreview, triggeredBySave: options.triggeredBySave}))
     })
 
     await Promise.all(asyncFunctions)
 
+
+    // resolve image paths
+    $('img, a').each((i, imgElement)=> {
+      let srcTag = 'src'
+      if (imgElement.name === 'a')
+        srcTag = 'href'
+
+      const img = $(imgElement)
+      const src = img.attr(srcTag)
+
+      img.attr(srcTag, this.resolveFilePath(src, options.useRelativeFilePath))
+    })
+
     // reset caches 
     // the line below actually has problem.
-    this.graphsCache = newGraphsCache
+    if (options.isForPreview) {
+      this.graphsCache = newGraphsCache
+    } 
+
     return $.html()
   }
 
@@ -1326,7 +1499,7 @@ export class MarkdownEngine {
     `
   }
 
-  private parseSlidesForExport(html:string, slideConfigs:Array<object>, useRelativeImagePath:boolean) {
+  private parseSlidesForExport(html:string, slideConfigs:Array<object>, useRelativeFilePath:boolean) {
     let slides = html.split('<span class="new-slide"></span>')
     let before = slides[0]
     slides = slides.slice(1)
@@ -1337,7 +1510,7 @@ export class MarkdownEngine {
       let attrString = ''
 
       if (slideConfig['data-background-image'])
-        attrString += ` data-background-image='${this.resolveFilePath(slideConfig['data-background-image'], useRelativeImagePath)}'`
+        attrString += ` data-background-image='${this.resolveFilePath(slideConfig['data-background-image'], useRelativeFilePath)}'`
 
       if (slideConfig['data-background-size'])
         attrString += ` data-background-size='${slideConfig['data-background-size']}'`
@@ -1355,7 +1528,7 @@ export class MarkdownEngine {
         attrString += ` data-notes='${slideConfig['data-notes']}'`
 
       if (slideConfig['data-background-video'])
-        attrString += ` data-background-video='${this.resolveFilePath(slideConfig['data-background-video'], useRelativeImagePath)}'`
+        attrString += ` data-background-video='${this.resolveFilePath(slideConfig['data-background-video'], useRelativeFilePath)}'`
 
       if (slideConfig['data-background-video-loop'])
         attrString += ` data-background-video-loop`
@@ -1367,7 +1540,7 @@ export class MarkdownEngine {
         attrString += ` data-transition='${slideConfig['data-transition']}'`
 
       if (slideConfig['data-background-iframe'])
-        attrString += ` data-background-iframe='${this.resolveFilePath(slideConfig['data-background-iframe'], useRelativeImagePath)}'`
+        attrString += ` data-background-iframe='${this.resolveFilePath(slideConfig['data-background-iframe'], useRelativeFilePath)}'`
       
       return attrString
     }
@@ -1404,6 +1577,8 @@ export class MarkdownEngine {
   }
 
   public async parseMD(inputString:string, options:MarkdownEngineRenderOption):Promise<MarkdownEngineOutput> {
+    if (!inputString) inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
+
     // process front-matter
     const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
     const frontMatterTable = fm.table,
@@ -1411,13 +1586,13 @@ export class MarkdownEngine {
     inputString = fm.content
 
     // import external files and insert anchors if necessary 
-    const {outputString, slideConfigs, tocBracketEnabled} = await transformMarkdown(inputString, 
+    const {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles} = await transformMarkdown(inputString, 
     {
       fileDirectoryPath: this.fileDirectoryPath, 
       projectDirectoryPath: this.projectDirectoryPath,
       forPreview: options.isForPreview,
       protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
-      useRelativeImagePath: options.useRelativeImagePath,
+      useRelativeFilePath: options.useRelativeFilePath,
       filesCache: this.filesCache
     })
 
@@ -1518,12 +1693,12 @@ export class MarkdownEngine {
       if (options.isForPreview) {
         html = this.parseSlides(html, slideConfigs, yamlConfig)
       } else {
-        html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeImagePath)
+        html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeFilePath)
       }
       if (yamlConfig) yamlConfig['isPresentationMode'] = true // mark as presentation mode
     }
 
     this.cachedHTML = html // save to cache
-    return {html, markdown:inputString, tocHTML: this.tocHTML, yamlConfig}
+    return {html, markdown:inputString, tocHTML: this.tocHTML, yamlConfig, JSAndCssFiles}
   }
 }
