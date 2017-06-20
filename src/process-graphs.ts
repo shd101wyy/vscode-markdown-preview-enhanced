@@ -1,5 +1,6 @@
 import * as path from "path"
 import * as fs from "fs"
+import * as cheerio from "cheerio"
 
 import * as plantumlAPI from "./puml"
 import * as utility from "./utility"
@@ -91,7 +92,7 @@ export async function processGraphs(text:string,
     }
   }
 
-  async function convertSVGToPNGFile(svg:string, lines:string[], start:number, end:number) {
+  async function convertSVGToPNGFile(svg:string, lines:string[], start:number, end:number, modifyCodeBlock:boolean) {
     const pngFilePath = path.resolve(imageDirectoryPath, imageFilePrefix+imgCount+'.png')
     await svgElementToPNGFile(svg, pngFilePath)
     let displayPNGFilePath
@@ -102,10 +103,14 @@ export async function processGraphs(text:string,
     }
 
     imgCount++
-    clearCodeBlock(lines, start, end)
-    lines[end] += '\n' + `![](${displayPNGFilePath})  `
+  
+    if (modifyCodeBlock) {
+      clearCodeBlock(lines, start, end)
+      lines[end] += '\n' + `![](${displayPNGFilePath})  `
+    }
 
     imagePaths.push(pngFilePath)
+    return displayPNGFilePath
   }
 
   for (let i = 0; i < codes.length; i++) {
@@ -120,7 +125,7 @@ export async function processGraphs(text:string,
         if (!(svg = graphsCache[checksum])) { // check whether in cache
           svg = await plantumlAPI.render(content, fileDirectoryPath)
         }
-        await convertSVGToPNGFile(svg, lines, start, end)
+        await convertSVGToPNGFile(svg, lines, start, end, true)
       } catch(error) {
         clearCodeBlock(lines, start, end)
         lines[end] += `\n` + `\`\`\`\n${error}\n\`\`\`  \n`
@@ -133,7 +138,7 @@ export async function processGraphs(text:string,
           const engine = options['engine'] || 'dot'
           svg = Viz(content, {engine})
         }
-        await convertSVGToPNGFile(svg, lines, start, end)
+        await convertSVGToPNGFile(svg, lines, start, end, true)
       } catch(error) {
         clearCodeBlock(lines, start, end)
         lines[end] += `\n` + `\`\`\`\n${error}\n\`\`\`  \n`
@@ -172,8 +177,17 @@ export async function processGraphs(text:string,
       }
 
       if (currentCodeChunk.result) { // append result
-        // TODO: check svg and convert it to png
-        lines[end] += ('\n' + currentCodeChunk.result)
+        let result = currentCodeChunk.result
+        if (currentCodeChunk.options['output'] === 'html') { // check svg and convert it to png
+          const $ = cheerio.load(currentCodeChunk.result, {xmlMode: true})
+          const svg = $('svg')
+          if (svg.length === 1) {
+            const pngFilePath = await convertSVGToPNGFile($.html('svg'), lines, start, end, false)
+            result = `![](${pngFilePath})  \n`
+          }
+        }
+
+        lines[end] += ('\n' + result)
       }
       currentCodeChunk = codeChunksData[currentCodeChunk.next]
     }

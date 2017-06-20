@@ -1199,7 +1199,8 @@ export class MarkdownEngine {
         codeChunkData.options = options
         codeChunkData.prev = previousCodeChunkDataId
       }
-      this.codeChunksData[previousCodeChunkDataId].next = options['id']
+      if (previousCodeChunkDataId && this.codeChunksData[previousCodeChunkDataId]) 
+        this.codeChunksData[previousCodeChunkDataId].next = options['id']
 
       codeChunksArray.push(codeChunkData) // this line has to be put above the `if` statement.
 
