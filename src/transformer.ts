@@ -206,7 +206,7 @@ export async function transformMarkdown(inputString:string,
       if (end < 0) end = inputString.length
       let line = inputString.substring(i, end)
 
-      if (line.match(/^\s*```/)) {
+      if (line.match(/^```/)) {
         if (!inBlock && forPreview) outputString += createAnchor(lineNo)
 
         let match;

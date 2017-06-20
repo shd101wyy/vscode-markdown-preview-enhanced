@@ -38,7 +38,10 @@ pre[class*="language-"] {
 	background-size: 3em 3em;
 	background-origin: content-box;
 	overflow: visible;
-	padding: 0;
+	/* padding: 0; */
+
+	padding-top: 1em;
+    padding-bottom: 1em;
 }
 
 code[class*="language"] {
@@ -192,19 +195,6 @@ pre[class*="language-"]:after {
 .token.cr:before,
 .token.lf:before {
 	color: #e0d7d1;
-}
-
-/* Plugin styles: Line Numbers */
-pre[class*="language-"].line-numbers {
-	padding-left: 0;
-}
-
-pre[class*="language-"].line-numbers code {
-	padding-left: 3.8em;
-}
-
-pre[class*="language-"].line-numbers .line-numbers-rows {
-	left: 0;
 }
 
 /* Plugin styles: Line Highlight */

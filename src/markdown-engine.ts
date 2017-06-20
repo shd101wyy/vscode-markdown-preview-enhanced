@@ -1066,7 +1066,23 @@ export class MarkdownEngine {
     }
     return await Promise.all(asyncFunctions)
   }
-
+  /**
+   * Add line numbers to code block <pre> element
+   * @param  
+   * @param code 
+   */  
+  private addLineNumbersIfNecessary($preElement, code:string):void {
+    if ($preElement.hasClass('line-numbers')) {
+      const match = code.match(/\n(?!$)/g)
+      const linesNum = match ? (match.length + 1) : 1
+      let lines = ''
+      for (let i = 0; i < linesNum; i++) {
+        lines += '<span></span>'
+      }
+      $preElement.append(`<span aria-hidden="true" class="line-numbers-rows">${lines}</span>`)
+    }
+  }
+  
   /**
    * 
    * @param preElement the cheerio element
@@ -1098,7 +1114,7 @@ export class MarkdownEngine {
       options = {}
     }
 
-    function renderPlainCodeBlock() {
+    const renderPlainCodeBlock = ()=> {
       try {
         if (!Prism) {
           Prism = require(path.resolve(extensionDirectoryPath, './dependencies/prism/prism.js'))
@@ -1107,6 +1123,10 @@ export class MarkdownEngine {
         $preElement.html(html)  
       } catch(e) {
         // do nothing
+      }
+      if (options['class']) {
+        $preElement.addClass(options['class'])
+        this.addLineNumbersIfNecessary($preElement, code)
       }
     }
 
@@ -1170,11 +1190,15 @@ export class MarkdownEngine {
           if (!Prism) {
             Prism = require(path.resolve(extensionDirectoryPath, './dependencies/prism/prism.js'))
           }
-          highlightedBlock = `<pre class="language-${lang}">${Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])}</pre>`
+          highlightedBlock = `<pre class="language-${lang} ${options['class'] || ''}">${Prism.highlight(code, Prism.languages[scopeForLanguageName(lang)])}</pre>`
         } catch(e) {
           // do nothing
-          highlightedBlock = `<pre class="language-text">${code}</pre>`
+          highlightedBlock = `<pre class="language-text ${options['class'] || ''}">${code}</pre>`
         }
+
+        const $highlightedBlock = $(highlightedBlock)
+        this.addLineNumbersIfNecessary($highlightedBlock, code)
+        highlightedBlock = $.html($highlightedBlock)
       }
 
       /*
