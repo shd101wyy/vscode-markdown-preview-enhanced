@@ -437,10 +437,10 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     }
   }
 
-  public saveAsHTML(sourceUri: Uri) {
+  public saveAsHTML(sourceUri: Uri, offline:boolean) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.saveAsHTML()
+      engine.saveAsHTML(offline)
       .then((dest)=> {
         vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
       })

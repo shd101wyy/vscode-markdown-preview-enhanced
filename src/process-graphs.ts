@@ -5,7 +5,8 @@ import * as cheerio from "cheerio"
 import * as plantumlAPI from "./puml"
 import * as utility from "./utility"
 import {svgElementToPNGFile} from "./magick"
-import {mermaidToPNG} from "./mermaid"
+// import {mermaidToPNG} from "./mermaid"
+import {compileLaTeX} from "./code-chunk"
 const Viz = require(path.resolve(utility.extensionDirectoryPath, './dependencies/viz/viz.js'))
 const jsonic = require(path.resolve(utility.extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
 const md5 = require(path.resolve(utility.extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
@@ -170,7 +171,7 @@ export async function processGraphs(text:string,
     } else if (currentCodeChunk) { // code chunk
       if (currentCodeChunk.options['hide']) { // remove code block
         clearCodeBlock(lines, start, end)
-      } else { // remove {...} after ```lang 
+      } else { // remove {...} after ```lang  
         const line = lines[start]
         const indexOfFirstSpace = line.indexOf(' ', line.indexOf('```'))
         lines[start] = line.slice(0, indexOfFirstSpace)
@@ -178,13 +179,16 @@ export async function processGraphs(text:string,
 
       if (currentCodeChunk.result) { // append result
         let result = currentCodeChunk.result
-        if (currentCodeChunk.options['output'] === 'html') { // check svg and convert it to png
-          const $ = cheerio.load(currentCodeChunk.result, {xmlMode: true})
+        const options = currentCodeChunk.options
+        if (options['output'] === 'html' || options['matplotlib']) { // check svg and convert it to png
+          const $ = cheerio.load(currentCodeChunk.result, {xmlMode: true}) // xmlMode here is necessary...
           const svg = $('svg')
           if (svg.length === 1) {
             const pngFilePath = await convertSVGToPNGFile($.html('svg'), lines, start, end, false)
             result = `![](${pngFilePath})  \n`
           }
+        } else if (options['cmd'].match(/^(la)?tex$/)) { // for latex, need to run it again to generate svg file in currect directory.
+          result = await compileLaTeX(content, fileDirectoryPath, Object.assign({}, options, {latex_svg_dir: imageDirectoryPath}))
         } else if (currentCodeChunk.options['output'] === 'markdown') {
           result = currentCodeChunk.plainResult
         }

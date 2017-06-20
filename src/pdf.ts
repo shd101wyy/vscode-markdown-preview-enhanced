@@ -80,7 +80,6 @@ return new Promise<string>((resolve, reject)=> {
               svgMarkdown += `![](${svgFilePath}?${r})\n`
           }
         })
-        console.log(svgMarkdown)
         return resolve(svgMarkdown)
       })
     }

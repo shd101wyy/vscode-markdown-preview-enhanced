@@ -145,7 +145,11 @@ config:object):Promise<string> {
   else
     outputFilePath = path.resolve(fileDirectoryPath, config['path'])
 
-  // TODO: create imageFolder
+  for (let key in filesCache) {
+    if (key.endsWith('.pdf')) 
+      delete(filesCache[key])
+  }
+
   let imageDirectoryPath:string
   if (config['image_dir'][0] === '/')
     imageDirectoryPath = path.resolve(projectDirectoryPath, '.' + config['image_dir'])

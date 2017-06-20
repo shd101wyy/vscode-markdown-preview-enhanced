@@ -303,8 +303,19 @@ function initContextMenu() {
       "sep1": "---------",
       "html_export": {
         name: "HTML",
-        callback: ()=> {
-          window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.saveAsHTML?${JSON.stringify([sourceUri])}`}, 'file://') 
+        items: {
+          "html_offline": {
+            name: "HTML (offline)",
+            callback() {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.saveAsHTML?${JSON.stringify([sourceUri, true])}`}, 'file://') 
+            }
+          },
+          "html_cdn": {
+            name: "HTML (cdn hosted)",
+            callback() {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.saveAsHTML?${JSON.stringify([sourceUri, false])}`}, 'file://') 
+            }
+          }
         }
       },
       "prince_export": 
@@ -465,7 +476,7 @@ function renderMermaid() {
     const mermaidGraphs = mpe.hiddenPreviewElement.getElementsByClassName('mermaid')
 
     const validMermaidGraphs = []
-    const mermaidCodes = []
+    // const mermaidCodes = []
     for (let i = 0; i < mermaidGraphs.length; i++) {
       const mermaidGraph = mermaidGraphs[i] as HTMLElement
       if (mermaidGraph.getAttribute('data-processed') === 'true') continue 
@@ -476,7 +487,7 @@ function renderMermaid() {
 
       if (mermaidAPI.parse(mermaidGraph.textContent)) {
         validMermaidGraphs.push(mermaidGraph)
-        mermaidCodes.push(mermaidGraph.textContent)
+        // mermaidCodes.push(mermaidGraph.textContent)
       }
     }
 
@@ -485,6 +496,8 @@ function renderMermaid() {
     mermaid.init(null, validMermaidGraphs, function(){
       resolve()
 
+      /*
+      // NVM it doesn't work well...
       // send svg data
       const CryptoJS = window["CryptoJS"]
       validMermaidGraphs.forEach((mermaidGraph, offset)=> {
@@ -496,6 +509,7 @@ function renderMermaid() {
           data: `command:_markdown-preview-enhanced.cacheSVG?${JSON.stringify([sourceUri, code, svg])}`
         }, 'file://')
       })
+      */
     })
   })
 }

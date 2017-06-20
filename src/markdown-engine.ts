@@ -63,6 +63,7 @@ interface HTMLTemplateOption {
   isForPrince: boolean
   offline: boolean
   embedLocalImages: boolean
+  embedSVG?: boolean
 }
 
 interface Heading {
@@ -172,7 +173,10 @@ export class MarkdownEngine {
   }
 
   public cacheSVG(code:string, svg:string) {
-    this.graphsCache[md5(code)] = CryptoJS.AES.decrypt(svg, 'markdown-preview-enhanced').toString(CryptoJS.enc.Utf8)
+    svg = CryptoJS.AES.decrypt(svg, 'markdown-preview-enhanced').toString(CryptoJS.enc.Utf8)
+    // const base64 = new Buffer(svg).toString('base64')
+    // const img = `<img src="data:image/svg+xml;charset=utf-8;base64,${base64}">`
+    this.graphsCache[md5(code)] = svg
   }
 
   public cacheCodeChunkResult(id:string, result:string) {
@@ -399,7 +403,7 @@ export class MarkdownEngine {
   /**
    * Embed local images. Load the image file and display it in base64 format
    */
-  public async embedLocalImages($) {
+  private async embedLocalImages($) {
     const asyncFunctions = [] 
 
     $('img').each((i, img)=> {
@@ -411,6 +415,7 @@ export class MarkdownEngine {
         src = src.replace(fileProtocalMatch[0], '/')
         src = src.replace(/\?(\.|\d)+$/, '') // remove cache
         const imageType = path.extname(src).slice(1)
+        if (imageType === 'svg') return 
         asyncFunctions.push(new Promise((resolve, reject)=> {
           fs.readFile(decodeURI(src), (error, data)=> {
             if (error) return resolve(null)
@@ -421,6 +426,38 @@ export class MarkdownEngine {
         }))
       }
     })
+    await Promise.all(asyncFunctions)
+
+    return $
+  }
+
+  /**
+   * Load local svg files and embed them into html directly.  
+   * @param $ 
+   */
+  private async embedSVG($) {
+    const asyncFunctions = []
+    $('img').each((i, img)=> {
+      const $img = $(img)
+      let src = this.resolveFilePath($img.attr('src'), false)
+
+      let fileProtocalMatch
+      if (fileProtocalMatch = src.match(/^file:\/\/+/)) {
+        src = src.replace(fileProtocalMatch[0], '/')
+        src = src.replace(/\?(\.|\d)+$/, '') // remove cache
+        const imageType = path.extname(src).slice(1)
+        if (imageType !== 'svg') return 
+          asyncFunctions.push(new Promise((resolve, reject)=> {
+            fs.readFile(decodeURI(src), (error, data)=> {
+              if (error) return resolve(null)
+              const base64 = new Buffer(data).toString('base64')
+              $img.attr('src', `data:image/svg+xml;charset=utf-8;base64,${base64}`)
+              return resolve(base64)
+            })
+        }))
+      }
+    })
+
     await Promise.all(asyncFunctions)
 
     return $
@@ -474,6 +511,22 @@ export class MarkdownEngine {
       }
     } else {
       mathStyle = ''
+    }
+
+    // mermaid 
+    let mermaidScript = ''
+    let mermaidStyle = ''
+    if (html.indexOf('<div class="mermaid">') >= 0) {
+      if (options.offline) {
+        mermaidScript = `<script type="text/javascript" src="file://${path.resolve(extensionDirectoryPath, './dependencies/mermaid/mermaid.min.js')}"></script>`
+        mermaidStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
+      } else {
+        mermaidScript = `<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/mermaid.min.js"></script>`
+        mermaidStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/${this.config.mermaidTheme.replace('.css', '.min.css')}">`
+      }
+      let mermaidConfig = await utility.getMermaidConfig() || {}
+      mermaidConfig = Object.assign(mermaidConfig, {startOnLoad: true})
+      mermaidScript += `<script>mermaidAPI.initialize(${JSON.stringify(mermaidConfig)})</script>`
     }
 
     // presentation
@@ -556,8 +609,10 @@ export class MarkdownEngine {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       ${presentationStyle}
       ${mathStyle}
+      ${mermaidStyle}
 
       ${presentationScript}
+      ${mermaidScript}
 
       <style> 
       ${styleCSS} 
@@ -574,6 +629,12 @@ export class MarkdownEngine {
     if (options.embedLocalImages) { // embed local images as Data URI
       let $ = cheerio.load(html, {xmlMode: true})
       $ = await this.embedLocalImages($)
+      html = $.html()
+    }
+
+    if (options.embedSVG) { // embed svg 
+      let $ = cheerio.load(html, {xmlMode: true})
+      $ = await this.embedSVG($)
       html = $.html()
     }
     
@@ -606,12 +667,13 @@ export class MarkdownEngine {
    * @param filePath 
    * @return dest if success, error if failure
    */
-  public async saveAsHTML():Promise<string> {
+  public async saveAsHTML(offline:boolean):Promise<string> {
     const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
     let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:true, hideFrontMatter:true, isForPreview: false})
     const htmlConfig = yamlConfig['html'] || {}
-    let cdn = htmlConfig['cdn'],
-        offline = !cdn
+    if ('cdn' in htmlConfig) {
+        offline = !htmlConfig['cdn']
+    }
     let embedLocalImages = htmlConfig['embed_local_images']
     
     let dest = this.filePath
@@ -622,7 +684,8 @@ export class MarkdownEngine {
         isForPrint: false, 
         isForPrince: false,
         embedLocalImages: embedLocalImages,
-        offline: !cdn
+        offline: offline,
+        embedSVG: true
     })
 
     const htmlFileName = path.basename(dest)
@@ -798,7 +861,7 @@ export class MarkdownEngine {
     results = results.sort((a, b)=> a['offset'] - b['offset'])
 
     results.forEach(({heading, id, level, filePath, html})=> {
-      const $ = cheerio.load(`<div>${html}</div>`, {xmlMode:true})
+      const $ = cheerio.load(`<div>${html}</div>`, {xmlMode: true})
       const $firstChild = $(':root').children().first()
       if ($firstChild.length) {
         $firstChild.attr('id', id)
@@ -1149,7 +1212,10 @@ export class MarkdownEngine {
       graphsCache[checksum] = svg // store to new cache 
 
     } else if (lang.match(/^mermaid$/)) { // mermaid 
-      const checksum = md5(optionsStr + code) 
+      /*
+      // it doesn't work well...
+      // the cache doesn't work well.
+      const checksum = md5(optionsStr + code)
       let svg:string = this.graphsCache[checksum]
       if (!svg) {
         $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
@@ -1157,6 +1223,8 @@ export class MarkdownEngine {
         $preElement.replaceWith(svg)
         graphsCache[checksum] = svg // store to new cache 
       }
+      */
+      $preElement.replaceWith(`<div class="mermaid">${code}</div>`)
     } else if (lang.match(/^(dot|viz)$/)) { // GraphViz
       const checksum = md5(optionsStr + code)
       let svg = this.graphsCache[checksum]
@@ -1328,6 +1396,7 @@ export class MarkdownEngine {
     // the line below actually has problem.
     if (options.isForPreview) {
       this.graphsCache = newGraphsCache
+      // console.log(this.graphsCache)
     } 
 
     return $.html()

@@ -158,9 +158,9 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.openInBrowser(sourceUri)
 	}
 
-	function saveAsHTML(uri) {
+	function saveAsHTML(uri, offline) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
-		contentProvider.saveAsHTML(sourceUri)
+		contentProvider.saveAsHTML(sourceUri, offline)
 	}
 
 	function princeExport(uri) {
