@@ -4,14 +4,17 @@ import * as fs from "fs"
 import * as plantumlAPI from "./puml"
 import * as utility from "./utility"
 import {svgElementToPNGFile} from "./magick"
-let Viz = require(path.resolve(utility.extensionDirectoryPath, './dependencies/viz/viz.js'))
+import {mermaidToPNG} from "./mermaid"
+const Viz = require(path.resolve(utility.extensionDirectoryPath, './dependencies/viz/viz.js'))
+const jsonic = require(path.resolve(utility.extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
+const md5 = require(path.resolve(utility.extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 
 export async function processGraphs(text:string, 
-{fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix, useRelativeFilePath, codeChunksData}:
-{fileDirectoryPath:string, projectDirectoryPath:string, imageDirectoryPath:string, imageFilePrefix:string, useRelativeFilePath:boolean, codeChunksData: {[key:string]: CodeChunkData}})
+{fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix, useRelativeFilePath, codeChunksData, graphsCache}:
+{fileDirectoryPath:string, projectDirectoryPath:string, imageDirectoryPath:string, imageFilePrefix:string, useRelativeFilePath:boolean, codeChunksData: {[key:string]: CodeChunkData}, graphsCache:{[key:string]:string}})
 :Promise<{outputString:string, imagePaths: string[]}> {
   let lines = text.split('\n')
-  const codes:Array<{start:number, end:number, content:string}> = []
+  const codes:Array<{start:number, end:number, content:string, options:object, optionsStr:string}> = []
 
   let i = 0
   while (i < lines.length) {
@@ -19,14 +22,31 @@ export async function processGraphs(text:string,
     const trimmedLine = line.trim()
 
     if (trimmedLine.match(/^```(.+)\"?cmd\"?\:/) || // code chunk
-        trimmedLine.match(/^```(puml|plantuml|dot|viz)/)) { // graphs
+        trimmedLine.match(/^```(puml|plantuml|dot|viz|mermaid)/)) { // graphs
       const numOfSpacesAhead = line.match(/^\s*/).length
-
       let j = i + 1
       let content = ''
       while (j < lines.length) {
         if (lines[j].trim() == '```' && lines[j].match(/^\s*/).length == numOfSpacesAhead) {
-          codes.push({start: i, end: j, content: content.trim()})
+          let options = {},
+              optionsStr = '',
+              optionsMatch
+          if (optionsMatch = trimmedLine.match(/\{(.+)\}$/)) {
+            try {
+              options = jsonic(optionsMatch[0])
+              optionsStr = optionsMatch[1]
+            } catch(error) {
+              options = {}
+            }
+          }
+
+          codes.push({
+            start: i, 
+            end: j, 
+            content,
+            options,
+            optionsStr
+          })
           i = j
           break
         }
@@ -90,12 +110,16 @@ export async function processGraphs(text:string,
 
   for (let i = 0; i < codes.length; i++) {
     const codeData = codes[i]
-    const {start, end, content} = codeData
+    const {start, end, content, options, optionsStr} = codeData
     const def = lines[start].trim().slice(3).trim()
 
     if (def.match(/^(puml|plantuml)/)) { 
       try {
-        const svg = await plantumlAPI.render(content, fileDirectoryPath)
+        const checksum = md5(optionsStr + content)
+        let svg 
+        if (!(svg = graphsCache[checksum])) { // check whether in cache
+          svg = await plantumlAPI.render(content, fileDirectoryPath)
+        }
         await convertSVGToPNGFile(svg, lines, start, end)
       } catch(error) {
         clearCodeBlock(lines, start, end)
@@ -103,12 +127,41 @@ export async function processGraphs(text:string,
       }
     } else if (def.match(/^(viz|dot)/)) {
       try {
-        const svg = Viz(content, {engine: "dot"})
+        const checksum = md5(optionsStr + content)
+        let svg 
+        if (!(svg = graphsCache[checksum])) {
+          const engine = options['engine'] || 'dot'
+          svg = Viz(content, {engine})
+        }
         await convertSVGToPNGFile(svg, lines, start, end)
       } catch(error) {
         clearCodeBlock(lines, start, end)
-        lines[end] += `\`\`\`\n${error}\n\`\`\`  `
+        lines[end] += `\n` + `\`\`\`\n${error}\n\`\`\`  \n`
       }
+    } else if (def.match(/^mermaid/))  {
+      // do nothing as it doesn't work well...
+      /*
+      try {
+        const pngFilePath = path.resolve(imageDirectoryPath, imageFilePrefix+imgCount+'.png')
+        imgCount++
+        await mermaidToPNG(content, pngFilePath)
+
+        let displayPNGFilePath
+        if (useRelativeFilePath) {
+          displayPNGFilePath = path.relative(fileDirectoryPath, pngFilePath) + '?' + Math.random()
+        } else {
+          displayPNGFilePath = '/' + path.relative(projectDirectoryPath, pngFilePath) + '?' + Math.random()
+        }
+        clearCodeBlock(lines, start, end)
+        
+        lines[end] += '\n' + `![](${displayPNGFilePath})  `
+
+        imagePaths.push(pngFilePath)
+      } catch(error) {
+        clearCodeBlock(lines, start, end)
+        lines[end] += `\n` + `\`\`\`\n${error}\n\`\`\`  \n`
+      }
+      */
     } else if (currentCodeChunk) { // code chunk
       if (currentCodeChunk.options['hide']) { // remove code block
         clearCodeBlock(lines, start, end)

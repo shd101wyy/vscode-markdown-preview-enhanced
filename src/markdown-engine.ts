@@ -923,6 +923,7 @@ export class MarkdownEngine {
       // deleteImages: true,
       filesCache: this.filesCache,
       codeChunksData: this.codeChunksData,
+      graphsCache: this.graphsCache,
       imageDirectoryPath: this.config.imageFolderPath
     }, config)
 
@@ -967,7 +968,8 @@ export class MarkdownEngine {
       filesCache: this.filesCache,
       mathInlineDelimiters: this.config.mathInlineDelimiters,
       mathBlockDelimiters: this.config.mathBlockDelimiters,
-      codeChunksData: this.codeChunksData
+      codeChunksData: this.codeChunksData,
+      graphsCache: this.graphsCache
     }, config)
   }
 

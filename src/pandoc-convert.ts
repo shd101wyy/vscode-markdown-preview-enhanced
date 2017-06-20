@@ -226,7 +226,7 @@ callback(err, outputFilePath)
  * @return outputFilePath
  */
 export async function pandocConvert(text, 
-  {fileDirectoryPath, projectDirectoryPath, sourceFilePath, filesCache, protocolsWhiteListRegExp, /*deleteImages=true,*/ codeChunksData, imageDirectoryPath}, 
+  {fileDirectoryPath, projectDirectoryPath, sourceFilePath, filesCache, protocolsWhiteListRegExp, /*deleteImages=true,*/ codeChunksData, graphsCache, imageDirectoryPath}, 
   config={}):Promise<string> {
     
   config = loadOutputYAML(fileDirectoryPath, config)
@@ -312,7 +312,7 @@ export async function pandocConvert(text,
   await utility.mkdirp(imageDirectoryPath) // create imageDirectoryPath
 
   const {outputString, imagePaths} = await processGraphs(text, 
-      {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix: md5(outputFilePath), useRelativeFilePath:true, codeChunksData})    
+      {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix: md5(outputFilePath), useRelativeFilePath:true, codeChunksData, graphsCache})    
   
   // pandoc will cause error if directory doesn't exist,
   // therefore I will create directory first.

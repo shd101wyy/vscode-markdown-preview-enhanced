@@ -129,8 +129,8 @@ function processPaths(text, fileDirectoryPath, projectDirectoryPath, useRelative
 }
 
 export async function markdownConvert(text, 
-{projectDirectoryPath, fileDirectoryPath, protocolsWhiteListRegExp, filesCache, mathInlineDelimiters, mathBlockDelimiters, codeChunksData}:
-{projectDirectoryPath:string, fileDirectoryPath:string, protocolsWhiteListRegExp:RegExp, filesCache:{[key:string]:string}, mathInlineDelimiters:string[][], mathBlockDelimiters:string[][], codeChunksData:{[key:string]:CodeChunkData}}, 
+{projectDirectoryPath, fileDirectoryPath, protocolsWhiteListRegExp, filesCache, mathInlineDelimiters, mathBlockDelimiters, codeChunksData, graphsCache}:
+{projectDirectoryPath:string, fileDirectoryPath:string, protocolsWhiteListRegExp:RegExp, filesCache:{[key:string]:string}, mathInlineDelimiters:string[][], mathBlockDelimiters:string[][], codeChunksData:{[key:string]:CodeChunkData}, graphsCache:{[key:string]:string}}, 
 config:object):Promise<string> {
   if (!config['path'])
     throw '{path} has to be specified'
@@ -169,7 +169,7 @@ config:object):Promise<string> {
       if (error) return reject(error.toString())
 
       processGraphs(text, 
-      {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix: md5(outputFilePath), useRelativeFilePath, codeChunksData})
+      {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix: md5(outputFilePath), useRelativeFilePath, codeChunksData, graphsCache})
       .then(({outputString})=> {
         fs.writeFile(outputFilePath, outputString, {encoding: 'utf-8'}, (error)=> {
           if (error) return reject(error.toString())
