@@ -59,7 +59,7 @@ return new Promise<string>((resolve, reject)=> {
         items.forEach((fileName)=> {
           let match 
           if (match = fileName.match(new RegExp(`^${svgFilePrefix}(\\d+)\.svg`))) {
-            const svgFilePath = path.relative(markdownDirectoryPath, path.resolve(svgDirectoryPath, fileName))
+            let svgFilePath = path.relative(markdownDirectoryPath, path.resolve(svgDirectoryPath, fileName))
 
             // nvm, the converted result looks so ugly
             /*
@@ -72,6 +72,7 @@ return new Promise<string>((resolve, reject)=> {
               console.log(error, pngFilePath)
             })
             */
+            svgFilePath = svgFilePath.replace(/\.\.\\/g, '../') /* Windows file path issue. "..\..\blabla" doesn't work */
 
             if (svgZoom || svgWidth || svgHeight)
               svgMarkdown += `<img src=\"${svgFilePath}\" ${svgWidth ? `width="${svgWidth}"` : ""} ${svgHeight ? `height="${svgHeight}"` : ''} ${svgZoom ? `style="zoom:${svgZoom};"` : ""}>`
@@ -79,7 +80,7 @@ return new Promise<string>((resolve, reject)=> {
               svgMarkdown += `![](${svgFilePath}?${r})\n`
           }
         })
-
+        console.log(svgMarkdown)
         return resolve(svgMarkdown)
       })
     }
