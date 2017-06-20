@@ -2,6 +2,9 @@ import * as path from "path"
 import * as fs from "fs"
 
 import * as plantumlAPI from "./puml"
+import * as utility from "./utility"
+import {svgElementToPNGFile} from "./magick"
+let Viz = null
 
 export async function processGraphs(text:string, 
 {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix, useRelativeFilePath, codeChunksData}:
@@ -58,21 +61,56 @@ export async function processGraphs(text:string,
     }
   }
 
-  codes.forEach((codeData)=> {
+  function clearCodeBlock(lines:string[], start:number, end:number) {
+    let i = start
+    while (i <= end) {
+      lines[i] = ''
+      i += 1
+    }
+  }
+
+  async function convertSVGToPNGFile(svg:string, lines:string[], start:number, end:number) {
+    const pngFilePath = path.resolve(imageDirectoryPath, imageFilePrefix+imgCount+'.png')
+    await svgElementToPNGFile(svg, pngFilePath)
+    let displayPNGFilePath
+    if (useRelativeFilePath) {
+      displayPNGFilePath = path.relative(fileDirectoryPath, pngFilePath) + '?' + Math.random()
+    } else {
+      displayPNGFilePath = '/' + path.relative(projectDirectoryPath, pngFilePath) + '?' + Math.random()
+    }
+
+    imgCount++
+    clearCodeBlock(lines, start, end)
+    lines[end] += '\n' + `![](${displayPNGFilePath})  `
+  }
+
+  for (let i = 0; i < codes.length; i++) {
+    const codeData = codes[i]
     const {start, end, content} = codeData
     const def = lines[start].trim().slice(3).trim()
 
     if (def.match(/^(puml|plantuml)/)) { 
-
+      try {
+        const svg = await plantumlAPI.render(content, fileDirectoryPath)
+        await convertSVGToPNGFile(svg, lines, start, end)
+      } catch(error) {
+        clearCodeBlock(lines, start, end)
+        lines[end] += `\n` + `\`\`\`\n${error}\n\`\`\`  \n`
+      }
     } else if (def.match(/^(viz|dot)/)) {
-
+      if (!Viz) {
+        Viz = require(path.resolve(utility.extensionDirectoryPath, './dependencies/viz/viz.js'))
+      }
+      try {
+        const svg = Viz(content, {engine: "dot"})
+        await convertSVGToPNGFile(svg, lines, start, end)
+      } catch(error) {
+        clearCodeBlock(lines, start, end)
+        lines[end] += `\`\`\`\n${error}\n\`\`\`  `
+      }
     } else if (currentCodeChunk) { // code chunk
       if (currentCodeChunk.options['hide']) { // remove code block
-        let i = start
-        while (i <= end) {
-          lines[i] = null
-          i += 1
-        }
+        clearCodeBlock(lines, start, end)
       } else { // remove {...} after ```lang 
         const line = lines[start]
         const indexOfFirstSpace = line.indexOf(' ', line.indexOf('```'))
@@ -85,7 +123,7 @@ export async function processGraphs(text:string,
       }
       currentCodeChunk = codeChunksData[currentCodeChunk.next]
     }
-  })
+  }
 
   await Promise.all(asyncFunctions)
 

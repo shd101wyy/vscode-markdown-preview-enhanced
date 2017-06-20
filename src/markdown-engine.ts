@@ -9,7 +9,7 @@ const matter = require('gray-matter')
 import * as plantumlAPI from "./puml"
 import {escapeString, unescapeString, readFile} from "./utility"
 import * as utility from "./utility"
-let viz = null
+let Viz = null
 import {scopeForLanguageName} from "./extension-helper"
 import {transformMarkdown} from "./transformer"
 import {toc} from "./toc"
@@ -1130,13 +1130,13 @@ export class MarkdownEngine {
       const checksum = md5(optionsStr + code)
       let svg = this.graphsCache[checksum]
       if (!svg) {
-        if (!viz) viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
+        if (!Viz) Viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
         
         try {
           let engine = options['engine'] || "dot"
-          svg = viz(code, {engine})
+          svg = Viz(code, {engine})
         } catch(e) {
-          $preElement.replaceWith(`<pre>${e.toString()}</pre>`)
+          $preElement.replaceWith(`<pre class="language-text">${e.toString()}</pre>`)
         }
       } 
 

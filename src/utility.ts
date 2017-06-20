@@ -2,6 +2,7 @@ import * as path from "path"
 import * as fs from "fs"
 import * as os from "os"
 import {exec} from "child_process"
+import * as child_process from "child_process"
 import * as less from "less"
 
 import * as temp from "temp"
@@ -68,6 +69,16 @@ export function tempOpen(options):Promise<any> {
     temp.open(options, function(error, info) {
       if (error) return reject(error.toString())
       return resolve(info)
+    })
+  })
+}
+
+export function execFile(file:string, args:string[], options?:object):Promise<string> {
+  return new Promise((resolve, reject)=> {
+    child_process.execFile(file, args, options, (error, stdout, stderr)=> {
+      if (error) return reject(error.toString())
+      else if (stderr) return reject(stderr)
+      else return resolve(stdout)
     })
   })
 }

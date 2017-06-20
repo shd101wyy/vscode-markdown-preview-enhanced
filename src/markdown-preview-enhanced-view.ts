@@ -336,7 +336,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <div class="mpe-toolbar">
           <div class="back-to-top-btn btn"><span>⬆︎</span></div>
           <div class="refresh-btn btn"><span>⟳︎</span></div>
-          <div class="sidebar-toc-btn btn"><span>≡</span></div>
+          <div class="sidebar-toc-btn btn"><span>§</span></div>
         </div>
 
         <div id="image-helper-view">
