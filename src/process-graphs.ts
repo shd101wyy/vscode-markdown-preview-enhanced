@@ -185,6 +185,8 @@ export async function processGraphs(text:string,
             const pngFilePath = await convertSVGToPNGFile($.html('svg'), lines, start, end, false)
             result = `![](${pngFilePath})  \n`
           }
+        } else if (currentCodeChunk.options['output'] === 'markdown') {
+          result = currentCodeChunk.plainResult
         }
 
         lines[end] += ('\n' + result)

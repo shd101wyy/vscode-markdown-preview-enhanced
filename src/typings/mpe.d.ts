@@ -54,6 +54,11 @@ interface CodeChunkData {
   /**
    * result after running code chunk
    */
+  plainResult: string,
+
+  /**
+   * result after formatting according to options['output'] format
+   */
   result: string,
   /**
    * whether is running the code chunk or not

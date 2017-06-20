@@ -1027,6 +1027,7 @@ export class MarkdownEngine {
       } else {
         result = await CodeChunkAPI.run(code, this.fileDirectoryPath, codeChunkData.options)
       }
+      codeChunkData.plainResult = result
 
       if (codeChunkData.options['modify_source'] && ('code_chunk_offset' in codeChunkData.options)) {
         codeChunkData.result = ''
@@ -1189,6 +1190,7 @@ export class MarkdownEngine {
           code,
           options: options,
           result: '',
+          plainResult: '',
           running: false,
           prev: previousCodeChunkDataId,
           next: null
