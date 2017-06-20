@@ -667,6 +667,27 @@ async function initEvents() {
   mpe.refreshingIcon.style.display = "none"
 }
 
+function bindTagAClickEvent() {
+  const as = mpe.previewElement.getElementsByTagName('a')
+  for (let i = 0; i < as.length; i++) {
+    const a = as[i]
+    const href =  a.getAttribute('href')
+    if (href && href[0] === '#') {
+      // anchor, do nothing 
+    } else {
+      a.onclick = (event)=> {
+        event.preventDefault()
+        event.stopPropagation()
+
+        window.parent.postMessage({ 
+          command: 'did-click-link', // <= this has to be `did-click-link` to post message
+          data: `command:_markdown-preview-enhanced.clickTagA?${JSON.stringify([sourceUri, href])}`
+        }, 'file://')
+      }
+    }
+  }
+}
+
 /**
  * update previewElement innerHTML content
  * @param html 
@@ -695,6 +716,8 @@ function updateHTML(html) {
   // init several events 
   initEvents().then(()=> {
     mpe.scrollMap = null 
+
+    bindTagAClickEvent()
     
     // scroll to initial position 
     if (!mpe.doneLoadingPreview) {

@@ -232,6 +232,20 @@ export function activate(context: vscode.ExtensionContext) {
 				type: 'run-code-chunk'
 			})
 	}
+
+	function clickTagA(uri, href) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		if (['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(path.extname(href)) >= 0) {
+			utility.openFile(href)
+		} else if (href.match(/^file\:\/\/\//)) {
+			// openFilePath = href.slice(8) # remove protocal
+			let openFilePath = href.replace(/(\s*)[\#\?](.+)$/, '') // remove #anchor and ?params...
+			openFilePath = decodeURI(openFilePath)
+		  vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(openFilePath), vscode.ViewColumn.One)
+		} else {
+			utility.openFile(href)
+		}
+	}
 	
 
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
@@ -363,6 +377,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runCodeChunk', runCodeChunk))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunks))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.clickTagA', clickTagA))
 
   context.subscriptions.push(contentProviderRegistration)
 }
