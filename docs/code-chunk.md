@@ -111,6 +111,12 @@ If set `class:"class1 class2"`, then `class1 class2` will be add to the code chu
 The element that you want to append after.  
 Check the **Plotly** example below.
 
+**run_on_save** `boolean`  
+Run code chunk when the markdown file is saved. Default `false`.  
+
+**modify_source** `boolean`  
+Insert code chunk output directly into markdown source file. Default `false`.  
+
 **id**  
 The `id` of the code chunk. This option would be useful if `continue` is used.     
 

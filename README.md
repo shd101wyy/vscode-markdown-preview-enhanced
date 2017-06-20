@@ -9,21 +9,43 @@ Below is a demo of the Atom version.
 ![](https://user-images.githubusercontent.com/1908863/26898176-a5cad7fc-4b90-11e7-9d8c-74f85f28f133.gif)
 
 ## Features
-
-Right now only 50% done:   
 * <kbd>ctrl-shift-m</kbd> for `Markdown Preview Enhanced: Open Preview` command.  
 * <kbd>ctrl-shift-i</kbd> for `Markdown Preview Enhanced: Image Helper` command.    
     * Support uploading images to either `imgur` or `sm.ms`.  
 ![Screen Shot 2017-06-15 at 1.31.01 AM](https://ooo.0o0.ooo/2017/06/15/59422aa748341.png)  
 * <kbd>shift-enter</kbd> for `Markdown Preview Enhanced: Run Code Chunk` command.  
 * <kbd>ctrl-shift-enter</kbd> for `Markdown Preview Enhanced: Run All Code Chunks` command.  
+* `Markdown Preview Enhanced: Customize CSS`    
+* `Markdown Preview Enhanced: Create TOC`  
+* `Markdown Preview Enhanced: Open Mermaid Config`
+* `Markdown Preview Enhanced: Open MathJax Config`  
+* `Markdown Preview Enhanced: Insert New Slide`  
+* `Markdown Preview Enhanced: Insert Table`  
+* `Markdown Preview Enhanced: Insert Page Break`  
 
-* **Right Click** at the Preview to see the contextmenu
+
+* **Right Click** at the Preview to see the contextmenu  
+
 ![Screen Shot 2017-06-15 at 1.36.32 AM](https://ooo.0o0.ooo/2017/06/15/59422b1ab3931.png)
 
 For more features that will be supported in the future, check [Markdown Preview Enhanced for atom](https://shd101wyy.github.io/markdown-preview-enhanced/#/).
 
 ### Progress so far 
+#### June 20, 2017
+Basically finished.   
+* Done [Pandoc export](https://shd101wyy.github.io/markdown-preview-enhanced/#/pandoc-pdf). (Not tested).  
+* Done Markdown(GFM) export. (Not tested)   
+* Done [TOC](https://shd101wyy.github.io/markdown-preview-enhanced/#/toc) implementation.   
+    > The vscode version is newer than the atom version.   
+    > To ignore a heading from TOC, you need to set `{ignore: true}`.  
+    > To add class and id, you need to set `{id:"...", class:"..."}`.  
+* Done Code Chunk implementation. Added two more options `modify_source` and `run_on_save`. Please check [this doc](./docs/code-chunk.md) for more information.   
+* Done [Customize CSS](https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css) support.  
+* Done `mermaid` configuration supoort.    
+* Done `MathJax` configuration support.   
+* Done `line-numbers`. Simply add `line-numbers` to code block(chunk) `class`.  
+![Screen Shot 2017-06-20 at 9.46.12 AM](https://ooo.0o0.ooo/2017/06/20/594939ec162d9.png)
+
 #### June 16, 2017
 * Done supporting [eBook export](https://shd101wyy.github.io/markdown-preview-enhanced/#/ebook).  
 * [@import](https://shd101wyy.github.io/markdown-preview-enhanced/#/file-imports) 70% done. Now support importing every external files except `.js` and `.pdf` files.  

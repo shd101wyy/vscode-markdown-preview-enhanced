@@ -394,7 +394,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         })
 
       engine.parseMD(text, {isForPreview: true, useRelativeFilePath: false, hideFrontMatter: false, triggeredBySave})
-      .then(({markdown, html, tocHTML, JSAndCssFiles})=> {
+      .then(({markdown, html, tocHTML, JSAndCssFiles, yamlConfig})=> {
 
         // check JSAndCssFiles 
         if (JSON.stringify(JSAndCssFiles) !== JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath])) {
@@ -410,8 +410,10 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
               html: html,
               tocHTML: tocHTML,
               totalLineCount: document.lineCount,
-              sourceUri: sourceUri.toString()
-            })
+              sourceUri: sourceUri.toString(),
+              id: yamlConfig.id || '',
+              class: yamlConfig.class || ''
+          })
         }
       })
     })

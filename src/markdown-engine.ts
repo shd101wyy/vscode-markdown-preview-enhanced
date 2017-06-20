@@ -559,7 +559,10 @@ export class MarkdownEngine {
 
       ${presentationScript}
 
-      <style> ${styleCSS}${globalStyles} </style>
+      <style> 
+      ${styleCSS} 
+      ${globalStyles} 
+      </style>
     </head>
     <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
     ${html}
@@ -867,7 +870,10 @@ export class MarkdownEngine {
     <title>${title}</title>
     <meta charset=\"utf-8\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <style> ${styleCSS} ${globalStyles} </style>
+    <style> 
+    ${styleCSS} 
+    ${globalStyles} 
+    </style>
     ${mathStyle}
   </head>
   <body class="markdown-preview-enhanced">

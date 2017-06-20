@@ -692,7 +692,7 @@ function bindTagAClickEvent() {
  * update previewElement innerHTML content
  * @param html 
  */
-function updateHTML(html) {
+function updateHTML(html:string, id:string, classes:string) {
   // editorScrollDelay = Date.now() + 500
   mpe.previewScrollDelay = Date.now() + 500
 
@@ -718,11 +718,19 @@ function updateHTML(html) {
     mpe.scrollMap = null 
 
     bindTagAClickEvent()
+
+    // set id and classes
+    mpe.previewElement.id = id || ''
+    mpe.previewElement.setAttribute('class', `markdown-preview-enhanced ${classes}`)
     
     // scroll to initial position 
     if (!mpe.doneLoadingPreview) {
       mpe.doneLoadingPreview = true
       scrollToRevealSourceLine(config['initialLine'])
+
+      // clear @scrollMap after 2 seconds because sometimes
+      // loading images will change scrollHeight.
+      setTimeout(()=> mpe.scrollMap = null, 2000) 
     } else { // restore scrollTop
       mpe.previewElement.scrollTop = scrollTop // <= This line is necessary...
     }
@@ -1000,7 +1008,7 @@ window.addEventListener('message', (event)=> {
     mpe.sidebarTOCHTML = data.tocHTML
     sourceUri = data.sourceUri
     renderSidebarTOC()
-    updateHTML(data.html)
+    updateHTML(data.html, data.id, data.class)
   } else if (data.type === 'change-text-editor-selection') {
     const line = parseInt(data.line)
     scrollToRevealSourceLine(line)
