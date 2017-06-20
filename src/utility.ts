@@ -4,6 +4,7 @@ import * as os from "os"
 import {exec} from "child_process"
 import * as child_process from "child_process"
 import * as less from "less"
+import * as mkdirp_ from "mkdirp"
 
 import * as temp from "temp"
 temp.track()
@@ -79,6 +80,15 @@ export function execFile(file:string, args:string[], options?:object):Promise<st
       if (error) return reject(error.toString())
       else if (stderr) return reject(stderr)
       else return resolve(stdout)
+    })
+  })
+}
+
+export function mkdirp(dir:string):Promise<boolean> {
+  return new Promise((resolve, reject)=> {
+    mkdirp_(dir, (error, made)=> {
+      if (error) return reject(error)
+      return resolve(made)
     })
   })
 }

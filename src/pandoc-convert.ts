@@ -6,6 +6,9 @@ import * as mkdirp from "mkdirp"
 const matter = require('gray-matter')
 
 import {transformMarkdown} from "./transformer"
+import {processGraphs} from "./process-graphs"
+import * as utility from "./utility"
+const md5 = require(path.resolve(utility.extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 
 function getFileExtension(documentType:string) {
   if (documentType === 'pdf_document' || documentType === 'beamer_presentation')
@@ -223,7 +226,7 @@ callback(err, outputFilePath)
  * @return outputFilePath
  */
 export async function pandocConvert(text, 
-  {fileDirectoryPath, projectDirectoryPath, sourceFilePath, filesCache, protocolsWhiteListRegExp, deleteImages=true}, 
+  {fileDirectoryPath, projectDirectoryPath, sourceFilePath, filesCache, protocolsWhiteListRegExp, /*deleteImages=true,*/ codeChunksData, imageDirectoryPath}, 
   config={}):Promise<string> {
     
   config = loadOutputYAML(fileDirectoryPath, config)
@@ -302,28 +305,33 @@ export async function pandocConvert(text,
   if (config['bibliography'] || config['references'])
     args.push('--filter', 'pandoc-citeproc')
 
-  // # mermaid / viz / wavedrom graph
-  // processGraphs text, {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath: fileDirectoryPath, forPandoc:true}, (text, imagePaths=[])->
-    // console.log args.join(' ')
-    // 
-    // pandoc will cause error if directory doesn't exist,
-    // therefore I will create directory first.
+  if (imageDirectoryPath[0] === '/') 
+    imageDirectoryPath = path.resolve(projectDirectoryPath, '.' + imageDirectoryPath)
+  else 
+    imageDirectoryPath = path.resolve(fileDirectoryPath, imageDirectoryPath)
+  await utility.mkdirp(imageDirectoryPath) // create imageDirectoryPath
+
+  const {outputString, imagePaths} = await processGraphs(text, 
+      {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix: md5(outputFilePath), useRelativeFilePath:true, codeChunksData})    
+  
+  // pandoc will cause error if directory doesn't exist,
+  // therefore I will create directory first.
+  await utility.mkdirp(path.dirname(outputFilePath))
+
   return await new Promise<string>((resolve, reject)=> {
-    mkdirp(path.dirname(outputFilePath), (error, made)=> {
-      // const pandocPath = atom.config.get('markdown-preview-enhanced.pandocPath')
-      const pandocPath = 'pandoc'
-      const program = execFile(pandocPath, args, (error)=> {
-        // if deleteImages
-        //# remove images
-        //  imagePaths.forEach (p)->
-        //    fs.unlink(p)
-        process.chdir(cwd) // change cwd back
+    // const pandocPath = atom.config.get('markdown-preview-enhanced.pandocPath')
+    const pandocPath = 'pandoc'
+    const program = execFile(pandocPath, args, (error)=> {
+      /*if (deleteImages) {
+        imagePaths.forEach((p)=> fs.unlink(p, (error)=>{}))
+      }*/
 
-        if (error) return reject(error.toString())
-        return resolve(outputFilePath)
-      })
+      process.chdir(cwd) // change cwd back
 
-      program.stdin.end(text)
+      if (error) return reject(error.toString())
+      return resolve(outputFilePath)
     })
+
+    program.stdin.end(outputString)
   })
 }

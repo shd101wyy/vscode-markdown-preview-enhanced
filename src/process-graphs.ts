@@ -4,7 +4,7 @@ import * as fs from "fs"
 import * as plantumlAPI from "./puml"
 import * as utility from "./utility"
 import {svgElementToPNGFile} from "./magick"
-let Viz = null
+let Viz = require(path.resolve(utility.extensionDirectoryPath, './dependencies/viz/viz.js'))
 
 export async function processGraphs(text:string, 
 {fileDirectoryPath, projectDirectoryPath, imageDirectoryPath, imageFilePrefix, useRelativeFilePath, codeChunksData}:
@@ -37,6 +37,8 @@ export async function processGraphs(text:string,
       const indexOfFirstSpace = line.indexOf(' ', line.indexOf('```'))
       if (indexOfFirstSpace > 0)
         lines[i] = line.slice(0, indexOfFirstSpace)
+    } else if (!trimmedLine) {
+      lines[i] = '  '
     } 
 
     i += 1
@@ -82,6 +84,8 @@ export async function processGraphs(text:string,
     imgCount++
     clearCodeBlock(lines, start, end)
     lines[end] += '\n' + `![](${displayPNGFilePath})  `
+
+    imagePaths.push(pngFilePath)
   }
 
   for (let i = 0; i < codes.length; i++) {
@@ -98,9 +102,6 @@ export async function processGraphs(text:string,
         lines[end] += `\n` + `\`\`\`\n${error}\n\`\`\`  \n`
       }
     } else if (def.match(/^(viz|dot)/)) {
-      if (!Viz) {
-        Viz = require(path.resolve(utility.extensionDirectoryPath, './dependencies/viz/viz.js'))
-      }
       try {
         const svg = Viz(content, {engine: "dot"})
         await convertSVGToPNGFile(svg, lines, start, end)

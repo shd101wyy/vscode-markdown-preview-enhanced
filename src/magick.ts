@@ -15,7 +15,8 @@ export async function svgElementToPNGFile(svgElement:string, pngFilePath:string)
   try {
     await utility.execFile('magick', [info.path, pngFilePath])
   } catch(error) {
-    throw "ImageMagick is required to be installed to convert svg to png."
+    console.log(error)
+    throw "ImageMagick is required to be installed to convert svg to png.\n" + error.toString()
   }
   return pngFilePath
 }

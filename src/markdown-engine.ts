@@ -9,7 +9,6 @@ const matter = require('gray-matter')
 import * as plantumlAPI from "./puml"
 import {escapeString, unescapeString, readFile} from "./utility"
 import * as utility from "./utility"
-let Viz = null
 import {scopeForLanguageName} from "./extension-helper"
 import {transformMarkdown} from "./transformer"
 import {toc} from "./toc"
@@ -26,6 +25,7 @@ const remarkable = require(path.resolve(extensionDirectoryPath, './dependencies/
 const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/jsonic/jsonic.js'))
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 const CryptoJS = require(path.resolve(extensionDirectoryPath, './dependencies/crypto-js/crypto-js.js'))
+const Viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
 
 // import * as uslug from "uslug"
 // import * as Prism from "prismjs"
@@ -920,8 +920,10 @@ export class MarkdownEngine {
       projectDirectoryPath: this.projectDirectoryPath,
       sourceFilePath: this.filePath,
       protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
-      deleteImages: true,
-      filesCache: this.filesCache
+      // deleteImages: true,
+      filesCache: this.filesCache,
+      codeChunksData: this.codeChunksData,
+      imageDirectoryPath: this.config.imageFolderPath
     }, config)
 
     utility.openFile(outputFilePath)
@@ -1129,19 +1131,20 @@ export class MarkdownEngine {
     } else if (lang.match(/^(dot|viz)$/)) { // GraphViz
       const checksum = md5(optionsStr + code)
       let svg = this.graphsCache[checksum]
-      if (!svg) {
-        if (!Viz) Viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
-        
+      if (!svg) {        
         try {
           let engine = options['engine'] || "dot"
           svg = Viz(code, {engine})
+          
+          $preElement.replaceWith(`<p>${svg}</p>`)
+          graphsCache[checksum] = svg // store to new cache
         } catch(e) {
           $preElement.replaceWith(`<pre class="language-text">${e.toString()}</pre>`)
         }
-      } 
-
-      $preElement.replaceWith(`<p>${svg}</p>`)
-      graphsCache[checksum] = svg // store to new cache
+      } else {
+        $preElement.replaceWith(`<p>${svg}</p>`)
+        graphsCache[checksum] = svg // store to new cache
+      }
     } else if (options['cmd']) {
       const $el = $("<div class=\"code-chunk\"></div>") // create code chunk
       if (!options['id']) {
