@@ -163,6 +163,11 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.saveAsHTML(sourceUri, offline)
 	}
 
+	function phantomjsExport(uri, type) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.phantomjsExport(sourceUri, type)
+	}
+
 	function princeExport(uri) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.princeExport(sourceUri)
@@ -359,6 +364,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.openInBrowser', openInBrowser))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.saveAsHTML', saveAsHTML))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.phantomjsExport', phantomjsExport))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.princeExport', princeExport))
 

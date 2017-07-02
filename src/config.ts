@@ -33,6 +33,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly imageFolderPath: string
   public readonly imageUploader: string
 
+  public readonly phantomPath: string 
+  public readonly pandocPath: string
+
   private constructor() {
     const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
 
@@ -51,6 +54,8 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.protocolsWhiteList = config.get<string>('protocolsWhiteList')
     this.imageFolderPath = config.get<string>('imageFolderPath')
     this.imageUploader = config.get<string>('imageUploader')
+    this.phantomPath = config.get<string>('phantomPath')
+    this.pandocPath = config.get<string>('pandocPath')
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

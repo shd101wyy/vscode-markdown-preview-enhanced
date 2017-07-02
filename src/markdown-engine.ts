@@ -26,6 +26,7 @@ const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/json
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 const CryptoJS = require(path.resolve(extensionDirectoryPath, './dependencies/crypto-js/crypto-js.js'))
 const Viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
+const pdf = require(path.resolve(extensionDirectoryPath, './dependencies/node-html-pdf/index.js'))
 
 // import * as uslug from "uslug"
 // import * as Prism from "prismjs"
@@ -59,10 +60,30 @@ interface MarkdownEngineOutput {
 }
 
 interface HTMLTemplateOption {
+  /**
+   * whether is for print. 
+   */
   isForPrint: boolean
+  /**
+   * whether is for prince export. 
+   */
   isForPrince: boolean
+  /**
+   * if it's for phantomjs export, what is the export file type.
+   * `pdf`, `jpeg`, and `png` are available.
+   */
+  phantomjsType?: string
+  /**
+   * whether for offline use
+   */
   offline: boolean
+  /**
+   * whether to embed local images as base64
+   */
   embedLocalImages: boolean
+  /**
+   * whether to embed svg images
+   */
   embedSVG?: boolean
 }
 
@@ -146,6 +167,7 @@ export class MarkdownEngine {
     this.fileDirectoryPath = path.dirname(this.filePath)
     this.projectDirectoryPath = args.projectDirectoryPath || '/'
     this.config = args.config
+
     this.initConfig()
     this.headings = []
     this.tocHTML = ''
@@ -163,6 +185,9 @@ export class MarkdownEngine {
     // protocal whitelist
     const protocolsWhiteList = this.config.protocolsWhiteList.split(',').map((x)=>x.trim()) || ['http', 'https', 'atom', 'file']
     this.protocolsWhiteListRegExp = new RegExp('^(' + protocolsWhiteList.join('|')+')\:\/\/')  // eg /^(http|https|atom|file)\:\/\//
+
+    this.config.pandocPath = this.config.pandocPath || 'pandoc'
+    this.config.phantomPath = this.config.phantomPath || 'phantomjs'
   }
 
   public updateConfiguration(config) {
@@ -573,6 +598,16 @@ export class MarkdownEngine {
       princeClass = "prince"
     }
 
+    // phantomjs 
+    let phantomjsClass = ""
+    if (options.phantomjsType) {
+      if (options.phantomjsType === 'pdf') {
+        phantomjsClass = 'phantomjs-pdf'
+      } else {
+        phantomjsClass = 'phantomjs-image'
+      }
+    }
+
     let title = path.basename(this.filePath)
     title = title.slice(0, title.length - path.extname(title).length) // remove '.md'
 
@@ -619,7 +654,7 @@ export class MarkdownEngine {
       ${globalStyles} 
       </style>
     </head>
-    <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
+    <body class="markdown-preview-enhanced ${princeClass} ${phantomjsClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
     ${html}
     </body>
     ${presentationInitScript}
@@ -703,6 +738,47 @@ export class MarkdownEngine {
 
     await utility.writeFile(dest, html)
     return dest
+  }
+
+  /**
+   * Phantomjs file export
+   * The config could be set by front-matter. 
+   * Check https://github.com/marcbachmann/node-html-pdf website.  
+   * @param type the export file type 
+   */
+  public async phantomjsExport(type:string = "pdf"):Promise<string> {
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:false, hideFrontMatter:true, isForPreview: false})
+    let dest = this.filePath
+    let extname = path.extname(dest)
+    dest = dest.replace(new RegExp(extname + '$'), '.' + type)
+
+    html = await this.generateHTMLFromTemplate(html, yamlConfig, {
+      isForPrint: true,
+      isForPrince: false,
+      embedLocalImages: false,
+      offline: true,
+      phantomjsType: type
+    })
+
+    const phantomjsConfig = Object.assign({
+      type: type,
+      script: path.join(extensionDirectoryPath, './dependencies/phantomjs/pdf_a4_portrait.js')
+    }, yamlConfig['phantomjs'] || yamlConfig['phantom'] || {})
+    if (!phantomjsConfig['phantomPath']) {
+      phantomjsConfig['phantomPath'] = this.config.phantomPath
+    }
+
+    return await new Promise<string>((resolve, reject)=> {
+      pdf.create(html, phantomjsConfig)
+      .toFile(dest, (error, res)=> {
+        if (error) {
+          return reject(error)
+        } else {
+          return resolve(dest)
+        }
+      })
+    })
   }
 
   /**

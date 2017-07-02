@@ -35,6 +35,8 @@ interface MarkdownEngineConfig {
   mermaidTheme: string
   frontMatterRenderingOption: string 
   imageFolderPath: string
+  phantomPath: string 
+  pandocPath: string
 }
 
 

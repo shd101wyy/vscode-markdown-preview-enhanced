@@ -232,6 +232,16 @@
                         "imgur",
                         "sm.ms"
                     ]
+                },
+                "markdown-preview-enhanced.phantomPath": {
+                    "description": "PhantomJS executable path",
+                    "default": "phantomjs",
+                    "type": "string"
+                },
+                "markdown-preview-enhanced.pandocPath": {
+                    "description": "Pandoc executable path",
+                    "default": "pandoc",
+                    "type": "string"
                 }
             }
         }

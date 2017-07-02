@@ -318,6 +318,30 @@ function initContextMenu() {
           }
         }
       },
+      "phantomjs_export": 
+      {
+        name: "PhantomJS",
+        items: {
+          "phantomjs_pdf": {
+            name: "PDF",
+            callback() {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.phantomjsExport?${JSON.stringify([sourceUri, 'pdf'])}`}, 'file://') 
+            }
+          },
+          "phantomjs_png": {
+            name: "PNG",
+            callback() {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.phantomjsExport?${JSON.stringify([sourceUri, 'png'])}`}, 'file://') 
+            }
+          },
+          "phantomjs_jpeg": {
+            name: "JPEG",
+            callback() {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.phantomjsExport?${JSON.stringify([sourceUri, 'jpeg'])}`}, 'file://') 
+            }
+          }
+        }
+      },
       "prince_export": 
       {
         name: "PDF (prince)",
