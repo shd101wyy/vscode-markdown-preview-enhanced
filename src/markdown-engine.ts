@@ -186,6 +186,7 @@ export class MarkdownEngine {
     const protocolsWhiteList = this.config.protocolsWhiteList.split(',').map((x)=>x.trim()) || ['http', 'https', 'atom', 'file']
     this.protocolsWhiteListRegExp = new RegExp('^(' + protocolsWhiteList.join('|')+')\:\/\/')  // eg /^(http|https|atom|file)\:\/\//
 
+    this.config.printBackground = this.config.printBackground || false
     this.config.pandocPath = this.config.pandocPath || 'pandoc'
     this.config.phantomPath = this.config.phantomPath || 'phantomjs'
   }
@@ -620,6 +621,8 @@ export class MarkdownEngine {
         // prism *.css
         utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`), {encoding:'utf-8'}),
         // preview theme
+        (options.isForPrint && !this.config.printBackground) ? 
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/github-light.css`), {encoding:'utf-8'}) :
         utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`), {encoding:'utf-8'})
       ])
       styleCSS = styles.join('')
@@ -763,6 +766,8 @@ export class MarkdownEngine {
 
     const phantomjsConfig = Object.assign({
       type: type,
+      border: '1cm',
+      quality: '75',
       script: path.join(extensionDirectoryPath, './dependencies/phantomjs/pdf_a4_portrait.js')
     }, yamlConfig['phantomjs'] || yamlConfig['phantom'] || {})
     if (!phantomjsConfig['phantomPath']) {
@@ -775,6 +780,7 @@ export class MarkdownEngine {
         if (error) {
           return reject(error)
         } else {
+          utility.openFile(dest)
           return resolve(dest)
         }
       })

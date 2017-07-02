@@ -33,6 +33,8 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly imageFolderPath: string
   public readonly imageUploader: string
 
+  public readonly printBackground: boolean
+
   public readonly phantomPath: string 
   public readonly pandocPath: string
 
@@ -54,6 +56,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.protocolsWhiteList = config.get<string>('protocolsWhiteList')
     this.imageFolderPath = config.get<string>('imageFolderPath')
     this.imageUploader = config.get<string>('imageUploader')
+    this.printBackground = config.get<boolean>('printBackground')
     this.phantomPath = config.get<string>('phantomPath')
     this.pandocPath = config.get<string>('pandocPath')
   }

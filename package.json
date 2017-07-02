@@ -233,6 +233,11 @@
                         "sm.ms"
                     ]
                 },
+                "markdown-preview-enhanced.printBackground": {
+                    "description": "Whether to print background for PDF file export or not. If set to `false`, then white background and black font will be used.",
+                    "default": false,
+                    "type": "boolean"  
+                },
                 "markdown-preview-enhanced.phantomPath": {
                     "description": "PhantomJS executable path",
                     "default": "phantomjs",

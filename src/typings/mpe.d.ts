@@ -35,6 +35,7 @@ interface MarkdownEngineConfig {
   mermaidTheme: string
   frontMatterRenderingOption: string 
   imageFolderPath: string
+  printBackground: boolean
   phantomPath: string 
   pandocPath: string
 }
