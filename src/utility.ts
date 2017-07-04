@@ -151,34 +151,79 @@ export async function getGlobalStyles():Promise<string> {
 /**
  * load ~/.markdown-preview-enhanced/mermaid_config.js file.  
  */
-export async function getMermaidConfig():Promise<object> {
+export async function getMermaidConfig():Promise<string> {
   const homeDir = os.homedir()
   const mermaidConfigPath = path.resolve(homeDir, './.markdown-preview-enhanced/mermaid_config.js')
 
-  let mermaidConfig:object
+  let mermaidConfig:string
   if (fs.existsSync(mermaidConfigPath)) {
     try {
-      delete require.cache[mermaidConfigPath] // return uncached
-      mermaidConfig = require(mermaidConfigPath)
+      mermaidConfig = await readFile(mermaidConfigPath, {encoding: 'utf-8'})
     } catch(e) {
-      mermaidConfig = { startOnLoad: false }
+      mermaidConfig = `MERMAID_CONFIG = {startOnLoad: false}`
     }
   } else {
     const fileContent = `// config mermaid init call
 // http://knsv.github.io/mermaid/#configuration
 //
-// You can edit the 'config' variable below.
-let config = {
+// You can edit the 'MERMAID_CONFIG' variable below.
+MERMAID_CONFIG = {
   startOnLoad: false
 }
-
-module.exports = config || {startOnLoad: false}
 `
     await writeFile(mermaidConfigPath, fileContent, {encoding: 'utf-8'})
-    mermaidConfig = { startOnLoad: false }
+    mermaidConfig = `MERMAID_CONFIG = {startOnLoad: false}`
   }
 
   return mermaidConfig
+}
+
+/**
+ * load ~/.markdown-preview-enhanced/phantomjs_config.js file.  
+ */
+export async function getPhantomjsConfig():Promise<object> {
+  const homeDir = os.homedir()
+  const phantomjsConfigPath = path.resolve(homeDir, './.markdown-preview-enhanced/phantomjs_config.js')
+
+  let phantomjsConfig:object
+  if (fs.existsSync(phantomjsConfigPath)) {
+    try {
+      delete require.cache[phantomjsConfigPath] // return uncached
+      phantomjsConfig = require(phantomjsConfigPath)
+    } catch(e) {
+      phantomjsConfig = {}
+    }
+  } else {
+    const fileContent = `/*
+configure header and footer (and other options)
+more information can be found here:
+    https://github.com/marcbachmann/node-html-pdf
+Attention: this config will override your config in exporter panel.
+
+eg:
+
+  let config = {
+    "header": {
+      "height": "45mm",
+      "contents": '<div style="text-align: center;">Author: Marc Bachmann</div>'
+    },
+    "footer": {
+      "height": "28mm",
+      "contents": '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>'
+    }
+  }
+*/
+// you can edit the 'config' variable below
+let config = {
+}
+
+module.exports = config || {}
+`
+    await writeFile(phantomjsConfigPath, fileContent, {encoding: 'utf-8'})
+    phantomjsConfig = {}
+  }
+
+  return phantomjsConfig
 }
 
 const defaultMathjaxConfig = {
@@ -231,4 +276,29 @@ module.exports = {
   }
 
   return mathjaxConfig
+}
+
+/**
+ * Check whether two arrays are equal
+ * @param x 
+ * @param y 
+ */
+export function isArrayEqual(x, y) {
+  if (x.length !== y.length) return false 
+  for (let i = 0; i < x.length; i++) {
+    if (x[i] !== y[i]) return false
+  }
+  return true 
+}
+
+/**
+ * Add file:// to file path
+ * @param filePath 
+ */
+export function addFileProtocol(filePath:string):string {
+  if (!filePath.startsWith('file://')) {
+    filePath = 'file:///' + filePath
+  }
+  filePath = filePath.replace(/^file\:\/+/, 'file:///')
+  return filePath
 }

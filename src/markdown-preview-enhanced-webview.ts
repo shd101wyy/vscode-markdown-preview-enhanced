@@ -318,6 +318,30 @@ function initContextMenu() {
           }
         }
       },
+      "phantomjs_export": 
+      {
+        name: "PhantomJS",
+        items: {
+          "phantomjs_pdf": {
+            name: "PDF",
+            callback() {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.phantomjsExport?${JSON.stringify([sourceUri, 'pdf'])}`}, 'file://') 
+            }
+          },
+          "phantomjs_png": {
+            name: "PNG",
+            callback() {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.phantomjsExport?${JSON.stringify([sourceUri, 'png'])}`}, 'file://') 
+            }
+          },
+          "phantomjs_jpeg": {
+            name: "JPEG",
+            callback() {
+              window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.phantomjsExport?${JSON.stringify([sourceUri, 'jpeg'])}`}, 'file://') 
+            }
+          }
+        }
+      },
       "prince_export": 
       {
         name: "PDF (prince)",
@@ -479,13 +503,13 @@ function renderMermaid() {
     // const mermaidCodes = []
     for (let i = 0; i < mermaidGraphs.length; i++) {
       const mermaidGraph = mermaidGraphs[i] as HTMLElement
-      if (mermaidGraph.getAttribute('data-processed') === 'true') continue 
+      // if (mermaidGraph.getAttribute('data-processed') === 'true') continue 
 
       mermaid.parseError = function(err) {
         mermaidGraph.innerHTML = `<pre class="language-text">${err.toString()}</pre>`
       }
 
-      if (mermaidAPI.parse(mermaidGraph.textContent)) {
+      if (mermaidAPI.parse(mermaidGraph.textContent.trim())) {
         validMermaidGraphs.push(mermaidGraph)
         // mermaidCodes.push(mermaidGraph.textContent)
       }
@@ -519,9 +543,10 @@ function renderMermaid() {
  */
 function renderMathJax() {
   return new Promise((resolve, reject)=> {
-    if (config['mathRenderingOption'] === 'MathJax') {
+    if (config['mathRenderingOption'] === 'MathJax' || config['usePandocParser']) {
       const MathJax = window['MathJax']
-      const unprocessedElements = mpe.hiddenPreviewElement.getElementsByClassName('mathjax-exps')
+      // .mathjax-exps, .math.inline, .math.display
+      const unprocessedElements = mpe.hiddenPreviewElement.querySelectorAll('.mathjax-exps, .math.inline, .math.display')
       if (!unprocessedElements.length) return resolve()
 
       window['MathJax'].Hub.Queue(

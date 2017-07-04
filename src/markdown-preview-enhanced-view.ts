@@ -190,29 +190,33 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     let scripts = ""
 
     // jquery 
-    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery/jquery.js')}"></script>`
+    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/jquery/jquery.js')}"></script>`
   
     // jquery contextmenu
-    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
-    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
+    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
+    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
 
     // jquery modal 
-    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/jquery-modal/jquery.modal.min.js')}"></script>`
+    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/jquery-modal/jquery.modal.min.js')}"></script>`
 
     // crpto-js
-    scripts += `<script type="text/javascript" src="file://${path.resolve(this.context.extensionPath, './dependencies/crypto-js/crypto-js.js')}"></script>`
+    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/crypto-js/crypto-js.js')}"></script>`
 
     // mermaid
-    scripts += `<script src="file://${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>`
-    scripts += `<script>mermaidAPI.initialize(${JSON.stringify(mpe.extensionConfig.mermaidConfig || {})})</script>`
+    scripts += `<script src="file:///${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>`
+    scripts += `<script>
+${mpe.extensionConfig.mermaidConfig}
+mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
+</script>`
 
     // math 
-    if (this.config.mathRenderingOption === 'MathJax') {
+    if (this.config.mathRenderingOption === 'MathJax' || this.config.usePandocParser) {
       const mathJaxConfig = mpe.extensionConfig.mathjaxConfig
+      mathJaxConfig['tex2jax'] = mathJaxConfig['tex2jax'] || {}
       mathJaxConfig['tex2jax']['inlineMath'] = this.config.mathInlineDelimiters
       mathJaxConfig['tex2jax']['displayMath'] = this.config.mathBlockDelimiters
 
-      scripts += `<script type="text/javascript" async src="file://${path.resolve(this.context.extensionPath, './dependencies/mathjax/MathJax.js')}"></script>`
+      scripts += `<script type="text/javascript" async src="file:///${path.resolve(this.context.extensionPath, './dependencies/mathjax/MathJax.js')}"></script>`
       scripts += `<script type="text/x-mathjax-config"> MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)}); </script>`
     }
     
@@ -224,33 +228,36 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    * @return a string of <link ...> that links to css files
    */
   private getStyles() {
-    let styles = `<link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">`
+    let styles = ''
 
     // preview.css 
-    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/preview.css')}">`
+    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './styles/preview.css')}">`
 
     // loading.css 
-    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './styles/loading.css')}">`
+    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './styles/loading.css')}">`
   
     // jquery-contextmenu
-    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-contextmenu/jquery.contextMenu.min.css`)}">`
+    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/jquery-contextmenu/jquery.contextMenu.min.css`)}">`
   
     // jquery-modal 
-    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-modal/jquery.modal.min.css`)}">`
+    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/jquery-modal/jquery.modal.min.css`)}">`
 
     // check math 
-    if (this.config.mathRenderingOption === "KaTeX") {
-      styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './dependencies/katex/katex.min.css')}">`
+    if (this.config.mathRenderingOption === "KaTeX" && !this.config.usePandocParser) {
+      styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './dependencies/katex/katex.min.css')}">`
     }
 
     // check mermaid 
-    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
+    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
 
     // check prism 
-    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)}">`
+    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)}">`
 
     // check preview theme 
-    styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
+    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
+
+    // style template
+    styles += `<link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">`
 
     // global styles
     styles += `<style>${mpe.extensionConfig.globalStyle}</style>`
@@ -265,11 +272,11 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     this.jsAndCssFilesMaps[fsPath].forEach((sourcePath)=> {
       let absoluteFilePath = sourcePath
       if (sourcePath[0] === '/') {
-        absoluteFilePath = 'file://' + path.resolve(vscode.workspace.rootPath, '.' + sourcePath)
+        absoluteFilePath = 'file:///' + path.resolve(vscode.workspace.rootPath, '.' + sourcePath)
       } else if (sourcePath.match(/^file:\/\//) || sourcePath.match(/^https?\:\/\//)) {
         // do nothing 
       } else {
-        absoluteFilePath = 'file://' + path.resolve(path.dirname(fsPath), sourcePath)
+        absoluteFilePath = 'file:///' + path.resolve(path.dirname(fsPath), sourcePath)
       }
 
       if (absoluteFilePath.endsWith('.js')) {
@@ -448,6 +455,19 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         vscode.window.showErrorMessage(error)
       })
     }
+  }
+
+  public phantomjsExport(sourceUri: Uri, type: string) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.phantomjsExport(type)
+      .then((dest)=> {
+        vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+      })
+      .catch((error)=> {
+        vscode.window.showErrorMessage(error)
+      })
+    }  
   }
 
   public princeExport(sourceUri: Uri) {

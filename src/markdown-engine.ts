@@ -1,8 +1,8 @@
 import * as path from "path"
 import * as fs from "fs"
 import * as cheerio from "cheerio"
-import * as uslug from "uslug"
 import * as request from "request"
+import {execFile} from "child_process"
 
 const matter = require('gray-matter')
 
@@ -26,8 +26,8 @@ const jsonic = require(path.resolve(extensionDirectoryPath, './dependencies/json
 const md5 = require(path.resolve(extensionDirectoryPath, './dependencies/javascript-md5/md5.js'))
 const CryptoJS = require(path.resolve(extensionDirectoryPath, './dependencies/crypto-js/crypto-js.js'))
 const Viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
+const pdf = require(path.resolve(extensionDirectoryPath, './dependencies/node-html-pdf/index.js'))
 
-// import * as uslug from "uslug"
 // import * as Prism from "prismjs"
 let Prism = null
 
@@ -59,17 +59,31 @@ interface MarkdownEngineOutput {
 }
 
 interface HTMLTemplateOption {
+  /**
+   * whether is for print. 
+   */
   isForPrint: boolean
+  /**
+   * whether is for prince export. 
+   */
   isForPrince: boolean
+  /**
+   * if it's for phantomjs export, what is the export file type.
+   * `pdf`, `jpeg`, and `png` are available.
+   */
+  phantomjsType?: string
+  /**
+   * whether for offline use
+   */
   offline: boolean
+  /**
+   * whether to embed local images as base64
+   */
   embedLocalImages: boolean
+  /**
+   * whether to embed svg images
+   */
   embedSVG?: boolean
-}
-
-interface Heading {
-  content:string,
-  level:number,
-  id:string
 }
 
 const defaults = {
@@ -146,6 +160,7 @@ export class MarkdownEngine {
     this.fileDirectoryPath = path.dirname(this.filePath)
     this.projectDirectoryPath = args.projectDirectoryPath || '/'
     this.config = args.config
+
     this.initConfig()
     this.headings = []
     this.tocHTML = ''
@@ -163,6 +178,14 @@ export class MarkdownEngine {
     // protocal whitelist
     const protocolsWhiteList = this.config.protocolsWhiteList.split(',').map((x)=>x.trim()) || ['http', 'https', 'atom', 'file']
     this.protocolsWhiteListRegExp = new RegExp('^(' + protocolsWhiteList.join('|')+')\:\/\/')  // eg /^(http|https|atom|file)\:\/\//
+
+    this.config.printBackground = this.config.printBackground || false
+
+    this.config.phantomPath = this.config.phantomPath || 'phantomjs'
+
+    this.config.pandocPath = this.config.pandocPath || 'pandoc'
+    this.config.pandocArguments = this.config.pandocArguments || []
+    this.config.pandocMarkdownFlavor = this.config.pandocMarkdownFlavor || 'markdown-raw_tex+tex_math_single_backslash'
   }
 
   public updateConfiguration(config) {
@@ -493,7 +516,7 @@ export class MarkdownEngine {
         <script type="text/x-mathjax-config">
           MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
         </script>
-        <script type="text/javascript" async src="file://${path.resolve(extensionDirectoryPath, './dependencies/mathjax/MathJax.js')}"></script>
+        <script type="text/javascript" async src="file:///${path.resolve(extensionDirectoryPath, './dependencies/mathjax/MathJax.js')}"></script>
         `
       } else {
         mathStyle = `
@@ -505,7 +528,7 @@ export class MarkdownEngine {
       }
     } else if (this.config.mathRenderingOption == 'KaTeX') {
       if (options.offline) {
-        mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
+        mathStyle = `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
       } else {
         mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
       }
@@ -518,15 +541,18 @@ export class MarkdownEngine {
     let mermaidStyle = ''
     if (html.indexOf('<div class="mermaid">') >= 0) {
       if (options.offline) {
-        mermaidScript = `<script type="text/javascript" src="file://${path.resolve(extensionDirectoryPath, './dependencies/mermaid/mermaid.min.js')}"></script>`
-        mermaidStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
+        mermaidScript = `<script type="text/javascript" src="file:///${path.resolve(extensionDirectoryPath, './dependencies/mermaid/mermaid.min.js')}"></script>`
+        mermaidStyle = `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
       } else {
         mermaidScript = `<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/mermaid.min.js"></script>`
         mermaidStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/${this.config.mermaidTheme.replace('.css', '.min.css')}">`
       }
-      let mermaidConfig = await utility.getMermaidConfig() || {}
-      mermaidConfig = Object.assign(mermaidConfig, {startOnLoad: true})
-      mermaidScript += `<script>mermaidAPI.initialize(${JSON.stringify(mermaidConfig)})</script>`
+      let mermaidConfig:string = await utility.getMermaidConfig()
+      mermaidScript += `<script>
+${mermaidConfig}
+window['MERMAID_CONFIG'].startOnLoad = true
+mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
+</script>`
     }
 
     // presentation
@@ -573,6 +599,16 @@ export class MarkdownEngine {
       princeClass = "prince"
     }
 
+    // phantomjs 
+    let phantomjsClass = ""
+    if (options.phantomjsType) {
+      if (options.phantomjsType === 'pdf') {
+        phantomjsClass = 'phantomjs-pdf'
+      } else {
+        phantomjsClass = 'phantomjs-image'
+      }
+    }
+
     let title = path.basename(this.filePath)
     title = title.slice(0, title.length - path.extname(title).length) // remove '.md'
 
@@ -580,12 +616,14 @@ export class MarkdownEngine {
     let styleCSS = ""
     try{
       const styles = await Promise.all([
-        // style template
-        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css'), {encoding:'utf-8'}),
-        // prism *.css
+         // prism *.css
         utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`), {encoding:'utf-8'}),
         // preview theme
-        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`), {encoding:'utf-8'})
+        (options.isForPrint && !this.config.printBackground) ? 
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/github-light.css`), {encoding:'utf-8'}) :
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`), {encoding:'utf-8'}),
+        // style template
+        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css'), {encoding:'utf-8'})
       ])
       styleCSS = styles.join('')
     } catch(e) {
@@ -619,7 +657,7 @@ export class MarkdownEngine {
       ${globalStyles} 
       </style>
     </head>
-    <body class="markdown-preview-enhanced ${princeClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
+    <body class="markdown-preview-enhanced ${princeClass} ${phantomjsClass} ${elementClass}" ${yamlConfig["isPresentationMode"] ? 'data-presentation-mode' : ''} ${elementId ? `id="${elementId}"` : ''}>
     ${html}
     </body>
     ${presentationInitScript}
@@ -706,6 +744,58 @@ export class MarkdownEngine {
   }
 
   /**
+   * Phantomjs file export
+   * The config could be set by front-matter. 
+   * Check https://github.com/marcbachmann/node-html-pdf website.  
+   * @param type the export file type 
+   */
+  public async phantomjsExport(type:string = "pdf"):Promise<string> {
+    const inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
+    let {html, yamlConfig} = await this.parseMD(inputString, {useRelativeFilePath:false, hideFrontMatter:true, isForPreview: false})
+    let dest = this.filePath
+    let extname = path.extname(dest)
+    dest = dest.replace(new RegExp(extname + '$'), '.' + type)
+
+    html = await this.generateHTMLFromTemplate(html, yamlConfig, {
+      isForPrint: true,
+      isForPrince: false,
+      embedLocalImages: false,
+      offline: true,
+      phantomjsType: type
+    })
+
+    const phantomjsConfig = Object.assign({
+      type: type,
+      border: '1cm',
+      quality: '75',
+      script: path.join(extensionDirectoryPath, './dependencies/phantomjs/pdf_a4_portrait.js')
+    }, await utility.getPhantomjsConfig(), yamlConfig['phantomjs'] || yamlConfig['phantom'] || {})
+    if (!phantomjsConfig['phantomPath']) {
+      phantomjsConfig['phantomPath'] = this.config.phantomPath
+    }
+
+    return await new Promise<string>((resolve, reject)=> {
+      try {
+        pdf.create(html, phantomjsConfig)
+        .toFile(dest, (error, res)=> {
+          if (error) {
+            return reject(error)
+          } else {
+            utility.openFile(dest)
+            return resolve(dest)
+          }
+        })
+      } catch(error) {
+        let errorMessage = error.toString()
+        if (errorMessage.indexOf("Error: write EPIPE") >= 0) {
+          errorMessage = `"phantomjs" is required to be installed.`
+        }
+        return reject(errorMessage)
+      }
+    })
+  }
+
+  /**
    * prince pdf file export
    * @return dest if success, error if failure
    */
@@ -727,7 +817,7 @@ export class MarkdownEngine {
     await utility.writeFile(info.fd, html)
 
     if (yamlConfig['isPresentationMode']) {
-      const url = 'file://' + info.path + '?print-pdf'
+      const url = 'file:///' + info.path + '?print-pdf'
       return url
     } else {
       await princeConvert(info.path, dest)
@@ -897,7 +987,7 @@ export class MarkdownEngine {
       if (path.extname(dest) == '.html' && ebookConfig['html'] && ebookConfig['html'].cdn){
         mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
       } else {
-        mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
+        mathStyle = `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
       }
     }
     
@@ -1038,7 +1128,8 @@ export class MarkdownEngine {
       mathInlineDelimiters: this.config.mathInlineDelimiters,
       mathBlockDelimiters: this.config.mathBlockDelimiters,
       codeChunksData: this.codeChunksData,
-      graphsCache: this.graphsCache
+      graphsCache: this.graphsCache,
+      usePandocParser: this.config.usePandocParser
     }, config)
   }
 
@@ -1056,12 +1147,12 @@ export class MarkdownEngine {
       if (relative)
         return path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.'+filePath))
       else
-        return 'file://' + path.resolve(this.projectDirectoryPath, '.'+filePath)
+        return 'file:///' + path.resolve(this.projectDirectoryPath, '.'+filePath)
     } else {
       if (relative)
         return filePath
       else
-        return 'file://' + path.resolve(this.fileDirectoryPath, filePath)
+        return 'file:///' + path.resolve(this.fileDirectoryPath, filePath)
     }
   }
 
@@ -1355,7 +1446,7 @@ export class MarkdownEngine {
     $('pre').each((i, preElement)=> {
       let codeBlock, lang, code 
       const $preElement = $(preElement)
-      if (preElement.children[0] && preElement.children[0].name == 'code') {
+      if (preElement.children[0] && preElement.children[0].name === 'code') {
         codeBlock = $preElement.children().first()
         lang = 'text'
         let classes = codeBlock.attr('class')
@@ -1418,71 +1509,65 @@ export class MarkdownEngine {
     this.graphsCache = {}
   }
 
+  private frontMatterToTable(arg) {
+    if (arg instanceof Array) {
+      let tbody = "<tbody><tr>"
+      arg.forEach((item)=> tbody += `<td>${this.frontMatterToTable(item)}</td>` )
+      tbody += "</tr></tbody>"
+      return `<table>${tbody}</table>`
+    } else if (typeof(arg) === 'object') {
+      let thead = "<thead><tr>"
+      let tbody = "<tbody><tr>"
+      for (let key in arg) {
+        thead += `<th>${key}</th>`
+        tbody += `<td>${this.frontMatterToTable(arg[key])}</td>`
+      }
+      thead += "</tr></thead>"
+      tbody += "</tr></tbody>"
+
+      return `<table>${thead}${tbody}</table>`
+    } else {
+      return arg
+    }
+  }
+
   /**
    * process input string, skip front-matter
-   * if display table. return {
-   *      content: rest of input string after skipping front matter (but with '\n' included)
+   * if usePandocParser. return {
+   *      content: frontMatterString
+   * }
+   * else if display table. return {
    *      table: string of <table>...</table> generated from data
+   *      content: ''
    * }
    * else return {
    *      content: replace ---\n with ```yaml
-   *      table: '',
    * }
    * 
    */
-  private processFrontMatter(inputString:string, hideFrontMatter=false) {
-    function toTable (arg) {
-      if (arg instanceof Array) {
-        let tbody = "<tbody><tr>"
-        arg.forEach((item)=> tbody += `<td>${toTable(item)}</td>` )
-        tbody += "</tr></tbody>"
-        return `<table>${tbody}</table>`
-      } else if (typeof(arg) === 'object') {
-        let thead = "<thead><tr>"
-        let tbody = "<tbody><tr>"
-        for (let key in arg) {
-          thead += `<th>${key}</th>`
-          tbody += `<td>${toTable(arg[key])}</td>`
-        }
-        thead += "</tr></thead>"
-        tbody += "</tr></tbody>"
+  private processFrontMatter(frontMatterString:string, hideFrontMatter=false) {
+    if (frontMatterString) {
+      let data:any = matter(frontMatterString).data
 
-        return `<table>${thead}${tbody}</table>`
-      } else {
-        return arg
-      }
-    }
-
-    // https://regexper.com/
-    let r = /^-{3}[\n\r]([\w|\W]+?)[\n\r]-{3}[\n\r]/
-
-    let match = r.exec(inputString)
-
-    if (match) {
-      let yamlStr = match[0] 
-      let data:any = matter(yamlStr).data
-
-      if (hideFrontMatter || this.config.frontMatterRenderingOption[0] == 'n') { // hide
-        const content = '\n'.repeat((yamlStr.match(/\n/g) || []).length) + inputString.slice(yamlStr.length)
-        return {content, table: '', data}
+      if (this.config.usePandocParser) { // use pandoc parser, so don't change inputString
+        return {content: frontMatterString, table: '', data: data || {}}
+      } else if (hideFrontMatter || this.config.frontMatterRenderingOption[0] == 'n') { // hide
+        return {content:'', table: '', data}
       } else if (this.config.frontMatterRenderingOption[0] === 't') { // table
-        const content = '\n'.repeat((yamlStr.match(/\n/g) || []).length) + inputString.slice(yamlStr.length)
-
         // to table
         let table 
         if (typeof(data) === 'object')
-          table = toTable(data)
+          table = this.frontMatterToTable(data)
         else
           table = "<pre>Failed to parse YAML.</pre>"
 
-        return {content, table, data}
+        return {content:'', table, data}
       } else { // # if frontMatterRenderingOption[0] == 'c' # code block
-        const content = '```yaml\n' + match[1] + '\n```\n' + inputString.slice(yamlStr.length)
-
+        const content = frontMatterString.replace(/^---/, '```yaml').replace(/---\n$/, '```\n')
         return {content, table: '', data}
       }
     } else {
-      return {content: inputString, table: '', data:{}}
+      return {content: frontMatterString, table: '', data:{}}
     }
   }
 
@@ -1651,105 +1736,116 @@ export class MarkdownEngine {
     `
   }
 
+  public async pandocRender(text:string='', args:string[]):Promise<string> {
+    args = args || []
+    args = ['-f', this.config.pandocMarkdownFlavor, // -tex_math_dollars doesn't work properly
+            '-t', 'html',
+            '--mathjax']
+            .concat(args).filter((arg)=>arg.length)
+
+    /*
+    convert code block
+    ```python {id:"haha"}
+    to
+    ```{.python data-code-block:"{id: haha}"}
+    */
+
+    let outputString = ""
+    let lines = text.split('\n')
+    let i = 0
+    let inCodeBlock = false
+    while (i < lines.length) {
+      let line = lines[i]
+      if (line.startsWith('```')) {
+        inCodeBlock = !inCodeBlock
+
+        if (inCodeBlock) {
+          let lang = utility.escapeString(line.slice(3)).trim()
+          if (!lang) lang = 'text'
+          outputString += `<pre><code class="language-${lang}" >`
+        } else {
+          outputString += '</code></pre>\n'
+        }
+
+        i += 1
+        continue
+      }
+
+      if (line.match(/^\[toc\]/i) && !inCodeBlock) {
+        line = '[MPETOC]'
+      }
+
+      outputString += line + '\n'
+      i += 1
+    }
+
+    const pandocPath = this.config.pandocPath
+    return await new Promise<string>((resolve, reject)=> {
+      try {
+        const program = execFile(pandocPath, args, {cwd: this.fileDirectoryPath}, (error, stdout, stderr)=> {
+          if (error) return reject(error)
+          if (stderr) return reject(stderr)
+          return resolve(stdout)
+        })
+        program.stdin.end(outputString, 'utf-8')
+      } catch(error) {
+        let errorMessage = error.toString()
+        if (errorMessage.indexOf("Error: write EPIPE") >= 0) {
+          errorMessage = `"pandoc" is required to be installed.\nCheck "http://pandoc.org/installing.html" website.`
+        }
+        return reject(errorMessage)
+      }
+    })
+  }
+
   public async parseMD(inputString:string, options:MarkdownEngineRenderOption):Promise<MarkdownEngineOutput> {
     if (!inputString) inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-
-    // process front-matter
-    const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
-    const frontMatterTable = fm.table,
-          yamlConfig = fm.data || {} 
-    inputString = fm.content
-
+    
     // import external files and insert anchors if necessary 
-    const {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles} = await transformMarkdown(inputString, 
+    let {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings, frontMatterString} = await transformMarkdown(inputString, 
     {
       fileDirectoryPath: this.fileDirectoryPath, 
       projectDirectoryPath: this.projectDirectoryPath,
       forPreview: options.isForPreview,
       protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
       useRelativeFilePath: options.useRelativeFilePath,
-      filesCache: this.filesCache
+      filesCache: this.filesCache,
+      usePandocParser: this.config.usePandocParser
     })
 
-    const tocTable:{[key:string]:number} = {},
-          headings:Array<Heading> = []
+    // process front-matter
+    const fm = this.processFrontMatter(frontMatterString, options.hideFrontMatter)
+    const frontMatterTable = fm.table,
+          yamlConfig = fm.data || {} 
+    outputString = fm.content + outputString
+
     /**
-     * flag for checking whether there is change in headings.
+     * render markdown to html
      */
-    let headingsChanged = false,
-        headingOffset = 0
+    let html
+    if (this.config.usePandocParser) { // pandoc
+      try {
+        let args = yamlConfig['pandoc_args'] || []
+        if (!(args instanceof Array)) args = []
 
-    // overwrite remarkable heading parse function
-    this.md.renderer.rules.heading_open = (tokens, idx)=> {
-      let line = null
-      let id = null
-      let classes = null
+        // check bibliography
+        if (yamlConfig['bibliography'] || yamlConfig['references'])
+          args.push('--filter', 'pandoc-citeproc')
+        
+        args = this.config.pandocArguments.concat(args)
 
-      if (tokens[idx + 1] && tokens[idx + 1].content) {
-        let ignore = false
-        let heading = tokens[idx + 1].content
-
-        // check {class:string, id:string, ignore:boolean}
-        let optMatch = null
-        if (optMatch = heading.match(/[^\\]\{(.+?)\}(\s*)$/)) {
-          heading = heading.replace(optMatch[0], '')
-          tokens[idx + 1].content = heading
-          tokens[idx + 1].children[0].content = heading
-
-          try {
-            let opt = jsonic(optMatch[0].trim())
-            
-            classes = opt.class,
-            id = opt.id,
-            ignore = opt.ignore 
-          } catch(e) {
-            heading = "OptionsError: " + optMatch[1]
-
-            tokens[idx + 1].content = heading
-            tokens[idx + 1].children[0].content = heading
-          }
-        }
-
-        if (!id) {
-          id = uslug(heading)
-        }
-
-        if (tocTable[id] >= 0) {
-          tocTable[id] += 1
-          id = id + '-' + tocTable[id]
-        } else {
-          tocTable[id] = 0
-        }
-
-        if (!ignore) {
-          const heading1:Heading = {content: heading, level: tokens[idx].hLevel, id:id}
-          headings.push(heading1)
-
-          /**
-           * check whether the heading is changed compared to the old one
-           */
-          if (headingOffset >= this.headings.length) headingsChanged = true
-          if (!headingsChanged && headingOffset < this.headings.length) {
-            const heading2 = this.headings[headingOffset]
-            if (heading1.content !== heading2.content || heading1.level !== heading2.level) {
-              headingsChanged = true
-            }
-          }
-          headingOffset += 1
-        }
+        html = await this.pandocRender(outputString, args)
+      } catch(error) {
+        html = `<pre>${error}</pre>`
       }
-
-      id = id ? `id=${id}` : ''
-      classes = classes ? `class=${classes}` : ''
-      return `<h${tokens[idx].hLevel} ${id} ${classes}>`
+    } else { // remarkable
+      html = this.md.render(outputString)
     }
-
-    let html = this.md.render(outputString)
 
     /**
      * render tocHTML
      */
-    if (headingsChanged || headings.length !== this.headings.length) {
+    if (!utility.isArrayEqual(headings, this.headings)) {
       const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
       this.tocHTML = this.md.render(tocObject.content)
     }
@@ -1759,6 +1855,9 @@ export class MarkdownEngine {
       html = html.replace(/^\s*<p>\[MPETOC\]<\/p>\s*/gm, this.tocHTML)
     }
 
+    /**
+     * resolve image paths and render code block.
+     */
     html = frontMatterTable + await this.resolveImagePathAndCodeBlock(html, options)
 
     /**

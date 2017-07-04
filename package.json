@@ -70,6 +70,10 @@
                 "title": "Markdown Preview Enhanced: Open MathJax Config"
             },
             {
+                "command": "markdown-preview-enhanced.openPhantomJSConfig",
+                "title": "Markdown Preview Enhanced: Open PhantomJS Config"
+            },
+            {
                 "command": "markdown-preview-enhanced.showUploadedImages",
                 "title": "Markdown Preview Enhanced: Show Uploaded Images"
             }
@@ -100,6 +104,11 @@
             "type": "object",
             "title": "Markdown Preview Enhanced",
             "properties": {
+                "markdown-preview-enhanced.usePandocParser": {
+                    "description": "Enable this option will render markdown by pandoc instead of remarkable.",
+                    "default": false,
+                    "type": "boolean"
+                },
                 "markdown-preview-enhanced.breakOnSingleNewLine": {
                     "description": "In Markdown, a single newline character doesn't cause a line break in the generated HTML. In GitHub Flavored Markdown, that is not true. Enable this config option to insert line breaks in rendered HTML for single newlines in Markdown source.",
                     "default": true,
@@ -152,8 +161,8 @@
                             "$$"
                         ],
                         [
-                            "\\\\(",
-                            "\\\\)"
+                            "\\[",
+                            "\\]"
                         ]
                     ],
                     "type": "array"
@@ -211,7 +220,10 @@
                     "type": "string",
                     "enum": [
                         "github-light.css",
-                        "github-dark.css"
+                        "github-dark.css",
+                        "gothic.css",
+                        "newsprint.css",
+                        "night.css"
                     ]
                 },
                 "markdown-preview-enhanced.protocolsWhiteList": {
@@ -232,6 +244,31 @@
                         "imgur",
                         "sm.ms"
                     ]
+                },
+                "markdown-preview-enhanced.printBackground": {
+                    "description": "Whether to print background for PDF file export or not. If set to `false`, then `github-light` preview theme will be used.",
+                    "default": false,
+                    "type": "boolean"  
+                },
+                "markdown-preview-enhanced.phantomPath": {
+                    "description": "PhantomJS executable path",
+                    "default": "phantomjs",
+                    "type": "string"
+                },
+                "markdown-preview-enhanced.pandocPath": {
+                    "description": "Pandoc executable path",
+                    "default": "pandoc",
+                    "type": "string"
+                },
+                "markdown-preview-enhanced.pandocMarkdownFlavor": {
+                    "description": "The pandoc markdown flavor you want",
+                    "default": "markdown-raw_tex+tex_math_single_backslash",
+                    "type": "string"
+                },
+                "markdown-preview-enhanced.pandocArguments": {
+                    "description": "Comma separated pandoc arguments e.g. `--smart, --filter=/bin/exe`. Please use long argument names.",
+                    "default": "",
+                    "type": "string"
                 }
             }
         }

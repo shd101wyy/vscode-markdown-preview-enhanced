@@ -129,8 +129,8 @@ function processPaths(text, fileDirectoryPath, projectDirectoryPath, useRelative
 }
 
 export async function markdownConvert(text, 
-{projectDirectoryPath, fileDirectoryPath, protocolsWhiteListRegExp, filesCache, mathInlineDelimiters, mathBlockDelimiters, codeChunksData, graphsCache}:
-{projectDirectoryPath:string, fileDirectoryPath:string, protocolsWhiteListRegExp:RegExp, filesCache:{[key:string]:string}, mathInlineDelimiters:string[][], mathBlockDelimiters:string[][], codeChunksData:{[key:string]:CodeChunkData}, graphsCache:{[key:string]:string}}, 
+{projectDirectoryPath, fileDirectoryPath, protocolsWhiteListRegExp, filesCache, mathInlineDelimiters, mathBlockDelimiters, codeChunksData, graphsCache, usePandocParser}:
+{projectDirectoryPath:string, fileDirectoryPath:string, protocolsWhiteListRegExp:RegExp, filesCache:{[key:string]:string}, mathInlineDelimiters:string[][], mathBlockDelimiters:string[][], codeChunksData:{[key:string]:CodeChunkData}, graphsCache:{[key:string]:string}, usePandocParser: boolean}, 
 config:object):Promise<string> {
   if (!config['path'])
     throw '{path} has to be specified'
@@ -159,7 +159,7 @@ config:object):Promise<string> {
   const useRelativeFilePath = !config['absolute_image_path']
 
   // import external files
-  const data = await transformMarkdown(text, {fileDirectoryPath, projectDirectoryPath, useRelativeFilePath, filesCache, forPreview:false, protocolsWhiteListRegExp, imageDirectoryPath})
+  const data = await transformMarkdown(text, {fileDirectoryPath, projectDirectoryPath, useRelativeFilePath, filesCache, forPreview:false, protocolsWhiteListRegExp, imageDirectoryPath, usePandocParser})
   text = data.outputString
   
   // change link path to project '/' path

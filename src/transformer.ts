@@ -5,6 +5,8 @@ import * as less from "less"
 import * as request from "request"
 import * as Baby from "babyparse"
 import * as temp from "temp"
+import * as uslug from "uslug"
+import {EOL} from "os"
 
 // import * as request from 'request'
 // import * as less from "less"
@@ -36,6 +38,13 @@ interface TransformMarkdownOutput {
    * convert .css file to <link href='...'></link>
    */
   JSAndCssFiles: string[] 
+
+  headings: Heading[]
+
+  /**
+   * Get `---\n...\n---\n` string.  
+   */
+  frontMatterString: string 
 }
 
 interface TransformMarkdownOptions {
@@ -47,6 +56,7 @@ interface TransformMarkdownOptions {
   protocolsWhiteListRegExp: RegExp,
   notSourceFile?: boolean,
   imageDirectoryPath?: string
+  usePandocParser: boolean
 }
 
 const fileExtensionToLanguageMap = {
@@ -186,17 +196,21 @@ export async function transformMarkdown(inputString:string,
                               forPreview = false,
                               protocolsWhiteListRegExp = null,
                               notSourceFile = false,
-                              imageDirectoryPath = '' }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
+                              imageDirectoryPath = '',
+                              usePandocParser = false }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
     let inBlock = false // inside code block
     let codeChunkOffset = 0
     const tocConfigs = [],
           slideConfigs = [],
           JSAndCssFiles = []
-    let tocBracketEnabled = false 
+    let headings = [],
+        tocBracketEnabled = false,
+        frontMatterString = ''
+    const tocTable:{[key:string]:number} = {}
 
     async function helper(i, lineNo=0, outputString=""):Promise<TransformMarkdownOutput> {
       if (i >= inputString.length) { // done 
-        return {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles}
+        return {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings, frontMatterString}
       }
 
       if (inputString[i] == '\n')
@@ -221,59 +235,141 @@ export async function transformMarkdown(inputString:string,
       if (inBlock)
         return helper(end+1, lineNo+1, outputString+line+'\n')
 
-      let subjectMatch
+      let subjectMatch, headingMatch
 
-      if (line.match(/^(\#|\!\[|@import)/)) {
+      if (line.match(/^(\!\[|@import)/)) {
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
-      } else if (subjectMatch = line.match(/^\<!--\s+([^\s]+)/)) {
+      } else if (headingMatch = line.match(/^(\#{1,7})(.+)/)) /* ((headingMatch = line.match(/^(\#{1,7})(.+)$/)) || 
+                // the ==== and --- headers don't work well. For example, table and list will affect it, therefore I decide not to support it.  
+                 (inputString[end + 1] === '=' && inputString[end + 2] === '=') || 
+                 (inputString[end + 1] === '-' && inputString[end + 2] === '-')) */ { // headings
+
         if (forPreview) outputString += createAnchor(lineNo)
-        
-        let subject = subjectMatch[1]
-        if (subject === '@import') {
-          const commentEnd = line.lastIndexOf('-->')
-          if (commentEnd > 0)
-            line = line.slice(4, commentEnd).trim()
-        }
-        else if (subject in CustomSubjects) {
-          let commentEnd = inputString.indexOf('-->', i + 4)
-
-          if (commentEnd < 0) { // didn't find -->
-            return helper(end+1, lineNo+1, outputString+'\n')
+        let heading, level, tag
+        //if (headingMatch) {
+        heading = headingMatch[2].trim()
+        tag = headingMatch[1]
+        level = tag.length
+        /*} else {
+          if (inputString[end + 1] === '=') {
+            heading = line.trim()
+            tag = '#'
+            level = 1
           } else {
-            commentEnd = commentEnd + 3
+            heading = line.trim()
+            tag = '##'
+            level = 2     
           }
+          
+          end = inputString.indexOf('\n', end + 1)
+          if (end < 0) end = inputString.length
+        }*/
 
+        if (!heading.length) return helper(end+1, lineNo+1, outputString + '\n')
+
+        // check {class:string, id:string, ignore:boolean}
+        let optMatch = null, classes = '', id = '', ignore = false
+        if (optMatch = heading.match(/[^\\]\{(.+?)\}(\s*)$/)) {
+          heading = heading.replace(optMatch[0], '')
+
+          try {
+            let opt = jsonic(optMatch[0].trim())
+            
+            classes = opt.class,
+            id = opt.id,
+            ignore = opt.ignore 
+          } catch(e) {
+            heading = "OptionsError: " + optMatch[1]
+            ignore = true
+          }
+        }
+
+        if (!id) {
+          id = uslug(heading)
+        }
+
+        if (tocTable[id] >= 0) {
+          tocTable[id] += 1
+          id = id + '-' + tocTable[id]
+        } else {
+          tocTable[id] = 0
+        }
+
+        if (!ignore) {
+          headings.push({content: heading, level: level, id:id})
+        }
+
+        if (usePandocParser) { // pandoc
+          let optionsStr = '{'
+          if (id) optionsStr += `#${id} `
+          if (classes) optionsStr += '.' + classes.replace(/\s+/g, ' .') + ' '
+          optionsStr += '}'
+          return helper(end+1, lineNo+1, outputString + `${tag} ${heading} ${optionsStr}` + '\n')
+        } else { // remarkable
+          const classesString = classes ? `class="${classes}"` : '',
+              idString = id ? `id="${id}"` : ''
+          return helper(end+1, lineNo+1, outputString + `<h${level} ${classesString} ${idString}>${heading}</h${level}>\n`)
+        }
+      } else if (line.match(/^\<!--/)) { // custom comment
+        if (forPreview) outputString += createAnchor(lineNo)
+        let commentEnd = inputString.indexOf('-->', i + 4)
+
+        if (commentEnd < 0) // didn't find -->
+          return helper(inputString.length, lineNo+1, outputString+'\n')
+        else 
+          commentEnd += 3
+
+        let subjectMatch = line.match(/^\<!--\s+([^\s]+)/)
+        if (!subjectMatch) {
           const content = inputString.slice(i+4, commentEnd-3).trim()
           const newlinesMatch = content.match(/\n/g)
           const newlines = (newlinesMatch ? newlinesMatch.length : 0)
-          const optionsMatch = content.match(/^([^\s]+?)\s([\s\S]+)$/)
-          const options = {lineNo}
+          return helper(commentEnd, lineNo + newlines, outputString + '\n')
+        } else {
+          let subject = subjectMatch[1]
+          if (subject === '@import') {
+            const commentEnd = line.lastIndexOf('-->')
+            if (commentEnd > 0)
+              line = line.slice(4, commentEnd).trim()
+          }
+          else if (subject in CustomSubjects) {
+            const content = inputString.slice(i+4, commentEnd-3).trim()
+            const newlinesMatch = content.match(/\n/g)
+            const newlines = (newlinesMatch ? newlinesMatch.length : 0)
+            const optionsMatch = content.match(/^([^\s]+?)\s([\s\S]+)$/)
+            const options = {lineNo}
 
-          if (optionsMatch && optionsMatch[2]) {
-            const rest = optionsMatch[2]
-            const match = rest.match(/(?:[^\s\n:"']+|"[^"]*"|'[^']*')+/g) // split by space and \newline and : (not in single and double quotezz)
+            if (optionsMatch && optionsMatch[2]) {
+              const rest = optionsMatch[2]
+              const match = rest.match(/(?:[^\s\n:"']+|"[^"]*"|'[^']*')+/g) // split by space and \newline and : (not in single and double quotezz)
 
-            if (match && match.length % 2 === 0) {
-              let i = 0
-              while (i < match.length) {
-                const key = match[i],
-                      value = match[i+1]
-                try {
-                  options[key] = JSON.parse(value)
-                } catch (e) {
-                  null // do nothing
+              if (match && match.length % 2 === 0) {
+                let i = 0
+                while (i < match.length) {
+                  const key = match[i],
+                        value = match[i+1]
+                  try {
+                    options[key] = JSON.parse(value)
+                  } catch (e) {
+                    null // do nothing
+                  }
+                  i += 2
                 }
-                i += 2
-              }
-            } 
-          }
+              } 
+            }
 
-          if (subject === 'pagebreak' || subject === 'newpage') { // pagebreak
-            return helper(commentEnd, lineNo + newlines, outputString + '<div class="pagebreak"> </div>\n')
-          } else if (subject === 'slide') { // slide 
-            slideConfigs.push(options)
-            return helper(commentEnd, lineNo + newlines, outputString + '<span class="new-slide"></span>\n')
-          }
+            if (subject === 'pagebreak' || subject === 'newpage') { // pagebreak
+              return helper(commentEnd, lineNo + newlines, outputString + '<div class="pagebreak"> </div>\n')
+            } else if (subject === 'slide') { // slide 
+              slideConfigs.push(options)
+              return helper(commentEnd, lineNo + newlines, outputString + '<span class="new-slide"></span>\n')
+            }
+          } else {
+            const content = inputString.slice(i+4, commentEnd-3).trim()
+            const newlinesMatch = content.match(/\n/g)
+            const newlines = (newlinesMatch ? newlinesMatch.length : 0)
+            return helper(commentEnd, lineNo + newlines, outputString + '\n')
+          } 
         }
       } else if (line.match(/^\s*\[toc\]\s*$/i)) { // [TOC]
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
@@ -393,7 +489,7 @@ export async function transformMarkdown(inputString:string,
             }
             else if (['.md', '.markdown', '.mmark'].indexOf(extname) >= 0) { // markdown files
               // this return here is necessary
-              let {outputString:output} = await transformMarkdown(fileContent, {
+              let {outputString:output, headings:headings2} = await transformMarkdown(fileContent, {
                 fileDirectoryPath: path.dirname(absoluteFilePath), 
                 projectDirectoryPath, 
                 filesCache, 
@@ -401,9 +497,11 @@ export async function transformMarkdown(inputString:string,
                 forPreview: false, 
                 protocolsWhiteListRegExp,
                 notSourceFile: true, // <= this is not the sourcefile
-                imageDirectoryPath
+                imageDirectoryPath,
+                usePandocParser
               })
               output = '\n' + output + '  '
+              headings = headings.concat(headings2)
               return helper(end+1, lineNo+1, outputString+output+'\n')
             }
             else if (extname == '.html') { // html file
@@ -426,7 +524,7 @@ export async function transformMarkdown(inputString:string,
                 else if (useRelativeFilePath)
                   sourcePath = path.relative(fileDirectoryPath, absoluteFilePath)
                 else 
-                  sourcePath = 'file://' + absoluteFilePath
+                  sourcePath = 'file:///' + absoluteFilePath
 
                 if (extname === '.js') {
                   output = `<script type="text/javascript" src="${sourcePath}"></script>`
@@ -498,5 +596,11 @@ export async function transformMarkdown(inputString:string,
       }
     }
 
-    return await helper(0, 0, '')
+    let frontMatterMatch = null
+    if (frontMatterMatch = inputString.match(new RegExp(`^---${EOL}([\\s\\S]+?)${EOL}---${EOL}`))) {
+      frontMatterString = frontMatterMatch[0]
+      return await helper(frontMatterString.length, frontMatterString.match(/\n/g).length, '')
+    } else {
+      return await helper(0, 0, '')
+    }
 }

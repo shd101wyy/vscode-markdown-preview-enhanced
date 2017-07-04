@@ -291,15 +291,11 @@ export async function pandocConvert(text,
   text = matter.stringify(text, config)
 
   // import external files
-  let data = await transformMarkdown(text, {fileDirectoryPath, projectDirectoryPath, useRelativeFilePath:true, filesCache, protocolsWhiteListRegExp, forPreview: false})
+  let data = await transformMarkdown(text, {fileDirectoryPath, projectDirectoryPath, useRelativeFilePath:true, filesCache, protocolsWhiteListRegExp, forPreview: false, usePandocParser: true})
   text = data.outputString
 
   // change link path to relative path
   text = processPaths(text, fileDirectoryPath, projectDirectoryPath)
-
-  // change working directory
-  const cwd = process.cwd()
-  process.chdir(fileDirectoryPath)
 
   // citation
   if (config['bibliography'] || config['references'])
@@ -321,12 +317,10 @@ export async function pandocConvert(text,
   return await new Promise<string>((resolve, reject)=> {
     // const pandocPath = atom.config.get('markdown-preview-enhanced.pandocPath')
     const pandocPath = 'pandoc'
-    const program = execFile(pandocPath, args, (error)=> {
+    const program = execFile(pandocPath, args, {cwd: fileDirectoryPath}, (error)=> {
       /*if (deleteImages) {
         imagePaths.forEach((p)=> fs.unlink(p, (error)=>{}))
       }*/
-
-      process.chdir(cwd) // change cwd back
 
       if (error) return reject(error.toString())
       return resolve(outputFilePath)

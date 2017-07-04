@@ -19,6 +19,7 @@ interface MPEConfig {
 */
 
 interface MarkdownEngineConfig {
+  usePandocParser: boolean
   breakOnSingleNewLine: boolean
   enableTypographer: boolean
   enableWikiLinkSyntax: boolean
@@ -35,6 +36,11 @@ interface MarkdownEngineConfig {
   mermaidTheme: string
   frontMatterRenderingOption: string 
   imageFolderPath: string
+  printBackground: boolean
+  phantomPath: string 
+  pandocPath: string
+  pandocMarkdownFlavor: string 
+  pandocArguments: string[]
 }
 
 
@@ -72,4 +78,10 @@ interface CodeChunkData {
    * next code chunk
    */
   next: string,
+}
+
+interface Heading {
+  content:string,
+  level:number,
+  id:string
 }

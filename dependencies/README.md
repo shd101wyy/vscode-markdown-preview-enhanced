@@ -18,7 +18,8 @@ I managed many libraries by myself instead of through npm to reduce overall file
     "katex": "0.7.1",
     "jsonic": "0.3.0",
     "crypto-js": "3.9.1-1",
-    "jquery-modal": "0.8.0"
+    "jquery-modal": "0.8.0",
+    "node-html-pdf": "commit 543a918d1c11cefc713b2d38983eb63cc1d347fe"
 }
 ```  
 
@@ -36,4 +37,4 @@ I managed many libraries by myself instead of through npm to reduce overall file
 
 *Attention*: **mpld3.v0.3.min.js** min version actually has problem, so use not minified version.  
 
-
+*Attention*: For **node-html-pdf**, I modified the `pdf.js` file so that `phantomjs-prebuilt` will not be required.  
