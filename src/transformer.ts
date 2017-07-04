@@ -202,9 +202,9 @@ export async function transformMarkdown(inputString:string,
     let codeChunkOffset = 0
     const tocConfigs = [],
           slideConfigs = [],
-          JSAndCssFiles = [],
-          headings = []
-    let tocBracketEnabled = false,
+          JSAndCssFiles = []
+    let headings = [],
+        tocBracketEnabled = false,
         frontMatterString = ''
     const tocTable:{[key:string]:number} = {}
 
@@ -489,7 +489,7 @@ export async function transformMarkdown(inputString:string,
             }
             else if (['.md', '.markdown', '.mmark'].indexOf(extname) >= 0) { // markdown files
               // this return here is necessary
-              let {outputString:output} = await transformMarkdown(fileContent, {
+              let {outputString:output, headings:headings2} = await transformMarkdown(fileContent, {
                 fileDirectoryPath: path.dirname(absoluteFilePath), 
                 projectDirectoryPath, 
                 filesCache, 
@@ -501,6 +501,7 @@ export async function transformMarkdown(inputString:string,
                 usePandocParser
               })
               output = '\n' + output + '  '
+              headings = headings.concat(headings2)
               return helper(end+1, lineNo+1, outputString+output+'\n')
             }
             else if (extname == '.html') { // html file
