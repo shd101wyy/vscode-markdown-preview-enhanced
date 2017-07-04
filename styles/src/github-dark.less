@@ -1,23 +1,7 @@
 // out: ../github-dark.css, compress: true, sourceMap: false
-.markdown-preview-enhanced {
-    background-color: #141414;
-    color: #ccc;
+@import "github.less";
 
-    // skip code block
-    h1, h2, h3, h4, h5, h6, p, strong, pre:not([class*="language-"]), code:not([class*="language-"]), table, tr th, tr td {
-        color: #ccc;
-    }
-
-    #preview-slides .slide, 
-    &[data-presentation-mode] section {
-        background-color: #141414;
-    }
-
-    code {
-        background-color: #3c3c3c;
-    }
-
-    blockquote {
-        color: #dbdbbd;
-    }
+html {
+    .github(#ccc, #141414);
 }
+

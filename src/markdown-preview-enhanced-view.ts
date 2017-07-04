@@ -228,7 +228,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
    * @return a string of <link ...> that links to css files
    */
   private getStyles() {
-    let styles = `<link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">`
+    let styles = ''
 
     // preview.css 
     styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './styles/preview.css')}">`
@@ -255,6 +255,9 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
 
     // check preview theme 
     styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
+
+    // style template
+    styles += `<link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">`
 
     // global styles
     styles += `<style>${mpe.extensionConfig.globalStyle}</style>`

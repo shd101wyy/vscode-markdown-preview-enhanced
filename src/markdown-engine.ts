@@ -616,14 +616,14 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
     let styleCSS = ""
     try{
       const styles = await Promise.all([
-        // style template
-        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css'), {encoding:'utf-8'}),
-        // prism *.css
+         // prism *.css
         utility.readFile(path.resolve(extensionDirectoryPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`), {encoding:'utf-8'}),
         // preview theme
         (options.isForPrint && !this.config.printBackground) ? 
         utility.readFile(path.resolve(extensionDirectoryPath, `./styles/github-light.css`), {encoding:'utf-8'}) :
-        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`), {encoding:'utf-8'})
+        utility.readFile(path.resolve(extensionDirectoryPath, `./styles/${this.config.previewTheme}`), {encoding:'utf-8'}),
+        // style template
+        utility.readFile(path.resolve(extensionDirectoryPath, './styles/style-template.css'), {encoding:'utf-8'})
       ])
       styleCSS = styles.join('')
     } catch(e) {
