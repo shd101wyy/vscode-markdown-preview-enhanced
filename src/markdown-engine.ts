@@ -2,7 +2,7 @@ import * as path from "path"
 import * as fs from "fs"
 import * as cheerio from "cheerio"
 import * as request from "request"
-import {execFile} from "child_process"
+import {execFile, spawn} from "child_process"
 
 const matter = require('gray-matter')
 
@@ -1781,20 +1781,36 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
 
     // console.log(outputString)
 
-    // change working directory
-    const cwd = process.cwd()
-    process.chdir(this.fileDirectoryPath)
-
     const pandocPath = this.config.pandocPath
     return await new Promise<string>((resolve, reject)=> {
       try {
-        const program = execFile(pandocPath, args, (error, stdout, stderr)=> {
-          process.chdir(cwd)
-          if (error) return reject(error)
-          if (stderr) return reject(stderr)
-          return resolve(stdout)
+        const task = spawn(pandocPath, args, {cwd: this.fileDirectoryPath})
+        const dataChunks = [], errorChunks = []
+
+        task.stdout.on('data', (chunk)=> {
+          dataChunks.push(chunk)
         })
-        program.stdin.end(outputString)
+
+        task.stderr.on('data', (chunk)=> {
+          errorChunks.push(chunk)
+        })
+
+        task.on('error', (error)=> {
+          errorChunks.push(Buffer.from(error.toString(), 'utf-8'))
+        })
+
+        task.on('close', ()=> {
+          if (errorChunks.length) {
+            const data = Buffer.concat(errorChunks).toString()
+            return reject(data)
+          } else {
+            const data = Buffer.concat(dataChunks).toString()
+            return resolve(data)
+          }
+        })
+
+        // task.stdin.write(outputString)
+        task.stdin.end(outputString, 'utf-8')
       } catch(error) {
         let errorMessage = error.toString()
         if (errorMessage.indexOf("Error: write EPIPE") >= 0) {
