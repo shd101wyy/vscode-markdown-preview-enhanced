@@ -546,7 +546,7 @@ function renderMathJax() {
     if (config['mathRenderingOption'] === 'MathJax' || config['usePandocParser']) {
       const MathJax = window['MathJax']
       // .mathjax-exps, .math.inline, .math.display
-      const unprocessedElements = mpe.hiddenPreviewElement.querySelectorAll('.mathjax-exps, .math.inline, .math.block')
+      const unprocessedElements = mpe.hiddenPreviewElement.querySelectorAll('.mathjax-exps, .math.inline, .math.display')
       if (!unprocessedElements.length) return resolve()
 
       window['MathJax'].Hub.Queue(
