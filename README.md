@@ -19,6 +19,7 @@ Below is a demo of the Atom version.
 * `Markdown Preview Enhanced: Create TOC`  
 * `Markdown Preview Enhanced: Open Mermaid Config`
 * `Markdown Preview Enhanced: Open MathJax Config`  
+* `Markdown Preview Enhanced: Open PhantomJS Config`
 * `Markdown Preview Enhanced: Insert New Slide`  
 * `Markdown Preview Enhanced: Insert Table`  
 * `Markdown Preview Enhanced: Insert Page Break`  
@@ -30,9 +31,14 @@ Below is a demo of the Atom version.
 
 For more features that will be supported in the future, check [Markdown Preview Enhanced for atom](https://shd101wyy.github.io/markdown-preview-enhanced/#/).
 
-### Progress so far 
+### Progress so far
+#### July 4, 2017
+*Basically finished porting.*   
+* Done [PhantomJS export](./docs/phantomjs.md).  
+* Done [pandoc parser](https://shd101wyy.github.io/markdown-preview-enhanced/#/pandoc?id=pandoc-parser) support.  
+* Added `Gothic`, `Newsprint`, and `Night` preview themes.  
+
 #### June 20, 2017
-Basically finished.   
 * Done [Pandoc export](https://shd101wyy.github.io/markdown-preview-enhanced/#/pandoc-pdf). (Not tested).  
 * Done Markdown(GFM) export. (Not tested)   
 * Done [TOC](https://shd101wyy.github.io/markdown-preview-enhanced/#/toc) implementation.   

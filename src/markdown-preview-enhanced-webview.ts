@@ -720,7 +720,7 @@ function bindTagAClickEvent() {
 
         window.parent.postMessage({ 
           command: 'did-click-link', // <= this has to be `did-click-link` to post message
-          data: `command:_markdown-preview-enhanced.clickTagA?${JSON.stringify([sourceUri, href])}`
+          data: `command:_markdown-preview-enhanced.clickTagA?${JSON.stringify([sourceUri, encodeURIComponent(href)])}`
         }, 'file://')
       }
     }
