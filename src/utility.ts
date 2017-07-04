@@ -290,3 +290,15 @@ export function isArrayEqual(x, y) {
   }
   return true 
 }
+
+/**
+ * Add file:// to file path
+ * @param filePath 
+ */
+export function addFileProtocol(filePath:string):string {
+  if (!filePath.startsWith('file://')) {
+    filePath = 'file:///' + filePath
+  }
+  filePath = filePath.replace(/^file\:\/+/, 'file:///')
+  return filePath
+}

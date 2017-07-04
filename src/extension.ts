@@ -61,27 +61,27 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	function customizeCSS() {
-		const globalStyleLessFile = 'file:///'+path.resolve(utility.extensionConfigDirectoryPath, './style.less')
+		const globalStyleLessFile = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './style.less'))
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(globalStyleLessFile))
 	}
 
 	function openMermaidConfig() {
-		const mermaidConfigFilePath = 'file:///'+path.resolve(utility.extensionConfigDirectoryPath, './mermaid_config.js')
+		const mermaidConfigFilePath = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './mermaid_config.js'))
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(mermaidConfigFilePath))
 	}
 
 	function openMathJaxConfig() {
-		const mathjaxConfigFilePath = 'file:///'+path.resolve(utility.extensionConfigDirectoryPath, './mathjax_config.js')
+		const mathjaxConfigFilePath = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './mathjax_config.js'))
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(mathjaxConfigFilePath))
 	}
 
 	function openPhantomJSConfig() {
-		const phantomjsConfigFilePath = 'file:///'+path.resolve(utility.extensionConfigDirectoryPath, './phantomjs_config.js')
+		const phantomjsConfigFilePath = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './phantomjs_config.js'))
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(phantomjsConfigFilePath))	
 	}
 
 	function showUploadedImages() {
-		const imageHistoryFilePath = 'file:///'+path.resolve(utility.extensionConfigDirectoryPath, './image_history.md')
+		const imageHistoryFilePath = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './image_history.md'))
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(imageHistoryFilePath))		
 	}
 
