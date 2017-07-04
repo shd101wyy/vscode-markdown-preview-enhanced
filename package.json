@@ -222,7 +222,8 @@
                         "github-light.css",
                         "github-dark.css",
                         "gothic.css",
-                        "newsprint.css"
+                        "newsprint.css",
+                        "night.css"
                     ]
                 },
                 "markdown-preview-enhanced.protocolsWhiteList": {

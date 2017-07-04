@@ -295,8 +295,12 @@ body .slide .task-list {
 }
 body .task-list-item,
 body .slide .task-list-item {
-  padding-left: 1.5rem;
   list-style-type: none;
+  margin-left: -1.8em;
+}
+body .task-list-item .task-list-item-checkbox,
+body .slide .task-list-item .task-list-item-checkbox {
+  margin-right: 0.8em;
 }
 body .task-list-item input:before,
 body .slide .task-list-item input:before {
