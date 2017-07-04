@@ -13,7 +13,6 @@
     color: @fg;
     background-color: @bg;
     overflow: initial;
-    margin: 10px 13px 10px 13px;
     padding: 2em;
     box-sizing: border-box;
     word-wrap: break-word;
@@ -210,6 +209,8 @@
     code {
       font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
       font-size: 0.85em !important;
+      color: @fg-strong;
+      background-color: contrast(@bg, lighten(@bg, 8%), darken(@bg, 6%));
       border-radius: 3px;
       padding: 0.2em 0;
 
@@ -237,7 +238,7 @@
 
     .highlight pre,
     pre {
-      font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+      // font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
       padding: @margin;
       overflow: auto;
       font-size: 0.85em !important;
@@ -255,6 +256,7 @@
       word-break: normal;
     }
 
+    /*
     pre {
       word-wrap: break-word;
       white-space: normal;
@@ -264,6 +266,7 @@
         opacity: 1;
       }
     }
+    */
 
     pre code,
     pre tt {

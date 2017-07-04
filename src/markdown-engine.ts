@@ -1855,6 +1855,9 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
       html = html.replace(/^\s*<p>\[MPETOC\]<\/p>\s*/gm, this.tocHTML)
     }
 
+    /**
+     * resolve image paths and render code block.
+     */
     html = frontMatterTable + await this.resolveImagePathAndCodeBlock(html, options)
 
     /**
