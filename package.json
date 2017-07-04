@@ -221,7 +221,8 @@
                     "enum": [
                         "github-light.css",
                         "github-dark.css",
-                        "gothic.css"
+                        "gothic.css",
+                        "newsprint.css"
                     ]
                 },
                 "markdown-preview-enhanced.protocolsWhiteList": {
