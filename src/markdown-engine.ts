@@ -1498,73 +1498,65 @@ export class MarkdownEngine {
     this.graphsCache = {}
   }
 
+  private frontMatterToTable(arg) {
+    if (arg instanceof Array) {
+      let tbody = "<tbody><tr>"
+      arg.forEach((item)=> tbody += `<td>${this.frontMatterToTable(item)}</td>` )
+      tbody += "</tr></tbody>"
+      return `<table>${tbody}</table>`
+    } else if (typeof(arg) === 'object') {
+      let thead = "<thead><tr>"
+      let tbody = "<tbody><tr>"
+      for (let key in arg) {
+        thead += `<th>${key}</th>`
+        tbody += `<td>${this.frontMatterToTable(arg[key])}</td>`
+      }
+      thead += "</tr></thead>"
+      tbody += "</tr></tbody>"
+
+      return `<table>${thead}${tbody}</table>`
+    } else {
+      return arg
+    }
+  }
+
   /**
    * process input string, skip front-matter
-   * if display table. return {
-   *      content: rest of input string after skipping front matter (but with '\n' included)
+   * if usePandocParser. return {
+   *      content: frontMatterString
+   * }
+   * else if display table. return {
    *      table: string of <table>...</table> generated from data
+   *      content: ''
    * }
    * else return {
    *      content: replace ---\n with ```yaml
-   *      table: '',
    * }
    * 
    */
-  private processFrontMatter(inputString:string, hideFrontMatter=false) {
-    function toTable (arg) {
-      if (arg instanceof Array) {
-        let tbody = "<tbody><tr>"
-        arg.forEach((item)=> tbody += `<td>${toTable(item)}</td>` )
-        tbody += "</tr></tbody>"
-        return `<table>${tbody}</table>`
-      } else if (typeof(arg) === 'object') {
-        let thead = "<thead><tr>"
-        let tbody = "<tbody><tr>"
-        for (let key in arg) {
-          thead += `<th>${key}</th>`
-          tbody += `<td>${toTable(arg[key])}</td>`
-        }
-        thead += "</tr></thead>"
-        tbody += "</tr></tbody>"
-
-        return `<table>${thead}${tbody}</table>`
-      } else {
-        return arg
-      }
-    }
-
-    // https://regexper.com/
-    let r = /^-{3}[\n\r]([\w|\W]+?)[\n\r]-{3}[\n\r]/
-
-    let match = r.exec(inputString)
-
-    if (match) {
-      let yamlStr = match[0] 
-      let data:any = matter(yamlStr).data
+  private processFrontMatter(frontMatterString:string, hideFrontMatter=false) {
+    if (frontMatterString) {
+      let data:any = matter(frontMatterString).data
 
       if (this.config.usePandocParser) { // use pandoc parser, so don't change inputString
-        return {content: inputString, table: '', data: data || {}}
+        return {content: frontMatterString, table: '', data: data || {}}
       } else if (hideFrontMatter || this.config.frontMatterRenderingOption[0] == 'n') { // hide
-        const content = '\n'.repeat((yamlStr.match(/\n/g) || []).length) + inputString.slice(yamlStr.length)
-        return {content, table: '', data}
+        return {content:'', table: '', data}
       } else if (this.config.frontMatterRenderingOption[0] === 't') { // table
-        const content = '\n'.repeat((yamlStr.match(/\n/g) || []).length) + inputString.slice(yamlStr.length)
-
         // to table
         let table 
         if (typeof(data) === 'object')
-          table = toTable(data)
+          table = this.frontMatterToTable(data)
         else
           table = "<pre>Failed to parse YAML.</pre>"
 
-        return {content, table, data}
+        return {content:'', table, data}
       } else { // # if frontMatterRenderingOption[0] == 'c' # code block
-        const content = '```yaml\n' + match[1] + '\n```\n' + inputString.slice(yamlStr.length)
-
+        const content = frontMatterString.replace(/^---/, '```yaml').replace(/---\n$/, '```\n')
         return {content, table: '', data}
       }
     } else {
-      return {content: inputString, table: '', data:{}}
+      return {content: frontMatterString, table: '', data:{}}
     }
   }
 
@@ -1757,7 +1749,9 @@ export class MarkdownEngine {
         inCodeBlock = !inCodeBlock
 
         if (inCodeBlock) {
-          outputString += `<pre><code class="language-${utility.escapeString(line.slice(3))}" >\n`
+          let lang = utility.escapeString(line.slice(3)).trim()
+          if (!lang) lang = 'text'
+          outputString += `<pre><code class="language-${lang}" >\n`
         } else {
           outputString += '</code></pre>\n'
         }
@@ -1794,15 +1788,9 @@ export class MarkdownEngine {
 
   public async parseMD(inputString:string, options:MarkdownEngineRenderOption):Promise<MarkdownEngineOutput> {
     if (!inputString) inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-
-    // process front-matter
-    const fm = this.processFrontMatter(inputString, options.hideFrontMatter)
-    const frontMatterTable = fm.table,
-          yamlConfig = fm.data || {} 
-    inputString = fm.content
-
+    
     // import external files and insert anchors if necessary 
-    const {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings} = await transformMarkdown(inputString, 
+    let {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings, frontMatterString} = await transformMarkdown(inputString, 
     {
       fileDirectoryPath: this.fileDirectoryPath, 
       projectDirectoryPath: this.projectDirectoryPath,
@@ -1812,6 +1800,12 @@ export class MarkdownEngine {
       filesCache: this.filesCache,
       usePandocParser: this.config.usePandocParser
     })
+
+    // process front-matter
+    const fm = this.processFrontMatter(frontMatterString, options.hideFrontMatter)
+    const frontMatterTable = fm.table,
+          yamlConfig = fm.data || {} 
+    outputString = fm.content + outputString
 
     /**
      * render markdown to html

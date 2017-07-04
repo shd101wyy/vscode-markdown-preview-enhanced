@@ -39,6 +39,11 @@ interface TransformMarkdownOutput {
   JSAndCssFiles: string[] 
 
   headings: Heading[]
+
+  /**
+   * Get `---\n...\n---\n` string.  
+   */
+  frontMatterString: string 
 }
 
 interface TransformMarkdownOptions {
@@ -198,12 +203,13 @@ export async function transformMarkdown(inputString:string,
           slideConfigs = [],
           JSAndCssFiles = [],
           headings = []
-    let tocBracketEnabled = false 
+    let tocBracketEnabled = false,
+        frontMatterString = ''
     const tocTable:{[key:string]:number} = {}
 
     async function helper(i, lineNo=0, outputString=""):Promise<TransformMarkdownOutput> {
       if (i >= inputString.length) { // done 
-        return {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings}
+        return {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings, frontMatterString}
       }
 
       if (inputString[i] == '\n')
@@ -232,14 +238,18 @@ export async function transformMarkdown(inputString:string,
 
       if (line.match(/^(\!\[|@import)/)) {
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
-      } else if ((headingMatch = line.match(/^(\#{1,7})(.+)$/)) || inputString[end + 1] === '=' || inputString[end + 1] === '-') { // headings
+      } else if (headingMatch = line.match(/^(\#{1,7})(.+)$/)) /* ((headingMatch = line.match(/^(\#{1,7})(.+)$/)) || 
+                // the ==== and --- headers don't work well. For example, table and list will affect it, therefore I decide not to support it.  
+                 (inputString[end + 1] === '=' && inputString[end + 2] === '=') || 
+                 (inputString[end + 1] === '-' && inputString[end + 2] === '-')) */ { // headings
+                   
         if (forPreview) outputString += createAnchor(lineNo)
         let heading, level, tag
-        if (headingMatch) {
-          heading = headingMatch[2].trim()
-          tag = headingMatch[1]
-          level = tag.length
-        } else {
+        //if (headingMatch) {
+        heading = headingMatch[2].trim()
+        tag = headingMatch[1]
+        level = tag.length
+        /*} else {
           if (inputString[end + 1] === '=') {
             heading = line.trim()
             tag = '#'
@@ -252,7 +262,7 @@ export async function transformMarkdown(inputString:string,
           
           end = inputString.indexOf('\n', end + 1)
           if (end < 0) end = inputString.length
-        }
+        }*/
 
         if (!heading.length) return helper(end+1, lineNo+1, outputString + '\n')
 
@@ -573,5 +583,11 @@ export async function transformMarkdown(inputString:string,
       }
     }
 
-    return await helper(0, 0, '')
+    let frontMatterMatch = null
+    if (frontMatterMatch = inputString.match(/^---\n([\s\S]+?)\n---\n/)) {
+      frontMatterString = frontMatterMatch[0]
+      return await helper(frontMatterString.length, frontMatterString.match(/\n/g).length, '')
+    } else {
+      return await helper(0, 0, '')
+    }
 }
