@@ -775,15 +775,23 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
     }
 
     return await new Promise<string>((resolve, reject)=> {
-      pdf.create(html, phantomjsConfig)
-      .toFile(dest, (error, res)=> {
-        if (error) {
-          return reject(error)
-        } else {
-          utility.openFile(dest)
-          return resolve(dest)
+      try {
+        pdf.create(html, phantomjsConfig)
+        .toFile(dest, (error, res)=> {
+          if (error) {
+            return reject(error)
+          } else {
+            utility.openFile(dest)
+            return resolve(dest)
+          }
+        })
+      } catch(error) {
+        let errorMessage = error.toString()
+        if (errorMessage.indexOf("Error: write EPIPE") >= 0) {
+          errorMessage = `"phantomjs" is required to be installed.`
         }
-      })
+        return reject(errorMessage)
+      }
     })
   }
 
