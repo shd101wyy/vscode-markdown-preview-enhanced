@@ -6,6 +6,7 @@ import * as request from "request"
 import * as Baby from "babyparse"
 import * as temp from "temp"
 import * as uslug from "uslug"
+import {EOL} from "os"
 
 // import * as request from 'request'
 // import * as less from "less"
@@ -238,7 +239,7 @@ export async function transformMarkdown(inputString:string,
 
       if (line.match(/^(\!\[|@import)/)) {
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
-      } else if (headingMatch = line.match(/^(\#{1,7})(.+)$/)) /* ((headingMatch = line.match(/^(\#{1,7})(.+)$/)) || 
+      } else if (headingMatch = line.match(/^(\#{1,7})(.+)/)) /* ((headingMatch = line.match(/^(\#{1,7})(.+)$/)) || 
                 // the ==== and --- headers don't work well. For example, table and list will affect it, therefore I decide not to support it.  
                  (inputString[end + 1] === '=' && inputString[end + 2] === '=') || 
                  (inputString[end + 1] === '-' && inputString[end + 2] === '-')) */ { // headings
@@ -595,7 +596,7 @@ export async function transformMarkdown(inputString:string,
     }
 
     let frontMatterMatch = null
-    if (frontMatterMatch = inputString.match(/^---\n([\s\S]+?)\n---\n/)) {
+    if (frontMatterMatch = inputString.match(new RegExp(`^---${EOL}([\\s\\S]+?)${EOL}---${EOL}`))) {
       frontMatterString = frontMatterMatch[0]
       return await helper(frontMatterString.length, frontMatterString.match(/\n/g).length, '')
     } else {
