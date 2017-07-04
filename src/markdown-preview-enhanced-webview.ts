@@ -543,9 +543,10 @@ function renderMermaid() {
  */
 function renderMathJax() {
   return new Promise((resolve, reject)=> {
-    if (config['mathRenderingOption'] === 'MathJax') {
+    if (config['mathRenderingOption'] === 'MathJax' || config['usePandocParser']) {
       const MathJax = window['MathJax']
-      const unprocessedElements = mpe.hiddenPreviewElement.getElementsByClassName('mathjax-exps')
+      // .mathjax-exps, .math.inline, .math.display
+      const unprocessedElements = mpe.hiddenPreviewElement.querySelectorAll('.mathjax-exps, .math.inline, .math.block')
       if (!unprocessedElements.length) return resolve()
 
       window['MathJax'].Hub.Queue(

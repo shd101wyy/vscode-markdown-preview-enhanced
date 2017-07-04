@@ -14,10 +14,11 @@ let CONFIG_CHANGE_CALLBACK:()=>void = null
 /**
  * style.less, mathjax_config.js, and mermaid_config.js files
  */
-export const extensionConfig:{globalStyle:string, mathjaxConfig:object, mermaidConfig: object} = {
+export const extensionConfig:{globalStyle:string, mathjaxConfig:object, mermaidConfig: object, phantomjsConfig: object} = {
   globalStyle: "",
   mathjaxConfig: null,
-  mermaidConfig: null
+  mermaidConfig: null,
+  phantomjsConfig: {}
 }
 
 /**
@@ -35,6 +36,7 @@ export async function init():Promise<void> {
   extensionConfig.globalStyle = await utility.getGlobalStyles()
   extensionConfig.mermaidConfig = await utility.getMermaidConfig()
   extensionConfig.mathjaxConfig = await utility.getMathJaxConfig()
+  extensionConfig.phantomjsConfig = await utility.getPhantomjsConfig()
 
   fs.watch(extensionConfigDirectoryPath, (eventType, fileName)=> {
     if (eventType === 'change' && CONFIG_CHANGE_CALLBACK) {

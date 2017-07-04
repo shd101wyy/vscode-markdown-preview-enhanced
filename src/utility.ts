@@ -181,6 +181,54 @@ module.exports = config || {startOnLoad: false}
   return mermaidConfig
 }
 
+/**
+ * load ~/.markdown-preview-enhanced/phantomjs_config.js file.  
+ */
+export async function getPhantomjsConfig():Promise<object> {
+  const homeDir = os.homedir()
+  const phantomjsConfigPath = path.resolve(homeDir, './.markdown-preview-enhanced/phantomjs_config.js')
+
+  let phantomjsConfig:object
+  if (fs.existsSync(phantomjsConfigPath)) {
+    try {
+      delete require.cache[phantomjsConfigPath] // return uncached
+      phantomjsConfig = require(phantomjsConfigPath)
+    } catch(e) {
+      phantomjsConfig = {}
+    }
+  } else {
+    const fileContent = `/*
+configure header and footer (and other options)
+more information can be found here:
+    https://github.com/marcbachmann/node-html-pdf
+Attention: this config will override your config in exporter panel.
+
+eg:
+
+  let config = {
+    "header": {
+      "height": "45mm",
+      "contents": '<div style="text-align: center;">Author: Marc Bachmann</div>'
+    },
+    "footer": {
+      "height": "28mm",
+      "contents": '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>'
+    }
+  }
+*/
+// you can edit the 'config' variable below
+let config = {
+}
+
+module.exports = config || {}
+`
+    await writeFile(phantomjsConfigPath, fileContent, {encoding: 'utf-8'})
+    phantomjsConfig = {}
+  }
+
+  return phantomjsConfig
+}
+
 const defaultMathjaxConfig = {
   extensions: ['tex2jax.js'],
   jax: ['input/TeX','output/HTML-CSS'],

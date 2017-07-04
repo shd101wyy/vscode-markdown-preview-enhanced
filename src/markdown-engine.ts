@@ -3,6 +3,7 @@ import * as fs from "fs"
 import * as cheerio from "cheerio"
 import * as uslug from "uslug"
 import * as request from "request"
+import {execFile} from "child_process"
 
 const matter = require('gray-matter')
 
@@ -187,8 +188,12 @@ export class MarkdownEngine {
     this.protocolsWhiteListRegExp = new RegExp('^(' + protocolsWhiteList.join('|')+')\:\/\/')  // eg /^(http|https|atom|file)\:\/\//
 
     this.config.printBackground = this.config.printBackground || false
-    this.config.pandocPath = this.config.pandocPath || 'pandoc'
+
     this.config.phantomPath = this.config.phantomPath || 'phantomjs'
+
+    this.config.pandocPath = this.config.pandocPath || 'pandoc'
+    this.config.pandocArguments = this.config.pandocArguments || []
+    this.config.pandocMarkdownFlavor = this.config.pandocMarkdownFlavor || 'markdown-raw_tex+tex_math_single_backslash'
   }
 
   public updateConfiguration(config) {
@@ -769,7 +774,7 @@ export class MarkdownEngine {
       border: '1cm',
       quality: '75',
       script: path.join(extensionDirectoryPath, './dependencies/phantomjs/pdf_a4_portrait.js')
-    }, yamlConfig['phantomjs'] || yamlConfig['phantom'] || {})
+    }, await utility.getPhantomjsConfig(), yamlConfig['phantomjs'] || yamlConfig['phantom'] || {})
     if (!phantomjsConfig['phantomPath']) {
       phantomjsConfig['phantomPath'] = this.config.phantomPath
     }
@@ -1437,7 +1442,7 @@ export class MarkdownEngine {
     $('pre').each((i, preElement)=> {
       let codeBlock, lang, code 
       const $preElement = $(preElement)
-      if (preElement.children[0] && preElement.children[0].name == 'code') {
+      if (preElement.children[0] && preElement.children[0].name === 'code') {
         codeBlock = $preElement.children().first()
         lang = 'text'
         let classes = codeBlock.attr('class')
@@ -1544,7 +1549,9 @@ export class MarkdownEngine {
       let yamlStr = match[0] 
       let data:any = matter(yamlStr).data
 
-      if (hideFrontMatter || this.config.frontMatterRenderingOption[0] == 'n') { // hide
+      if (this.config.usePandocParser) { // use pandoc parser, so don't change inputString
+        return {content: inputString, table: '', data: data || {}}
+      } else if (hideFrontMatter || this.config.frontMatterRenderingOption[0] == 'n') { // hide
         const content = '\n'.repeat((yamlStr.match(/\n/g) || []).length) + inputString.slice(yamlStr.length)
         return {content, table: '', data}
       } else if (this.config.frontMatterRenderingOption[0] === 't') { // table
@@ -1733,6 +1740,65 @@ export class MarkdownEngine {
     `
   }
 
+  public async pandocRender(text:string='', args:string[]):Promise<string> {
+    args = args || []
+    args = ['-f', this.config.pandocMarkdownFlavor, // -tex_math_dollars doesn't work properly
+            '-t', 'html',
+            '--mathjax']
+            .concat(args).filter((arg)=>arg.length)
+
+    /*
+    convert code block
+    ```python {id:"haha"}
+    to
+    ```{.python data-code-block:"{id: haha}"}
+    */
+
+    let outputString = ""
+    let lines = text.split('\n')
+    let i = 0
+    let inCodeBlock = false
+    while (i < lines.length) {
+      let line = lines[i]
+      if (line.startsWith('```')) {
+        inCodeBlock = !inCodeBlock
+
+        if (inCodeBlock) {
+          outputString += `<pre><code class="language-${utility.escapeString(line.slice(3))}" >\n`
+        } else {
+          outputString += '</code></pre>\n'
+        }
+
+        i += 1
+        continue
+      }
+
+      if (line.match(/^\[toc\]/i) && !inCodeBlock) {
+        line = '[MPETOC]'
+      }
+
+      outputString += line + '\n'
+      i += 1
+    }
+
+    // console.log(outputString)
+
+    // change working directory
+    const cwd = process.cwd()
+    process.chdir(this.fileDirectoryPath)
+
+    const pandocPath = this.config.pandocPath
+    return await new Promise<string>((resolve, reject)=> {
+      const program = execFile(pandocPath, args, (error, stdout, stderr)=> {
+        process.chdir(cwd)
+        if (error) return reject(error)
+        if (stderr) return reject(stderr)
+        return resolve(stdout)
+      })
+      program.stdin.end(outputString)
+    })
+  }
+
   public async parseMD(inputString:string, options:MarkdownEngineRenderOption):Promise<MarkdownEngineOutput> {
     if (!inputString) inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
 
@@ -1826,7 +1892,25 @@ export class MarkdownEngine {
       return `<h${tokens[idx].hLevel} ${id} ${classes}>`
     }
 
-    let html = this.md.render(outputString)
+    let html
+    if (this.config.usePandocParser) { // pandoc
+      try {
+        let args = yamlConfig['pandoc_args'] || []
+        if (!(args instanceof Array)) args = []
+
+        // check bibliography
+        if (yamlConfig['bibliography'] || yamlConfig['references'])
+          args.push('--filter', 'pandoc-citeproc')
+        
+        args = this.config.pandocArguments.concat(args)
+
+        html = await this.pandocRender(outputString, args)
+      } catch(error) {
+        html = `<pre>${error}</pre>`
+      }
+    } else { // remarkable
+      html = this.md.render(outputString)
+    }
 
     /**
      * render tocHTML

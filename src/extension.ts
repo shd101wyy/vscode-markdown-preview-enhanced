@@ -75,6 +75,11 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(mathjaxConfigFilePath))
 	}
 
+	function openPhantomJSConfig() {
+		const phantomjsConfigFilePath = 'file://'+path.resolve(utility.extensionConfigDirectoryPath, './phantomjs_config.js')
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(phantomjsConfigFilePath))	
+	}
+
 	function showUploadedImages() {
 		const imageHistoryFilePath = 'file://'+path.resolve(utility.extensionConfigDirectoryPath, './image_history.md')
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(imageHistoryFilePath))		
@@ -340,6 +345,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openMermaidConfig', openMermaidConfig))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openMathJaxConfig', openMathJaxConfig))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPhantomJSConfig', openPhantomJSConfig))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.showUploadedImages', showUploadedImages))
 

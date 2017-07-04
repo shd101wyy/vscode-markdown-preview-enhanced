@@ -5,6 +5,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     return new MarkdownPreviewEnhancedConfig()
   }
 
+  public readonly usePandocParser: boolean
   public readonly breakOnSingleNewLine: boolean
   public readonly enableTypographer: boolean
   public readonly enableWikiLinkSyntax: boolean
@@ -36,11 +37,18 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly printBackground: boolean
 
   public readonly phantomPath: string 
+
+  /**
+   * pandoc
+   */
   public readonly pandocPath: string
+  public readonly pandocMarkdownFlavor: string 
+  public readonly pandocArguments: string[]
 
   private constructor() {
     const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
 
+    this.usePandocParser = config.get<boolean>('usePandocParser')
     this.breakOnSingleNewLine = config.get<boolean>('breakOnSingleNewLine')
     this.enableTypographer = config.get<boolean>('enableTypographer')
     this.enableWikiLinkSyntax = config.get<boolean>('enableWikiLinkSyntax')
@@ -59,6 +67,8 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.printBackground = config.get<boolean>('printBackground')
     this.phantomPath = config.get<string>('phantomPath')
     this.pandocPath = config.get<string>('pandocPath')
+    this.pandocMarkdownFlavor = config.get<string>('pandocMarkdownFlavor')
+    this.pandocArguments = config.get<string>('pandocArguments').split(',').map((x)=> x.trim())
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

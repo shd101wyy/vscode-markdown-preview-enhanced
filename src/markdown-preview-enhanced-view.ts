@@ -207,8 +207,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     scripts += `<script>mermaidAPI.initialize(${JSON.stringify(mpe.extensionConfig.mermaidConfig || {})})</script>`
 
     // math 
-    if (this.config.mathRenderingOption === 'MathJax') {
+    if (this.config.mathRenderingOption === 'MathJax' || this.config.usePandocParser) {
       const mathJaxConfig = mpe.extensionConfig.mathjaxConfig
+      mathJaxConfig['tex2jax'] = mathJaxConfig['tex2jax'] || {}
       mathJaxConfig['tex2jax']['inlineMath'] = this.config.mathInlineDelimiters
       mathJaxConfig['tex2jax']['displayMath'] = this.config.mathBlockDelimiters
 
@@ -239,7 +240,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, `./dependencies/jquery-modal/jquery.modal.min.css`)}">`
 
     // check math 
-    if (this.config.mathRenderingOption === "KaTeX") {
+    if (this.config.mathRenderingOption === "KaTeX" && !this.config.usePandocParser) {
       styles += `<link rel="stylesheet" href="file://${path.resolve(this.context.extensionPath, './dependencies/katex/katex.min.css')}">`
     }
 

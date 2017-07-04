@@ -19,6 +19,7 @@ interface MPEConfig {
 */
 
 interface MarkdownEngineConfig {
+  usePandocParser: boolean
   breakOnSingleNewLine: boolean
   enableTypographer: boolean
   enableWikiLinkSyntax: boolean
@@ -38,6 +39,8 @@ interface MarkdownEngineConfig {
   printBackground: boolean
   phantomPath: string 
   pandocPath: string
+  pandocMarkdownFlavor: string 
+  pandocArguments: string[]
 }
 
 
