@@ -1787,13 +1787,21 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
 
     const pandocPath = this.config.pandocPath
     return await new Promise<string>((resolve, reject)=> {
-      const program = execFile(pandocPath, args, (error, stdout, stderr)=> {
-        process.chdir(cwd)
-        if (error) return reject(error)
-        if (stderr) return reject(stderr)
-        return resolve(stdout)
-      })
-      program.stdin.end(outputString)
+      try {
+        const program = execFile(pandocPath, args, (error, stdout, stderr)=> {
+          process.chdir(cwd)
+          if (error) return reject(error)
+          if (stderr) return reject(stderr)
+          return resolve(stdout)
+        })
+        program.stdin.end(outputString)
+      } catch(error) {
+        let errorMessage = error.toString()
+        if (errorMessage.indexOf("Error: write EPIPE") >= 0) {
+          errorMessage = `"pandoc" is required to be installed.\nCheck "http://pandoc.org/installing.html" website.`
+        }
+        return reject(errorMessage)
+      }
     })
   }
 
