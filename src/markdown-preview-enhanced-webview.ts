@@ -503,13 +503,13 @@ function renderMermaid() {
     // const mermaidCodes = []
     for (let i = 0; i < mermaidGraphs.length; i++) {
       const mermaidGraph = mermaidGraphs[i] as HTMLElement
-      if (mermaidGraph.getAttribute('data-processed') === 'true') continue 
+      // if (mermaidGraph.getAttribute('data-processed') === 'true') continue 
 
       mermaid.parseError = function(err) {
         mermaidGraph.innerHTML = `<pre class="language-text">${err.toString()}</pre>`
       }
 
-      if (mermaidAPI.parse(mermaidGraph.textContent)) {
+      if (mermaidAPI.parse(mermaidGraph.textContent.trim())) {
         validMermaidGraphs.push(mermaidGraph)
         // mermaidCodes.push(mermaidGraph.textContent)
       }

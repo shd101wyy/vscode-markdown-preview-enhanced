@@ -14,10 +14,10 @@ let CONFIG_CHANGE_CALLBACK:()=>void = null
 /**
  * style.less, mathjax_config.js, and mermaid_config.js files
  */
-export const extensionConfig:{globalStyle:string, mathjaxConfig:object, mermaidConfig: object, phantomjsConfig: object} = {
+export const extensionConfig:{globalStyle:string, mathjaxConfig:object, mermaidConfig: string, phantomjsConfig: object} = {
   globalStyle: "",
   mathjaxConfig: null,
-  mermaidConfig: null,
+  mermaidConfig: "MERMAID_CONFIG = {startOnLoad: false}",
   phantomjsConfig: {}
 }
 

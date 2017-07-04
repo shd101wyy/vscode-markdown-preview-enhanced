@@ -547,9 +547,12 @@ export class MarkdownEngine {
         mermaidScript = `<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/mermaid.min.js"></script>`
         mermaidStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/${this.config.mermaidTheme.replace('.css', '.min.css')}">`
       }
-      let mermaidConfig = await utility.getMermaidConfig() || {}
-      mermaidConfig = Object.assign(mermaidConfig, {startOnLoad: true})
-      mermaidScript += `<script>mermaidAPI.initialize(${JSON.stringify(mermaidConfig)})</script>`
+      let mermaidConfig:string = await utility.getMermaidConfig()
+      mermaidScript += `<script>
+${mermaidConfig}
+window['MERMAID_CONFIG'].startOnLoad = true
+mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
+</script>`
     }
 
     // presentation

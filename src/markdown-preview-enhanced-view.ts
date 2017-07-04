@@ -204,7 +204,10 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     // mermaid
     scripts += `<script src="file://${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>`
-    scripts += `<script>mermaidAPI.initialize(${JSON.stringify(mpe.extensionConfig.mermaidConfig || {})})</script>`
+    scripts += `<script>
+${mpe.extensionConfig.mermaidConfig}
+mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
+</script>`
 
     // math 
     if (this.config.mathRenderingOption === 'MathJax' || this.config.usePandocParser) {

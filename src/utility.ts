@@ -151,31 +151,28 @@ export async function getGlobalStyles():Promise<string> {
 /**
  * load ~/.markdown-preview-enhanced/mermaid_config.js file.  
  */
-export async function getMermaidConfig():Promise<object> {
+export async function getMermaidConfig():Promise<string> {
   const homeDir = os.homedir()
   const mermaidConfigPath = path.resolve(homeDir, './.markdown-preview-enhanced/mermaid_config.js')
 
-  let mermaidConfig:object
+  let mermaidConfig:string
   if (fs.existsSync(mermaidConfigPath)) {
     try {
-      delete require.cache[mermaidConfigPath] // return uncached
-      mermaidConfig = require(mermaidConfigPath)
+      mermaidConfig = await readFile(mermaidConfigPath, {encoding: 'utf-8'})
     } catch(e) {
-      mermaidConfig = { startOnLoad: false }
+      mermaidConfig = `MERMAID_CONFIG = {startOnLoad: false}`
     }
   } else {
     const fileContent = `// config mermaid init call
 // http://knsv.github.io/mermaid/#configuration
 //
-// You can edit the 'config' variable below.
-let config = {
+// You can edit the 'MERMAID_CONFIG' variable below.
+MERMAID_CONFIG = {
   startOnLoad: false
 }
-
-module.exports = config || {startOnLoad: false}
 `
     await writeFile(mermaidConfigPath, fileContent, {encoding: 'utf-8'})
-    mermaidConfig = { startOnLoad: false }
+    mermaidConfig = `MERMAID_CONFIG = {startOnLoad: false}`
   }
 
   return mermaidConfig
