@@ -522,7 +522,7 @@ export async function transformMarkdown(inputString:string,
                 else if (useRelativeFilePath)
                   sourcePath = path.relative(fileDirectoryPath, absoluteFilePath)
                 else 
-                  sourcePath = 'file://' + absoluteFilePath
+                  sourcePath = 'file:///' + absoluteFilePath
 
                 if (extname === '.js') {
                   output = `<script type="text/javascript" src="${sourcePath}"></script>`

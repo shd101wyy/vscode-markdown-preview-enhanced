@@ -516,7 +516,7 @@ export class MarkdownEngine {
         <script type="text/x-mathjax-config">
           MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)});
         </script>
-        <script type="text/javascript" async src="file://${path.resolve(extensionDirectoryPath, './dependencies/mathjax/MathJax.js')}"></script>
+        <script type="text/javascript" async src="file:///${path.resolve(extensionDirectoryPath, './dependencies/mathjax/MathJax.js')}"></script>
         `
       } else {
         mathStyle = `
@@ -528,7 +528,7 @@ export class MarkdownEngine {
       }
     } else if (this.config.mathRenderingOption == 'KaTeX') {
       if (options.offline) {
-        mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
+        mathStyle = `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
       } else {
         mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
       }
@@ -541,8 +541,8 @@ export class MarkdownEngine {
     let mermaidStyle = ''
     if (html.indexOf('<div class="mermaid">') >= 0) {
       if (options.offline) {
-        mermaidScript = `<script type="text/javascript" src="file://${path.resolve(extensionDirectoryPath, './dependencies/mermaid/mermaid.min.js')}"></script>`
-        mermaidStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
+        mermaidScript = `<script type="text/javascript" src="file:///${path.resolve(extensionDirectoryPath, './dependencies/mermaid/mermaid.min.js')}"></script>`
+        mermaidStyle = `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
       } else {
         mermaidScript = `<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/mermaid.min.js"></script>`
         mermaidStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/${this.config.mermaidTheme.replace('.css', '.min.css')}">`
@@ -809,7 +809,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
     await utility.writeFile(info.fd, html)
 
     if (yamlConfig['isPresentationMode']) {
-      const url = 'file://' + info.path + '?print-pdf'
+      const url = 'file:///' + info.path + '?print-pdf'
       return url
     } else {
       await princeConvert(info.path, dest)
@@ -979,7 +979,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
       if (path.extname(dest) == '.html' && ebookConfig['html'] && ebookConfig['html'].cdn){
         mathStyle = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css">`
       } else {
-        mathStyle = `<link rel="stylesheet" href="file://${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
+        mathStyle = `<link rel="stylesheet" href="file:///${path.resolve(extensionDirectoryPath, './dependencies/katex/katex.min.css')}">`
       }
     }
     
@@ -1139,12 +1139,12 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
       if (relative)
         return path.relative(this.fileDirectoryPath, path.resolve(this.projectDirectoryPath, '.'+filePath))
       else
-        return 'file://' + path.resolve(this.projectDirectoryPath, '.'+filePath)
+        return 'file:///' + path.resolve(this.projectDirectoryPath, '.'+filePath)
     } else {
       if (relative)
         return filePath
       else
-        return 'file://' + path.resolve(this.fileDirectoryPath, filePath)
+        return 'file:///' + path.resolve(this.fileDirectoryPath, filePath)
     }
   }
 
