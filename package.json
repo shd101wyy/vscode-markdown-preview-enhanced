@@ -220,7 +220,8 @@
                     "type": "string",
                     "enum": [
                         "github-light.css",
-                        "github-dark.css"
+                        "github-dark.css",
+                        "gothic.css"
                     ]
                 },
                 "markdown-preview-enhanced.protocolsWhiteList": {
@@ -243,7 +244,7 @@
                     ]
                 },
                 "markdown-preview-enhanced.printBackground": {
-                    "description": "Whether to print background for PDF file export or not. If set to `false`, then white background and black font will be used.",
+                    "description": "Whether to print background for PDF file export or not. If set to `false`, then `github-light` preview theme will be used.",
                     "default": false,
                     "type": "boolean"  
                 },
