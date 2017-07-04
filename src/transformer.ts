@@ -242,7 +242,7 @@ export async function transformMarkdown(inputString:string,
                 // the ==== and --- headers don't work well. For example, table and list will affect it, therefore I decide not to support it.  
                  (inputString[end + 1] === '=' && inputString[end + 2] === '=') || 
                  (inputString[end + 1] === '-' && inputString[end + 2] === '-')) */ { // headings
-                   
+
         if (forPreview) outputString += createAnchor(lineNo)
         let heading, level, tag
         //if (headingMatch) {
@@ -309,55 +309,66 @@ export async function transformMarkdown(inputString:string,
               idString = id ? `id="${id}"` : ''
           return helper(end+1, lineNo+1, outputString + `<h${level} ${classesString} ${idString}>${heading}</h${level}>\n`)
         }
-      } else if (subjectMatch = line.match(/^\<!--\s+([^\s]+)/)) { // custom comment
+      } else if (line.match(/^\<!--/)) { // custom comment
         if (forPreview) outputString += createAnchor(lineNo)
-        
-        let subject = subjectMatch[1]
-        if (subject === '@import') {
-          const commentEnd = line.lastIndexOf('-->')
-          if (commentEnd > 0)
-            line = line.slice(4, commentEnd).trim()
-        }
-        else if (subject in CustomSubjects) {
-          let commentEnd = inputString.indexOf('-->', i + 4)
+        let commentEnd = inputString.indexOf('-->', i + 4)
 
-          if (commentEnd < 0) { // didn't find -->
-            return helper(end+1, lineNo+1, outputString+'\n')
-          } else {
-            commentEnd = commentEnd + 3
-          }
+        if (commentEnd < 0) // didn't find -->
+          return helper(inputString.length, lineNo+1, outputString+'\n')
+        else 
+          commentEnd += 3
 
+        let subjectMatch = line.match(/^\<!--\s+([^\s]+)/)
+        if (!subjectMatch) {
           const content = inputString.slice(i+4, commentEnd-3).trim()
           const newlinesMatch = content.match(/\n/g)
           const newlines = (newlinesMatch ? newlinesMatch.length : 0)
-          const optionsMatch = content.match(/^([^\s]+?)\s([\s\S]+)$/)
-          const options = {lineNo}
+          return helper(commentEnd, lineNo + newlines, outputString + '\n')
+        } else {
+          let subject = subjectMatch[1]
+          if (subject === '@import') {
+            const commentEnd = line.lastIndexOf('-->')
+            if (commentEnd > 0)
+              line = line.slice(4, commentEnd).trim()
+          }
+          else if (subject in CustomSubjects) {
+            const content = inputString.slice(i+4, commentEnd-3).trim()
+            const newlinesMatch = content.match(/\n/g)
+            const newlines = (newlinesMatch ? newlinesMatch.length : 0)
+            const optionsMatch = content.match(/^([^\s]+?)\s([\s\S]+)$/)
+            const options = {lineNo}
 
-          if (optionsMatch && optionsMatch[2]) {
-            const rest = optionsMatch[2]
-            const match = rest.match(/(?:[^\s\n:"']+|"[^"]*"|'[^']*')+/g) // split by space and \newline and : (not in single and double quotezz)
+            if (optionsMatch && optionsMatch[2]) {
+              const rest = optionsMatch[2]
+              const match = rest.match(/(?:[^\s\n:"']+|"[^"]*"|'[^']*')+/g) // split by space and \newline and : (not in single and double quotezz)
 
-            if (match && match.length % 2 === 0) {
-              let i = 0
-              while (i < match.length) {
-                const key = match[i],
-                      value = match[i+1]
-                try {
-                  options[key] = JSON.parse(value)
-                } catch (e) {
-                  null // do nothing
+              if (match && match.length % 2 === 0) {
+                let i = 0
+                while (i < match.length) {
+                  const key = match[i],
+                        value = match[i+1]
+                  try {
+                    options[key] = JSON.parse(value)
+                  } catch (e) {
+                    null // do nothing
+                  }
+                  i += 2
                 }
-                i += 2
-              }
-            } 
-          }
+              } 
+            }
 
-          if (subject === 'pagebreak' || subject === 'newpage') { // pagebreak
-            return helper(commentEnd, lineNo + newlines, outputString + '<div class="pagebreak"> </div>\n')
-          } else if (subject === 'slide') { // slide 
-            slideConfigs.push(options)
-            return helper(commentEnd, lineNo + newlines, outputString + '<span class="new-slide"></span>\n')
-          }
+            if (subject === 'pagebreak' || subject === 'newpage') { // pagebreak
+              return helper(commentEnd, lineNo + newlines, outputString + '<div class="pagebreak"> </div>\n')
+            } else if (subject === 'slide') { // slide 
+              slideConfigs.push(options)
+              return helper(commentEnd, lineNo + newlines, outputString + '<span class="new-slide"></span>\n')
+            }
+          } else {
+            const content = inputString.slice(i+4, commentEnd-3).trim()
+            const newlinesMatch = content.match(/\n/g)
+            const newlines = (newlinesMatch ? newlinesMatch.length : 0)
+            return helper(commentEnd, lineNo + newlines, outputString + '\n')
+          } 
         }
       } else if (line.match(/^\s*\[toc\]\s*$/i)) { // [TOC]
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
