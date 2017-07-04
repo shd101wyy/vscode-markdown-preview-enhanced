@@ -1762,7 +1762,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
         if (inCodeBlock) {
           let lang = utility.escapeString(line.slice(3)).trim()
           if (!lang) lang = 'text'
-          outputString += `<pre><code class="language-${lang}" >\n`
+          outputString += `<pre><code class="language-${lang}" >`
         } else {
           outputString += '</code></pre>\n'
         }
