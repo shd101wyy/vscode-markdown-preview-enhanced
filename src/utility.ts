@@ -280,3 +280,16 @@ module.exports = {
 
   return mathjaxConfig
 }
+
+/**
+ * Check whether two arrays are equal
+ * @param x 
+ * @param y 
+ */
+export function isArrayEqual(x, y) {
+  if (x.length !== y.length) return false 
+  for (let i = 0; i < x.length; i++) {
+    if (x[i] !== y[i]) return false
+  }
+  return true 
+}

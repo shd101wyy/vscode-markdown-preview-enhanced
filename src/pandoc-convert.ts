@@ -291,7 +291,7 @@ export async function pandocConvert(text,
   text = matter.stringify(text, config)
 
   // import external files
-  let data = await transformMarkdown(text, {fileDirectoryPath, projectDirectoryPath, useRelativeFilePath:true, filesCache, protocolsWhiteListRegExp, forPreview: false})
+  let data = await transformMarkdown(text, {fileDirectoryPath, projectDirectoryPath, useRelativeFilePath:true, filesCache, protocolsWhiteListRegExp, forPreview: false, usePandocParser: true})
   text = data.outputString
 
   // change link path to relative path

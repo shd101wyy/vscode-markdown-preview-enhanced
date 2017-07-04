@@ -1,7 +1,6 @@
 import * as path from "path"
 import * as fs from "fs"
 import * as cheerio from "cheerio"
-import * as uslug from "uslug"
 import * as request from "request"
 import {execFile} from "child_process"
 
@@ -29,7 +28,6 @@ const CryptoJS = require(path.resolve(extensionDirectoryPath, './dependencies/cr
 const Viz = require(path.resolve(extensionDirectoryPath, './dependencies/viz/viz.js'))
 const pdf = require(path.resolve(extensionDirectoryPath, './dependencies/node-html-pdf/index.js'))
 
-// import * as uslug from "uslug"
 // import * as Prism from "prismjs"
 let Prism = null
 
@@ -86,12 +84,6 @@ interface HTMLTemplateOption {
    * whether to embed svg images
    */
   embedSVG?: boolean
-}
-
-interface Heading {
-  content:string,
-  level:number,
-  id:string
 }
 
 const defaults = {
@@ -1125,7 +1117,8 @@ export class MarkdownEngine {
       mathInlineDelimiters: this.config.mathInlineDelimiters,
       mathBlockDelimiters: this.config.mathBlockDelimiters,
       codeChunksData: this.codeChunksData,
-      graphsCache: this.graphsCache
+      graphsCache: this.graphsCache,
+      usePandocParser: this.config.usePandocParser
     }, config)
   }
 
@@ -1809,89 +1802,20 @@ export class MarkdownEngine {
     inputString = fm.content
 
     // import external files and insert anchors if necessary 
-    const {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles} = await transformMarkdown(inputString, 
+    const {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings} = await transformMarkdown(inputString, 
     {
       fileDirectoryPath: this.fileDirectoryPath, 
       projectDirectoryPath: this.projectDirectoryPath,
       forPreview: options.isForPreview,
       protocolsWhiteListRegExp: this.protocolsWhiteListRegExp,
       useRelativeFilePath: options.useRelativeFilePath,
-      filesCache: this.filesCache
+      filesCache: this.filesCache,
+      usePandocParser: this.config.usePandocParser
     })
 
-    const tocTable:{[key:string]:number} = {},
-          headings:Array<Heading> = []
     /**
-     * flag for checking whether there is change in headings.
+     * render markdown to html
      */
-    let headingsChanged = false,
-        headingOffset = 0
-
-    // overwrite remarkable heading parse function
-    this.md.renderer.rules.heading_open = (tokens, idx)=> {
-      let line = null
-      let id = null
-      let classes = null
-
-      if (tokens[idx + 1] && tokens[idx + 1].content) {
-        let ignore = false
-        let heading = tokens[idx + 1].content
-
-        // check {class:string, id:string, ignore:boolean}
-        let optMatch = null
-        if (optMatch = heading.match(/[^\\]\{(.+?)\}(\s*)$/)) {
-          heading = heading.replace(optMatch[0], '')
-          tokens[idx + 1].content = heading
-          tokens[idx + 1].children[0].content = heading
-
-          try {
-            let opt = jsonic(optMatch[0].trim())
-            
-            classes = opt.class,
-            id = opt.id,
-            ignore = opt.ignore 
-          } catch(e) {
-            heading = "OptionsError: " + optMatch[1]
-
-            tokens[idx + 1].content = heading
-            tokens[idx + 1].children[0].content = heading
-          }
-        }
-
-        if (!id) {
-          id = uslug(heading)
-        }
-
-        if (tocTable[id] >= 0) {
-          tocTable[id] += 1
-          id = id + '-' + tocTable[id]
-        } else {
-          tocTable[id] = 0
-        }
-
-        if (!ignore) {
-          const heading1:Heading = {content: heading, level: tokens[idx].hLevel, id:id}
-          headings.push(heading1)
-
-          /**
-           * check whether the heading is changed compared to the old one
-           */
-          if (headingOffset >= this.headings.length) headingsChanged = true
-          if (!headingsChanged && headingOffset < this.headings.length) {
-            const heading2 = this.headings[headingOffset]
-            if (heading1.content !== heading2.content || heading1.level !== heading2.level) {
-              headingsChanged = true
-            }
-          }
-          headingOffset += 1
-        }
-      }
-
-      id = id ? `id=${id}` : ''
-      classes = classes ? `class=${classes}` : ''
-      return `<h${tokens[idx].hLevel} ${id} ${classes}>`
-    }
-
     let html
     if (this.config.usePandocParser) { // pandoc
       try {
@@ -1915,7 +1839,7 @@ export class MarkdownEngine {
     /**
      * render tocHTML
      */
-    if (headingsChanged || headings.length !== this.headings.length) {
+    if (!utility.isArrayEqual(headings, this.headings)) {
       const tocObject = toc(headings, {ordered: false, depthFrom: 1, depthTo: 6, tab: '\t'})
       this.tocHTML = this.md.render(tocObject.content)
     }

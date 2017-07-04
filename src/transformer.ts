@@ -5,6 +5,7 @@ import * as less from "less"
 import * as request from "request"
 import * as Baby from "babyparse"
 import * as temp from "temp"
+import * as uslug from "uslug"
 
 // import * as request from 'request'
 // import * as less from "less"
@@ -36,6 +37,8 @@ interface TransformMarkdownOutput {
    * convert .css file to <link href='...'></link>
    */
   JSAndCssFiles: string[] 
+
+  headings: Heading[]
 }
 
 interface TransformMarkdownOptions {
@@ -47,6 +50,7 @@ interface TransformMarkdownOptions {
   protocolsWhiteListRegExp: RegExp,
   notSourceFile?: boolean,
   imageDirectoryPath?: string
+  usePandocParser: boolean
 }
 
 const fileExtensionToLanguageMap = {
@@ -186,17 +190,20 @@ export async function transformMarkdown(inputString:string,
                               forPreview = false,
                               protocolsWhiteListRegExp = null,
                               notSourceFile = false,
-                              imageDirectoryPath = '' }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
+                              imageDirectoryPath = '',
+                              usePandocParser = false }:TransformMarkdownOptions):Promise<TransformMarkdownOutput> {
     let inBlock = false // inside code block
     let codeChunkOffset = 0
     const tocConfigs = [],
           slideConfigs = [],
-          JSAndCssFiles = []
+          JSAndCssFiles = [],
+          headings = []
     let tocBracketEnabled = false 
+    const tocTable:{[key:string]:number} = {}
 
     async function helper(i, lineNo=0, outputString=""):Promise<TransformMarkdownOutput> {
       if (i >= inputString.length) { // done 
-        return {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles}
+        return {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings}
       }
 
       if (inputString[i] == '\n')
@@ -221,11 +228,78 @@ export async function transformMarkdown(inputString:string,
       if (inBlock)
         return helper(end+1, lineNo+1, outputString+line+'\n')
 
-      let subjectMatch
+      let subjectMatch, headingMatch
 
-      if (line.match(/^(\#|\!\[|@import)/)) {
+      if (line.match(/^(\!\[|@import)/)) {
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
-      } else if (subjectMatch = line.match(/^\<!--\s+([^\s]+)/)) {
+      } else if ((headingMatch = line.match(/^(\#{1,7})(.+)$/)) || inputString[end + 1] === '=' || inputString[end + 1] === '-') { // headings
+        if (forPreview) outputString += createAnchor(lineNo)
+        let heading, level, tag
+        if (headingMatch) {
+          heading = headingMatch[2].trim()
+          tag = headingMatch[1]
+          level = tag.length
+        } else {
+          if (inputString[end + 1] === '=') {
+            heading = line.trim()
+            tag = '#'
+            level = 1
+          } else {
+            heading = line.trim()
+            tag = '##'
+            level = 2     
+          }
+          
+          end = inputString.indexOf('\n', end + 1)
+          if (end < 0) end = inputString.length
+        }
+
+        if (!heading.length) return helper(end+1, lineNo+1, outputString + '\n')
+
+        // check {class:string, id:string, ignore:boolean}
+        let optMatch = null, classes = '', id = '', ignore = false
+        if (optMatch = heading.match(/[^\\]\{(.+?)\}(\s*)$/)) {
+          heading = heading.replace(optMatch[0], '')
+
+          try {
+            let opt = jsonic(optMatch[0].trim())
+            
+            classes = opt.class,
+            id = opt.id,
+            ignore = opt.ignore 
+          } catch(e) {
+            heading = "OptionsError: " + optMatch[1]
+            ignore = true
+          }
+        }
+
+        if (!id) {
+          id = uslug(heading)
+        }
+
+        if (tocTable[id] >= 0) {
+          tocTable[id] += 1
+          id = id + '-' + tocTable[id]
+        } else {
+          tocTable[id] = 0
+        }
+
+        if (!ignore) {
+          headings.push({content: heading, level: level, id:id})
+        }
+
+        if (usePandocParser) { // pandoc
+          let optionsStr = '{'
+          if (id) optionsStr += `#${id} `
+          if (classes) optionsStr += '.' + classes.replace(/\s+/g, ' .') + ' '
+          optionsStr += '}'
+          return helper(end+1, lineNo+1, outputString + `${tag} ${heading} ${optionsStr}` + '\n')
+        } else { // remarkable
+          const classesString = classes ? `class="${classes}"` : '',
+              idString = id ? `id="${id}"` : ''
+          return helper(end+1, lineNo+1, outputString + `<h${level} ${classesString} ${idString}>${heading}</h${level}>\n`)
+        }
+      } else if (subjectMatch = line.match(/^\<!--\s+([^\s]+)/)) { // custom comment
         if (forPreview) outputString += createAnchor(lineNo)
         
         let subject = subjectMatch[1]
@@ -401,7 +475,8 @@ export async function transformMarkdown(inputString:string,
                 forPreview: false, 
                 protocolsWhiteListRegExp,
                 notSourceFile: true, // <= this is not the sourcefile
-                imageDirectoryPath
+                imageDirectoryPath,
+                usePandocParser
               })
               output = '\n' + output + '  '
               return helper(end+1, lineNo+1, outputString+output+'\n')

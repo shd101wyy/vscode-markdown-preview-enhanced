@@ -79,3 +79,9 @@ interface CodeChunkData {
    */
   next: string,
 }
+
+interface Heading {
+  content:string,
+  level:number,
+  id:string
+}
