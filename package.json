@@ -2,7 +2,7 @@
     "name": "markdown-preview-enhanced",
     "displayName": "Markdown Preview Enhanced",
     "description": "Markdown Preview Enhanced ported to vscode",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "publisher": "shd101wyy",
     "repository": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced",
     "bugs": {
@@ -248,7 +248,7 @@
                 "markdown-preview-enhanced.printBackground": {
                     "description": "Whether to print background for PDF file export or not. If set to `false`, then `github-light` preview theme will be used.",
                     "default": false,
-                    "type": "boolean"  
+                    "type": "boolean"
                 },
                 "markdown-preview-enhanced.phantomPath": {
                     "description": "PhantomJS executable path",
