@@ -80,6 +80,11 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(phantomjsConfigFilePath))	
 	}
 
+	function extendParser() {
+		const parserConfigPath = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './parser.js'))
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(parserConfigPath))	
+	}
+
 	function showUploadedImages() {
 		const imageHistoryFilePath = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './image_history.md'))
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(imageHistoryFilePath))		
@@ -372,6 +377,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openMathJaxConfig', openMathJaxConfig))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPhantomJSConfig', openPhantomJSConfig))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.extendParser', extendParser))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.showUploadedImages', showUploadedImages))
 

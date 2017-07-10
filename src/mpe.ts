@@ -14,12 +14,7 @@ let CONFIG_CHANGE_CALLBACK:()=>void = null
 /**
  * style.less, mathjax_config.js, and mermaid_config.js files
  */
-export const extensionConfig:{globalStyle:string, mathjaxConfig:object, mermaidConfig: string, phantomjsConfig: object} = {
-  globalStyle: "",
-  mathjaxConfig: null,
-  mermaidConfig: "MERMAID_CONFIG = {startOnLoad: false}",
-  phantomjsConfig: {}
-}
+export const extensionConfig = utility.extensionConfig
 
 /**
  * init markdown-preview-enhanced config folder at ~/.markdown-preview-enhanced
@@ -37,6 +32,8 @@ export async function init():Promise<void> {
   extensionConfig.mermaidConfig = await utility.getMermaidConfig()
   extensionConfig.mathjaxConfig = await utility.getMathJaxConfig()
   extensionConfig.phantomjsConfig = await utility.getPhantomjsConfig()
+  extensionConfig.parserConfig = await utility.getParserConfig()
+  extensionConfig.config = await utility.getExtensionConfig()
 
   fs.watch(extensionConfigDirectoryPath, (eventType, fileName)=> {
     if (eventType === 'change' && CONFIG_CHANGE_CALLBACK) {
@@ -56,6 +53,12 @@ export async function init():Promise<void> {
         utility.getMathJaxConfig()
         .then((mathjaxConfig)=> {
           extensionConfig.mathjaxConfig = mathjaxConfig
+          CONFIG_CHANGE_CALLBACK()
+        })
+      } else if (fileName === 'parser.js') {
+        utility.getParserConfig()
+        .then((parserConfig)=> {
+          extensionConfig.parserConfig = parserConfig
           CONFIG_CHANGE_CALLBACK()
         })
       }

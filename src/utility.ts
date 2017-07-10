@@ -278,6 +278,55 @@ module.exports = {
   return mathjaxConfig
 }
 
+export async function getExtensionConfig():Promise<object> {
+  const homeDir = os.homedir()
+  const extensionConfigFilePath = path.resolve(homeDir, './.markdown-preview-enhanced/config.json')
+
+  let config:object 
+  if (fs.existsSync(extensionConfigFilePath)) {
+    try {
+      delete require.cache[extensionConfigFilePath] // return uncached
+      config = require(extensionConfigFilePath)
+    } catch(error) {
+      config = {error: error}
+    }
+  } else {
+    config = {}
+    await writeFile(extensionConfigFilePath, '{}', {encoding: 'utf-8'})
+  }
+  return config
+}
+
+export async function getParserConfig():Promise<object> {
+  const homeDir = os.homedir()
+  const parserConfigPath = path.resolve(homeDir, './.markdown-preview-enhanced/parser.js')
+
+  let parserConfig:object
+  if (fs.existsSync(parserConfigPath)) {
+    try {
+      delete require.cache[parserConfigPath] // return uncached
+      parserConfig = require(parserConfigPath)
+    } catch(error) {
+      parserConfig = {}
+    }
+  } else {
+    const template = `module.exports = {
+  onWillParseMarkdown: async function(markdown) {
+    return markdown
+  },
+  onDidParseMarkdown: async function(html) {
+    return html
+  }
+}
+`
+    await writeFile(parserConfigPath, template, {encoding: 'utf-8'})
+
+    parserConfig = {}
+  }
+
+  return parserConfig
+}
+
 /**
  * Check whether two arrays are equal
  * @param x 
@@ -301,4 +350,29 @@ export function addFileProtocol(filePath:string):string {
   }
   filePath = filePath.replace(/^file\:\/+/, 'file:///')
   return filePath
+}
+
+/**
+ * style.less, 
+ * mathjax_config.js, 
+ * mermaid_config.js 
+ * phantomjs_config.js
+ * config.json
+ * 
+ * files
+ */
+export const extensionConfig:
+{ globalStyle:string
+  mathjaxConfig:object 
+  mermaidConfig: string
+  phantomjsConfig: object
+  parserConfig: object
+  config: object } = {
+
+  globalStyle: "",
+  mathjaxConfig: null,
+  mermaidConfig: "MERMAID_CONFIG = {startOnLoad: false}",
+  phantomjsConfig: {},
+  parserConfig: {},
+  config: {}
 }

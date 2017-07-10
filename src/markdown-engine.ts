@@ -1818,7 +1818,11 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
 
   public async parseMD(inputString:string, options:MarkdownEngineRenderOption):Promise<MarkdownEngineOutput> {
     if (!inputString) inputString = await utility.readFile(this.filePath, {encoding:'utf-8'})
-    
+
+    if (utility.extensionConfig.parserConfig['onWillParseMarkdown']) {
+      inputString = await utility.extensionConfig.parserConfig['onWillParseMarkdown'](inputString)
+    }
+
     // import external files and insert anchors if necessary 
     let {outputString, slideConfigs, tocBracketEnabled, JSAndCssFiles, headings, frontMatterString} = await transformMarkdown(inputString, 
     {
@@ -1888,6 +1892,10 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
         html = this.parseSlidesForExport(html, slideConfigs, options.useRelativeFilePath)
       }
       if (yamlConfig) yamlConfig['isPresentationMode'] = true // mark as presentation mode
+    }
+
+    if (utility.extensionConfig.parserConfig['onDidParseMarkdown']) {
+      html = await utility.extensionConfig.parserConfig['onDidParseMarkdown'](html)
     }
 
     this.cachedHTML = html // save to cache
