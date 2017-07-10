@@ -353,6 +353,18 @@ export function addFileProtocol(filePath:string):string {
 }
 
 /**
+ * Remove file:// from file path
+ * @param filePath 
+ */
+export function removeFileProtocol(filePath:string):string {
+  if (process.platform === 'win32') {
+    return filePath.replace(/^file\:\/+/, '')
+  } else {
+    return filePath.replace(/^file\:\/+/, '/')
+  }
+}
+
+/**
  * style.less, 
  * mathjax_config.js, 
  * mermaid_config.js 

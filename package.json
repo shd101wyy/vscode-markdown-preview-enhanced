@@ -286,6 +286,7 @@
         "package": "vsce package"
     },
     "dependencies": {
+        "@shd101wyy/mume": "file:../mume",
         "babyparse": "^0.4.6",
         "cheerio": "0.15.0",
         "gray-matter": "^2.1.1",

@@ -26,7 +26,8 @@
 * Done `mermaid` configuration supoort.    
 * Done `MathJax` configuration support.   
 * Done `line-numbers`. Simply add `line-numbers` to code block(chunk) `class`.  
-![Screen Shot 2017-06-20 at 9.46.12 AM](https://ooo.0o0.ooo/2017/06/20/594939ec162d9.png)
+
+![](https://ooo.0o0.ooo/2017/06/20/594939ec162d9.png)
 
 ## June 16, 2017
 * Done supporting [eBook export](https://shd101wyy.github.io/markdown-preview-enhanced/#/ebook).  
@@ -35,8 +36,8 @@
 * [Code Chunk](https://shd101wyy.github.io/markdown-preview-enhanced/#/code-chunk) implementation is now 60% done. LaTeX and JavaScript don't work yet.    
 Please note that Code Chunk of [Markdown Preview Enhanced for Atom](https://shd101wyy.github.io/markdown-preview-enhanced/#/code-chunk) is outdated. The syntax of the vscode version is the newest. You need to have `cmd` set to declare a code chunk.  
 
-![Screen Shot 2017-06-16 at 10.23.49 PM](https://ooo.0o0.ooo/2017/06/17/5944a2b03d954.png).  
 
+![](https://ooo.0o0.ooo/2017/06/17/5944a2b03d954.png)  
 
 ## June 14, 2017
 * Scroll sync is partially done.
