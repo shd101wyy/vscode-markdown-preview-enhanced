@@ -158,6 +158,11 @@ body .slide ul li {
   list-style-type: disc;
   list-style-position: outside;
 }
+body li > p,
+body .slide li > p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
 body .md-meta,
 body .slide .md-meta,
 body .md-before,

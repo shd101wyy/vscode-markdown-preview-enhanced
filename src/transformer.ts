@@ -235,7 +235,7 @@ export async function transformMarkdown(inputString:string,
       if (inBlock)
         return helper(end+1, lineNo+1, outputString+line+'\n')
 
-      let subjectMatch, headingMatch
+      let subjectMatch, headingMatch, taskListItemMatch
 
       if (line.match(/^(\!\[|@import)/)) {
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
@@ -375,6 +375,12 @@ export async function transformMarkdown(inputString:string,
         if (forPreview) outputString += createAnchor(lineNo) // insert anchor for scroll sync
         tocBracketEnabled = true 
         return helper(end+1, lineNo+1, outputString + `\n[MPETOC]\n\n`)
+      } else if (taskListItemMatch = line.match(/^\s*(?:[*\-+]|\d+)\s+(\[[xX\s]\])\s/)) { // task list
+        const checked = taskListItemMatch[1] !== '[ ]'
+        line = line.replace(
+          taskListItemMatch[1], 
+          `<input type="checkbox" class="task-list-item-checkbox${forPreview ? ' sync-line' : ''}" ${forPreview ? `data-line="${lineNo}"` : '' }${checked? ' checked' : ''}>`)
+        return helper(end+1, lineNo+1, outputString+line+`\n`)
       }
 
       // file import 

@@ -223,7 +223,8 @@
                         "github-dark.css",
                         "gothic.css",
                         "newsprint.css",
-                        "night.css"
+                        "night.css",
+                        "medium.css"
                     ]
                 },
                 "markdown-preview-enhanced.protocolsWhiteList": {

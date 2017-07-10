@@ -727,6 +727,18 @@ function bindTagAClickEvent() {
   }
 }
 
+function bindTaskListEvent() {
+  const taskListItemCheckboxes = mpe.previewElement.getElementsByClassName('task-list-item-checkbox')
+  for (let i = 0; i < taskListItemCheckboxes.length; i++) {
+    let checkbox = taskListItemCheckboxes[i]
+    let li = checkbox.parentElement
+    if (li.tagName !== 'LI') li = li.parentElement
+    if (li.tagName === 'LI') {
+      li.classList.add('task-list-item')
+    }
+  }
+}
+
 /**
  * update previewElement innerHTML content
  * @param html 
@@ -757,6 +769,7 @@ function updateHTML(html:string, id:string, classes:string) {
     mpe.scrollMap = null 
 
     bindTagAClickEvent()
+    bindTaskListEvent()
 
     // set id and classes
     mpe.previewElement.id = id || ''
@@ -954,6 +967,7 @@ function scrollSyncToSlide(line:number) {
  */
 function scrollSyncToLine(line:number) {
   if (!mpe.scrollMap) mpe.scrollMap = buildScrollMap()
+  if (line >= mpe.scrollMap.length) return
 
   /**
    * Since I am not able to access the viewport of the editor 

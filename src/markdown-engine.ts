@@ -367,6 +367,7 @@ export class MarkdownEngine {
     }
 
     // task list 
+    /*
     this.md.renderer.rules.list_item_open = (tokens, idx)=> {
       if (tokens[idx + 2]) {
         let children = tokens[idx + 2].children
@@ -389,6 +390,7 @@ export class MarkdownEngine {
         return '<li>'
       }
     }
+    */
 
     // code fences 
     // modified to support math block
@@ -638,6 +640,21 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
       // ignore it 
     }
 
+    // task list script
+    const taskListScript = `<script>
+(function bindTaskListEvent() {
+  var taskListItemCheckboxes = document.body.getElementsByClassName('task-list-item-checkbox')
+  for (var i = 0; i < taskListItemCheckboxes.length; i++) {
+    let checkbox = taskListItemCheckboxes[i]
+    let li = checkbox.parentElement
+    if (li.tagName !== 'LI') li = li.parentElement
+    if (li.tagName === 'LI') {
+      li.classList.add('task-list-item')
+    }
+  }
+}())    
+</script>`
+
     html = `
   <!DOCTYPE html>
   <html>
@@ -661,6 +678,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
     ${html}
     </body>
     ${presentationInitScript}
+    ${taskListScript}
   </html>
     `
 

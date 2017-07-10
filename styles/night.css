@@ -344,6 +344,11 @@ body .slide td {
   text-align: left;
   /* variable */
 }
+body li > p,
+body .slide li > p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
 body .task-list,
 body .slide .task-list {
   padding-left: 0;
