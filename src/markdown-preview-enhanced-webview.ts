@@ -730,11 +730,31 @@ function bindTagAClickEvent() {
 function bindTaskListEvent() {
   const taskListItemCheckboxes = mpe.previewElement.getElementsByClassName('task-list-item-checkbox')
   for (let i = 0; i < taskListItemCheckboxes.length; i++) {
-    let checkbox = taskListItemCheckboxes[i]
+    const checkbox = taskListItemCheckboxes[i] as HTMLInputElement
     let li = checkbox.parentElement
     if (li.tagName !== 'LI') li = li.parentElement
     if (li.tagName === 'LI') {
       li.classList.add('task-list-item')
+
+      // bind checkbox click event
+      checkbox.onclick = (event)=> {
+        event.preventDefault()
+
+        let checked = checkbox.checked
+        if (checked) {
+          checkbox.setAttribute('checked', '')  
+        } else {
+          checkbox.removeAttribute('checked')
+        }
+
+        const dataLine = parseInt(checkbox.getAttribute('data-line'))
+        if (!isNaN(dataLine)) {
+          window.parent.postMessage({ 
+            command: 'did-click-link', // <= this has to be `did-click-link` to post message
+            data: `command:_markdown-preview-enhanced.clickTaskListCheckbox?${JSON.stringify([sourceUri, dataLine])}`
+          }, 'file://')
+        }
+      }
     }
   }
 }

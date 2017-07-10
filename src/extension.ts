@@ -257,6 +257,30 @@ export function activate(context: vscode.ExtensionContext) {
 			utility.openFile(href)
 		}
 	}
+
+	function clickTaskListCheckbox(uri, dataLine) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		const visibleTextEditors = vscode.window.visibleTextEditors
+    for (let i = 0; i < visibleTextEditors.length; i++) {
+      const editor = visibleTextEditors[i]
+      if (editor.document.uri.fsPath === sourceUri.fsPath) {
+				dataLine = parseInt(dataLine)
+				editor.edit((edit)=> {
+					let line = editor.document.lineAt(dataLine).text
+					if (line.match(/\[ \]/)) {
+						line = line.replace('[ ]', '[x]')	
+					} else {
+						line = line.replace(/\[[xX]\]/, '[ ]')
+					}
+					edit.replace(new vscode.Range(
+						new vscode.Position(dataLine, 0),
+						new vscode.Position(dataLine, line.length)
+					), line)
+				})
+				break
+			}
+		}
+	}
 	
 
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
@@ -394,6 +418,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunks))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.clickTagA', clickTagA))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.clickTaskListCheckbox', clickTaskListCheckbox))
 
   context.subscriptions.push(contentProviderRegistration)
 }
