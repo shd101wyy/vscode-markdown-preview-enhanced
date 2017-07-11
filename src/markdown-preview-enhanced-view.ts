@@ -2,10 +2,10 @@ import * as vscode from 'vscode'
 import * as path from 'path'
 import {Uri, CancellationToken, Event, ProviderResult, TextEditor} from 'vscode'
 
-import * as mpe from "./mpe"
-import {MarkdownEngine} from './markdown-engine'
-import {MarkdownPreviewEnhancedConfig} from './config'
-import * as utility from './utility'
+import * as mume from "@shd101wyy/mume"
+import {MarkdownEngine} from "@shd101wyy/mume"
+
+import {MarkdownPreviewEnhancedConfig} from "./config"
 
 let singlePreviewSouceUri:Uri = null
 
@@ -35,9 +35,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   public constructor(private context: vscode.ExtensionContext) {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig()
 
-    mpe.init() // init markdown-preview-enhanced
+    mume.init() // init markdown-preview-enhanced
     .then(()=> {
-      mpe.onDidChangeConfigFile(this.refreshAllPreviews.bind(this))
+      mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this))
 
       MarkdownEngine.onModifySource(this.modifySource.bind(this))
     })
@@ -58,7 +58,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    * @param result 
    * @param filePath 
    */
-  private async modifySource(codeChunkData:CodeChunkData, result:string, filePath:string):Promise<string> {
+  private async modifySource(codeChunkData:mume.CodeChunkData, result:string, filePath:string):Promise<string> {
     function insertResult(i:number, editor:TextEditor) {
       const lineCount = editor.document.lineCount
       if (i + 1 < lineCount && editor.document.lineAt(i + 1).text.startsWith('<!-- code_chunk_output -->')) {
@@ -173,7 +173,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   /**
    * Initialize MarkdownEngine for this markdown file
    */
-  public initMarkdownEngine(sourceUri: Uri) {
+  public initMarkdownEngine(sourceUri: Uri):MarkdownEngine {
     let engine = this.getEngine(sourceUri)
     if (!engine) {
       engine = new MarkdownEngine(
@@ -184,85 +184,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         })
       this.engineMaps[sourceUri.fsPath] = engine
     }
-  }
-
-  private getScripts() {
-    let scripts = ""
-
-    // jquery 
-    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/jquery/jquery.js')}"></script>`
-  
-    // jquery contextmenu
-    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.ui.position.min.js')}"></script>`
-    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/jquery-contextmenu/jquery.contextMenu.min.js')}"></script>`
-
-    // jquery modal 
-    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/jquery-modal/jquery.modal.min.js')}"></script>`
-
-    // crpto-js
-    scripts += `<script type="text/javascript" src="file:///${path.resolve(this.context.extensionPath, './dependencies/crypto-js/crypto-js.js')}"></script>`
-
-    // mermaid
-    scripts += `<script src="file:///${path.resolve(this.context.extensionPath, `./dependencies/mermaid/mermaid.min.js`)}"></script>`
-    scripts += `<script>
-${mpe.extensionConfig.mermaidConfig}
-mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
-</script>`
-
-    // math 
-    if (this.config.mathRenderingOption === 'MathJax' || this.config.usePandocParser) {
-      const mathJaxConfig = mpe.extensionConfig.mathjaxConfig
-      mathJaxConfig['tex2jax'] = mathJaxConfig['tex2jax'] || {}
-      mathJaxConfig['tex2jax']['inlineMath'] = this.config.mathInlineDelimiters
-      mathJaxConfig['tex2jax']['displayMath'] = this.config.mathBlockDelimiters
-
-      scripts += `<script type="text/javascript" async src="file:///${path.resolve(this.context.extensionPath, './dependencies/mathjax/MathJax.js')}"></script>`
-      scripts += `<script type="text/x-mathjax-config"> MathJax.Hub.Config(${JSON.stringify(mathJaxConfig)}); </script>`
-    }
-    
-    return scripts
-  }
-
-  /**
-   * @param isForPreview: whether to getStyles for rendering preview.  
-   * @return a string of <link ...> that links to css files
-   */
-  private getStyles() {
-    let styles = ''
-
-    // preview.css 
-    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './styles/preview.css')}">`
-
-    // loading.css 
-    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './styles/loading.css')}">`
-  
-    // jquery-contextmenu
-    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/jquery-contextmenu/jquery.contextMenu.min.css`)}">`
-  
-    // jquery-modal 
-    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/jquery-modal/jquery.modal.min.css`)}">`
-
-    // check math 
-    if (this.config.mathRenderingOption === "KaTeX" && !this.config.usePandocParser) {
-      styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './dependencies/katex/katex.min.css')}">`
-    }
-
-    // check mermaid 
-    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/mermaid/${this.config.mermaidTheme}`)}">`
-
-    // check prism 
-    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./dependencies/prism/themes/${this.config.codeBlockTheme}`)}">`
-
-    // check preview theme 
-    styles += `<link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, `./styles/${this.config.previewTheme}`)}">`
-
-    // style template
-    styles += `<link rel="stylesheet" media="screen" href="${path.resolve(this.context.extensionPath, './styles/style-template.css')}">`
-
-    // global styles
-    styles += `<style>${mpe.extensionConfig.globalStyle}</style>`
-
-    return styles  
+    return engine
   }
 
   private getJSAndCssFiles(fsPath:string) {
@@ -317,30 +239,37 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
       })
 
       let html = '<div class="markdown-spinner"> Loading Markdown\u2026 </div>'
-      const engine = this.getEngine(sourceUri)
+      let engine = this.getEngine(sourceUri)
       if (engine) {
         html = engine.getCachedHTML()
+      } else {
+        engine = this.initMarkdownEngine(sourceUri)
       }
 
       const htmlTemplate = `<!DOCTYPE html>
       <html>
       <head>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        <meta id="vscode-markdown-preview-enhanced-data" data-config="${utility.escapeString(JSON.stringify(config))}">
+        <meta id="vscode-markdown-preview-enhanced-data" data-config="${mume.utility.escapeString(JSON.stringify(config))}">
         <meta charset="UTF-8">
-        ${this.getStyles()}
-        ${this.getScripts()}
+
+        ${engine.generateStylesForPreview()}
+        <link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './styles/preview.css')}">
+
+        ${engine.generateScriptsForPreview()}
+
         ${this.getJSAndCssFiles(sourceUri.fsPath)}
+        
         <base href="${document.uri.toString(true)}">
       </head>
-      <body class="markdown-preview-enhanced-container">
-        <div class="markdown-preview-enhanced" for="preview">
+      <body class="preview-container">
+        <div class="mume" for="preview">
           ${html}
         </div>
         
         <div class="refreshing-icon"></div>
 
-        <div class="mpe-toolbar">
+        <div id="md-toolbar">
           <div class="back-to-top-btn btn"><span>⬆︎</span></div>
           <div class="refresh-btn btn"><span>⟳︎</span></div>
           <div class="sidebar-toc-btn btn"><span>§</span></div>
@@ -377,6 +306,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
             </div>
           </div>
         </div>
+
       </body>
       <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
       </html>`
@@ -437,7 +367,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
   public openInBrowser(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.openInBrowser()
+      engine.openInBrowser({})
       .catch((error)=> {
         vscode.window.showErrorMessage(error)
       })
@@ -447,7 +377,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
   public saveAsHTML(sourceUri: Uri, offline:boolean) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.saveAsHTML(offline)
+      engine.htmlExport({offline})
       .then((dest)=> {
         vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
       })
@@ -473,7 +403,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
   public princeExport(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.princeExport()
+      engine.princeExport({})
       .then((dest)=> {
         if (dest.endsWith('?print-pdf'))  // presentation pdf
           vscode.window.showInformationMessage(`Please copy and open the link: { ${dest.replace(/\_/g, '\\_')} } in Chrome then Print as Pdf.`)
@@ -502,7 +432,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
   public pandocExport(sourceUri) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.pandocExport()
+      engine.pandocExport({})
       .then((dest)=> {
         vscode.window.showInformationMessage(`Document ${path.basename(dest)} was created as path: ${dest}`)
       })
@@ -515,7 +445,7 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
   public markdownExport(sourceUri) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.markdownExport()
+      engine.markdownExport({})
       .then((dest)=> {
         vscode.window.showInformationMessage(`Document ${path.basename(dest)} was created as path: ${dest}`)
       })
@@ -525,12 +455,14 @@ mermaidAPI.initialize(window['MERMAID_CONFIG'] || {})
     }
   }
 
+  /*
   public cacheSVG(sourceUri: Uri, code:string, svg:string) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.cacheSVG(code, svg)
     }
   }
+  */
 
   public cacheCodeChunkResult(sourceUri: Uri, id:string, result:string) {
     const engine = this.getEngine(sourceUri)

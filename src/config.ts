@@ -1,4 +1,5 @@
 import * as vscode from "vscode"
+import {MarkdownEngineConfig} from "@shd101wyy/mume"
 
 export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public static getCurrentConfig() {

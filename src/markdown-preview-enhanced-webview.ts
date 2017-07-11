@@ -45,7 +45,7 @@ interface MarkdownPreviewEnhancedPreview {
   doneLoadingPreview: boolean
 
  /**
-  * .markdown-preview-enhanced-container element 
+  * .preview-container element 
   */
   containerElement: HTMLElement,
 
@@ -159,9 +159,9 @@ function onLoad() {
   $ = window['$'] as JQuery
 
   /** init preview elements */
-  const previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0] as HTMLElement
+  const previewElement = document.getElementsByClassName('mume')[0] as HTMLElement
   const hiddenPreviewElement = document.createElement("div")
-  hiddenPreviewElement.classList.add('markdown-preview-enhanced')
+  hiddenPreviewElement.classList.add('mume')
   hiddenPreviewElement.classList.add('hidden-preview')
   hiddenPreviewElement.setAttribute('for', 'preview')
   hiddenPreviewElement.style.zIndex = '0'
@@ -194,7 +194,7 @@ function onLoad() {
     presentationMode: false,
     slideBufferLineNumbers: [],
     toolbar: {
-      toolbar: document.getElementsByClassName('mpe-toolbar')[0] as HTMLElement,
+      toolbar: document.getElementById('md-toolbar') as HTMLElement,
       backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
       refreshBtn: document.getElementsByClassName('refresh-btn')[0] as HTMLElement,
       sidebarTOCBtn: document.getElementsByClassName('sidebar-toc-btn')[0] as HTMLElement
@@ -251,7 +251,7 @@ function initSideBarTOCButton() {
 
     if (mpe.enableSidebarTOC) {
       mpe.sidebarTOC = document.createElement('div') // create new sidebar toc
-      mpe.sidebarTOC.classList.add('mpe-sidebar-toc')
+      mpe.sidebarTOC.classList.add('md-sidebar-toc')
       mpe.containerElement.appendChild(mpe.sidebarTOC)
       mpe.containerElement.classList.add('show-sidebar-toc')
       renderSidebarTOC()
@@ -292,7 +292,7 @@ function initRefreshButton() {
  */
 function initContextMenu() {
   $["contextMenu"]({
-    selector: '.markdown-preview-enhanced-container',
+    selector: '.preview-container',
     items: {
       "open_in_browser": {
         name: "Open in Browser", 
@@ -793,7 +793,7 @@ function updateHTML(html:string, id:string, classes:string) {
 
     // set id and classes
     mpe.previewElement.id = id || ''
-    mpe.previewElement.setAttribute('class', `markdown-preview-enhanced ${classes}`)
+    mpe.previewElement.setAttribute('class', `mume ${classes}`)
     
     // scroll to initial position 
     if (!mpe.doneLoadingPreview) {

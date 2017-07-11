@@ -19,7 +19,8 @@
     }
 }
 
-.markdown-preview-enhanced-container {
+// the preview
+.preview-container {
     width: 100%;
     margin: 0;
     padding: 0;
@@ -62,7 +63,7 @@
         z-index: 999;
         color: black;
     }
-    .mpe-toolbar {
+    #md-toolbar {
         position: fixed;
         top: 32px;
         right: 24px;
@@ -89,7 +90,7 @@
         }
     }
     &.show-sidebar-toc {
-        .mpe-sidebar-toc {
+        .md-sidebar-toc {
             font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif;
             position: fixed;
             top: 0;
@@ -118,20 +119,15 @@
                 list-style-type: none;
             }
         }
-        .mpe-toolbar {
+        #md-toolbar {
             right: 300px;
         }
-        .markdown-preview-enhanced {
+        .mume {
             width: calc(~"100% - 268px");
         }
     }
-    /*
-    .mpe-sidebar-toc,
-    .markdown-preview-enhanced {
-        // .scrollbar-style();
-    }
-    */
-    .markdown-preview-enhanced[for="preview"] {
+
+    .mume[for="preview"] {
         position: fixed;
         left: 0;
         top: 0;
@@ -219,7 +215,7 @@
     /*
     * Reveal.js styles
     */
-    .markdown-preview-enhanced[data-presentation-preview-mode] {
+    .mume[data-presentation-preview-mode] {
         background-color: #f4f4f4;
         #preview-slides {
             width: 100%;

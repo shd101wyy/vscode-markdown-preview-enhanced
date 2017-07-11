@@ -4,14 +4,14 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs"
 
+import {utility} from "@shd101wyy/mume"
+
 import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview} from "./markdown-preview-enhanced-view"
-import * as utility from "./utility"
 import {uploadImageFile, pasteImageFile} from "./image-helper"
 
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-
   // assume only one preview supported.  
   const extensionPath = context.extensionPath
 
@@ -198,10 +198,12 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.markdownExport(sourceUri)
 	}
 
+	/*
 	function cacheSVG(uri, code, svg) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.cacheSVG(sourceUri, code, svg)
 	}
+	*/
 
 	function cacheCodeChunkResult(uri, id, result) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
@@ -287,7 +289,6 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}
 	
-
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {
 			// contentProvider.update(document.uri, true);
@@ -416,7 +417,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.webviewFinishLoading', webviewFinishLoading))
 
-  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheSVG', cacheSVG))
+  // context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheSVG', cacheSVG))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheCodeChunkResult', cacheCodeChunkResult))
 

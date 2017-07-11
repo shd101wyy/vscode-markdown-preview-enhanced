@@ -1,11 +1,9 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs"
+import {utility} from "@shd101wyy/mume"
 
 import {isMarkdownFile} from "./markdown-preview-enhanced-view"
-import * as utility from "./utility"
-import * as smAPI from "./sm"
-import * as imgurAPI from "./imgur"
 
 /**
  * Copy ans paste image at imageFilePath to config.imageForlderPath.
@@ -74,28 +72,6 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
     })
 }
 
-async function addImageURLToHistory(markdownImage) {
-  // TODO: save to history
-  const imageHistoryPath = path.resolve(utility.extensionConfigDirectoryPath, './image_history.md')
-  let data:string
-  try {
-    data = await utility.readFile(imageHistoryPath, {encoding: 'utf-8'})
-  } catch(e) {
-    data = ''
-  }
-  data = `
-${markdownImage}
-
-\`${markdownImage}\`
-
-${(new Date()).toString()}
-
----
-
-` + data 
-  utility.writeFile(imageHistoryPath, data, {encoding: 'utf-8'})
-}
-
 function replaceHint(editor:vscode.TextEditor, line:number, hint:string, withStr:string):boolean {
   let textLine = editor.document.lineAt(line)
   if (textLine.text.indexOf(hint) >= 0) {
@@ -127,8 +103,6 @@ function setUploadedImageURL(imageFileName:string, url:string, editor:vscode.Tex
       i++
     }
   }
-
-  addImageURLToHistory(withStr)
 }
 
 /**
@@ -155,24 +129,13 @@ export function uploadImageFile(sourceUri: any, imageFilePath: string, imageUplo
       textEditorEdit.insert(curPos, hint)
     })
 
-    if (imageUploader === 'imgur') {
-      // A single image
-      imgurAPI.uploadFile(imageFilePath)
-      .then((url)=> {
-        setUploadedImageURL(imageFileName, url, editor, hint, curPos)
-      })
-      .catch((err)=> {
-        vscode.window.showErrorMessage(err)
-      })
-    } else { // sm.ms 
-      smAPI.uploadFile(imageFilePath)
-      .then((url)=> {
-        setUploadedImageURL(imageFileName, url, editor, hint, curPos)
-      })
-      .catch((err)=> {
-        vscode.window.showErrorMessage(err)
-      })
-    }
+    utility.uploadImage(imageFilePath, {method:imageUploader})
+    .then((url)=> {
+      setUploadedImageURL(imageFileName, url, editor, hint, curPos)
+    })
+    .catch((err)=> {
+      vscode.window.showErrorMessage(err)
+    })
   })
 }
 
