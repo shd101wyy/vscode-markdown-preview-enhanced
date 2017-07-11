@@ -4,14 +4,14 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs"
 
+import {utility} from "@shd101wyy/mume"
+
 import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview} from "./markdown-preview-enhanced-view"
-import * as utility from "./utility"
 import {uploadImageFile, pasteImageFile} from "./image-helper"
 
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-
   // assume only one preview supported.  
   const extensionPath = context.extensionPath
 
@@ -78,6 +78,11 @@ export function activate(context: vscode.ExtensionContext) {
 	function openPhantomJSConfig() {
 		const phantomjsConfigFilePath = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './phantomjs_config.js'))
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(phantomjsConfigFilePath))	
+	}
+
+	function extendParser() {
+		const parserConfigPath = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './parser.js'))
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(parserConfigPath))	
 	}
 
 	function showUploadedImages() {
@@ -193,10 +198,12 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.markdownExport(sourceUri)
 	}
 
+	/*
 	function cacheSVG(uri, code, svg) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.cacheSVG(sourceUri, code, svg)
 	}
+	*/
 
 	function cacheCodeChunkResult(uri, id, result) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
@@ -257,8 +264,31 @@ export function activate(context: vscode.ExtensionContext) {
 			utility.openFile(href)
 		}
 	}
-	
 
+	function clickTaskListCheckbox(uri, dataLine) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		const visibleTextEditors = vscode.window.visibleTextEditors
+    for (let i = 0; i < visibleTextEditors.length; i++) {
+      const editor = visibleTextEditors[i]
+      if (editor.document.uri.fsPath === sourceUri.fsPath) {
+				dataLine = parseInt(dataLine)
+				editor.edit((edit)=> {
+					let line = editor.document.lineAt(dataLine).text
+					if (line.match(/\[ \]/)) {
+						line = line.replace('[ ]', '[x]')	
+					} else {
+						line = line.replace(/\[[xX]\]/, '[ ]')
+					}
+					edit.replace(new vscode.Range(
+						new vscode.Position(dataLine, 0),
+						new vscode.Position(dataLine, line.length)
+					), line)
+				})
+				break
+			}
+		}
+	}
+	
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
 		if (isMarkdownFile(document)) {
 			// contentProvider.update(document.uri, true);
@@ -349,6 +379,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPhantomJSConfig', openPhantomJSConfig))
 
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.extendParser', extendParser))
+
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.showUploadedImages', showUploadedImages))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.insertNewSlide', insertNewSlide))
@@ -385,7 +417,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.webviewFinishLoading', webviewFinishLoading))
 
-  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheSVG', cacheSVG))
+  // context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheSVG', cacheSVG))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheCodeChunkResult', cacheCodeChunkResult))
 
@@ -394,6 +426,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunks))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.clickTagA', clickTagA))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.clickTaskListCheckbox', clickTaskListCheckbox))
 
   context.subscriptions.push(contentProviderRegistration)
 }

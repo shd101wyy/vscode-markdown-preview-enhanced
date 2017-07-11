@@ -45,7 +45,7 @@ interface MarkdownPreviewEnhancedPreview {
   doneLoadingPreview: boolean
 
  /**
-  * .markdown-preview-enhanced-container element 
+  * .preview-container element 
   */
   containerElement: HTMLElement,
 
@@ -159,9 +159,9 @@ function onLoad() {
   $ = window['$'] as JQuery
 
   /** init preview elements */
-  const previewElement = document.getElementsByClassName('markdown-preview-enhanced')[0] as HTMLElement
+  const previewElement = document.getElementsByClassName('mume')[0] as HTMLElement
   const hiddenPreviewElement = document.createElement("div")
-  hiddenPreviewElement.classList.add('markdown-preview-enhanced')
+  hiddenPreviewElement.classList.add('mume')
   hiddenPreviewElement.classList.add('hidden-preview')
   hiddenPreviewElement.setAttribute('for', 'preview')
   hiddenPreviewElement.style.zIndex = '0'
@@ -194,7 +194,7 @@ function onLoad() {
     presentationMode: false,
     slideBufferLineNumbers: [],
     toolbar: {
-      toolbar: document.getElementsByClassName('mpe-toolbar')[0] as HTMLElement,
+      toolbar: document.getElementById('md-toolbar') as HTMLElement,
       backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
       refreshBtn: document.getElementsByClassName('refresh-btn')[0] as HTMLElement,
       sidebarTOCBtn: document.getElementsByClassName('sidebar-toc-btn')[0] as HTMLElement
@@ -251,7 +251,7 @@ function initSideBarTOCButton() {
 
     if (mpe.enableSidebarTOC) {
       mpe.sidebarTOC = document.createElement('div') // create new sidebar toc
-      mpe.sidebarTOC.classList.add('mpe-sidebar-toc')
+      mpe.sidebarTOC.classList.add('md-sidebar-toc')
       mpe.containerElement.appendChild(mpe.sidebarTOC)
       mpe.containerElement.classList.add('show-sidebar-toc')
       renderSidebarTOC()
@@ -292,7 +292,7 @@ function initRefreshButton() {
  */
 function initContextMenu() {
   $["contextMenu"]({
-    selector: '.markdown-preview-enhanced-container',
+    selector: '.preview-container',
     items: {
       "open_in_browser": {
         name: "Open in Browser", 
@@ -727,6 +727,38 @@ function bindTagAClickEvent() {
   }
 }
 
+function bindTaskListEvent() {
+  const taskListItemCheckboxes = mpe.previewElement.getElementsByClassName('task-list-item-checkbox')
+  for (let i = 0; i < taskListItemCheckboxes.length; i++) {
+    const checkbox = taskListItemCheckboxes[i] as HTMLInputElement
+    let li = checkbox.parentElement
+    if (li.tagName !== 'LI') li = li.parentElement
+    if (li.tagName === 'LI') {
+      li.classList.add('task-list-item')
+
+      // bind checkbox click event
+      checkbox.onclick = (event)=> {
+        event.preventDefault()
+
+        let checked = checkbox.checked
+        if (checked) {
+          checkbox.setAttribute('checked', '')  
+        } else {
+          checkbox.removeAttribute('checked')
+        }
+
+        const dataLine = parseInt(checkbox.getAttribute('data-line'))
+        if (!isNaN(dataLine)) {
+          window.parent.postMessage({ 
+            command: 'did-click-link', // <= this has to be `did-click-link` to post message
+            data: `command:_markdown-preview-enhanced.clickTaskListCheckbox?${JSON.stringify([sourceUri, dataLine])}`
+          }, 'file://')
+        }
+      }
+    }
+  }
+}
+
 /**
  * update previewElement innerHTML content
  * @param html 
@@ -757,10 +789,11 @@ function updateHTML(html:string, id:string, classes:string) {
     mpe.scrollMap = null 
 
     bindTagAClickEvent()
+    bindTaskListEvent()
 
     // set id and classes
     mpe.previewElement.id = id || ''
-    mpe.previewElement.setAttribute('class', `markdown-preview-enhanced ${classes}`)
+    mpe.previewElement.setAttribute('class', `mume ${classes}`)
     
     // scroll to initial position 
     if (!mpe.doneLoadingPreview) {
@@ -954,6 +987,7 @@ function scrollSyncToSlide(line:number) {
  */
 function scrollSyncToLine(line:number) {
   if (!mpe.scrollMap) mpe.scrollMap = buildScrollMap()
+  if (line >= mpe.scrollMap.length) return
 
   /**
    * Since I am not able to access the viewport of the editor 

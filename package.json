@@ -74,6 +74,10 @@
                 "title": "Markdown Preview Enhanced: Open PhantomJS Config"
             },
             {
+                "command": "markdown-preview-enhanced.extendParser",
+                "title": "Markdown Preview Enhanced: Extend Parser"
+            },
+            {
                 "command": "markdown-preview-enhanced.showUploadedImages",
                 "title": "Markdown Preview Enhanced: Show Uploaded Images"
             }
@@ -223,7 +227,9 @@
                         "github-dark.css",
                         "gothic.css",
                         "newsprint.css",
-                        "night.css"
+                        "night.css",
+                        "medium.css",
+                        "none.css"
                     ]
                 },
                 "markdown-preview-enhanced.protocolsWhiteList": {
@@ -281,14 +287,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "babyparse": "^0.4.6",
-        "cheerio": "0.15.0",
-        "gray-matter": "^2.1.1",
-        "less": "^2.7.2",
-        "mkdirp": "^0.5.1",
-        "request": "^2.81.0",
-        "temp": "^0.8.3",
-        "uslug": "^1.0.4"
+        "@shd101wyy/mume": "0.0.6"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
