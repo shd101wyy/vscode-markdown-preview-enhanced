@@ -287,15 +287,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "0.0.5",
-        "babyparse": "^0.4.6",
-        "cheerio": "0.15.0",
-        "gray-matter": "^2.1.1",
-        "less": "^2.7.2",
-        "mkdirp": "^0.5.1",
-        "request": "^2.81.0",
-        "temp": "^0.8.3",
-        "uslug": "^1.0.4"
+        "@shd101wyy/mume": "0.0.6"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
