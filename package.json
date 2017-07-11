@@ -228,7 +228,8 @@
                         "gothic.css",
                         "newsprint.css",
                         "night.css",
-                        "medium.css"
+                        "medium.css",
+                        "none.css"
                     ]
                 },
                 "markdown-preview-enhanced.protocolsWhiteList": {

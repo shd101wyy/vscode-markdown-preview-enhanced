@@ -3,7 +3,7 @@
 * [x] Support Task List (TODO) for pandoc parser. Added click event for checkbox.    
 * [ ] Wavedrom support.  
 * [ ] Add `Welcome page`.  
-* [x] Add preview theme `Medium`.
+* [x] Add preview themes: `Medium`, `None`.
 * [x] Add `Markdown Preview Enhanced: Extend Parser` command. 
 * [ ] Fix issue [#17](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/17#issuecomment-314016606).  
 

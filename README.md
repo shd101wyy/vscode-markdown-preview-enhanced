@@ -1,11 +1,9 @@
 # Markdown Preview Enhanced
 
-Trying hard to port [Markdown Preview Enhanced for Atom](https://github.com/shd101wyy/markdown-preview-enhanced) to vscode.
+Powered by [Mume](https://github.com/shd101wyy/mume).
 
-First time to write typescript, and it is awesome. I think I will write all my web projects in TypeScript from now on.  
-
-Below is a demo of the Atom version.   
-
+Below is a demo of the Atom version.  
+[Website for Atom (outdated)](https://shd101wyy.github.io/markdown-preview-enhanced/#/).  
 ![](https://user-images.githubusercontent.com/1908863/26898176-a5cad7fc-4b90-11e7-9d8c-74f85f28f133.gif)
 
 ## Features
@@ -20,9 +18,11 @@ Below is a demo of the Atom version.
 * `Markdown Preview Enhanced: Open Mermaid Config`
 * `Markdown Preview Enhanced: Open MathJax Config`  
 * `Markdown Preview Enhanced: Open PhantomJS Config`
+* `Markdown Preview Enhanced: Extend Parser`
 * `Markdown Preview Enhanced: Insert New Slide`  
 * `Markdown Preview Enhanced: Insert Table`  
 * `Markdown Preview Enhanced: Insert Page Break`  
+* `Markdown Preview Enhanced: Show Uploaded Images`
 
 
 * **Right Click** at the Preview to see the contextmenu  
