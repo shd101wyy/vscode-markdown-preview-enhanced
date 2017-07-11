@@ -390,7 +390,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   public phantomjsExport(sourceUri: Uri, type: string) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.phantomjsExport(type)
+      engine.phantomjsExport({fileType: type})
       .then((dest)=> {
         vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
       })
