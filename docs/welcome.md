@@ -5,16 +5,18 @@ presentation:
 
 <!-- slide -->
 # Hello version 0.1.7
-This presentation is created by   
-**Markdown Preview Enhanced**    
-
-Powered by  
-[reveal.js](https://github.com/hakimel/reveal.js)  
 
 <p style="font-size: 18px;">press <kbd>?</kbd> key to see keyboard help.</p>  
 <p style="font-size: 18px;">press <kbd>s</kbd> key to open note window.</p>
 <p style="font-size: 18px;">press <kbd>arrow</kbd> key to navigate.</p>
 <p style="font-size: 18px;">press <kbd>esc</kbd> to toggle overview.</p>
+
+<!-- slide -->
+This presentation is created by   
+**Markdown Preview Enhanced**    
+
+Powered by  
+[reveal.js](https://github.com/hakimel/reveal.js)  
 
 <!-- slide -->
 You can easily create beautiful presentation by running command   
