@@ -30,11 +30,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    */
   private jsAndCssFilesMaps: {[key:string]: string[]} = {}
 
-  /**
-   * The key is markdown file fsPath
-   * value is whether it's presentation mode or not.
-   */
-  private isPresentationModeMaps: {[key:string]: boolean} = {}
 
   private config:MarkdownPreviewEnhancedConfig
 
@@ -240,6 +235,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     })
   }
 
+  // FIXME: presentation markdown is parsed twice here...
   public updateMarkdown(sourceUri:Uri, triggeredBySave?:boolean) {
     const engine = this.getEngine(sourceUri)
     // console.log('updateMarkdown: ' + Object.keys(this.engineMaps).length)
@@ -257,15 +253,12 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
       engine.parseMD(text, {isForPreview: true, useRelativeFilePath: false, hideFrontMatter: false, triggeredBySave})
       .then(({markdown, html, tocHTML, JSAndCssFiles, yamlConfig})=> {
-
         // check JSAndCssFiles 
         if (JSON.stringify(JSAndCssFiles) !== JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath]) || yamlConfig['isPresentationMode'] ) {
           this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles
-          this.isPresentationModeMaps[sourceUri.fsPath] = yamlConfig['isPresentationMode']
           // restart iframe 
           this._onDidChange.fire(getPreviewUri(sourceUri))
         } else {
-          this.isPresentationModeMaps[sourceUri.fsPath] = false
           vscode.commands.executeCommand(
             '_workbench.htmlPreview.postMessage',
             getPreviewUri(sourceUri),
