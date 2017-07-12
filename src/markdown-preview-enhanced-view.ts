@@ -194,6 +194,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
           config: this.config
         })
       this.engineMaps[sourceUri.fsPath] = engine
+      this.jsAndCssFilesMaps[sourceUri.fsPath] = []
     }
     return engine
   }
@@ -230,7 +231,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
           previewUri: previewUri.toString(),
           sourceUri: sourceUri.toString(),
           initialLine: initialLine,
-        }
+        },
+        webviewScript: path.resolve(this.context.extensionPath, './out/src/webview.js')
       })
     })
   }
@@ -238,9 +240,14 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   // FIXME: presentation markdown is parsed twice here...
   public updateMarkdown(sourceUri:Uri, triggeredBySave?:boolean) {
     const engine = this.getEngine(sourceUri)
-    // console.log('updateMarkdown: ' + Object.keys(this.engineMaps).length)
     if (!engine) return 
 
+    // presentation mode 
+    if (engine.isPreviewInPresentationMode) {
+      return this._onDidChange.fire(getPreviewUri(sourceUri))
+    }
+
+    // not presentation mode 
     vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
 
