@@ -391,43 +391,43 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.createTOC', createTOC))
 
-  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.revealLine', revealLine))
+  context.subscriptions.push(vscode.commands.registerCommand('_mume.revealLine', revealLine))
 
-  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.insertImageUrl', insertImageUrl))
+  context.subscriptions.push(vscode.commands.registerCommand('_mume.insertImageUrl', insertImageUrl))
 
-  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.pasteImageFile', pasteImageFile))
+  context.subscriptions.push(vscode.commands.registerCommand('_mume.pasteImageFile', pasteImageFile))
 
-  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.uploadImageFile', uploadImageFile))
+  context.subscriptions.push(vscode.commands.registerCommand('_mume.uploadImageFile', uploadImageFile))
 
-  context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.refreshPreview', refreshPreview))
+  context.subscriptions.push(vscode.commands.registerCommand('_mume.refreshPreview', refreshPreview))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.openInBrowser', openInBrowser))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.openInBrowser', openInBrowser))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.saveAsHTML', saveAsHTML))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.saveAsHTML', saveAsHTML))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.phantomjsExport', phantomjsExport))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.phantomjsExport', phantomjsExport))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.princeExport', princeExport))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.princeExport', princeExport))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.eBookExport', eBookExport))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.eBookExport', eBookExport))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.pandocExport', pandocExport))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.pandocExport', pandocExport))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.markdownExport', markdownExport))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.markdownExport', markdownExport))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.webviewFinishLoading', webviewFinishLoading))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.webviewFinishLoading', webviewFinishLoading))
 
-  // context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheSVG', cacheSVG))
+  // context.subscriptions.push(vscode.commands.registerCommand('_mume.cacheSVG', cacheSVG))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.cacheCodeChunkResult', cacheCodeChunkResult))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.cacheCodeChunkResult', cacheCodeChunkResult))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runCodeChunk', runCodeChunk))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.runCodeChunk', runCodeChunk))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunks))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.runAllCodeChunks', runAllCodeChunks))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.clickTagA', clickTagA))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.clickTagA', clickTagA))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_markdown-preview-enhanced.clickTaskListCheckbox', clickTaskListCheckbox))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.clickTaskListCheckbox', clickTaskListCheckbox))
 
   context.subscriptions.push(contentProviderRegistration)
 }

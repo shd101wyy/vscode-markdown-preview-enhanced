@@ -1,6 +1,5 @@
 ## v0.1.7 
-* [ ] New prensentation mode. Multiple revealjs presentation themes are provided.  
-* [ ] Added Wavedrom support.  
+* [ ] New design for prensentation mode. Multiple revealjs presentation themes are provided.  
 * [ ] Added `Welcome Page`.  
 * [ ] Update `Mume` to version `0.0.7`.  
 
