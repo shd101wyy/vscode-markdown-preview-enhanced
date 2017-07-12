@@ -250,6 +250,10 @@ function initToolbarEvent() {
 function initSideBarTOCButton() {
 
   mpe.toolbar.sidebarTOCBtn.onclick = ()=> {
+    if (mpe.presentationMode) {
+      return window['Reveal'].toggleOverview()
+    }
+
     mpe.enableSidebarTOC = !mpe.enableSidebarTOC
 
     if (mpe.enableSidebarTOC) {
@@ -275,6 +279,10 @@ function initSideBarTOCButton() {
  */
 function initBackToTopButton() {
   mpe.toolbar.backToTopBtn.onclick = ()=> {
+    if (mpe.presentationMode) {
+      return window['Reveal'].slide(0)
+    }
+
     mpe.previewElement.scrollTop = 0
   }
 }
