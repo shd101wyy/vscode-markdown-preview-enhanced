@@ -74,6 +74,10 @@
                 "title": "Markdown Preview Enhanced: Open PhantomJS Config"
             },
             {
+                "command": "markdown-preview-enhanced.openWelcomePage",
+                "title": "Markdown Preview Enhanced: Open Welcome Page"
+            },
+            {
                 "command": "markdown-preview-enhanced.extendParser",
                 "title": "Markdown Preview Enhanced: Extend Parser"
             },
@@ -232,6 +236,25 @@
                         "none.css"
                     ]
                 },
+                "markdown-preview-enhanced.revealjsTheme": {
+                    "description": "RevealJS Presentation Theme",
+                    "default": "white.css",
+                    "type": "string",
+                    "enum": [
+                        "beige.css",
+                        "black.css",
+                        "blood.css",
+                        "league.css",
+                        "moon.css",
+                        "night.css",
+                        "serif.css",
+                        "simple.css",
+                        "sky.css",
+                        "solarized.css",
+                        "white.css",
+                        "none.css"
+                    ]
+                },
                 "markdown-preview-enhanced.protocolsWhiteList": {
                     "description": "Accepted protocols followed by `://` for links.",
                     "default": "http, https, atom, file",
@@ -287,7 +310,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "0.0.6"
+        "@shd101wyy/mume": "0.0.9"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",

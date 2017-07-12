@@ -21,6 +21,7 @@ Below is a demo of the Atom version.
 * `Markdown Preview Enhanced: Open Mermaid Config`
 * `Markdown Preview Enhanced: Open MathJax Config`  
 * `Markdown Preview Enhanced: Open PhantomJS Config`
+* `Markdown Preview Enhanced: Open Welcome Page`
 * `Markdown Preview Enhanced: Extend Parser`
 * `Markdown Preview Enhanced: Insert New Slide`  
 * `Markdown Preview Enhanced: Insert Table`  

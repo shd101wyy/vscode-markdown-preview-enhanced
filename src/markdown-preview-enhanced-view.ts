@@ -30,6 +30,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    */
   private jsAndCssFilesMaps: {[key:string]: string[]} = {}
 
+
   private config:MarkdownPreviewEnhancedConfig
 
   public constructor(private context: vscode.ExtensionContext) {
@@ -38,15 +39,25 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     mume.init() // init markdown-preview-enhanced
     .then(()=> {
       mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this))
-
       MarkdownEngine.onModifySource(this.modifySource.bind(this))
+
+      const extensionVersion = require(path.resolve(this.context.extensionPath, './package.json'))['version']
+      if (extensionVersion !== mume.configs.config['vscode_mpe_version']) {
+        mume.utility.updateExtensionConfig({'vscode_mpe_version': extensionVersion})
+        openWelcomePage()
+      }
     })
   }
 
   private refreshAllPreviews() {
+    // reset configs
+    for (let key in this.engineMaps) {
+      this.engineMaps[key].resetConfig()
+    }
+
+    // refresh iframes
     vscode.workspace.textDocuments.forEach(document => {
       if (document.uri.scheme === 'markdown-preview-enhanced') {
-        // this.update(document.uri);
         this._onDidChange.fire(document.uri)
       }
     })
@@ -187,29 +198,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     return engine
   }
 
-  private getJSAndCssFiles(fsPath:string) {
-    if (!this.jsAndCssFilesMaps[fsPath]) return ''
-
-    let output = ''
-    this.jsAndCssFilesMaps[fsPath].forEach((sourcePath)=> {
-      let absoluteFilePath = sourcePath
-      if (sourcePath[0] === '/') {
-        absoluteFilePath = 'file:///' + path.resolve(vscode.workspace.rootPath, '.' + sourcePath)
-      } else if (sourcePath.match(/^file:\/\//) || sourcePath.match(/^https?\:\/\//)) {
-        // do nothing 
-      } else {
-        absoluteFilePath = 'file:///' + path.resolve(path.dirname(fsPath), sourcePath)
-      }
-
-      if (absoluteFilePath.endsWith('.js')) {
-        output += `<script type="text/javascript" src="${absoluteFilePath}"></script>`
-      } else { // css
-        output += `<link rel="stylesheet" href="${absoluteFilePath}">`
-      }
-    })
-    return output
-  }
-
   public provideTextDocumentContent(previewUri: Uri)
   : Thenable<string> {
     // console.log(sourceUri, uri, vscode.workspace.rootPath)
@@ -231,90 +219,23 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
     return vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText()
-
-      const config = Object.assign({}, this.config, {
-				previewUri: previewUri.toString(),
-				sourceUri: sourceUri.toString(),
-        initialLine: initialLine
-      })
-
-      let html = '<div class="markdown-spinner"> Loading Markdown\u2026 </div>'
       let engine = this.getEngine(sourceUri)
-      if (engine) {
-        html = engine.getCachedHTML()
-      } else {
+      if (!engine) {
         engine = this.initMarkdownEngine(sourceUri)
       }
 
-      const htmlTemplate = `<!DOCTYPE html>
-      <html>
-      <head>
-        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        <meta id="vscode-markdown-preview-enhanced-data" data-config="${mume.utility.escapeString(JSON.stringify(config))}">
-        <meta charset="UTF-8">
-
-        ${engine.generateStylesForPreview()}
-        <link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './styles/preview.css')}">
-
-        ${engine.generateScriptsForPreview()}
-
-        ${this.getJSAndCssFiles(sourceUri.fsPath)}
-        
-        <base href="${document.uri.toString(true)}">
-      </head>
-      <body class="preview-container">
-        <div class="mume" for="preview">
-          ${html}
-        </div>
-        
-        <div class="refreshing-icon"></div>
-
-        <div id="md-toolbar">
-          <div class="back-to-top-btn btn"><span>⬆︎</span></div>
-          <div class="refresh-btn btn"><span>⟳︎</span></div>
-          <div class="sidebar-toc-btn btn"><span>§</span></div>
-        </div>
-
-        <div id="image-helper-view">
-          <h4>Image Helper</h4>
-          <div class="upload-div">
-            <label>Link</label>
-            <input type="text" class="url-editor" placeholder="enter image URL here, then press \'Enter\' to insert.">
-
-            <div class="splitter"></div>
-
-            <label class="copy-label">Copy image to root /assets folder</label>
-            <div class="drop-area paster">
-              <p class="paster"> Drop image file here or click me </p>
-              <input class="file-uploader paster" type="file" style="display:none;" multiple="multiple" >
-            </div>
-
-            <div class="splitter"></div>
-
-            <label>Upload</label>
-            <div class="drop-area uploader">
-              <p class="uploader">Drop image file here or click me</p>
-              <input class="file-uploader uploader" type="file" style="display:none;" multiple="multiple" >
-            </div>
-            <div class="uploader-choice">
-              <span>use</span>
-              <select class="uploader-select">
-                <option>imgur</option>
-                <option>sm.ms</option>
-              </select>
-              <span> to upload images</span>
-            </div>
-          </div>
-        </div>
-
-      </body>
-      <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
-      </html>`
-
-      return htmlTemplate
+      return engine.generateHTMLTemplateForPreview({
+        inputString: text, 
+        config: {
+          previewUri: previewUri.toString(),
+          sourceUri: sourceUri.toString(),
+          initialLine: initialLine,
+        }
+      })
     })
   }
 
+  // FIXME: presentation markdown is parsed twice here...
   public updateMarkdown(sourceUri:Uri, triggeredBySave?:boolean) {
     const engine = this.getEngine(sourceUri)
     // console.log('updateMarkdown: ' + Object.keys(this.engineMaps).length)
@@ -332,9 +253,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
       engine.parseMD(text, {isForPreview: true, useRelativeFilePath: false, hideFrontMatter: false, triggeredBySave})
       .then(({markdown, html, tocHTML, JSAndCssFiles, yamlConfig})=> {
-
         // check JSAndCssFiles 
-        if (JSON.stringify(JSAndCssFiles) !== JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath])) {
+        if (JSON.stringify(JSAndCssFiles) !== JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath]) || yamlConfig['isPresentationMode'] ) {
           this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles
           // restart iframe 
           this._onDidChange.fire(getPreviewUri(sourceUri))
@@ -360,7 +280,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.clearCaches()
-      this.updateMarkdown(sourceUri)
+      // restart iframe 
+      this._onDidChange.fire(getPreviewUri(sourceUri))
     }
   }
 
@@ -419,7 +340,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   public eBookExport(sourceUri: Uri, fileType:string) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.eBookExport(fileType)
+      engine.eBookExport({fileType, runAllCodeChunks:false})
       .then((dest)=> {
         vscode.window.showInformationMessage(`eBook ${path.basename(dest)} was created as path: ${dest}`)
       })
@@ -576,8 +497,15 @@ export function getPreviewUri(uri: vscode.Uri) {
   return previewUri
 }
 
-
 export function isMarkdownFile(document: vscode.TextDocument) {
 	return document.languageId === 'markdown'
 		&& document.uri.scheme !== 'markdown-preview-enhanced' // prevent processing of own documents
+}
+
+export function openWelcomePage() {
+  const welcomeFilePath = mume.utility.addFileProtocol(path.resolve(__dirname, '../../docs/welcome.md')).replace(/\\/g, '/')
+  const uri = vscode.Uri.parse(welcomeFilePath)
+  vscode.commands.executeCommand('vscode.open', uri).then(()=> {
+    vscode.commands.executeCommand('markdown-preview-enhanced.openPreview', uri)
+  })
 }
