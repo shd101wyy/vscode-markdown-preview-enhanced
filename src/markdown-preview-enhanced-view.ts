@@ -237,7 +237,6 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     })
   }
 
-  // FIXME: presentation markdown is parsed twice here...
   public updateMarkdown(sourceUri:Uri, triggeredBySave?:boolean) {
     const engine = this.getEngine(sourceUri)
     if (!engine) return 

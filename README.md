@@ -28,7 +28,6 @@ Below is a demo of the Atom version.
 * `Markdown Preview Enhanced: Insert Page Break`  
 * `Markdown Preview Enhanced: Show Uploaded Images`
 
-
 * **Right Click** at the Preview to see the contextmenu  
 
 ![Screen Shot 2017-06-15 at 1.36.32 AM](https://ooo.0o0.ooo/2017/06/15/59422b1ab3931.png)
@@ -43,21 +42,24 @@ For example, `"markdown-preview-enhanced.previewTheme": "gothic.css"` renders Go
 ![Screen Shot 2017-07-11 at 1.49.54 AM](https://ooo.0o0.ooo/2017/07/11/59647528501b0.png)
 
 ## Porting Progress
-## July 11, 2017
-* [x] Migrate **core library** out from this extension to [Mume](https://github.com/shd101wyy/mume). In the future the mpe both vscode and atom will share the same core.
-* [x] Support Task List (TODO) for pandoc parser. Added click event for checkbox.    
-* [ ] Wavedrom support.  
-* [ ] Add `Welcome page`.  
-* [x] Add preview themes: `Medium`, `None`.
-* [x] Add `Markdown Preview Enhanced: Extend Parser` command. 
-* [x] Fix issue [#17](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/17#issuecomment-314016606).  
+### July 12, 2017  
+* New design for prensentation mode. Multiple revealjs presentation themes are provided.  
+* Added `Welcome Page`.  
+* Update `Mume` to version `0.1.0`.  
 
-## July 4, 2017
+### July 11, 2017
+* Migrate **core library** out from this extension to [Mume](https://github.com/shd101wyy/mume). In the future the mpe both vscode and atom will share the same core.
+* Support Task List (TODO) for pandoc parser. Added click event for checkbox.    
+* Add preview themes: `Medium`, `None`.
+* Add `Markdown Preview Enhanced: Extend Parser` command. 
+* Fix issue [#17](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/17#issuecomment-314016606).  
+
+### July 4, 2017
 * Done [PhantomJS export](./docs/phantomjs.md).  
 * Done [pandoc parser](https://shd101wyy.github.io/markdown-preview-enhanced/#/pandoc?id=pandoc-parser) support.  
 * Added `Gothic`, `Newsprint`, and `Night` preview themes.  
 
-## June 20, 2017
+### June 20, 2017
 * Done [Pandoc export](https://shd101wyy.github.io/markdown-preview-enhanced/#/pandoc-pdf). (Not tested).  
 * Done Markdown(GFM) export. (Not tested)   
 * Done [TOC](https://shd101wyy.github.io/markdown-preview-enhanced/#/toc) implementation.   
@@ -72,7 +74,7 @@ For example, `"markdown-preview-enhanced.previewTheme": "gothic.css"` renders Go
 
 ![](https://ooo.0o0.ooo/2017/06/20/594939ec162d9.png)
 
-## June 16, 2017
+### June 16, 2017
 * Done supporting [eBook export](https://shd101wyy.github.io/markdown-preview-enhanced/#/ebook).  
 * [@import](https://shd101wyy.github.io/markdown-preview-enhanced/#/file-imports) 70% done. Now support importing every external files except `.js` and `.pdf` files.  
 * Done implementing refresh button in preview.  
@@ -82,7 +84,7 @@ Please note that Code Chunk of [Markdown Preview Enhanced for Atom](https://shd1
 
 ![](https://ooo.0o0.ooo/2017/06/17/5944a2b03d954.png)  
 
-## June 14, 2017
+### June 14, 2017
 * Scroll sync is partially done.
 * Done supporting `mermaid`, `PlantUML` and `viz.js` (GraphViz). 
 * Done supporting `[TOC]`.  

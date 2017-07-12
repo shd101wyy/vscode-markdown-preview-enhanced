@@ -1,7 +1,7 @@
 ## v0.1.7 
 * [ ] New design for prensentation mode. Multiple revealjs presentation themes are provided.  
 * [ ] Added `Welcome Page`.  
-* [ ] Update `Mume` to version `0.0.9`.  
+* [ ] Update `Mume` to version `0.1.0`.  
 
 ## v0.1.6 
 * [ ] Separate **core library** out from this extension.
