@@ -5,7 +5,6 @@ console.log('init webview')
 // const settings = JSON.parse(document.getElementById('vscode-markdown-preview-enhanced-data').getAttribute('data-settings'));
 // console.log(settings)
 
-// copied from 'config.ts'
 interface MarkdownConfig {
   breakOnSingleNewLine?: boolean,
   enableTypographer?: boolean,
@@ -116,15 +115,16 @@ interface MarkdownPreviewEnhancedPreview {
    */ 
   presentationMode: boolean
 
-  /**
-   * zoom of the presentation
-   */
-  presentationZoom: number
 
   /**
-   * track the buffer line number of slides
+   * track the slide line number, and (h, v) indices
    */
-  slideBufferLineNumbers: Array<number>
+  slidesData: Array<{line:number, h:number, v:number, offset:number}>
+
+  /**
+   * Current slide offset 
+   */
+  currentSlideOffset: number
 
   /**
    * setTimeout value
@@ -155,7 +155,7 @@ let previewUri = null
  */
 let mpe: MarkdownPreviewEnhancedPreview = null
 
-function onLoad() {
+function onLoad() {  
   $ = window['$'] as JQuery
 
   /** init preview elements */
@@ -190,9 +190,9 @@ function onLoad() {
     editorScrollDelay: 0,
     totalLineCount: 0,
     scrollTimeout: null,
-    presentationZoom: 1,
-    presentationMode: false,
-    slideBufferLineNumbers: [],
+    presentationMode: config['isPresentationMode'],
+    slidesData: [],
+    currentSlideOffset: -1,
     toolbar: {
       toolbar: document.getElementById('md-toolbar') as HTMLElement,
       backToTopBtn: document.getElementsByClassName('back-to-top-btn')[0] as HTMLElement,
@@ -207,21 +207,24 @@ function onLoad() {
     refreshingIconTimeout: null
   }
 
-  /** init mermaid */
-  initMermaid()
-
   /** init toolbar event */
   initToolbarEvent()
 
   /** init image helper */
   initImageHelper()
 
-  previewElement.onscroll = scrollEvent
+  if (!mpe.presentationMode) {
+    previewElement.onscroll = scrollEvent
+  } else { // TODO: presentation preview to source sync
+    initPresentationEvent()
+  }
 
   window.parent.postMessage({ 
     command: 'did-click-link', // <= this has to be `did-click-link` to post message
     data: `command:_markdown-preview-enhanced.webviewFinishLoading?${JSON.stringify([sourceUri])}`
   }, 'file://')
+
+  // console.log(document.getElementsByTagName('html')[0].outerHTML)
 }
 
 /**
@@ -478,16 +481,36 @@ function initImageHelper() {
       fileUploader.val('')
     }
   })
-
 }
 
-/**
- * init mermaid
- */
-function initMermaid() {
-  const mermaidAPI = window["mermaidAPI"]
-  // mermaidAPI.initialize(loadMermaidConfig())
-  mermaidAPI.initialize({startOnLoad: false})
+function initPresentationEvent() {
+  window['Reveal'].addEventListener( 'ready', function( event ) {
+    initSlidesData()
+
+    // slide to initial position
+    window['Reveal'].configure({transition: 'none'})
+    scrollToRevealSourceLine(config['initialLine'])
+    window['Reveal'].configure({transition: 'slide'})
+
+    // setup code chunks
+    setupCodeChunks()
+
+    // scroll slides
+    window['Reveal'].addEventListener('slidechanged', (event)=> {
+      if (Date.now() < mpe.previewScrollDelay) return 
+
+      const {indexh, indexv} = event
+      for (let i = 0; i < mpe.slidesData.length; i++) {
+        const {h, v, line} = mpe.slidesData[i]
+        if (h === indexh && v === indexv) {
+          window.parent.postMessage({ 
+            command: 'did-click-link', // <= this has to be `did-click-link` to post message
+            data: `command:_markdown-preview-enhanced.revealLine?${JSON.stringify([sourceUri, line + 6])}`
+          }, 'file://')
+        }
+      }
+    })
+  })
 }
 
 /**
@@ -664,29 +687,6 @@ function renderSidebarTOC() {
 }
 
 /**
- * zoom slides to fit screen
- */
-function zoomSlidesToFitScreen(element:HTMLElement) {
-  const width = parseFloat(element.getAttribute('data-width')),
-        height = parseFloat(element.getAttribute('data-height'))
-  
-  // ratio = height / width * 100 + '%'
-  const desiredWidth = mpe.previewElement.offsetWidth - 200
-  const zoom = desiredWidth / width  // 100 is padding
-  
-  mpe.slideBufferLineNumbers = []
-
-  const slides = element.getElementsByClassName('slide') 
-  for (let i = 0; i < slides.length; i++) {
-    const slide = slides[i] as HTMLElement
-    slide.style.zoom = zoom.toString()
-
-    mpe.slideBufferLineNumbers.push(parseInt(slide.getAttribute('data-line')))
-  }
-  mpe.presentationZoom = zoom
-}
-
-/**
  * init several preview events
  */
 async function initEvents() {
@@ -764,24 +764,13 @@ function bindTaskListEvent() {
  * @param html 
  */
 function updateHTML(html:string, id:string, classes:string) {
+  if (mpe.presentationMode) return 
+
   // editorScrollDelay = Date.now() + 500
   mpe.previewScrollDelay = Date.now() + 500
 
   mpe.hiddenPreviewElement.innerHTML = html
 
-  let previewSlidesElement;
-  if ( previewSlidesElement = mpe.hiddenPreviewElement.querySelector('#preview-slides')) {
-    mpe.previewElement.setAttribute('data-presentation-preview-mode', '')
-    mpe.hiddenPreviewElement.setAttribute('data-presentation-preview-mode', '')
-
-    mpe.presentationMode = true 
-    zoomSlidesToFitScreen(previewSlidesElement)
-  } else {
-    mpe.previewElement.removeAttribute('data-presentation-preview-mode')
-    mpe.hiddenPreviewElement.removeAttribute('data-presentation-preview-mode')
-
-    mpe.presentationMode = false 
-  }
 
   const scrollTop = mpe.previewElement.scrollTop
   // init several events 
@@ -901,10 +890,6 @@ function previewSyncSource() {
 
   let top = mpe.previewElement.scrollTop + mpe.previewElement.offsetHeight / 2
 
-  if (mpe.presentationMode) {
-    top = top / mpe.presentationZoom
-  }
-
   // try to find corresponding screen buffer row
   if (!mpe.scrollMap) mpe.scrollMap = buildScrollMap()
 
@@ -957,28 +942,36 @@ function setZoomLevel () {
   mpe.scrollMap = null
 }
 
+function initSlidesData() {
+  const slideElements = document.getElementsByTagName('section')
+  let offset = 0
+  for (let i = 0; i < slideElements.length; i++) {
+    const slide = slideElements[i]
+    if (slide.hasAttribute('data-line')) {
+      const line = parseInt(slide.getAttribute('data-line')),
+            h = parseInt(slide.getAttribute('data-h')),
+            v = parseInt(slide.getAttribute('data-v'))
+      mpe.slidesData.push({line, h, v, offset})
+      offset += 1
+    }
+  }
+}
+
 /**
  * scroll sync to display slide according `line`
  * @param: line: the buffer row of editor
  */
 function scrollSyncToSlide(line:number) {
-  let i = mpe.slideBufferLineNumbers.length - 1 
-  while (i >= 0) {
-    if (line >= mpe.slideBufferLineNumbers[i]) {
+  for (let i = mpe.slidesData.length - 1; i >= 0; i--) {
+    if (line >= mpe.slidesData[i].line) {
+      const {h, v, offset} = mpe.slidesData[i]
+      if (offset === mpe.currentSlideOffset) return
+      
+      mpe.currentSlideOffset = offset
+      window['Reveal'].slide(h, v)
       break
     }
-    i -= 1
   }
-  
-  const slideElement:HTMLElement = mpe.previewElement.querySelector(`.slide[data-offset="${i}"]`) as HTMLElement
-  if (!slideElement) {
-    mpe.previewElement.scrollTop = 0
-  } else {
-    const firstSlide = mpe.previewElement.querySelector('.slide[data-offset="0"]') as HTMLElement
-    // set slide to middle of preview
-    mpe.previewElement.scrollTop = -mpe.previewElement.offsetHeight/2 + (slideElement.offsetTop + slideElement.offsetHeight/2)*mpe.presentationZoom
-
-  }  
 }
 
 /**
@@ -1059,15 +1052,7 @@ function scrollToRevealSourceLine(line) {
 
 
 function resizeEvent() {
-  // console.log('resize')
   mpe.scrollMap = null
-
-  /*
-  // nvm it doesn't work.  
-  if (this.presentationMode) { // zoom again 
-    zoomSlidesToFitScreen(document.getElementById('preview-slides'))
-  }
-  */
 }
 
 window.addEventListener('message', (event)=> {
@@ -1093,7 +1078,9 @@ window.addEventListener('message', (event)=> {
     if (mpe.refreshingIconTimeout) clearTimeout(mpe.refreshingIconTimeout)
 
     mpe.refreshingIconTimeout = setTimeout(()=> {
-      mpe.refreshingIcon.style.display = "block"
+      if (!mpe.presentationMode) {
+        mpe.refreshingIcon.style.display = "block"
+      }
     }, 1000)
   } else if (data.type === 'open-image-helper') {
     window['$']('#image-helper-view').modal()

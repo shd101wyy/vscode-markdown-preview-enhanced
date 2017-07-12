@@ -30,6 +30,18 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
    */
   private jsAndCssFilesMaps: {[key:string]: string[]} = {}
 
+  /**
+   * The key is markdown file fsPath
+   * value is whether it's presentation mode or not.
+   */
+  private isPresentationModeMaps: {[key:string]: boolean} = {}
+
+  /**
+   * The key is markdown file fsPath
+   * value is yamlConfig got from calling `parseMD` function.  
+   */
+  private yamlConfigMaps: {[key:string]: object} = {}
+
   private config:MarkdownPreviewEnhancedConfig
 
   public constructor(private context: vscode.ExtensionContext) {
@@ -235,7 +247,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       const config = Object.assign({}, this.config, {
 				previewUri: previewUri.toString(),
 				sourceUri: sourceUri.toString(),
-        initialLine: initialLine
+        initialLine: initialLine,
+        isPresentationMode: this.isPresentationModeMaps[sourceUri.fsPath]
       })
 
       let html = '<div class="markdown-spinner"> Loading Markdown\u2026 </div>'
@@ -253,17 +266,15 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         <meta id="vscode-markdown-preview-enhanced-data" data-config="${mume.utility.escapeString(JSON.stringify(config))}">
         <meta charset="UTF-8">
 
-        ${engine.generateStylesForPreview()}
+        ${engine.generateStylesForPreview(this.isPresentationModeMaps[sourceUri.fsPath])}
         <link rel="stylesheet" href="file:///${path.resolve(this.context.extensionPath, './styles/preview.css')}">
-
-        ${engine.generateScriptsForPreview()}
 
         ${this.getJSAndCssFiles(sourceUri.fsPath)}
         
         <base href="${document.uri.toString(true)}">
       </head>
       <body class="preview-container">
-        <div class="mume" for="preview">
+        <div class="mume" for="preview" ${this.isPresentationModeMaps[sourceUri.fsPath] ? 'data-presentation-mode' : ''}>
           ${html}
         </div>
         
@@ -308,6 +319,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         </div>
 
       </body>
+      ${engine.generateScriptsForPreview(this.isPresentationModeMaps[sourceUri.fsPath], this.yamlConfigMaps[sourceUri.fsPath])}
       <script src="${path.resolve(this.context.extensionPath, './out/src/markdown-preview-enhanced-webview.js')}"></script>
       </html>`
 
@@ -332,13 +344,16 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
 
       engine.parseMD(text, {isForPreview: true, useRelativeFilePath: false, hideFrontMatter: false, triggeredBySave})
       .then(({markdown, html, tocHTML, JSAndCssFiles, yamlConfig})=> {
+        this.yamlConfigMaps[sourceUri.fsPath] = yamlConfig
 
         // check JSAndCssFiles 
-        if (JSON.stringify(JSAndCssFiles) !== JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath])) {
+        if (JSON.stringify(JSAndCssFiles) !== JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath]) || yamlConfig['isPresentationMode'] ) {
           this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles
+          this.isPresentationModeMaps[sourceUri.fsPath] = yamlConfig['isPresentationMode']
           // restart iframe 
           this._onDidChange.fire(getPreviewUri(sourceUri))
         } else {
+          this.isPresentationModeMaps[sourceUri.fsPath] = false
           vscode.commands.executeCommand(
             '_workbench.htmlPreview.postMessage',
             getPreviewUri(sourceUri),
@@ -419,7 +434,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   public eBookExport(sourceUri: Uri, fileType:string) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.eBookExport(fileType)
+      engine.eBookExport({fileType})
       .then((dest)=> {
         vscode.window.showInformationMessage(`eBook ${path.basename(dest)} was created as path: ${dest}`)
       })

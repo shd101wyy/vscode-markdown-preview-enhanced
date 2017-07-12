@@ -13,7 +13,6 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly wikiLinkFileExtension: string
   public readonly frontMatterRenderingOption:string
   public readonly scrollSync: boolean
-  public readonly mermaidTheme: string
   /**
    * "KaTeX", "MathJax", or "None"
    */
@@ -25,7 +24,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
    * Themes
    */
   public readonly codeBlockTheme: string
+  public readonly mermaidTheme: string
   public readonly previewTheme: string
+  public readonly revealjsTheme: string
 
   public readonly protocolsWhiteList: string
 
@@ -62,6 +63,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.mathBlockDelimiters = config.get<Array<string[]>>('mathBlockDelimiters')
     this.codeBlockTheme = config.get<string>('codeBlockTheme')
     this.previewTheme = config.get<string>('previewTheme')
+    this.revealjsTheme = config.get<string>('revealjsTheme')
     this.protocolsWhiteList = config.get<string>('protocolsWhiteList')
     this.imageFolderPath = config.get<string>('imageFolderPath')
     this.imageUploader = config.get<string>('imageUploader')
