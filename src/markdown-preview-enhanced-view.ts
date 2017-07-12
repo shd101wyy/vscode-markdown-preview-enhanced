@@ -45,6 +45,12 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     .then(()=> {
       mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this))
       MarkdownEngine.onModifySource(this.modifySource.bind(this))
+
+      const extensionVersion = require(path.resolve(this.context.extensionPath, './package.json'))['version']
+      if (extensionVersion !== mume.configs.config['vscode_mpe_version']) {
+        mume.utility.updateExtensionConfig({'vscode_mpe_version': extensionVersion})
+        openWelcomePage()
+      }
     })
   }
 
@@ -498,8 +504,15 @@ export function getPreviewUri(uri: vscode.Uri) {
   return previewUri
 }
 
-
 export function isMarkdownFile(document: vscode.TextDocument) {
 	return document.languageId === 'markdown'
 		&& document.uri.scheme !== 'markdown-preview-enhanced' // prevent processing of own documents
+}
+
+export function openWelcomePage() {
+  const welcomeFilePath = mume.utility.addFileProtocol(path.resolve(__dirname, '../../docs/welcome.md'))
+  const uri = vscode.Uri.parse(welcomeFilePath)
+  vscode.commands.executeCommand('vscode.open', uri).then(()=> {
+    vscode.commands.executeCommand('markdown-preview-enhanced.openPreview', uri)
+  })
 }
