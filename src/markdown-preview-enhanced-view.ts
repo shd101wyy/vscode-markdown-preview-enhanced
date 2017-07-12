@@ -347,7 +347,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   public eBookExport(sourceUri: Uri, fileType:string) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
-      engine.eBookExport({fileType})
+      engine.eBookExport({fileType, runAllCodeChunks:false})
       .then((dest)=> {
         vscode.window.showInformationMessage(`eBook ${path.basename(dest)} was created as path: ${dest}`)
       })

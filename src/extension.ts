@@ -135,9 +135,12 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	function webviewFinishLoading(sourceUri) {
+		// do nothing
+		/*
 		sourceUri = vscode.Uri.parse(sourceUri)
 		contentProvider.initMarkdownEngine(sourceUri)
 		contentProvider.update(sourceUri)
+		*/
 	}
 
 	/**
