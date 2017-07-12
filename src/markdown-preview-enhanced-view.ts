@@ -375,7 +375,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.clearCaches()
-      this.updateMarkdown(sourceUri)
+      // restart iframe 
+      this._onDidChange.fire(getPreviewUri(sourceUri))
     }
   }
 

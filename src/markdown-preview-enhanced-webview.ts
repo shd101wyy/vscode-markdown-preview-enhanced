@@ -492,8 +492,10 @@ function initPresentationEvent() {
     scrollToRevealSourceLine(config['initialLine'])
     window['Reveal'].configure({transition: 'slide'})
 
-    // setup code chunks
+    // several events...
     setupCodeChunks()
+    bindTagAClickEvent()
+    bindTaskListEvent()
 
     // scroll slides
     window['Reveal'].addEventListener('slidechanged', (event)=> {
@@ -764,7 +766,13 @@ function bindTaskListEvent() {
  * @param html 
  */
 function updateHTML(html:string, id:string, classes:string) {
-  if (mpe.presentationMode) return 
+  // If it's now presentationMode, then this function shouldn't be called.
+  // If this function is called, then it might be in the case that 
+  //   1. Using singlePreview 
+  //   2. Switch from a presentationMode file to not presentationMode file.
+  if (mpe.presentationMode) {
+    return window.parent.postMessage({ command: 'did-click-link', data: `command:_markdown-preview-enhanced.refreshPreview?${JSON.stringify([sourceUri])}`}, 'file://') 
+  }
 
   // editorScrollDelay = Date.now() + 500
   mpe.previewScrollDelay = Date.now() + 500
