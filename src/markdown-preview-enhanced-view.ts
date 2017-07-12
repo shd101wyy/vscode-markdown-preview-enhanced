@@ -510,7 +510,7 @@ export function isMarkdownFile(document: vscode.TextDocument) {
 }
 
 export function openWelcomePage() {
-  const welcomeFilePath = mume.utility.addFileProtocol(path.resolve(__dirname, '../../docs/welcome.md'))
+  const welcomeFilePath = mume.utility.addFileProtocol(path.resolve(__dirname, '../../docs/welcome.md')).replace(/\\/g, '/')
   const uri = vscode.Uri.parse(welcomeFilePath)
   vscode.commands.executeCommand('vscode.open', uri).then(()=> {
     vscode.commands.executeCommand('markdown-preview-enhanced.openPreview', uri)
