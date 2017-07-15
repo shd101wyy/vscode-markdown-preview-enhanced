@@ -212,14 +212,20 @@
                     "enum": [
                         "atom-dark.css",
                         "coy.css",
+                        "darcula.css",
                         "dark.css",
                         "default.css",
                         "funky.css",
                         "github.css",
+                        "hopscotch.css",
                         "monokai.css",
                         "okaidia.css",
+                        "onedark.css",
+                        "pojoaque.css",
                         "solarized-light.css",
-                        "twilight.css"
+                        "twilight.css",
+                        "vs.css",
+                        "xonokai.css"
                     ]
                 },
                 "markdown-preview-enhanced.previewTheme": {
@@ -310,7 +316,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.1.0"
+        "@shd101wyy/mume": "^0.1.2"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",

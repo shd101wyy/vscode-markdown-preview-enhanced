@@ -6,7 +6,7 @@ import * as fs from "fs"
 
 import {utility} from "@shd101wyy/mume"
 
-import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview, openWelcomePage} from "./markdown-preview-enhanced-view"
+import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview, openWelcomePage} from "./preview-content-provider"
 import {uploadImageFile, pasteImageFile} from "./image-helper"
 
 // this method is called when your extension iopenTextDocuments activated
@@ -232,7 +232,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
 			previewUri,
 			{
-				type: 'run-all-code-chunks'
+				command: 'runAllCodeChunks'
 			})
 	}
 
@@ -247,7 +247,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
 			previewUri,
 			{
-				type: 'run-code-chunk'
+				command: 'runCodeChunk'
 			})
 	}
 
@@ -315,7 +315,7 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
         previewUri,
         {
-          type: 'change-text-editor-selection',
+          command: 'changeTextEditorSelection',
           line: event.selections[0].active.line
         })
       }
@@ -437,7 +437,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 function revealLine(uri, line) {
-	// console.log('revealLine: ' + uri + ' ' + line)
 	const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 
 	vscode.window.visibleTextEditors

@@ -231,8 +231,9 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
           previewUri: previewUri.toString(),
           sourceUri: sourceUri.toString(),
           initialLine: initialLine,
+          vscode: true
         },
-        webviewScript: path.resolve(this.context.extensionPath, './out/src/webview.js')
+        // webviewScript: path.resolve(this.context.extensionPath, './out/src/webview.js') // use default webview.ts in mume
       })
     })
   }
@@ -254,7 +255,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         '_workbench.htmlPreview.postMessage',
         getPreviewUri(sourceUri),
         {
-          type: 'start-parsing-markdown',
+          command: 'startParsingMarkdown',
         })
 
       engine.parseMD(text, {isForPreview: true, useRelativeFilePath: false, hideFrontMatter: false, triggeredBySave})
@@ -269,7 +270,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
             '_workbench.htmlPreview.postMessage',
             getPreviewUri(sourceUri),
             {
-              type: 'update-html',
+              command: 'updateHTML',
               html: html,
               tocHTML: tocHTML,
               totalLineCount: document.lineCount,
@@ -464,7 +465,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         '_workbench.htmlPreview.postMessage',
         getPreviewUri(sourceUri),
         {
-          type: 'open-image-helper'
+          command: 'openImageHelper'
         })
     }
   }

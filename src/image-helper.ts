@@ -3,7 +3,7 @@ import * as path from "path"
 import * as fs from "fs"
 import {utility} from "@shd101wyy/mume"
 
-import {isMarkdownFile} from "./markdown-preview-enhanced-view"
+import {isMarkdownFile} from "./preview-content-provider"
 
 /**
  * Copy ans paste image at imageFilePath to config.imageForlderPath.
