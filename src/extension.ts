@@ -169,9 +169,9 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.openInBrowser(sourceUri)
 	}
 
-	function saveAsHTML(uri, offline) {
+	function htmlExport(uri, offline) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
-		contentProvider.saveAsHTML(sourceUri, offline)
+		contentProvider.htmlExport(sourceUri, offline)
 	}
 
 	function phantomjsExport(uri, type) {
@@ -406,7 +406,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.openInBrowser', openInBrowser))
 
-	context.subscriptions.push(vscode.commands.registerCommand('_mume.saveAsHTML', saveAsHTML))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.htmlExport', htmlExport))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.phantomjsExport', phantomjsExport))
 

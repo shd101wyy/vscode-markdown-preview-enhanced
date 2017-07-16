@@ -11,41 +11,27 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly enableTypographer: boolean
   public readonly enableWikiLinkSyntax: boolean
   public readonly wikiLinkFileExtension: string
+  public readonly enableExtendedTableSyntax: boolean
   public readonly frontMatterRenderingOption:string
-  public readonly scrollSync: boolean
-  /**
-   * "KaTeX", "MathJax", or "None"
-   */
   public readonly mathRenderingOption: string
   public readonly mathInlineDelimiters: Array<string[]>
   public readonly mathBlockDelimiters: Array<string[]>
-
-  /**
-   * Themes
-   */
   public readonly codeBlockTheme: string
   public readonly mermaidTheme: string
   public readonly previewTheme: string
   public readonly revealjsTheme: string
-
   public readonly protocolsWhiteList: string
-
-  /**
-   * image helper
-   */
   public readonly imageFolderPath: string
   public readonly imageUploader: string
-
   public readonly printBackground: boolean
-
   public readonly phantomPath: string 
-
-  /**
-   * pandoc
-   */
   public readonly pandocPath: string
   public readonly pandocMarkdownFlavor: string 
   public readonly pandocArguments: string[]
+  public readonly latexEngine: string
+
+  // preview config
+  public readonly scrollSync: boolean
 
   private constructor() {
     const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
@@ -55,8 +41,8 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.enableTypographer = config.get<boolean>('enableTypographer')
     this.enableWikiLinkSyntax = config.get<boolean>('enableWikiLinkSyntax')
     this.wikiLinkFileExtension = config.get<string>('wikiLinkFileExtension')
+    this.enableExtendedTableSyntax = config.get<boolean>('enableExtendedTableSyntax')
     this.frontMatterRenderingOption = config.get<string>('frontMatterRenderingOption')
-    this.scrollSync = config.get<boolean>('scrollSync')
     this.mermaidTheme = config.get<string>('mermaidTheme')
     this.mathRenderingOption = config.get<string>('mathRenderingOption')
     this.mathInlineDelimiters = config.get<Array<string[]>>('mathInlineDelimiters')
@@ -72,6 +58,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.pandocPath = config.get<string>('pandocPath')
     this.pandocMarkdownFlavor = config.get<string>('pandocMarkdownFlavor')
     this.pandocArguments = config.get<string>('pandocArguments').split(',').map((x)=> x.trim())
+    this.latexEngine = config.get<string>('latexEngine')
+
+    this.scrollSync = config.get<boolean>('scrollSync')
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

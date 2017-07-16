@@ -302,7 +302,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     }
   }
 
-  public saveAsHTML(sourceUri: Uri, offline:boolean) {
+  public htmlExport(sourceUri: Uri, offline:boolean) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.htmlExport({offline})
