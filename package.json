@@ -185,6 +185,11 @@
                     "default": ".md",
                     "type": "string"
                 },
+                "markdown-preview-enhanced.enableExtendedTableSyntax": {
+                    "description": "Enable extended table syntax to support merging table cells.",
+                    "default": false,
+                    "type": "boolean"
+                },
                 "markdown-preview-enhanced.frontMatterRenderingOption": {
                     "description": "Front matter rendering option",
                     "type": "string",
@@ -304,6 +309,11 @@
                     "description": "Comma separated pandoc arguments e.g. `--smart, --filter=/bin/exe`. Please use long argument names.",
                     "default": "",
                     "type": "string"
+                },
+                "markdown-preview-enhanced.latexEngine": {
+                    "description": "Default latex engine for Pandoc export and latex code chunk.",
+                    "default": "pdflatex",
+                    "type": "string"
                 }
             }
         }
@@ -316,7 +326,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.1.2"
+        "@shd101wyy/mume": "file:..\\..\\Documents\\GitHub\\mume"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
