@@ -326,7 +326,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.1.4"
+        "@shd101wyy/mume": "^0.1.5"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
