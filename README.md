@@ -1,6 +1,6 @@
 <h1 align="center"> Markdown Preview Enhanced </h1>
 
-![intro](https://user-images.githubusercontent.com/1908863/28227953-eb6eefa4-68a1-11e7-8769-96ea83facf3b.png)
+![intro](https://user-images.githubusercontent.com/1908863/28495106-30b3b15e-6f09-11e7-8eb6-ca4ca001ab15.png)
 
 <p align="center">
 <a href="https://shd101wyy.github.io/markdown-preview-enhanced/#/"> English &nbsp;&nbsp; </a>  
