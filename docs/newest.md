@@ -1,4 +1,4 @@
-## 0.2.0
+## 0.2.0, 0.2.1
 * Upgraded [mume](https://github.com/shd101wyy/mume) to version `0.1.5`.
     * Fixed header id bug [#516](https://github.com/shd101wyy/markdown-preview-enhanced/issues/516).  
     * Fixed `enableExtendedTableSyntax` bug.  

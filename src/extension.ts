@@ -255,14 +255,14 @@ export function activate(context: vscode.ExtensionContext) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		href = decodeURIComponent(href)
 		if (['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(path.extname(href)) >= 0) {
-			utility.openFile(utility.addFileProtocol(href))
+			utility.openFile(href)
 		} else if (href.match(/^file\:\/\/\//)) {
 			// openFilePath = href.slice(8) # remove protocal
 			let openFilePath = utility.addFileProtocol(href.replace(/(\s*)[\#\?](.+)$/, '')) // remove #anchor and ?params...
 			openFilePath = decodeURI(openFilePath)
 		  vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(openFilePath), vscode.ViewColumn.One)
 		} else {
-			utility.openFile(utility.addFileProtocol(href))
+			utility.openFile(href)
 		}
 	}
 
