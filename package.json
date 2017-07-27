@@ -211,26 +211,32 @@
                     ]
                 },
                 "markdown-preview-enhanced.codeBlockTheme": {
-                    "description": "Code block theme.",
-                    "default": "default.css",
+                    "description": "Code block theme. If `auto.css` is chosen, then the code block theme will be automatically picked to match the preview theme.",
+                    "default": "auto.css",
                     "type": "string",
                     "enum": [
+                        "auto.css",
+                        "default.css",
                         "atom-dark.css",
+                        "atom-light.css",
+                        "atom-material.css",
                         "coy.css",
                         "darcula.css",
                         "dark.css",
-                        "default.css",
                         "funky.css",
                         "github.css",
                         "hopscotch.css",
                         "monokai.css",
                         "okaidia.css",
-                        "onedark.css",
+                        "one-dark.css",
+                        "one-light.css",
+                        "pen-paper-coffee.css",
                         "pojoaque.css",
+                        "solarized-dark.css",
                         "solarized-light.css",
                         "twilight.css",
                         "vs.css",
-                        "xonokai.css"
+                        "xonokai.css" 
                     ]
                 },
                 "markdown-preview-enhanced.previewTheme": {
@@ -238,13 +244,21 @@
                     "default": "github-light.css",
                     "type": "string",
                     "enum": [
-                        "github-light.css",
+                        "atom-dark.css",
+                        "atom-light.css",
+                        "atom-material.css",
                         "github-dark.css",
+                        "github-light.css",
                         "gothic.css",
+                        "medium.css",
+                        "monokai.css",
                         "newsprint.css",
                         "night.css",
-                        "medium.css",
-                        "none.css"
+                        "none.css",
+                        "one-dark.css",
+                        "one-light.css",
+                        "solarized-dark.css",
+                        "solarized-light.css"
                     ]
                 },
                 "markdown-preview-enhanced.revealjsTheme": {
@@ -326,7 +340,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.1.5"
+        "@shd101wyy/mume": "file:../mume"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
