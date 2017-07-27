@@ -328,6 +328,11 @@
                     "description": "Default latex engine for Pandoc export and latex code chunk.",
                     "default": "pdflatex",
                     "type": "string"
+                },
+                "markdown-preview-enhanced.enableScriptExecution": {
+                    "description": "Disabling this will prevent executing code chunks and importing javascript files.",
+                    "default": true,
+                    "type": "boolean"
                 }
             }
         }
