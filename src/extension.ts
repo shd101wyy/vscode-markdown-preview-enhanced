@@ -432,6 +432,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.clickTaskListCheckbox', clickTaskListCheckbox))
 
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.showUploadedImageHistory', showUploadedImages))
+
   context.subscriptions.push(contentProviderRegistration)
 }
 
