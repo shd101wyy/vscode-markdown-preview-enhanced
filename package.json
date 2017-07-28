@@ -93,6 +93,12 @@
                 "when": "editorLangId == markdown"
             },
             {
+                "command": "markdown-preview-enhanced.openPreview",
+				"key": "ctrl+k v",
+                "mac": "cmd+k v",
+                "when": "editorLangId == markdown"
+            },
+            {
                 "command": "markdown-preview-enhanced.openImageHelper",
                 "key": "shift+ctrl+i",
                 "when": "editorLangId == markdown"
@@ -211,7 +217,7 @@
                     ]
                 },
                 "markdown-preview-enhanced.codeBlockTheme": {
-                    "description": "Code block theme. If `auto.css` is chosen, then the code block theme will be automatically picked to match the preview theme.",
+                    "description": "Code block theme. If `auto.css` is chosen, then the code block theme that best matches the current preview theme will be picked.",
                     "default": "auto.css",
                     "type": "string",
                     "enum": [
