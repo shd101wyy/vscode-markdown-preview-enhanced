@@ -72,10 +72,17 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   private async modifySource(codeChunkData:mume.CodeChunkData, result:string, filePath:string):Promise<string> {
     function insertResult(i:number, editor:TextEditor) {
       const lineCount = editor.document.lineCount
-      if (i + 1 < lineCount && editor.document.lineAt(i + 1).text.startsWith('<!-- code_chunk_output -->')) {
+      let start = 0
+      // find <!-- code_chunk_output -->
+      for (let j = i + 1; j < i + 6 && j < lineCount; j++) {
+        if (editor.document.lineAt(j).text.startsWith('<!-- code_chunk_output -->')) {
+          start = j 
+          break
+        }
+      }
+      if (start) { // found
         // TODO: modify exited output 
-        let start = i + 1
-        let end = i + 2
+        let end = start + 1
         while (end < lineCount) {
           if (editor.document.lineAt(end).text.startsWith('<!-- /code_chunk_output -->')){
             break
@@ -116,7 +123,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         const lineCount = editor.document.lineCount
         for (let i = 0; i < lineCount; i++) {
           const line = editor.document.lineAt(i)
-          if (line.text.match(/^```(.+)\"?cmd\"?\s*\:/)) {
+          if (line.text.match(/^```(.+)\"?cmd\"?\s*[:=]/)) {
             if (codeChunkOffset === targetCodeChunkOffset) {
               i = i + 1
               while (i < lineCount) {
@@ -129,7 +136,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
             } else {
               codeChunkOffset++
             }
-          } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*\:/)) {
+          } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*[:=]/)) {
             if (codeChunkOffset === targetCodeChunkOffset) {
               // console.log('find code chunk' )
               return insertResult(i, editor)

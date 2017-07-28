@@ -29,6 +29,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly pandocMarkdownFlavor: string 
   public readonly pandocArguments: string[]
   public readonly latexEngine: string
+  public readonly enableScriptExecution: boolean
 
   // preview config
   public readonly scrollSync: boolean
@@ -59,6 +60,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.pandocMarkdownFlavor = config.get<string>('pandocMarkdownFlavor')
     this.pandocArguments = config.get<string>('pandocArguments').split(',').map((x)=> x.trim())
     this.latexEngine = config.get<string>('latexEngine')
+    this.enableScriptExecution = config.get<boolean>('enableScriptExecution')
 
     this.scrollSync = config.get<boolean>('scrollSync')
   }

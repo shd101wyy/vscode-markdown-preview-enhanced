@@ -112,7 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const editor = vscode.window.activeTextEditor
 		if (editor && editor.document && editor.edit) {
 			editor.edit((textEdit)=> {
-				textEdit.insert(editor.selection.active, '\n<!-- @import "[TOC]" {cmd:"toc", depthFrom:1, depthTo:6, orderedList:false} -->\n')
+				textEdit.insert(editor.selection.active, '\n<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->\n')
 			})
 		}
 	}
@@ -431,6 +431,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.clickTagA', clickTagA))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.clickTaskListCheckbox', clickTaskListCheckbox))
+
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.showUploadedImageHistory', showUploadedImages))
 
   context.subscriptions.push(contentProviderRegistration)
 }

@@ -93,6 +93,12 @@
                 "when": "editorLangId == markdown"
             },
             {
+                "command": "markdown-preview-enhanced.openPreview",
+                "key": "ctrl+k v",
+                "mac": "cmd+k v",
+                "when": "editorLangId == markdown"
+            },
+            {
                 "command": "markdown-preview-enhanced.openImageHelper",
                 "key": "shift+ctrl+i",
                 "when": "editorLangId == markdown"
@@ -211,22 +217,28 @@
                     ]
                 },
                 "markdown-preview-enhanced.codeBlockTheme": {
-                    "description": "Code block theme.",
-                    "default": "default.css",
+                    "description": "Code block theme. If `auto.css` is chosen, then the code block theme that best matches the current preview theme will be picked.",
+                    "default": "auto.css",
                     "type": "string",
                     "enum": [
+                        "auto.css",
+                        "default.css",
                         "atom-dark.css",
+                        "atom-light.css",
+                        "atom-material.css",
                         "coy.css",
                         "darcula.css",
                         "dark.css",
-                        "default.css",
                         "funky.css",
                         "github.css",
                         "hopscotch.css",
                         "monokai.css",
                         "okaidia.css",
-                        "onedark.css",
+                        "one-dark.css",
+                        "one-light.css",
+                        "pen-paper-coffee.css",
                         "pojoaque.css",
+                        "solarized-dark.css",
                         "solarized-light.css",
                         "twilight.css",
                         "vs.css",
@@ -238,13 +250,21 @@
                     "default": "github-light.css",
                     "type": "string",
                     "enum": [
-                        "github-light.css",
+                        "atom-dark.css",
+                        "atom-light.css",
+                        "atom-material.css",
                         "github-dark.css",
+                        "github-light.css",
                         "gothic.css",
+                        "medium.css",
+                        "monokai.css",
                         "newsprint.css",
                         "night.css",
-                        "medium.css",
-                        "none.css"
+                        "none.css",
+                        "one-dark.css",
+                        "one-light.css",
+                        "solarized-dark.css",
+                        "solarized-light.css"
                     ]
                 },
                 "markdown-preview-enhanced.revealjsTheme": {
@@ -314,6 +334,11 @@
                     "description": "Default latex engine for Pandoc export and latex code chunk.",
                     "default": "pdflatex",
                     "type": "string"
+                },
+                "markdown-preview-enhanced.enableScriptExecution": {
+                    "description": "Disabling this will prevent executing code chunks and importing javascript files.",
+                    "default": true,
+                    "type": "boolean"
                 }
             }
         }
@@ -326,7 +351,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.1.5"
+        "@shd101wyy/mume": "^0.1.6"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
