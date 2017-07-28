@@ -116,7 +116,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         const lineCount = editor.document.lineCount
         for (let i = 0; i < lineCount; i++) {
           const line = editor.document.lineAt(i)
-          if (line.text.match(/^```(.+)\"?cmd\"?\s*\:/)) {
+          if (line.text.match(/^```(.+)\"?cmd\"?\s*[:=]/)) {
             if (codeChunkOffset === targetCodeChunkOffset) {
               i = i + 1
               while (i < lineCount) {
@@ -129,7 +129,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
             } else {
               codeChunkOffset++
             }
-          } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*\:/)) {
+          } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*[:=]/)) {
             if (codeChunkOffset === targetCodeChunkOffset) {
               // console.log('find code chunk' )
               return insertResult(i, editor)
