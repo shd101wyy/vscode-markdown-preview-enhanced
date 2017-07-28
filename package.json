@@ -94,7 +94,7 @@
             },
             {
                 "command": "markdown-preview-enhanced.openPreview",
-				"key": "ctrl+k v",
+                "key": "ctrl+k v",
                 "mac": "cmd+k v",
                 "when": "editorLangId == markdown"
             },
@@ -242,7 +242,7 @@
                         "solarized-light.css",
                         "twilight.css",
                         "vs.css",
-                        "xonokai.css" 
+                        "xonokai.css"
                     ]
                 },
                 "markdown-preview-enhanced.previewTheme": {
@@ -351,7 +351,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "file:../mume"
+        "@shd101wyy/mume": "^0.1.6"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
