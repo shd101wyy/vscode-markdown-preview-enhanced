@@ -308,7 +308,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}))
 
   context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(event => {
-		if (isMarkdownFile(event.textEditor.document) && contentProvider.config.scrollSync) {
+		if (isMarkdownFile(event.textEditor.document)) {
 			const previewUri = getPreviewUri(event.textEditor.document.uri);
 			// logger.log('updatePreviewForSelection', { markdownFile: markdownFile.toString() });
       // console.log('onDidChangeTextEditorSelection', markdownFile)

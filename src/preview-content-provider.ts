@@ -31,7 +31,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   private jsAndCssFilesMaps: {[key:string]: string[]} = {}
 
 
-  public config:MarkdownPreviewEnhancedConfig
+  private config:MarkdownPreviewEnhancedConfig
 
   public constructor(private context: vscode.ExtensionContext) {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig()
