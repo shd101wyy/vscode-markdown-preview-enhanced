@@ -394,7 +394,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.createTOC', createTOC))
 
-  context.subscriptions.push(vscode.commands.registerCommand('_mume.revealLine', revealLine))
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.revealLine', revealLine))
 
   context.subscriptions.push(vscode.commands.registerCommand('_mume.insertImageUrl', insertImageUrl))
 
@@ -439,12 +439,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 function revealLine(uri, line) {
-	const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+	const sourceUri = vscode.Uri.parse(decodeURIComponent(uri))
 
 	vscode.window.visibleTextEditors
 		.filter(editor => isMarkdownFile(editor.document) && editor.document.uri.fsPath === sourceUri.fsPath)
 		.forEach(editor => {
-			const sourceLine = Math.floor(line);
+			const sourceLine = Math.min(Math.floor(line), editor.document.lineCount - 1)
 			const fraction = line - sourceLine;
 			const text = editor.document.lineAt(sourceLine).text;
 			const start = Math.floor(fraction * text.length);
@@ -452,7 +452,6 @@ function revealLine(uri, line) {
 				new vscode.Range(sourceLine, start, sourceLine + 1, 0),
 				vscode.TextEditorRevealType.InCenter);
 		})
-
 }
 
 // this method is called when your extension is deactivated
