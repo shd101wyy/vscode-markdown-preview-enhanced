@@ -2,6 +2,15 @@
 I will be busy hunting jobs (August & September), so I won't have time to implement new features for this extension.     
 The updates in the following two months will be bug fixes only.  
 
+## 0.2.3
+* The old feature [WaveDrom diagram](https://shd101wyy.github.io/markdown-preview-enhanced/#/diagrams?id=wavedrom) is now supported again.
+* The doc of customization css is updated, please [check it here](https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css).
+* Sidebar TOC is now supported in HTML export, and it is enabled by default.
+  ![screen shot 2017-08-05 at 8 50 16 pm](https://user-images.githubusercontent.com/1908863/28999904-c40b56b6-7a1f-11e7-9a9e-ab2e19a82b41.png)
+
+  You can configure the sidebar TOC by front-matter. For more information, please check [this doc](https://shd101wyy.github.io/markdown-preview-enhanced/#/html?id=configuration).
+* Upgraded [mume](https://github.com/shd101wyy/mume) to version [0.1.7](https://github.com/shd101wyy/mume/blob/master/CHANGELOG.md).
+
 ## 0.2.2  
 * Deprecated the old way of defining attribtues (still supported but not recommened) [#529](https://github.com/shd101wyy/markdown-preview-enhanced/issues/529). Now attributes should be defined like below in order to be compatible with the pandoc parser:  
 
