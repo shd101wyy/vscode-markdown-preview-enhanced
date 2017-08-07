@@ -42,6 +42,10 @@
                 "title": "Markdown Preview Enhanced: Run Code Chunk"
             },
             {
+                "command": "markdown-preview-enhanced.syncPreview",
+                "title": "Markdown Preview Enhanced: Sync Preview"
+            },
+            {
                 "command": "markdown-preview-enhanced.customizeCss",
                 "title": "Markdown Preview Enhanced: Customize CSS"
             },
@@ -111,6 +115,11 @@
             {
                 "command": "markdown-preview-enhanced.runCodeChunk",
                 "key": "shift+enter",
+                "when": "editorLangId == markdown"
+            },
+            {
+                "command": "markdown-preview-enhanced.syncPreview",
+                "key": "ctrl+shift+s",
                 "when": "editorLangId == markdown"
             }
         ],
@@ -351,7 +360,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.1.7"
+        "@shd101wyy/mume": "^0.1.8"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",

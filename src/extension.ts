@@ -251,6 +251,23 @@ export function activate(context: vscode.ExtensionContext) {
 			})
 	}
 
+	function syncPreview() {
+		const textEditor = vscode.window.activeTextEditor
+		if (!textEditor.document) return 
+		if (!isMarkdownFile(textEditor.document)) return
+
+		const previewUri = getPreviewUri(textEditor.document.uri)
+		if (!previewUri) return
+
+		vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
+			previewUri,
+			{
+				command: 'changeTextEditorSelection',
+				line: textEditor.selections[0].active.line,
+				forced: true
+		})
+	}
+
 	function clickTagA(uri, href) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		href = decodeURIComponent(href)
@@ -371,6 +388,8 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunksCommand))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.runCodeChunk', runCodeChunkCommand))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.syncPreview', syncPreview))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.customizeCss', customizeCSS))
 
