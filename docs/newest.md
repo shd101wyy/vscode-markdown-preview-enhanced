@@ -2,7 +2,7 @@
 I will be busy hunting jobs (August & September), so I won't have time to implement new features for this extension.     
 The updates in the following two months will be bug fixes only.  
 
-## 0.2.3
+## 0.2.3 & 0.2.4
 * The old feature [WaveDrom diagram](https://shd101wyy.github.io/markdown-preview-enhanced/#/diagrams?id=wavedrom) is now supported again.
 * The doc of customization css is updated, please [check it here](https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css).
 * Sidebar TOC is now supported in HTML export, and it is enabled by default.
