@@ -315,7 +315,7 @@
                     ]
                 },
                 "markdown-preview-enhanced.printBackground": {
-                    "description": "Whether to print background for PDF file export or not. If set to `false`, then `github-light` preview theme will be used.",
+                    "description": "Whether to print background for file export or not. If set to `false`, then `github-light` preview theme will be used. You can also set `print_background` in front-matter for individual files.",
                     "default": false,
                     "type": "boolean"
                 },
@@ -360,7 +360,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.1.8"
+        "@shd101wyy/mume": "^0.1.9"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
