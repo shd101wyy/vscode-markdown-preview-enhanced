@@ -44,7 +44,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       const extensionVersion = require(path.resolve(this.context.extensionPath, './package.json'))['version']
       if (extensionVersion !== mume.configs.config['vscode_mpe_version']) {
         mume.utility.updateExtensionConfig({'vscode_mpe_version': extensionVersion})
-        openWelcomePage()
+        // openWelcomePage() // <== disable welcome page
       }
     })
   }

@@ -6,7 +6,7 @@ import * as fs from "fs"
 
 import {utility} from "@shd101wyy/mume"
 
-import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview, openWelcomePage} from "./preview-content-provider"
+import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview} from "./preview-content-provider"
 import {uploadImageFile, pasteImageFile} from "./image-helper"
 
 // this method is called when your extension iopenTextDocuments activated
@@ -398,8 +398,6 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openMathJaxConfig', openMathJaxConfig))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPhantomJSConfig', openPhantomJSConfig))
-
-	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openWelcomePage', openWelcomePage))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.extendParser', extendParser))
 
