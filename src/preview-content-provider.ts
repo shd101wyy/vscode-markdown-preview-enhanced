@@ -322,6 +322,19 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     }
   }
 
+  public chromeExport(sourceUri: Uri, type: string) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.chromeExport({fileType: type, openFileAfterGeneration: true})
+      .then((dest)=> {
+        vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+      })
+      .catch((error)=> {
+        vscode.window.showErrorMessage(error)
+      })
+    }  
+  }
+
   public phantomjsExport(sourceUri: Uri, type: string) {
     const engine = this.getEngine(sourceUri)
     if (engine) {

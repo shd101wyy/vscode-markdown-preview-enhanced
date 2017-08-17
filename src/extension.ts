@@ -174,6 +174,11 @@ export function activate(context: vscode.ExtensionContext) {
 		contentProvider.htmlExport(sourceUri, offline)
 	}
 
+	function chromeExport(uri, type) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.chromeExport(sourceUri, type)
+	}
+
 	function phantomjsExport(uri, type) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.phantomjsExport(sourceUri, type)
@@ -425,6 +430,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.htmlExport', htmlExport))
 
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.chromeExport', chromeExport))
+	
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.phantomjsExport', phantomjsExport))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.princeExport', princeExport))
