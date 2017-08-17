@@ -340,7 +340,10 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     if (engine) {
       engine.phantomjsExport({fileType: type, openFileAfterGeneration: true})
       .then((dest)=> {
-        vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+        if (dest.endsWith('?print-pdf'))  // presentation pdf
+          vscode.window.showInformationMessage(`Please copy and open the link: { ${dest.replace(/\_/g, '\\_')} } in Chrome then Print as Pdf.`)
+        else 
+          vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)     
       })
       .catch((error)=> {
         vscode.window.showErrorMessage(error)
