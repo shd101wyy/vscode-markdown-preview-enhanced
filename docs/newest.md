@@ -1,7 +1,3 @@
-## Anouncement 
-I will be busy hunting jobs (August & September), so I won't have time to implement new features for this extension.     
-The updates in the following two months will be bug fixes only.  
-
 ## 0.2.6
 * Removed the `Welcome Page`.  
 * Supported revealjs `fragment` [#559](https://github.com/shd101wyy/markdown-preview-enhanced/issues/559).  
