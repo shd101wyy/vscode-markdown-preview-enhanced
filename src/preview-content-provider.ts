@@ -44,7 +44,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       const extensionVersion = require(path.resolve(this.context.extensionPath, './package.json'))['version']
       if (extensionVersion !== mume.configs.config['vscode_mpe_version']) {
         mume.utility.updateExtensionConfig({'vscode_mpe_version': extensionVersion})
-        openWelcomePage()
+        // openWelcomePage() // <== disable welcome page
       }
     })
   }
@@ -322,12 +322,28 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     }
   }
 
+  public chromeExport(sourceUri: Uri, type: string) {
+    const engine = this.getEngine(sourceUri)
+    if (engine) {
+      engine.chromeExport({fileType: type, openFileAfterGeneration: true})
+      .then((dest)=> {
+        vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+      })
+      .catch((error)=> {
+        vscode.window.showErrorMessage(error)
+      })
+    }  
+  }
+
   public phantomjsExport(sourceUri: Uri, type: string) {
     const engine = this.getEngine(sourceUri)
     if (engine) {
       engine.phantomjsExport({fileType: type, openFileAfterGeneration: true})
       .then((dest)=> {
-        vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)
+        if (dest.endsWith('?print-pdf'))  // presentation pdf
+          vscode.window.showInformationMessage(`Please copy and open the link: { ${dest.replace(/\_/g, '\\_')} } in Chrome then Print as Pdf.`)
+        else 
+          vscode.window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`)     
       })
       .catch((error)=> {
         vscode.window.showErrorMessage(error)

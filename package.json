@@ -78,10 +78,6 @@
                 "title": "Markdown Preview Enhanced: Open PhantomJS Config"
             },
             {
-                "command": "markdown-preview-enhanced.openWelcomePage",
-                "title": "Markdown Preview Enhanced: Open Welcome Page"
-            },
-            {
                 "command": "markdown-preview-enhanced.extendParser",
                 "title": "Markdown Preview Enhanced: Extend Parser"
             },
@@ -360,7 +356,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.1.9"
+        "@shd101wyy/mume": "^0.2.0"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",

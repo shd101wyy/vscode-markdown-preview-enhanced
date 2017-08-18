@@ -6,7 +6,7 @@ import * as fs from "fs"
 
 import {utility} from "@shd101wyy/mume"
 
-import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview, openWelcomePage} from "./preview-content-provider"
+import {MarkdownPreviewEnhancedView, getPreviewUri, isMarkdownFile, useSinglePreview} from "./preview-content-provider"
 import {uploadImageFile, pasteImageFile} from "./image-helper"
 
 // this method is called when your extension iopenTextDocuments activated
@@ -172,6 +172,11 @@ export function activate(context: vscode.ExtensionContext) {
 	function htmlExport(uri, offline) {
 		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
 		contentProvider.htmlExport(sourceUri, offline)
+	}
+
+	function chromeExport(uri, type) {
+		const sourceUri = vscode.Uri.parse(decodeURIComponent(uri));
+		contentProvider.chromeExport(sourceUri, type)
 	}
 
 	function phantomjsExport(uri, type) {
@@ -399,8 +404,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPhantomJSConfig', openPhantomJSConfig))
 
-	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openWelcomePage', openWelcomePage))
-
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.extendParser', extendParser))
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.showUploadedImages', showUploadedImages))
@@ -427,6 +430,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.htmlExport', htmlExport))
 
+	context.subscriptions.push(vscode.commands.registerCommand('_mume.chromeExport', chromeExport))
+	
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.phantomjsExport', phantomjsExport))
 
 	context.subscriptions.push(vscode.commands.registerCommand('_mume.princeExport', princeExport))
