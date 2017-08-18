@@ -1,4 +1,8 @@
-## 0.2.6
+## 0.2.7 
+* Added `ignoreLink` option to TOC.  
+* Fixed issue [#585](https://github.com/shd101wyy/markdown-preview-enhanced/issues/585), [#586](https://github.com/shd101wyy/markdown-preview-enhanced/issues/585).  
+
+## 0.2.6 
 * Removed the `Welcome Page`.  
 * Supported revealjs `fragment` [#559](https://github.com/shd101wyy/markdown-preview-enhanced/issues/559).  
 * Supported Experimental Puppeteer export (Headless Chrome).     
