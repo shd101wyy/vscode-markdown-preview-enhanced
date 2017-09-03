@@ -99,11 +99,6 @@
                 "when": "editorLangId == markdown"
             },
             {
-                "command": "markdown-preview-enhanced.openImageHelper",
-                "key": "shift+ctrl+i",
-                "when": "editorLangId == markdown"
-            },
-            {
                 "command": "markdown-preview-enhanced.runAllCodeChunks",
                 "key": "ctrl+shift+enter",
                 "when": "editorLangId == markdown"
@@ -356,7 +351,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.2.1"
+        "@shd101wyy/mume": "file:../mume"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
