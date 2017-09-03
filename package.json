@@ -114,6 +114,15 @@
                 "when": "editorLangId == markdown"
             }
         ],
+        "menus": {
+            "editor/context": [
+				{
+					"command": "markdown-preview-enhanced.openPreview",
+					"when": "editorLangId == markdown",
+					"group": "markdown-preview-enhanced"
+                }
+            ]
+        },
         "configuration": {
             "type": "object",
             "title": "Markdown Preview Enhanced",
