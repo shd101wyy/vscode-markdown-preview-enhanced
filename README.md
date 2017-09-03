@@ -41,7 +41,6 @@ Contact me if you are willing to help translate the documentation :)
 |---|---|
 | <kbd>ctrl-shift-m</kbd> or <kbd>cmd-k v</kbd> | Open preview  |
 | <kbd>ctrl-shift-s</kbd>  | Sync preview / Sync source  |  
-| <kbd>ctrl-shift-i</kbd>  | Open Image Helper |  
 | <kbd>shift-enter</kbd> | Run Code Chunk |    
 | <kbd>ctrl-shift-enter</kbd> | Run all Code Chunks |  
 | <kbd>cmd-=</kbd> or <kbd>cmd-shift-=</kbd> | Preview zoom in |  

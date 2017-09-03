@@ -99,11 +99,6 @@
                 "when": "editorLangId == markdown"
             },
             {
-                "command": "markdown-preview-enhanced.openImageHelper",
-                "key": "shift+ctrl+i",
-                "when": "editorLangId == markdown"
-            },
-            {
                 "command": "markdown-preview-enhanced.runAllCodeChunks",
                 "key": "ctrl+shift+enter",
                 "when": "editorLangId == markdown"
@@ -119,6 +114,15 @@
                 "when": "editorLangId == markdown"
             }
         ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "markdown-preview-enhanced.openPreview",
+                    "when": "editorLangId == markdown",
+                    "group": "markdown-preview-enhanced"
+                }
+            ]
+        },
         "configuration": {
             "type": "object",
             "title": "Markdown Preview Enhanced",
@@ -198,6 +202,11 @@
                 },
                 "markdown-preview-enhanced.enableExtendedTableSyntax": {
                     "description": "Enable extended table syntax to support merging table cells.",
+                    "default": false,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.enableCriticMarkupSyntax": {
+                    "description": "Enable CriticMarkup syntax. Only works with markdown-it parser. Please check http://criticmarkup.com/users-guide.php for more information.",
                     "default": false,
                     "type": "boolean"
                 },
@@ -356,7 +365,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.2.1"
+        "@shd101wyy/mume": "^0.2.2"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
