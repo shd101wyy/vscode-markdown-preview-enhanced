@@ -12,6 +12,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly enableWikiLinkSyntax: boolean
   public readonly wikiLinkFileExtension: string
   public readonly enableExtendedTableSyntax: boolean
+  public readonly enableCriticMarkupSyntax: boolean
   public readonly frontMatterRenderingOption:string
   public readonly mathRenderingOption: string
   public readonly mathInlineDelimiters: Array<string[]>
@@ -43,6 +44,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.enableWikiLinkSyntax = config.get<boolean>('enableWikiLinkSyntax')
     this.wikiLinkFileExtension = config.get<string>('wikiLinkFileExtension')
     this.enableExtendedTableSyntax = config.get<boolean>('enableExtendedTableSyntax')
+    this.enableCriticMarkupSyntax = config.get<boolean>('enableCriticMarkupSyntax')    
     this.frontMatterRenderingOption = config.get<string>('frontMatterRenderingOption')
     this.mermaidTheme = config.get<string>('mermaidTheme')
     this.mathRenderingOption = config.get<string>('mathRenderingOption')
