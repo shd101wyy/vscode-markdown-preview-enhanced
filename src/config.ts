@@ -11,6 +11,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly enableTypographer: boolean
   public readonly enableWikiLinkSyntax: boolean
   public readonly wikiLinkFileExtension: string
+  public readonly enableEmojiSyntax: boolean
   public readonly enableExtendedTableSyntax: boolean
   public readonly enableCriticMarkupSyntax: boolean
   public readonly frontMatterRenderingOption:string
@@ -43,6 +44,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.enableTypographer = config.get<boolean>('enableTypographer')
     this.enableWikiLinkSyntax = config.get<boolean>('enableWikiLinkSyntax')
     this.wikiLinkFileExtension = config.get<string>('wikiLinkFileExtension')
+    this.enableEmojiSyntax = config.get<boolean>('enableEmojiSyntax')
     this.enableExtendedTableSyntax = config.get<boolean>('enableExtendedTableSyntax')
     this.enableCriticMarkupSyntax = config.get<boolean>('enableCriticMarkupSyntax')    
     this.frontMatterRenderingOption = config.get<string>('frontMatterRenderingOption')

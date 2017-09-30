@@ -200,6 +200,11 @@
                     "default": ".md",
                     "type": "string"
                 },
+                "markdown-preview-enhanced.enableEmojiSyntax": {
+                    "description": "Enable emoji & font-awesome plugin. This only works for markdown-it parser, but not pandoc parser.",
+                    "default": true,
+                    "type": "boolean"
+                },
                 "markdown-preview-enhanced.enableExtendedTableSyntax": {
                     "description": "Enable extended table syntax to support merging table cells.",
                     "default": false,
@@ -365,7 +370,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.2.2"
+        "@shd101wyy/mume": "^0.2.3"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
