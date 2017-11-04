@@ -447,6 +447,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
   }
 
   public update(sourceUri: Uri) {
+    if (!this.config.liveUpdate) return 
+    
     // console.log('update')
 		if (!this._waiting) {
 			this._waiting = true;
