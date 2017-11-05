@@ -30,6 +30,18 @@
                 "title": "Markdown Preview Enhanced: Open Preview"
             },
             {
+                "command": "markdown-preview-enhanced.toggleScrollSync",
+                "title": "Markdown Preview Enhanced: Toggle Scroll Sync"
+            },
+            {
+                "command": "markdown-preview-enhanced.toggleLiveUpdate",
+                "title": "Markdown Preview Enhanced: Toggle Live Update"
+            },
+            {
+                "command": "markdown-preview-enhanced.toggleBreakOnSingleNewLine",
+                "title": "Markdown Preview Enhanced: Toggle Break On Single New Line"
+            },
+            {
                 "command": "markdown-preview-enhanced.openImageHelper",
                 "title": "Markdown Preview Enhanced: Image Helper"
             },

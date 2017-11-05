@@ -60,6 +60,45 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	}
 
+	function toggleScrollSync() {
+		const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
+		const scrollSync = !config.get<boolean>('scrollSync')
+		config.update('scrollSync', scrollSync, true).then(()=> {
+			contentProvider.updateConfiguration()
+			if (scrollSync) {
+				vscode.window.showInformationMessage('Scroll Sync is enabled')
+			} else {
+				vscode.window.showInformationMessage('Scroll Sync is disabled')				
+			}
+		})
+	}
+
+	function toggleLiveUpdate() {
+		const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
+		const liveUpdate = !config.get<boolean>('liveUpdate')
+		config.update('liveUpdate', liveUpdate, true).then(()=> {
+			contentProvider.updateConfiguration()
+			if (liveUpdate) {
+				vscode.window.showInformationMessage('Live Update is enabled')
+			} else {
+				vscode.window.showInformationMessage('Live Update is disabled')				
+			}
+		})
+	}
+
+	function toggleBreakOnSingleNewLine() {
+		const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
+		const breakOnSingleNewLine = !config.get<boolean>('breakOnSingleNewLine')
+		config.update('breakOnSingleNewLine', breakOnSingleNewLine, true).then(()=> {
+			contentProvider.updateConfiguration()
+			if (breakOnSingleNewLine) {
+				vscode.window.showInformationMessage('Break On Single New Line is enabled')
+			} else {
+				vscode.window.showInformationMessage('Break On Single New Line is disabled')				
+			}
+		})
+	}
+
 	function customizeCSS() {
 		const globalStyleLessFile = utility.addFileProtocol(path.resolve(utility.extensionConfigDirectoryPath, './style.less'))
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(globalStyleLessFile))
@@ -386,7 +425,13 @@ export function activate(context: vscode.ExtensionContext) {
 	}))
 	*/
 
-  context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPreview', openPreview))
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openPreview', openPreview))
+	
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.toggleScrollSync', toggleScrollSync))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.toggleLiveUpdate', toggleLiveUpdate))
+
+	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.toggleBreakOnSingleNewLine', toggleBreakOnSingleNewLine))	
 
 	context.subscriptions.push(vscode.commands.registerCommand('markdown-preview-enhanced.openImageHelper', openImageHelper))
 
