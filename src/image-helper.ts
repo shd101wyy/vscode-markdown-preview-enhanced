@@ -61,8 +61,8 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
           vscode.window.showInformationMessage(`Image ${imageFileName} has been copied to folder ${assetDirectoryPath}`)
 
           let url = `${imageFolderPath}/${imageFileName}`
-          if (url.indexOf(' ') >= 0)
-            url = `<${url}>`
+          if (url.indexOf(' ') >= 0) 
+            url = url.replace(/ /g, '%20')
 
           editor.edit((textEditorEdit) => {
             textEditorEdit.insert(editor.selection.active, `![${description}](${url})`)
