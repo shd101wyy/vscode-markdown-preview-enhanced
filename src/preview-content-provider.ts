@@ -235,8 +235,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
       return engine.generateHTMLTemplateForPreview({
         inputString: text, 
         config: {
-          previewUri: previewUri.toString(),
-          sourceUri: sourceUri.toString(),
+          previewUri: encodeURIComponent(previewUri.toString()),
+          sourceUri: encodeURIComponent(sourceUri.toString()),
           initialLine: initialLine,
           vscode: true
         },
@@ -281,7 +281,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
               html: html,
               tocHTML: tocHTML,
               totalLineCount: document.lineCount,
-              sourceUri: sourceUri.toString(),
+              sourceUri: encodeURIComponent(sourceUri.toString()),
               id: yamlConfig.id || '',
               class: yamlConfig.class || ''
           })
