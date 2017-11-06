@@ -15,15 +15,15 @@ export function activate(context: vscode.ExtensionContext) {
   // assume only one preview supported.  
   const extensionPath = context.extensionPath
 
-  const contentProvider = new MarkdownPreviewEnhancedView(context);
-  const contentProviderRegistration = vscode.workspace.registerTextDocumentContentProvider('markdown-preview-enhanced', contentProvider);
+  const contentProvider = new MarkdownPreviewEnhancedView(context)
+  const contentProviderRegistration = vscode.workspace.registerTextDocumentContentProvider('markdown-preview-enhanced', contentProvider)
 
 	function openPreview(uri?: vscode.Uri) {
-		let resource = uri;
+		let resource = uri
 		if (!(resource instanceof vscode.Uri)) {
 			if (vscode.window.activeTextEditor) {
 				// we are relaxed and don't check for markdown files
-				resource = vscode.window.activeTextEditor.document.uri;
+				resource = vscode.window.activeTextEditor.document.uri
 			}
 		}
 
@@ -184,7 +184,7 @@ export function activate(context: vscode.ExtensionContext) {
 	 * @param imageUrl: url of image to be inserted  
 	 */
 	function insertImageUrl(uri, imageUrl) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 
 		vscode.window.visibleTextEditors
 			.filter(editor => isMarkdownFile(editor.document) && editor.document.uri.fsPath === sourceUri.fsPath)
@@ -197,48 +197,47 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	function refreshPreview(uri) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.refreshPreview(sourceUri)		
 	}
 
 	function openInBrowser(uri) {
-		console.log('openInBrowser: ', uri)
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.openInBrowser(sourceUri)
 	}
 
 	function htmlExport(uri, offline) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.htmlExport(sourceUri, offline)
 	}
 
 	function chromeExport(uri, type) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.chromeExport(sourceUri, type)
 	}
 
 	function phantomjsExport(uri, type) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.phantomjsExport(sourceUri, type)
 	}
 
 	function princeExport(uri) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.princeExport(sourceUri)
 	}
 
 	function eBookExport(uri, fileType) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.eBookExport(sourceUri, fileType)
 	}
 
 	function pandocExport(uri) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.pandocExport(sourceUri)
 	}
 
 	function markdownExport(uri) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.markdownExport(sourceUri)
 	}
 
@@ -250,17 +249,17 @@ export function activate(context: vscode.ExtensionContext) {
 	*/
 
 	function cacheCodeChunkResult(uri, id, result) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.cacheCodeChunkResult(sourceUri, id, result)
 	}
 
 	function runCodeChunk(uri, codeChunkId) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.runCodeChunk(sourceUri, codeChunkId)
 	}
 
 	function runAllCodeChunks(uri) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		contentProvider.runAllCodeChunks(sourceUri)
 	}
 
@@ -312,7 +311,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	function clickTagA(uri, href) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		href = decodeURIComponent(href)
 		if (['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(path.extname(href)) >= 0) {
 			utility.openFile(href)
@@ -327,7 +326,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	function clickTaskListCheckbox(uri, dataLine) {
-		const sourceUri = vscode.Uri.parse(uri);
+		const sourceUri = vscode.Uri.parse(uri)
 		const visibleTextEditors = vscode.window.visibleTextEditors
     for (let i = 0; i < visibleTextEditors.length; i++) {
       const editor = visibleTextEditors[i]
@@ -359,19 +358,17 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
 		if (isMarkdownFile(event.document)) {
-			contentProvider.update(event.document.uri);
+			contentProvider.update(event.document.uri)
 		}
 	}))
 
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => {
-		contentProvider.updateConfiguration();
+		contentProvider.updateConfiguration()
 	}))
 
   context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(event => {
 		if (isMarkdownFile(event.textEditor.document)) {
-			const previewUri = getPreviewUri(event.textEditor.document.uri);
-			// logger.log('updatePreviewForSelection', { markdownFile: markdownFile.toString() });
-      // console.log('onDidChangeTextEditorSelection', markdownFile)
+			const previewUri = getPreviewUri(event.textEditor.document.uri)
       vscode.commands.executeCommand('_workbench.htmlPreview.postMessage',
         previewUri,
         {
@@ -513,12 +510,12 @@ function revealLine(uri, line) {
 		.filter(editor => isMarkdownFile(editor.document) && editor.document.uri.fsPath === sourceUri.fsPath)
 		.forEach(editor => {
 			const sourceLine = Math.min(Math.floor(line), editor.document.lineCount - 1)
-			const fraction = line - sourceLine;
-			const text = editor.document.lineAt(sourceLine).text;
-			const start = Math.floor(fraction * text.length);
+			const fraction = line - sourceLine
+			const text = editor.document.lineAt(sourceLine).text
+			const start = Math.floor(fraction * text.length)
 			editor.revealRange(
 				new vscode.Range(sourceLine, start, sourceLine + 1, 0),
-				vscode.TextEditorRevealType.InCenter);
+				vscode.TextEditorRevealType.InCenter)
 		})
 }
 
