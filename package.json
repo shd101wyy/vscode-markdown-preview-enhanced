@@ -30,6 +30,18 @@
                 "title": "Markdown Preview Enhanced: Open Preview"
             },
             {
+                "command": "markdown-preview-enhanced.toggleScrollSync",
+                "title": "Markdown Preview Enhanced: Toggle Scroll Sync"
+            },
+            {
+                "command": "markdown-preview-enhanced.toggleLiveUpdate",
+                "title": "Markdown Preview Enhanced: Toggle Live Update"
+            },
+            {
+                "command": "markdown-preview-enhanced.toggleBreakOnSingleNewLine",
+                "title": "Markdown Preview Enhanced: Toggle Break On Single New Line"
+            },
+            {
                 "command": "markdown-preview-enhanced.openImageHelper",
                 "title": "Markdown Preview Enhanced: Image Helper"
             },
@@ -139,6 +151,11 @@
                 },
                 "markdown-preview-enhanced.scrollSync": {
                     "description": "Automatic scroll sync. This is now partially supported.",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.liveUpdate": {
+                    "description": "Re-render the preview as the contents of the source changes, without requiring the source buffer to be saved. If disabled, the preview is re-rendered only when the buffer is saved to disk.",
                     "default": true,
                     "type": "boolean"
                 },
@@ -370,7 +387,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.2.3"
+        "@shd101wyy/mume": "^0.2.4"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",
