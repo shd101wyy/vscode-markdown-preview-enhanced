@@ -278,6 +278,7 @@
                         "solarized-light.css",
                         "twilight.css",
                         "vs.css",
+                        "vue.css",
                         "xonokai.css"
                     ]
                 },
@@ -300,7 +301,8 @@
                         "one-dark.css",
                         "one-light.css",
                         "solarized-dark.css",
-                        "solarized-light.css"
+                        "solarized-light.css",
+                        "vue.css"
                     ]
                 },
                 "markdown-preview-enhanced.revealjsTheme": {
