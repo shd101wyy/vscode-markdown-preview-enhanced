@@ -338,8 +338,29 @@
                     "type": "string",
                     "enum": [
                         "imgur",
-                        "sm.ms"
+                        "sm.ms",
+                        "qiniu"
                     ]
+                },
+                "markdown-preview-enhanced.AccessKey": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Qiniu AccessKey"
+                },
+                "markdown-preview-enhanced.SecretKey": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Qiniu SecretKey"
+                },
+                "markdown-preview-enhanced.Bucket": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Qiniu Bucket"
+                },
+                "markdown-preview-enhanced.Domain": {
+                    "type": "string",
+                    "default": "http://",
+                    "description": "Qiniu Domain"
                 },
                 "markdown-preview-enhanced.printBackground": {
                     "description": "Whether to print background for file export or not. If set to `false`, then `github-light` preview theme will be used. You can also set `print_background` in front-matter for individual files.",
@@ -387,7 +408,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.2.6"
+        "@shd101wyy/mume": "file:../mume"
     },
     "devDependencies": {
         "@types/jquery": "^2.0.46",

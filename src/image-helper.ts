@@ -129,7 +129,13 @@ export function uploadImageFile(sourceUri: any, imageFilePath: string, imageUplo
       textEditorEdit.insert(curPos, hint)
     })
 
-    utility.uploadImage(imageFilePath, {method:imageUploader})
+    const config = vscode.workspace.getConfiguration('markdown-preview-enhanced')
+    const AccessKey = config.get<string>('AccessKey') || ''
+    const SecretKey = config.get<string>('SecretKey') || ''
+    const Bucket = config.get<string>('Bucket') || ''
+    const Domain = config.get<string>('Domain') || ''
+
+    utility.uploadImage(imageFilePath, {method:imageUploader, qiniu: {AccessKey, SecretKey, Bucket, Domain}})
     .then((url)=> {
       setUploadedImageURL(imageFileName, url, editor, hint, curPos)
     })
