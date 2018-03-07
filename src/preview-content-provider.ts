@@ -106,7 +106,7 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
         return ""
       } else {
         editor.edit((edit)=> {
-          edit.insert(new vscode.Position(i+1, 0), `<!-- code_chunk_output -->\n\n${result}\n\n<!-- /code_chunk_output -->\n`)
+          edit.insert(new vscode.Position(i+1, 0), `\n<!-- code_chunk_output -->\n\n${result}\n\n<!-- /code_chunk_output -->\n`)
         })
         return ""
       }
@@ -116,9 +116,8 @@ export class MarkdownPreviewEnhancedView implements vscode.TextDocumentContentPr
     for (let i = 0; i < visibleTextEditors.length; i++) {
       const editor = visibleTextEditors[i]
       if (editor.document.uri.fsPath === filePath) {
-
         let codeChunkOffset = 0,
-            targetCodeChunkOffset = codeChunkData.options['code_chunk_offset']
+            targetCodeChunkOffset = codeChunkData.normalizedInfo.attributes['code_chunk_offset']
 
         const lineCount = editor.document.lineCount
         for (let i = 0; i < lineCount; i++) {

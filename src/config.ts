@@ -1,5 +1,6 @@
 import * as vscode from "vscode"
 import {MarkdownEngineConfig} from "@shd101wyy/mume"
+import { MathRenderingOption } from "../../mume/out/src/markdown-engine-config";
 
 export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public static getCurrentConfig() {
@@ -15,7 +16,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly enableExtendedTableSyntax: boolean
   public readonly enableCriticMarkupSyntax: boolean
   public readonly frontMatterRenderingOption:string
-  public readonly mathRenderingOption: string
+  public readonly mathRenderingOption: MathRenderingOption
   public readonly mathInlineDelimiters: Array<string[]>
   public readonly mathBlockDelimiters: Array<string[]>
   public readonly codeBlockTheme: string
@@ -50,7 +51,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.enableCriticMarkupSyntax = config.get<boolean>('enableCriticMarkupSyntax')    
     this.frontMatterRenderingOption = config.get<string>('frontMatterRenderingOption')
     this.mermaidTheme = config.get<string>('mermaidTheme')
-    this.mathRenderingOption = config.get<string>('mathRenderingOption')
+    this.mathRenderingOption = config.get<string>('mathRenderingOption') as MathRenderingOption
     this.mathInlineDelimiters = config.get<Array<string[]>>('mathInlineDelimiters')
     this.mathBlockDelimiters = config.get<Array<string[]>>('mathBlockDelimiters')
     this.codeBlockTheme = config.get<string>('codeBlockTheme')
