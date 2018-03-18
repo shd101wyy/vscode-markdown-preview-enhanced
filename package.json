@@ -101,11 +101,6 @@
         "keybindings": [
             {
                 "command": "markdown-preview-enhanced.openPreview",
-                "key": "shift+ctrl+m",
-                "when": "editorLangId == markdown"
-            },
-            {
-                "command": "markdown-preview-enhanced.openPreview",
                 "key": "ctrl+k v",
                 "mac": "cmd+k v",
                 "when": "editorLangId == markdown"
@@ -410,7 +405,7 @@
         "package": "vsce package"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.1"
+        "@shd101wyy/mume": "^0.3.2"
     },
     "devDependencies": {
         "@types/jquery": "^3.2.17",
@@ -419,6 +414,6 @@
         "eslint": "^4.15.0",
         "mocha": "^4.1.0",
         "typescript": "^2.6.2",
-        "vscode": "^1.1.10"
+        "vscode": "^1.1.13"
     }
 }

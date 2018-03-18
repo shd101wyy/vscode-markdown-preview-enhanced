@@ -39,7 +39,7 @@ Contact me if you are willing to help translate the documentation :)
 
 | Shortcuts  | Functionality  |
 |---|---|
-| <kbd>ctrl-shift-m</kbd> or <kbd>cmd-k v</kbd> | Open preview  |
+| <kbd>cmd-k v</kbd> | Open preview  |
 | <kbd>ctrl-shift-s</kbd>  | Sync preview / Sync source  |  
 | <kbd>shift-enter</kbd> | Run Code Chunk |    
 | <kbd>ctrl-shift-enter</kbd> | Run all Code Chunks |  
