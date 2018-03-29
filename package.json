@@ -398,6 +398,8 @@
         }
     },
     "scripts": {
+        "lint": "tsc --project . --noEmit && tslint --project . && prettier-check --ignore-path .gitignore \"{.,docs/**,src/**,test/**}/{*.{j,t}s,*.md,ts*.json}\"",
+        "format": "prettier --write --ignore-path .gitignore \"{.,docs/**,src/**,test/**}/{*.{j,t}s,*.md,ts*.json}\"",
         "vscode:prepublish": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
@@ -413,6 +415,9 @@
         "@types/node": "^9.3.0",
         "eslint": "^4.15.0",
         "mocha": "^4.1.0",
+        "prettier": "^1.11.1",
+        "prettier-check": "^2.0.0",
+        "tslint-config-prettier": "^1.10.0",
         "typescript": "^2.6.2",
         "vscode": "^1.1.13"
     }
