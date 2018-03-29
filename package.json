@@ -2,9 +2,9 @@
     "name": "markdown-preview-enhanced-with-litvis",
     "displayName": "Markdown Preview Enhanced with litvis",
     "description": "Fork of markdown-preview-enhanced with added http://livis.org",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "publisher": "gicentre",
-    "repository": "https://github.com/gicentre/markdown-preview-enhanced-with-litvis.git",
+    "repository": "https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis.git",
     "bugs": {
         "url": "https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis/issues"
     },
