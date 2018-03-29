@@ -1,14 +1,14 @@
 {
-    "name": "markdown-preview-enhanced",
-    "displayName": "Markdown Preview Enhanced",
-    "description": "Markdown Preview Enhanced ported to vscode",
-    "version": "0.3.3",
-    "publisher": "shd101wyy",
-    "repository": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced",
+    "name": "markdown-preview-enhanced-with-litvis",
+    "displayName": "Markdown Preview Enhanced with litvis",
+    "description": "Fork of markdown-preview-enhanced with added http://livis.org",
+    "version": "0.0.1",
+    "publisher": "gicentre",
+    "repository": "https://github.com/gicentre/markdown-preview-enhanced-with-litvis.git",
     "bugs": {
-        "url": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues"
+        "url": "https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis/issues"
     },
-    "license": "NCSA",
+    "license": "BSD-3, NCSA",
     "engines": {
         "vscode": "^1.12.0"
     },
@@ -20,103 +20,103 @@
     ],
     "activationEvents": [
         "onLanguage:markdown",
-        "onCommand:markdown-preview-enhanced.openPreview"
+        "onCommand:markdown-preview-enhanced-with-litvis.openPreview"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [
             {
-                "command": "markdown-preview-enhanced.openPreview",
-                "title": "Markdown Preview Enhanced: Open Preview"
+                "command": "markdown-preview-enhanced-with-litvis.openPreview",
+                "title": "Markdown Preview Enhanced with litvis: Open Preview"
             },
             {
-                "command": "markdown-preview-enhanced.toggleScrollSync",
-                "title": "Markdown Preview Enhanced: Toggle Scroll Sync"
+                "command": "markdown-preview-enhanced-with-litvis.toggleScrollSync",
+                "title": "Markdown Preview Enhanced with litvis: Toggle Scroll Sync"
             },
             {
-                "command": "markdown-preview-enhanced.toggleLiveUpdate",
-                "title": "Markdown Preview Enhanced: Toggle Live Update"
+                "command": "markdown-preview-enhanced-with-litvis.toggleLiveUpdate",
+                "title": "Markdown Preview Enhanced with litvis: Toggle Live Update"
             },
             {
-                "command": "markdown-preview-enhanced.toggleBreakOnSingleNewLine",
-                "title": "Markdown Preview Enhanced: Toggle Break On Single New Line"
+                "command": "markdown-preview-enhanced-with-litvis.toggleBreakOnSingleNewLine",
+                "title": "Markdown Preview Enhanced with litvis: Toggle Break On Single New Line"
             },
             {
-                "command": "markdown-preview-enhanced.openImageHelper",
-                "title": "Markdown Preview Enhanced: Image Helper"
+                "command": "markdown-preview-enhanced-with-litvis.openImageHelper",
+                "title": "Markdown Preview Enhanced with litvis: Image Helper"
             },
             {
-                "command": "markdown-preview-enhanced.runAllCodeChunks",
-                "title": "Markdown Preview Enhanced: Run All Code Chunks"
+                "command": "markdown-preview-enhanced-with-litvis.runAllCodeChunks",
+                "title": "Markdown Preview Enhanced with litvis: Run All Code Chunks"
             },
             {
-                "command": "markdown-preview-enhanced.runCodeChunk",
-                "title": "Markdown Preview Enhanced: Run Code Chunk"
+                "command": "markdown-preview-enhanced-with-litvis.runCodeChunk",
+                "title": "Markdown Preview Enhanced with litvis: Run Code Chunk"
             },
             {
-                "command": "markdown-preview-enhanced.syncPreview",
-                "title": "Markdown Preview Enhanced: Sync Preview"
+                "command": "markdown-preview-enhanced-with-litvis.syncPreview",
+                "title": "Markdown Preview Enhanced with litvis: Sync Preview"
             },
             {
-                "command": "markdown-preview-enhanced.customizeCss",
-                "title": "Markdown Preview Enhanced: Customize CSS"
+                "command": "markdown-preview-enhanced-with-litvis.customizeCss",
+                "title": "Markdown Preview Enhanced with litvis: Customize CSS"
             },
             {
-                "command": "markdown-preview-enhanced.insertNewSlide",
-                "title": "Markdown Preview Enhanced: Insert New Slide"
+                "command": "markdown-preview-enhanced-with-litvis.insertNewSlide",
+                "title": "Markdown Preview Enhanced with litvis: Insert New Slide"
             },
             {
-                "command": "markdown-preview-enhanced.insertTable",
-                "title": "Markdown Preview Enhanced: Insert Table"
+                "command": "markdown-preview-enhanced-with-litvis.insertTable",
+                "title": "Markdown Preview Enhanced with litvis: Insert Table"
             },
             {
-                "command": "markdown-preview-enhanced.insertPagebreak",
-                "title": "Markdown Preview Enhanced: Insert Page Break"
+                "command": "markdown-preview-enhanced-with-litvis.insertPagebreak",
+                "title": "Markdown Preview Enhanced with litvis: Insert Page Break"
             },
             {
-                "command": "markdown-preview-enhanced.createTOC",
-                "title": "Markdown Preview Enhanced: Create TOC"
+                "command": "markdown-preview-enhanced-with-litvis.createTOC",
+                "title": "Markdown Preview Enhanced with litvis: Create TOC"
             },
             {
-                "command": "markdown-preview-enhanced.openMermaidConfig",
-                "title": "Markdown Preview Enhanced: Open Mermaid Config"
+                "command": "markdown-preview-enhanced-with-litvis.openMermaidConfig",
+                "title": "Markdown Preview Enhanced with litvis: Open Mermaid Config"
             },
             {
-                "command": "markdown-preview-enhanced.openMathJaxConfig",
-                "title": "Markdown Preview Enhanced: Open MathJax Config"
+                "command": "markdown-preview-enhanced-with-litvis.openMathJaxConfig",
+                "title": "Markdown Preview Enhanced with litvis: Open MathJax Config"
             },
             {
-                "command": "markdown-preview-enhanced.openPhantomJSConfig",
-                "title": "Markdown Preview Enhanced: Open PhantomJS Config"
+                "command": "markdown-preview-enhanced-with-litvis.openPhantomJSConfig",
+                "title": "Markdown Preview Enhanced with litvis: Open PhantomJS Config"
             },
             {
-                "command": "markdown-preview-enhanced.extendParser",
-                "title": "Markdown Preview Enhanced: Extend Parser"
+                "command": "markdown-preview-enhanced-with-litvis.extendParser",
+                "title": "Markdown Preview Enhanced with litvis: Extend Parser"
             },
             {
-                "command": "markdown-preview-enhanced.showUploadedImages",
-                "title": "Markdown Preview Enhanced: Show Uploaded Images"
+                "command": "markdown-preview-enhanced-with-litvis.showUploadedImages",
+                "title": "Markdown Preview Enhanced with litvis: Show Uploaded Images"
             }
         ],
         "keybindings": [
             {
-                "command": "markdown-preview-enhanced.openPreview",
+                "command": "markdown-preview-enhanced-with-litvis.openPreview",
                 "key": "ctrl+k v",
                 "mac": "cmd+k v",
                 "when": "editorLangId == markdown"
             },
             {
-                "command": "markdown-preview-enhanced.runAllCodeChunks",
+                "command": "markdown-preview-enhanced-with-litvis.runAllCodeChunks",
                 "key": "ctrl+shift+enter",
                 "when": "editorLangId == markdown"
             },
             {
-                "command": "markdown-preview-enhanced.runCodeChunk",
+                "command": "markdown-preview-enhanced-with-litvis.runCodeChunk",
                 "key": "shift+enter",
                 "when": "editorLangId == markdown"
             },
             {
-                "command": "markdown-preview-enhanced.syncPreview",
+                "command": "markdown-preview-enhanced-with-litvis.syncPreview",
                 "key": "ctrl+shift+s",
                 "when": "editorLangId == markdown"
             }
@@ -124,9 +124,9 @@
         "menus": {
             "editor/context": [
                 {
-                    "command": "markdown-preview-enhanced.openPreview",
+                    "command": "markdown-preview-enhanced-with-litvis.openPreview",
                     "when": "editorLangId == markdown",
-                    "group": "markdown-preview-enhanced"
+                    "group": "markdown-preview-enhanced-with-litvis"
                 }
             ]
         },
@@ -134,37 +134,37 @@
             "type": "object",
             "title": "Markdown Preview Enhanced",
             "properties": {
-                "markdown-preview-enhanced.usePandocParser": {
+                "markdown-preview-enhanced-with-litvis.usePandocParser": {
                     "description": "Enable this option will render markdown by pandoc instead of remarkable.",
                     "default": false,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.breakOnSingleNewLine": {
+                "markdown-preview-enhanced-with-litvis.breakOnSingleNewLine": {
                     "description": "In Markdown, a single newline character doesn't cause a line break in the generated HTML. In GitHub Flavored Markdown, that is not true. Enable this config option to insert line breaks in rendered HTML for single newlines in Markdown source.",
                     "default": true,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.scrollSync": {
+                "markdown-preview-enhanced-with-litvis.scrollSync": {
                     "description": "Automatic scroll sync. This is now partially supported.",
                     "default": true,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.liveUpdate": {
+                "markdown-preview-enhanced-with-litvis.liveUpdate": {
                     "description": "Re-render the preview as the contents of the source changes, without requiring the source buffer to be saved. If disabled, the preview is re-rendered only when the buffer is saved to disk.",
                     "default": true,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.singlePreview": {
+                "markdown-preview-enhanced-with-litvis.singlePreview": {
                     "description": "Open Only One Preview",
                     "default": true,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.enableTypographer": {
+                "markdown-preview-enhanced-with-litvis.enableTypographer": {
                     "description": "Enable smartypants and other sweet transforms.",
                     "default": false,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.mathRenderingOption": {
+                "markdown-preview-enhanced-with-litvis.mathRenderingOption": {
                     "description": "Choose the Math expression rendering method here. You can also disable math rendering if you want by choosing 'None'.",
                     "default": "KaTeX",
                     "type": "string",
@@ -174,7 +174,7 @@
                         "None"
                     ]
                 },
-                "markdown-preview-enhanced.mathInlineDelimiters": {
+                "markdown-preview-enhanced-with-litvis.mathInlineDelimiters": {
                     "description": "Use customized Math expression inline delimiters.",
                     "default": [
                         [
@@ -188,7 +188,7 @@
                     ],
                     "type": "array"
                 },
-                "markdown-preview-enhanced.mathBlockDelimiters": {
+                "markdown-preview-enhanced-with-litvis.mathBlockDelimiters": {
                     "description": "Use customized Math expression block delimiters.",
                     "default": [
                         [
@@ -202,32 +202,32 @@
                     ],
                     "type": "array"
                 },
-                "markdown-preview-enhanced.enableWikiLinkSyntax": {
+                "markdown-preview-enhanced-with-litvis.enableWikiLinkSyntax": {
                     "description": "Enable Wiki Link syntax support. More information can be found at https://help.github.com/articles/adding-links-to-wikis/",
                     "default": true,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.wikiLinkFileExtension": {
+                "markdown-preview-enhanced-with-litvis.wikiLinkFileExtension": {
                     "description": "By default, the extension for wikilink is `.md`. For example: [[test]] will direct to file path `test.md`.",
                     "default": ".md",
                     "type": "string"
                 },
-                "markdown-preview-enhanced.enableEmojiSyntax": {
+                "markdown-preview-enhanced-with-litvis.enableEmojiSyntax": {
                     "description": "Enable emoji & font-awesome plugin. This only works for markdown-it parser, but not pandoc parser.",
                     "default": true,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.enableExtendedTableSyntax": {
+                "markdown-preview-enhanced-with-litvis.enableExtendedTableSyntax": {
                     "description": "Enable extended table syntax to support merging table cells.",
                     "default": false,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.enableCriticMarkupSyntax": {
+                "markdown-preview-enhanced-with-litvis.enableCriticMarkupSyntax": {
                     "description": "Enable CriticMarkup syntax. Only works with markdown-it parser. Please check http://criticmarkup.com/users-guide.php for more information.",
                     "default": false,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.frontMatterRenderingOption": {
+                "markdown-preview-enhanced-with-litvis.frontMatterRenderingOption": {
                     "description": "Front matter rendering option",
                     "type": "string",
                     "enum": [
@@ -237,7 +237,7 @@
                     ],
                     "default": "table"
                 },
-                "markdown-preview-enhanced.mermaidTheme": {
+                "markdown-preview-enhanced-with-litvis.mermaidTheme": {
                     "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
                     "default": "mermaid.css",
                     "type": "string",
@@ -247,7 +247,7 @@
                         "mermaid.forest.css"
                     ]
                 },
-                "markdown-preview-enhanced.codeBlockTheme": {
+                "markdown-preview-enhanced-with-litvis.codeBlockTheme": {
                     "description": "Code block theme. If `auto.css` is chosen, then the code block theme that best matches the current preview theme will be picked.",
                     "default": "auto.css",
                     "type": "string",
@@ -277,7 +277,7 @@
                         "xonokai.css"
                     ]
                 },
-                "markdown-preview-enhanced.previewTheme": {
+                "markdown-preview-enhanced-with-litvis.previewTheme": {
                     "description": "Preview Theme",
                     "default": "github-light.css",
                     "type": "string",
@@ -300,7 +300,7 @@
                         "vue.css"
                     ]
                 },
-                "markdown-preview-enhanced.revealjsTheme": {
+                "markdown-preview-enhanced-with-litvis.revealjsTheme": {
                     "description": "RevealJS Presentation Theme",
                     "default": "white.css",
                     "type": "string",
@@ -319,17 +319,17 @@
                         "none.css"
                     ]
                 },
-                "markdown-preview-enhanced.protocolsWhiteList": {
+                "markdown-preview-enhanced-with-litvis.protocolsWhiteList": {
                     "description": "Accepted protocols followed by `://` for links.",
                     "default": "http, https, atom, file",
                     "type": "string"
                 },
-                "markdown-preview-enhanced.imageFolderPath": {
+                "markdown-preview-enhanced-with-litvis.imageFolderPath": {
                     "description": "When using Image Helper to copy images, by default images will be copied to root image folder path '/assets'",
                     "default": "/assets",
                     "type": "string"
                 },
-                "markdown-preview-enhanced.imageUploader": {
+                "markdown-preview-enhanced-with-litvis.imageUploader": {
                     "description": "You can choose different image uploader to upload image",
                     "default": "imgur",
                     "type": "string",
@@ -339,57 +339,57 @@
                         "qiniu"
                     ]
                 },
-                "markdown-preview-enhanced.AccessKey": {
+                "markdown-preview-enhanced-with-litvis.AccessKey": {
                     "type": "string",
                     "default": "",
                     "description": "Qiniu AccessKey"
                 },
-                "markdown-preview-enhanced.SecretKey": {
+                "markdown-preview-enhanced-with-litvis.SecretKey": {
                     "type": "string",
                     "default": "",
                     "description": "Qiniu SecretKey"
                 },
-                "markdown-preview-enhanced.Bucket": {
+                "markdown-preview-enhanced-with-litvis.Bucket": {
                     "type": "string",
                     "default": "",
                     "description": "Qiniu Bucket"
                 },
-                "markdown-preview-enhanced.Domain": {
+                "markdown-preview-enhanced-with-litvis.Domain": {
                     "type": "string",
                     "default": "http://",
                     "description": "Qiniu Domain"
                 },
-                "markdown-preview-enhanced.printBackground": {
+                "markdown-preview-enhanced-with-litvis.printBackground": {
                     "description": "Whether to print background for file export or not. If set to `false`, then `github-light` preview theme will be used. You can also set `print_background` in front-matter for individual files.",
                     "default": false,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.phantomPath": {
+                "markdown-preview-enhanced-with-litvis.phantomPath": {
                     "description": "PhantomJS executable path",
                     "default": "phantomjs",
                     "type": "string"
                 },
-                "markdown-preview-enhanced.pandocPath": {
+                "markdown-preview-enhanced-with-litvis.pandocPath": {
                     "description": "Pandoc executable path",
                     "default": "pandoc",
                     "type": "string"
                 },
-                "markdown-preview-enhanced.pandocMarkdownFlavor": {
+                "markdown-preview-enhanced-with-litvis.pandocMarkdownFlavor": {
                     "description": "The pandoc markdown flavor you want",
                     "default": "markdown-raw_tex+tex_math_single_backslash",
                     "type": "string"
                 },
-                "markdown-preview-enhanced.pandocArguments": {
+                "markdown-preview-enhanced-with-litvis.pandocArguments": {
                     "description": "Comma separated pandoc arguments e.g. `--smart, --filter=/bin/exe`. Please use long argument names.",
                     "default": "",
                     "type": "string"
                 },
-                "markdown-preview-enhanced.latexEngine": {
+                "markdown-preview-enhanced-with-litvis.latexEngine": {
                     "description": "Default latex engine for Pandoc export and latex code chunk.",
                     "default": "pdflatex",
                     "type": "string"
                 },
-                "markdown-preview-enhanced.enableScriptExecution": {
+                "markdown-preview-enhanced-with-litvis.enableScriptExecution": {
                     "description": "Enables executing code chunks and importing javascript files. Please use this feature with caution because it may put your security at risk! Your machine can be hacked if someone makes you open a markdown with malicious code!",
                     "default": false,
                     "type": "boolean"
@@ -407,12 +407,15 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.2"
+        "mume-with-litvis": "^0.1.3",
+        "vfile": "^2.3.0",
+        "vfile-reporter": "^4.0.0"
     },
     "devDependencies": {
         "@types/jquery": "^3.2.17",
         "@types/mocha": "^2.2.46",
         "@types/node": "^9.3.0",
+        "@types/vfile": "^2.2.2",
         "eslint": "^4.15.0",
         "mocha": "^4.1.0",
         "prettier": "^1.11.1",

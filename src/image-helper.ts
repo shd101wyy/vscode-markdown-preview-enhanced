@@ -1,5 +1,5 @@
-import { utility } from "@shd101wyy/mume";
 import * as fs from "fs";
+import { utility } from "mume-with-litvis";
 import * as path from "path";
 import * as vscode from "vscode";
 

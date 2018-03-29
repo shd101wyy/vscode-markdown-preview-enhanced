@@ -1,6 +1,6 @@
-import { MarkdownEngineConfig } from "@shd101wyy/mume";
+import { MarkdownEngineConfig } from "mume-with-litvis";
+import { MathRenderingOption } from "mume-with-litvis/out/src/markdown-engine-config";
 import * as vscode from "vscode";
-import { MathRenderingOption } from "../../mume/out/src/markdown-engine-config";
 
 export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public static getCurrentConfig() {
@@ -40,7 +40,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
 
   private constructor() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      "markdown-preview-enhanced-with-litvis",
     );
 
     this.usePandocParser = config.get<boolean>("usePandocParser");

@@ -3,7 +3,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 
-import { utility } from "@shd101wyy/mume";
+import { utility } from "mume-with-litvis";
 
 import { pasteImageFile, uploadImageFile } from "./image-helper";
 import {
@@ -546,126 +546,126 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openPreview",
+      "markdown-preview-enhanced-with-litvis.openPreview",
       openPreview,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.toggleScrollSync",
+      "markdown-preview-enhanced-with-litvis.toggleScrollSync",
       toggleScrollSync,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.toggleLiveUpdate",
+      "markdown-preview-enhanced-with-litvis.toggleLiveUpdate",
       toggleLiveUpdate,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.toggleBreakOnSingleNewLine",
+      "markdown-preview-enhanced-with-litvis.toggleBreakOnSingleNewLine",
       toggleBreakOnSingleNewLine,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openImageHelper",
+      "markdown-preview-enhanced-with-litvis.openImageHelper",
       openImageHelper,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.runAllCodeChunks",
+      "markdown-preview-enhanced-with-litvis.runAllCodeChunks",
       runAllCodeChunksCommand,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.runCodeChunk",
+      "markdown-preview-enhanced-with-litvis.runCodeChunk",
       runCodeChunkCommand,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.syncPreview",
+      "markdown-preview-enhanced-with-litvis.syncPreview",
       syncPreview,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.customizeCss",
+      "markdown-preview-enhanced-with-litvis.customizeCss",
       customizeCSS,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openMermaidConfig",
+      "markdown-preview-enhanced-with-litvis.openMermaidConfig",
       openMermaidConfig,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openMathJaxConfig",
+      "markdown-preview-enhanced-with-litvis.openMathJaxConfig",
       openMathJaxConfig,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openPhantomJSConfig",
+      "markdown-preview-enhanced-with-litvis.openPhantomJSConfig",
       openPhantomJSConfig,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.extendParser",
+      "markdown-preview-enhanced-with-litvis.extendParser",
       extendParser,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.showUploadedImages",
+      "markdown-preview-enhanced-with-litvis.showUploadedImages",
       showUploadedImages,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.insertNewSlide",
+      "markdown-preview-enhanced-with-litvis.insertNewSlide",
       insertNewSlide,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.insertTable",
+      "markdown-preview-enhanced-with-litvis.insertTable",
       insertTable,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.insertPagebreak",
+      "markdown-preview-enhanced-with-litvis.insertPagebreak",
       insertPagebreak,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.createTOC",
+      "markdown-preview-enhanced-with-litvis.createTOC",
       createTOC,
     ),
   );

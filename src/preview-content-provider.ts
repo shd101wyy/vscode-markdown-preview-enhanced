@@ -2,10 +2,10 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { Event, TextEditor, Uri } from "vscode";
 
-import * as mume from "@shd101wyy/mume";
-import { MarkdownEngine } from "@shd101wyy/mume";
-
+import * as mume from "mume-with-litvis";
+import { MarkdownEngine } from "mume-with-litvis";
 import { MarkdownPreviewEnhancedConfig } from "./config";
+import { updateLintingReport } from "./linting";
 
 let singlePreviewSouceUri: Uri = null;
 
@@ -41,6 +41,7 @@ export class MarkdownPreviewEnhancedView
       .then(() => {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this));
         MarkdownEngine.onModifySource(this.modifySource.bind(this));
+        mume.MarkdownEngine.onUpdateLintingReport(updateLintingReport);
 
         const extensionVersion = require(path.resolve(
           this.context.extensionPath,
@@ -618,7 +619,7 @@ export function openWelcomePage() {
   const uri = vscode.Uri.parse(welcomeFilePath);
   vscode.commands.executeCommand("vscode.open", uri).then(() => {
     vscode.commands.executeCommand(
-      "markdown-preview-enhanced.openPreview",
+      "markdown-preview-enhanced-with-litvis.openPreview",
       uri,
     );
   });

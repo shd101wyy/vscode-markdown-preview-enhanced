@@ -84,7 +84,8 @@
 
   `ditaa` is intergrated with [code chunk](https://shd101wyy.github.io/markdown-preview-enhanced/#/code-chunk), for example:
 
-    <pre>
+      <pre>
+
   ```ditaa {cmd=true args=["-E"]}
   +--------+   +-------+    +-------+
   |        | --+ ditaa +--> |       |
@@ -96,7 +97,8 @@
       |       Lots of work      |
       +-------------------------+
   ```
-</pre>
+
+  </pre>
 
 > <kbd>shift-enter</kbd> to run code chunk.  
 > set `{hide=true}` to hide code block.  
