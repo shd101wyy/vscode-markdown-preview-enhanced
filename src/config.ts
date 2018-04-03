@@ -1,6 +1,6 @@
 import { MarkdownEngineConfig } from "@shd101wyy/mume";
+import { MathRenderingOption } from "@shd101wyy/mume/out/src/markdown-engine-config";
 import * as vscode from "vscode";
-import { MathRenderingOption } from "../../mume/out/src/markdown-engine-config";
 
 export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public static getCurrentConfig() {
