@@ -1,21 +1,13 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "es6",
-        "outDir": "out",
-        "lib": [
-            "es6",
-            "dom"
-        ],
-        "sourceMap": true,
-        "rootDir": "."
-    },
-    "include": [
-		"src/**/*"
-	],
-    "exclude": [
-        "node_modules",
-        ".vscode-test",
-        "dependencies"
-    ]
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "noUnusedLocals": true,
+    "sourceMap": true,
+    "outDir": "out",
+    "lib": ["es6", "dom"],
+    "rootDir": "."
+  },
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules"]
 }
