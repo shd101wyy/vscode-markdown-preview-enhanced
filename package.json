@@ -391,7 +391,7 @@
                 },
                 "markdown-preview-enhanced.enableScriptExecution": {
                     "description": "Disabling this will prevent executing code chunks and importing javascript files.",
-                    "default": true,
+                    "default": false,
                     "type": "boolean"
                 }
             }
