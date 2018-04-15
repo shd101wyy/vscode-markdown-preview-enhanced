@@ -27,7 +27,12 @@
         "commands": [
             {
                 "command": "markdown-preview-enhanced.openPreview",
-                "title": "Markdown Preview Enhanced: Open Preview"
+                "title": "Markdown Preview Enhanced: Open Preview",
+                "category": "Markdown",
+                "icon": {
+                    "light": "./media/PreviewOnRightPane_16x.svg",
+                    "dark": "./media/PreviewOnRightPane_16x_dark.svg"
+                }
             },
             {
                 "command": "markdown-preview-enhanced.toggleScrollSync",
@@ -128,6 +133,13 @@
                     "when": "editorLangId == markdown",
                     "group": "markdown-preview-enhanced"
                 }
+            ],
+            "editor/title": [
+                {
+					"command": "markdown-preview-enhanced.openPreview",
+					"when": "editorLangId == markdown",
+                    "group": "navigation"
+				}
             ]
         },
         "configuration": {
