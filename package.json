@@ -402,7 +402,7 @@
                     "type": "string"
                 },
                 "markdown-preview-enhanced.enableScriptExecution": {
-                    "description": "Disabling this will prevent executing code chunks and importing javascript files.",
+                    "description": "Enables executing code chunks and importing javascript files.\n⚠️ Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled.",
                     "default": false,
                     "type": "boolean"
                 }
