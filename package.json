@@ -27,7 +27,12 @@
         "commands": [
             {
                 "command": "markdown-preview-enhanced.openPreview",
-                "title": "Markdown Preview Enhanced: Open Preview"
+                "title": "Markdown Preview Enhanced: Open Preview",
+                "category": "Markdown",
+                "icon": {
+                    "light": "./media/PreviewOnRightPane_16x.svg",
+                    "dark": "./media/PreviewOnRightPane_16x_dark.svg"
+                }
             },
             {
                 "command": "markdown-preview-enhanced.toggleScrollSync",
@@ -127,6 +132,13 @@
                     "command": "markdown-preview-enhanced.openPreview",
                     "when": "editorLangId == markdown",
                     "group": "markdown-preview-enhanced"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "markdown-preview-enhanced.openPreview",
+                    "when": "editorLangId == markdown",
+                    "group": "navigation"
                 }
             ]
         },
@@ -231,11 +243,11 @@
                     "description": "Front matter rendering option",
                     "type": "string",
                     "enum": [
+                        "none",
                         "table",
-                        "code block",
-                        "none"
+                        "code block"
                     ],
-                    "default": "table"
+                    "default": "none"
                 },
                 "markdown-preview-enhanced.mermaidTheme": {
                     "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
@@ -320,8 +332,8 @@
                     ]
                 },
                 "markdown-preview-enhanced.protocolsWhiteList": {
-                    "description": "Accepted protocols followed by `://` for links.",
-                    "default": "http, https, atom, file",
+                    "description": "Accepted protocols for links.",
+                    "default": "http://, https://, atom://, file://, mailto:, tel:",
                     "type": "string"
                 },
                 "markdown-preview-enhanced.imageFolderPath": {
@@ -407,7 +419,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.2"
+        "@shd101wyy/mume": "^0.3.3"
     },
     "devDependencies": {
         "@types/jquery": "^3.2.17",
