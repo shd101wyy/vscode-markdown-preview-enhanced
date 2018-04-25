@@ -12,11 +12,11 @@ This research was in part supported by the EU under the EC Grant Agreement No. F
 
 ## Prerequisites
 
-Please ensure that you have `elm` and `run-elm` installed on your machine before proceeding to the setup.
-The following command will ensure that both of these tools are in place and are up-to-date.
+Please ensure that you have `elm` installed on your machine before proceeding to the setup.
+The following command will ensure that this tool is in place and is up-to-date.
 
 ```bash
-npm install --global elm run-elm
+npm install --global elm
 ```
 
 If you don’t have npm, please download it as a part of Node.js from https://nodejs.org/.
