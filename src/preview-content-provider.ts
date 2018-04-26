@@ -153,7 +153,7 @@ export class MarkdownPreviewEnhancedView
         const lineCount = editor.document.lineCount;
         for (let i2 = 0; i2 < lineCount; i2++) {
           const line = editor.document.lineAt(i2);
-          if (line.text.match(/^```(.+)\"?cmd\"?\s*[:=]/)) {
+          if (line.text.match(/^```(.+)\"?cmd\"?\s*[=\s}]/)) {
             if (codeChunkOffset === targetCodeChunkOffset) {
               i2 = i2 + 1;
               while (i2 < lineCount) {
@@ -166,7 +166,7 @@ export class MarkdownPreviewEnhancedView
             } else {
               codeChunkOffset++;
             }
-          } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*[:=]/)) {
+          } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*[=\s}]/)) {
             if (codeChunkOffset === targetCodeChunkOffset) {
               // console.log('find code chunk' )
               return insertResult(i2, editor);
@@ -510,7 +510,7 @@ export class MarkdownPreviewEnhancedView
   public runAllCodeChunks(sourceUri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
-      engine.runAllCodeChunks().then(() => {
+      engine.runCodeChunks().then(() => {
         this.updateMarkdown(sourceUri);
       });
     }

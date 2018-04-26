@@ -128,6 +128,13 @@
                     "when": "editorLangId == markdown",
                     "group": "markdown-preview-enhanced-with-litvis"
                 }
+            ],
+            "editor/title": [
+                {
+                    "command": "markdown-preview-enhanced-with-litvis.openPreview",
+                    "when": "editorLangId == markdown",
+                    "group": "navigation"
+                }
             ]
         },
         "configuration": {
@@ -231,11 +238,11 @@
                     "description": "Front matter rendering option",
                     "type": "string",
                     "enum": [
+                        "none",
                         "table",
-                        "code block",
-                        "none"
+                        "code block"
                     ],
-                    "default": "table"
+                    "default": "none"
                 },
                 "markdown-preview-enhanced-with-litvis.mermaidTheme": {
                     "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
