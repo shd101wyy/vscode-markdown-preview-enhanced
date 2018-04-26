@@ -407,7 +407,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "mume-with-litvis": "^0.1.3",
+        "mume-with-litvis": "^0.5.4",
         "vfile": "^2.3.0",
         "vfile-reporter": "^4.0.0"
     },
