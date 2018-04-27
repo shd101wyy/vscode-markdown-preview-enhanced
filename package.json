@@ -420,8 +420,7 @@
     },
     "dependencies": {
         "mume-with-litvis": "^0.5.7",
-        "vfile": "^2.3.0",
-        "vfile-reporter": "^4.0.0"
+        "vfile": "^2.3.0"
     },
     "devDependencies": {
         "@types/jquery": "^3.2.17",
