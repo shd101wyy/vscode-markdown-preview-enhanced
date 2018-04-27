@@ -27,7 +27,12 @@
         "commands": [
             {
                 "command": "markdown-preview-enhanced-with-litvis.openPreview",
-                "title": "Markdown Preview Enhanced with litvis: Open Preview"
+                "title": "Markdown Preview Enhanced with litvis: Open Preview",
+                "category": "Markdown",
+                "icon": {
+                    "light": "./media/PreviewOnRightPane_16x.svg",
+                    "dark": "./media/PreviewOnRightPane_16x_dark.svg"
+                }
             },
             {
                 "command": "markdown-preview-enhanced-with-litvis.toggleScrollSync",
