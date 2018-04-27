@@ -1,7 +1,5 @@
 # VSCode `markdown-preview-enhanced` with [litvis](http://litvis.org/)
 
-> If you want to try out `litvis`, we temporary recommend you to use [Atom package](https://github.com/gicentre/markdown-preview-enhanced-with-litvis) as it is a bit more mature.
-
 This project is a fork of [`vscode-markdown-preview-enhanced`](https://github.com/shd101wyy/markdown-preview-enhanced), which is a popular [VSCode extension](https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced) for previewing markdown files.
 Most of the code in this fork is inherited from the upstream repository and is thus courtesy of [@shd101wyy](https://github.com/shd101wyy) and other [contributors](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/graphs/contributors) to `vscode-markdown-preview-enhanced`.
 
@@ -12,14 +10,8 @@ This research was in part supported by the EU under the EC Grant Agreement No. F
 
 ## Prerequisites
 
-Please ensure that you have `elm` installed on your machine before proceeding to the setup.
-The following command will ensure that this tool is in place and is up-to-date.
-
-```bash
-npm install --global elm
-```
-
-If you don’t have npm, please download it as a part of Node.js from https://nodejs.org/.
+Please ensure that you have a reasonably recent version of Node.js installed on your machine before proceeding to the setup.
+It can be downloaded and installed from https://nodejs.org/.
 
 ## Setup for VSCode users
 
@@ -92,7 +84,13 @@ Please follow these steps to enable full-featured formatting support for litvis 
 
 ## Getting linting feedback for litvis narratives
 
-At the moment, linting errors in VSCode are reported to the built-in console, which can be opened by clicking `cmd+shift+i`.
-This will improve by integrating with VSCode’s `DiagnosticCollection` feature, which will mae the user experience will similar to what [litvis Atom extension already provides](https://github.com/gicentre/markdown-preview-enhanced-with-litvis#getting-linting-feedback-for-litvis-narratives).
+If a litvis narrative you are currently editing contains problems like Elm compile errors, corresponding messages will be automatically shown in the _Problems_ tab of VSCode:
 
-![kapture 2018-03-26 at 21 00 45](https://user-images.githubusercontent.com/608862/37930310-4ba86c40-313a-11e8-99f5-a6b7ac99f38c.gif)
+![litvis linting UI](https://user-images.githubusercontent.com/608862/39370936-1eb6d250-4a38-11e8-853c-6ec03a281e98.png)
+
+The list of messages gets updated every time a preview is refreshed.
+
+If you are using other tools such as [Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker), which also detect and report problems, litvis-specific messages may become lost amongst others.
+In this case, you can type _litvis_ in the filter input and thus filter out the messages that do not require your attention.
+
+![linting filtering](https://user-images.githubusercontent.com/608862/39371088-96f7af3c-4a38-11e8-865e-282a798350a9.png)
