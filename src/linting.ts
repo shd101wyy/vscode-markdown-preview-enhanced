@@ -1,5 +1,6 @@
 // @ts-ignore
 import { VFile, VFileBase } from "vfile";
+import * as sort from "vfile-sort";
 import * as vscode from "vscode";
 
 const diagnosticCollection = vscode.languages.createDiagnosticCollection();
@@ -9,6 +10,7 @@ export const updateLintingReport = (vFiles: Array<VFile<{}>> = []) => {
 
   vFiles.forEach((vFile) => {
     const diagnostics: vscode.Diagnostic[] = [];
+    sort(vFile);
     vFile.messages.forEach((message) => {
       const severity = {
         true: vscode.DiagnosticSeverity.Error,
