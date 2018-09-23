@@ -13,6 +13,8 @@ import {
   useSinglePreview,
 } from "./preview-content-provider";
 
+let editorScrollDelay = Date.now();
+
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -501,6 +503,9 @@ export function activate(context: vscode.ExtensionContext) {
       // But I see the official vscode markdown-preview extension uses it.
       vscode.window["onDidChangeTextEditorVisibleRanges"]((event)=> {
         const textEditor = event.textEditor as vscode.TextEditor;
+        if (Date.now() < editorScrollDelay) {
+          return;
+        }
         if (isMarkdownFile(textEditor.document)) {
           const previewUri = getPreviewUri(textEditor.document.uri);
           if (previewUri) {
@@ -821,10 +826,12 @@ function revealLine(uri, line) {
       const fraction = line - sourceLine;
       const text = editor.document.lineAt(sourceLine).text;
       const start = Math.floor(fraction * text.length);
+      editorScrollDelay = Date.now() + 500;
       editor.revealRange(
         new vscode.Range(sourceLine, start, sourceLine + 1, 0),
         vscode.TextEditorRevealType.InCenter,
       );
+      editorScrollDelay = Date.now() + 500;
     });
 }
 
