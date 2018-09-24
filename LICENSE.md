@@ -3,9 +3,9 @@ Open Source License
 
 ```
 Copyright (c) 2017  Yiyi Wang
-All rights reserved.  
+All rights reserved.
 
-Developed by:     Yiyi Wang and many other contributors  
+Developed by:     Yiyi Wang and many other contributors
                   https://github.com/shd101wyy/markdown-preview-enhanced
 ```
 

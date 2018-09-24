@@ -10,7 +10,7 @@
     },
     "license": "NCSA",
     "engines": {
-        "vscode": "^1.12.0"
+        "vscode": "^1.20.0"
     },
     "categories": [
         "Other"
@@ -147,7 +147,7 @@
             "title": "Markdown Preview Enhanced",
             "properties": {
                 "markdown-preview-enhanced.usePandocParser": {
-                    "description": "Enable this option will render markdown by pandoc instead of remarkable.",
+                    "description": "Enable this option will render markdown by pandoc instead of markdown-it.",
                     "default": false,
                     "type": "boolean"
                 },
@@ -254,9 +254,9 @@
                     "default": "mermaid.css",
                     "type": "string",
                     "enum": [
-                        "mermaid.css",
-                        "mermaid.dark.css",
-                        "mermaid.forest.css"
+                        "default",
+                        "dark",
+                        "forest"
                     ]
                 },
                 "markdown-preview-enhanced.codeBlockTheme": {
@@ -419,18 +419,18 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.3"
+        "@shd101wyy/mume": "^0.3.4"
     },
     "devDependencies": {
-        "@types/jquery": "^3.2.17",
-        "@types/mocha": "^2.2.46",
-        "@types/node": "^9.3.0",
-        "eslint": "^4.15.0",
-        "mocha": "^4.1.0",
-        "prettier": "^1.11.1",
+        "@types/jquery": "^3.3.9",
+        "@types/mocha": "^5.2.5",
+        "@types/node": "^10.10.3",
+        "eslint": "^5.6.0",
+        "mocha": "^5.2.0",
+        "prettier": "^1.14.3",
         "prettier-check": "^2.0.0",
-        "tslint-config-prettier": "^1.10.0",
-        "typescript": "^2.6.2",
-        "vscode": "^1.1.13"
+        "tslint-config-prettier": "^1.15.0",
+        "typescript": "^3.0.3",
+        "vscode": "^1.1.21"
     }
 }

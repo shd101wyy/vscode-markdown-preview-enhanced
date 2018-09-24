@@ -13,6 +13,8 @@ import {
   useSinglePreview,
 } from "./preview-content-provider";
 
+let editorScrollDelay = Date.now();
+
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -495,6 +497,49 @@ export function activate(context: vscode.ExtensionContext) {
     }),
   );
 
+  if (vscode.window["onDidChangeTextEditorVisibleRanges"]) {
+    context.subscriptions.push(
+      // I don't know why it doesn't exist in the newest @types/vscode
+      // But I see the official vscode markdown-preview extension uses it.
+      vscode.window["onDidChangeTextEditorVisibleRanges"]((event) => {
+        const textEditor = event.textEditor as vscode.TextEditor;
+        if (Date.now() < editorScrollDelay) {
+          return;
+        }
+        if (isMarkdownFile(textEditor.document)) {
+          const previewUri = getPreviewUri(textEditor.document.uri);
+          if (previewUri) {
+            if (!event.textEditor["visibleRanges"].length) {
+              return undefined;
+            } else {
+              const topLine = getTopVisibleLine(textEditor);
+              const bottomLine = getBottomVisibleLine(textEditor);
+              let midLine;
+              if (topLine === 0) {
+                midLine = 0;
+              } else if (
+                Math.floor(bottomLine) ===
+                textEditor.document.lineCount - 1
+              ) {
+                midLine = bottomLine;
+              } else {
+                midLine = Math.floor((topLine + bottomLine) / 2);
+              }
+              vscode.commands.executeCommand(
+                "_workbench.htmlPreview.postMessage",
+                previewUri,
+                {
+                  command: "changeTextEditorSelection",
+                  line: midLine,
+                },
+              );
+            }
+          }
+        }
+      }),
+    );
+  }
+
   /**
    * Open preview automatically if the `automaticallyShowPreviewOfMarkdownBeingEdited` is on.
    * @param textEditor
@@ -784,11 +829,56 @@ function revealLine(uri, line) {
       const fraction = line - sourceLine;
       const text = editor.document.lineAt(sourceLine).text;
       const start = Math.floor(fraction * text.length);
+      editorScrollDelay = Date.now() + 500;
       editor.revealRange(
         new vscode.Range(sourceLine, start, sourceLine + 1, 0),
         vscode.TextEditorRevealType.InCenter,
       );
+      editorScrollDelay = Date.now() + 500;
     });
+}
+
+/**
+ * Get the top-most visible range of `editor`.
+ *
+ * Returns a fractional line number based the visible character within the line.
+ * Floor to get real line number
+ */
+export function getTopVisibleLine(
+  editor: vscode.TextEditor,
+): number | undefined {
+  if (!editor["visibleRanges"].length) {
+    return undefined;
+  }
+
+  const firstVisiblePosition = editor["visibleRanges"][0].start;
+  const lineNumber = firstVisiblePosition.line;
+  const line = editor.document.lineAt(lineNumber);
+  const progress = firstVisiblePosition.character / (line.text.length + 2);
+  return lineNumber + progress;
+}
+
+/**
+ * Get the bottom-most visible range of `editor`.
+ *
+ * Returns a fractional line number based the visible character within the line.
+ * Floor to get real line number
+ */
+export function getBottomVisibleLine(
+  editor: vscode.TextEditor,
+): number | undefined {
+  if (!editor["visibleRanges"].length) {
+    return undefined;
+  }
+
+  const firstVisiblePosition = editor["visibleRanges"][0].end;
+  const lineNumber = firstVisiblePosition.line;
+  let text = "";
+  if (lineNumber < editor.document.lineCount) {
+    text = editor.document.lineAt(lineNumber).text;
+  }
+  const progress = firstVisiblePosition.character / (text.length + 2);
+  return lineNumber + progress;
 }
 
 // this method is called when your extension is deactivated
