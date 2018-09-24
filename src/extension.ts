@@ -517,7 +517,7 @@ export function activate(context: vscode.ExtensionContext) {
               let midLine;
               if (topLine === 0) {
                 midLine = 0
-              } else if (bottomLine === textEditor.document.lineCount - 1) {
+              } else if (Math.floor(bottomLine) === textEditor.document.lineCount - 1) {
                 midLine = bottomLine
               } else {
                 midLine = Math.floor((topLine + bottomLine) / 2);
