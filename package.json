@@ -419,7 +419,8 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.4"
+        "@shd101wyy/mume": "^0.3.4",
+        "@types/vfile": "^2.2.2"
     },
     "devDependencies": {
         "@types/jquery": "^3.3.9",
