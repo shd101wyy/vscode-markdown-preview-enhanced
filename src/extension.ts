@@ -501,7 +501,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       // I don't know why it doesn't exist in the newest @types/vscode
       // But I see the official vscode markdown-preview extension uses it.
-      vscode.window["onDidChangeTextEditorVisibleRanges"]((event)=> {
+      vscode.window["onDidChangeTextEditorVisibleRanges"]((event) => {
         const textEditor = event.textEditor as vscode.TextEditor;
         if (Date.now() < editorScrollDelay) {
           return;
@@ -512,13 +512,16 @@ export function activate(context: vscode.ExtensionContext) {
             if (!event.textEditor["visibleRanges"].length) {
               return undefined;
             } else {
-              const topLine = getTopVisibleLine(textEditor)
-              const bottomLine = getBottomVisibleLine(textEditor)
+              const topLine = getTopVisibleLine(textEditor);
+              const bottomLine = getBottomVisibleLine(textEditor);
               let midLine;
               if (topLine === 0) {
-                midLine = 0
-              } else if (Math.floor(bottomLine) === textEditor.document.lineCount - 1) {
-                midLine = bottomLine
+                midLine = 0;
+              } else if (
+                Math.floor(bottomLine) ===
+                textEditor.document.lineCount - 1
+              ) {
+                midLine = bottomLine;
               } else {
                 midLine = Math.floor((topLine + bottomLine) / 2);
               }
@@ -527,14 +530,14 @@ export function activate(context: vscode.ExtensionContext) {
                 previewUri,
                 {
                   command: "changeTextEditorSelection",
-                  line: midLine
+                  line: midLine,
                 },
               );
             }
           }
         }
-      })
-    )
+      }),
+    );
   }
 
   /**
@@ -842,17 +845,17 @@ function revealLine(uri, line) {
  * Floor to get real line number
  */
 export function getTopVisibleLine(
-	editor: vscode.TextEditor
+  editor: vscode.TextEditor,
 ): number | undefined {
-	if (!editor["visibleRanges"].length) {
-		return undefined;
-	}
+  if (!editor["visibleRanges"].length) {
+    return undefined;
+  }
 
-	const firstVisiblePosition = editor["visibleRanges"][0].start;
-	const lineNumber = firstVisiblePosition.line;
-	const line = editor.document.lineAt(lineNumber);
-	const progress = firstVisiblePosition.character / (line.text.length + 2);
-	return lineNumber + progress;
+  const firstVisiblePosition = editor["visibleRanges"][0].start;
+  const lineNumber = firstVisiblePosition.line;
+  const line = editor.document.lineAt(lineNumber);
+  const progress = firstVisiblePosition.character / (line.text.length + 2);
+  return lineNumber + progress;
 }
 
 /**
@@ -862,20 +865,21 @@ export function getTopVisibleLine(
  * Floor to get real line number
  */
 export function getBottomVisibleLine(
-	editor: vscode.TextEditor
+  editor: vscode.TextEditor,
 ): number | undefined {
-	if (!editor["visibleRanges"].length) {
-		return undefined;
-	}
+  if (!editor["visibleRanges"].length) {
+    return undefined;
+  }
 
-	const firstVisiblePosition = editor["visibleRanges"][0].end;
-	const lineNumber = firstVisiblePosition.line;
-	const line = editor.document.lineAt(lineNumber);
-	const progress = firstVisiblePosition.character / (line.text.length + 2);
-	return lineNumber + progress;
+  const firstVisiblePosition = editor["visibleRanges"][0].end;
+  const lineNumber = firstVisiblePosition.line;
+  let text = "";
+  if (lineNumber < editor.document.lineCount) {
+    text = editor.document.lineAt(lineNumber).text;
+  }
+  const progress = firstVisiblePosition.character / (text.length + 2);
+  return lineNumber + progress;
 }
-
-
 
 // this method is called when your extension is deactivated
 export function deactivate() {
