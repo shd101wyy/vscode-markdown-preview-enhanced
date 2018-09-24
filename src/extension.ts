@@ -485,12 +485,18 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeTextEditorSelection((event) => {
       if (isMarkdownFile(event.textEditor.document)) {
         const previewUri = getPreviewUri(event.textEditor.document.uri);
+        const firstVisibleScreenRow = getTopVisibleLine(event.textEditor);
+        const lastVisibleScreenRow = getBottomVisibleLine(event.textEditor);
+        const topRatio =
+          (event.selections[0].active.line - firstVisibleScreenRow) /
+          (lastVisibleScreenRow - firstVisibleScreenRow);
         vscode.commands.executeCommand(
           "_workbench.htmlPreview.postMessage",
           previewUri,
           {
             command: "changeTextEditorSelection",
             line: event.selections[0].active.line,
+            topRatio
           },
         );
       }
