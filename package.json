@@ -2,7 +2,7 @@
     "name": "markdown-preview-enhanced-with-litvis",
     "displayName": "Markdown Preview Enhanced with litvis",
     "description": "Fork of markdown-preview-enhanced with added http://livis.org",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "publisher": "gicentre",
     "repository": "https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis.git",
     "bugs": {
@@ -419,7 +419,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "mume-with-litvis": "^0.8.0",
+        "mume-with-litvis": "^0.10.0",
         "vfile": "^2.3.0",
         "vfile-sort": "^2.1.0"
     },
