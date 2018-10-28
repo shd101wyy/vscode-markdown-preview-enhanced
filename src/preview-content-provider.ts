@@ -219,7 +219,7 @@ export class MarkdownPreviewEnhancedView
 
   private getProjectDirectoryPath(
     sourceUri: Uri,
-    workspaceFolders: vscode.WorkspaceFolder[],
+    workspaceFolders: vscode.WorkspaceFolder[] = [],
   ) {
     const possibleWorkspaceFolders = workspaceFolders.filter(
       (workspaceFolder) => {
@@ -231,17 +231,17 @@ export class MarkdownPreviewEnhancedView
       },
     );
 
-    if (!possibleWorkspaceFolders.length) {
-      vscode.window.showErrorMessage(
-        "Bug in getProjectDirectoryPath function. Please report on GitHub. Thanks!",
-      );
+    let projectDirectoryPath;
+    if (possibleWorkspaceFolders.length) {
+      // We pick the workspaceUri that has the longest path
+      const workspaceFolder = possibleWorkspaceFolders.sort(
+        (x, y) => y.uri.fsPath.length - x.uri.fsPath.length,
+      )[0];
+      projectDirectoryPath = workspaceFolder.uri.fsPath;
+    } else {
+      projectDirectoryPath = "";
     }
 
-    // We pick the workspaceUri that has the longest path
-    const workspaceFolder = possibleWorkspaceFolders.sort(
-      (x, y) => y.uri.fsPath.length - x.uri.fsPath.length,
-    )[0];
-    let projectDirectoryPath = workspaceFolder.uri.fsPath;
     if (process.platform === "win32") {
       projectDirectoryPath = projectDirectoryPath.replace(
         /^([a-zA-Z])\:\\/,
