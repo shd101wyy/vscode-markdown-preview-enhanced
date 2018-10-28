@@ -217,6 +217,32 @@ export class MarkdownPreviewEnhancedView
     }
   }
 
+  private getProjectDirectoryPath(sourceUri: Uri, workspaceFolders: vscode.WorkspaceFolder[]) {
+    const possibleWorkspaceFolders = workspaceFolders.filter((workspaceFolder)=> {
+      return path.dirname(sourceUri.path.toUpperCase()).indexOf(workspaceFolder.uri.path.toUpperCase()) >= 0;
+    })
+
+    if (!possibleWorkspaceFolders.length) {
+      vscode.window.showErrorMessage("Bug in getProjectDirectoryPath function. Please report on GitHub. Thanks!");
+    }
+
+    // We pick the workspaceUri that has the longest path
+    const workspaceFolder = possibleWorkspaceFolders.sort((x, y)=> y.uri.fsPath.length - x.uri.fsPath.length)[0];
+    let projectDirectoryPath = workspaceFolder.uri.fsPath;
+    if (process.platform === "win32") {
+      projectDirectoryPath = projectDirectoryPath.replace(/^([a-zA-Z])\:\\/, (_, $1)=> `${$1.toUpperCase()}:\\`);
+    }
+    return projectDirectoryPath;
+  }
+
+  private getFilePath(sourceUri: Uri) {
+    if (process.platform === "win32") {
+      return sourceUri.fsPath.replace(/^([a-zA-Z])\:\\/, (_, $1)=> `${$1.toUpperCase()}:\\`);
+    } else {
+      return sourceUri.fsPath;
+    }
+  }
+
   /**
    * Initialize MarkdownEngine for this markdown file
    */
@@ -224,8 +250,8 @@ export class MarkdownPreviewEnhancedView
     let engine = this.getEngine(sourceUri);
     if (!engine) {
       engine = new MarkdownEngine({
-        filePath: sourceUri.fsPath,
-        projectDirectoryPath: vscode.workspace.rootPath,
+        filePath: this.getFilePath(sourceUri),
+        projectDirectoryPath:this.getProjectDirectoryPath(sourceUri, vscode.workspace.workspaceFolders),
         config: this.config,
       });
       this.engineMaps[sourceUri.fsPath] = engine;
