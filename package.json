@@ -219,6 +219,11 @@
                     "default": true,
                     "type": "boolean"
                 },
+                "markdown-preview-enhanced.enableLinkify": {
+                    "description": "Enable or disable conversion of URL-like text to links in the markdown preview.",
+                    "default": true,
+                    "type": "boolean"
+                },
                 "markdown-preview-enhanced.wikiLinkFileExtension": {
                     "description": "By default, the extension for wikilink is `.md`. For example: [[test]] will direct to file path `test.md`.",
                     "default": ".md",
@@ -419,7 +424,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.5",
+        "@shd101wyy/mume": "^0.3.6",
         "@types/vfile": "^2.2.2"
     },
     "devDependencies": {

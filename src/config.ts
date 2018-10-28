@@ -11,6 +11,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly breakOnSingleNewLine: boolean;
   public readonly enableTypographer: boolean;
   public readonly enableWikiLinkSyntax: boolean;
+  public readonly enableLinkify: boolean;
   public readonly wikiLinkFileExtension: string;
   public readonly enableEmojiSyntax: boolean;
   public readonly enableExtendedTableSyntax: boolean;
@@ -47,6 +48,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.breakOnSingleNewLine = config.get<boolean>("breakOnSingleNewLine");
     this.enableTypographer = config.get<boolean>("enableTypographer");
     this.enableWikiLinkSyntax = config.get<boolean>("enableWikiLinkSyntax");
+    this.enableLinkify = config.get<boolean>("enableLinkify");
     this.wikiLinkFileExtension = config.get<string>("wikiLinkFileExtension");
     this.enableEmojiSyntax = config.get<boolean>("enableEmojiSyntax");
     this.enableExtendedTableSyntax = config.get<boolean>(
