@@ -496,7 +496,7 @@ export function activate(context: vscode.ExtensionContext) {
           {
             command: "changeTextEditorSelection",
             line: event.selections[0].active.line,
-            topRatio
+            topRatio,
           },
         );
       }
