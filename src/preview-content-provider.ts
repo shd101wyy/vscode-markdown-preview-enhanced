@@ -144,7 +144,7 @@ export class MarkdownPreviewEnhancedView
     const visibleTextEditors = vscode.window.visibleTextEditors;
     for (let i = 0; i < visibleTextEditors.length; i++) {
       const editor = visibleTextEditors[i];
-      if (editor.document.uri.fsPath === filePath) {
+      if (this.formatPathIfNecessary(editor.document.uri.fsPath) === filePath) {
         let codeChunkOffset = 0;
         const targetCodeChunkOffset =
           codeChunkData.normalizedInfo.attributes["code_chunk_offset"];
@@ -217,6 +217,20 @@ export class MarkdownPreviewEnhancedView
     }
   }
 
+  /**
+   * Format pathString if it is on Windows. Convert `c:\` like string to `C:\`
+   * @param pathString
+   */
+  private formatPathIfNecessary(pathString: string) {
+    if (process.platform === "win32") {
+      pathString = pathString.replace(
+        /^([a-zA-Z])\:\\/,
+        (_, $1) => `${$1.toUpperCase()}:\\`,
+      );
+    }
+    return pathString;
+  }
+
   private getProjectDirectoryPath(
     sourceUri: Uri,
     workspaceFolders: vscode.WorkspaceFolder[] = [],
@@ -242,24 +256,11 @@ export class MarkdownPreviewEnhancedView
       projectDirectoryPath = "";
     }
 
-    if (process.platform === "win32") {
-      projectDirectoryPath = projectDirectoryPath.replace(
-        /^([a-zA-Z])\:\\/,
-        (_, $1) => `${$1.toUpperCase()}:\\`,
-      );
-    }
-    return projectDirectoryPath;
+    return this.formatPathIfNecessary(projectDirectoryPath);
   }
 
   private getFilePath(sourceUri: Uri) {
-    if (process.platform === "win32") {
-      return sourceUri.fsPath.replace(
-        /^([a-zA-Z])\:\\/,
-        (_, $1) => `${$1.toUpperCase()}:\\`,
-      );
-    } else {
-      return sourceUri.fsPath;
-    }
+    return this.formatPathIfNecessary(sourceUri.fsPath);
   }
 
   /**
