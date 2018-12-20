@@ -1,3 +1,15 @@
+## 0.7.0
+
+* Upgrade vega to 4.4.0, vega-lite to 3.0.0-rc10 and vega-embed to 3.26.1 ([gicentre/mume-with-litvis#429dcf63](https://github.com/gicentre/mume-with-litvis/commit/429dcf6370191cfc8b421923a6283d4f7bdc7625))
+
+* Fix a few minor bugs ([gicentre/litvis#11](https://github.com/gicentre/litvis/issue/11),
+  [gicentre/litvis#12](https://github.com/gicentre/litvis/issue/12),
+  [gicentre/litvis#13](https://github.com/gicentre/litvis/issue/13),
+  [gicentre/litvis#14](https://github.com/gicentre/litvis/issue/14),
+  [gicentre/litvis#15](https://github.com/gicentre/litvis/issue/15),
+  [gicentre/litvis#16](https://github.com/gicentre/litvis/issue/16),
+  [gicentre/litvis#17](https://github.com/gicentre/litvis/issue/17))
+
 ## 0.6.0
 
 * Implement markdown output from litvis blocks ([gicentre/litvis#10](https://github.com/gicentre/litvis/pull/10))
