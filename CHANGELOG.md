@@ -1,3 +1,7 @@
+## 0.8.0
+
+* Add ability to highlight lines of code ([gicentre/litvis#9](https://github.com/gicentre/litvis/issues/9), [shd101wyy/mume#100](https://github.com/shd101wyy/mume/pull/100), [mume-with-litvis#5074ca39](https://github.com/gicentre/mume-with-litvis/commit/5074ca39a24ff86ef8ddc63c35f33b212e2da984))
+
 ## 0.7.0
 
 * Upgrade vega to 4.4.0, vega-lite to 3.0.0-rc10 and vega-embed to 3.26.1 ([gicentre/mume-with-litvis#429dcf63](https://github.com/gicentre/mume-with-litvis/commit/429dcf6370191cfc8b421923a6283d4f7bdc7625))
