@@ -1,22 +1,18 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import { Event, TextEditor, Uri } from "vscode";
+import { TextEditor, Uri } from "vscode";
 
 import * as mume from "@shd101wyy/mume";
 import { MarkdownEngine } from "@shd101wyy/mume";
 
 import { MarkdownPreviewEnhancedConfig } from "./config";
 
-let singlePreviewSouceUri: Uri = null;
-
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
 // https://github.com/Microsoft/vscode/tree/master/extensions/markdown/src
 // https://github.com/tomoki1207/gfm-preview/blob/master/src/gfmProvider.ts
 // https://github.com/cbreeden/vscode-markdownit
-export class MarkdownPreviewEnhancedView
-  implements vscode.TextDocumentContentProvider {
-  private privateOnDidChange = new vscode.EventEmitter<Uri>();
+export class MarkdownPreviewEnhancedView {
   private waiting: boolean = false;
 
   /**
@@ -24,6 +20,14 @@ export class MarkdownPreviewEnhancedView
    * value is MarkdownEngine
    */
   private engineMaps: { [key: string]: MarkdownEngine } = {};
+  
+  /**
+   * The key is markdown file fspath
+   * value is Preview (vscode.Webview) object
+   */
+  private previewMaps: { [key: string]: vscode.WebviewPanel } = {}
+
+  private singlePreviewPanel: vscode.WebviewPanel;
 
   /**
    * The key is markdown file fsPath
@@ -64,11 +68,13 @@ export class MarkdownPreviewEnhancedView
     }
 
     // refresh iframes
-    vscode.workspace.textDocuments.forEach((document) => {
-      if (document.uri.scheme === "markdown-preview-enhanced") {
-        this.privateOnDidChange.fire(document.uri);
+    if (useSinglePreview()) {
+      this.refreshPreviewPanel(this.singlePreviewPanel);
+    } else {
+      for (const key in this.previewMaps) {
+        this.refreshPreviewPanel(this.previewMaps[key]);
       }
-    });
+    }
   }
 
   /**
@@ -167,7 +173,6 @@ export class MarkdownPreviewEnhancedView
             }
           } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*[=\s}]/)) {
             if (codeChunkOffset === targetCodeChunkOffset) {
-              // console.log('find code chunk' )
               return insertResult(i2, editor);
             } else {
               codeChunkOffset++;
@@ -186,6 +191,18 @@ export class MarkdownPreviewEnhancedView
    */
   public getEngine(sourceUri: Uri): MarkdownEngine {
     return this.engineMaps[sourceUri.fsPath];
+  }
+
+  /**
+   * return markdown preview of sourceUri
+   * @param sourceUri 
+   */
+  public getPreview(sourceUri: Uri): vscode.WebviewPanel {
+    if (useSinglePreview()) {
+      return this.singlePreviewPanel;
+    } else {
+      return this.previewMaps[sourceUri.fsPath];
+    }
   }
 
   /**
@@ -212,7 +229,6 @@ export class MarkdownPreviewEnhancedView
     const sourceUri = vscode.Uri.parse(previewUri.query);
     const engine = this.getEngine(sourceUri);
     if (engine) {
-      // console.log('engine destroyed')
       this.engineMaps[sourceUri.fsPath] = null; // destroy engine
     }
   }
@@ -283,42 +299,99 @@ export class MarkdownPreviewEnhancedView
     return engine;
   }
 
-  public provideTextDocumentContent(previewUri: Uri): Thenable<string> {
-    // console.log(sourceUri, uri, vscode.workspace.rootPath)
-
-    let sourceUri: Uri;
-    if (useSinglePreview()) {
-      sourceUri = singlePreviewSouceUri;
+  public initPreview(sourceUri: vscode.Uri, context: vscode.ExtensionContext) {
+    const previewUri = getPreviewUri(sourceUri);
+    const isUsingSinglePreview = useSinglePreview();
+    let previewPanel: vscode.WebviewPanel;
+    if (isUsingSinglePreview && this.singlePreviewPanel) {
+      previewPanel = this.singlePreviewPanel;
     } else {
-      sourceUri = vscode.Uri.parse(previewUri.query);
+      const localResourceRoots = [
+        vscode.Uri.file(context.extensionPath), 
+        vscode.Uri.file(mume.utility.extensionDirectoryPath),
+        vscode.Uri.file(mume.utility.extensionConfigDirectoryPath),
+        vscode.workspace.getWorkspaceFolder(sourceUri).uri
+      ];
+      
+      previewPanel = vscode.window.createWebviewPanel(
+        "markdown-preview-enhanced",
+        isUsingSinglePreview
+            ? "MPE Preview"
+            : `Preview '${path.basename(sourceUri.fsPath)}'`,
+        vscode.ViewColumn.Two,
+        {
+          enableFindWidget: true,
+          localResourceRoots,
+          enableScripts: true // TODO: This might be set by enableScriptExecution config. But for now we just enable it.
+        }
+      )
+
+      if (isUsingSinglePreview) {
+        this.singlePreviewPanel = previewPanel;
+      }
     }
+    
+    // unregister previewPanel
+    previewPanel.onDidDispose(()=> {
+      this.previewMaps[sourceUri.fsPath] = null;
 
-    // console.log('open preview for source: ' + sourceUri.toString())
+      if (useSinglePreview()) {
+        this.singlePreviewPanel = null;
+      } 
+    }, null, context.subscriptions);
 
+    // register previewPanel
+    this.previewMaps[sourceUri.fsPath] = previewPanel;
+
+    // register previewPanel message events
+    previewPanel.webview.onDidReceiveMessage((message)=> {
+      vscode.commands.executeCommand(`_mume.${message.command}`, ...message.args);
+    }, null, context.subscriptions);
+
+    // init markdown engine
     let initialLine: number | undefined;
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document.uri.fsPath === sourceUri.fsPath) {
       initialLine = editor.selection.active.line;
     }
+    const text = editor.document.getText();
+    let engine = this.getEngine(sourceUri);
+    if (!engine) {
+      engine = this.initMarkdownEngine(sourceUri);
+    }
 
-    return vscode.workspace.openTextDocument(sourceUri).then((document) => {
-      const text = document.getText();
-      let engine = this.getEngine(sourceUri);
-      if (!engine) {
-        engine = this.initMarkdownEngine(sourceUri);
-      }
-
-      return engine.generateHTMLTemplateForPreview({
-        inputString: text,
-        config: {
-          previewUri: encodeURIComponent(previewUri.toString()),
-          sourceUri: encodeURIComponent(sourceUri.toString()),
-          initialLine,
-          vscode: true,
-        },
-        // webviewScript: path.resolve(this.context.extensionPath, './out/src/webview.js') // use default webview.ts in mume
-      });
+    engine.generateHTMLTemplateForPreview({
+      inputString: text,
+      config: {
+        sourceUri: encodeURIComponent(sourceUri.fsPath),
+        initialLine,
+        vscode: true,
+      },
+      isForVSCode: true,
+      contentSecurityPolicy: ""
+    }).then((html)=> {
+      previewPanel.webview.html = html;
     });
+  }
+
+  /**
+   * Close all previews
+   */
+  public closeAllPreviews() {
+    if (useSinglePreview()) {
+      if (this.singlePreviewPanel) {
+        this.singlePreviewPanel.dispose();
+        this.singlePreviewPanel = null;
+      }
+    } else {
+      for (const key in this.previewMaps) {
+        const previewPanel = this.previewMaps[key];
+        if (previewPanel) {
+          previewPanel.dispose();
+          this.previewMaps[key] = null;
+        }
+      }
+    }
   }
 
   public updateMarkdown(sourceUri: Uri, triggeredBySave?: boolean) {
@@ -327,22 +400,22 @@ export class MarkdownPreviewEnhancedView
       return;
     }
 
+    const previewPanel = this.getPreview(sourceUri);
+    if (!previewPanel) {
+      return;
+    }
+
     // presentation mode
     if (engine.isPreviewInPresentationMode) {
-      return this.privateOnDidChange.fire(getPreviewUri(sourceUri));
+      return this.refreshPreviewPanel(this.getPreview(sourceUri));
     }
 
     // not presentation mode
     vscode.workspace.openTextDocument(sourceUri).then((document) => {
       const text = document.getText();
-
-      vscode.commands.executeCommand(
-        "_workbench.htmlPreview.postMessage",
-        getPreviewUri(sourceUri),
-        {
-          command: "startParsingMarkdown",
-        },
-      );
+      previewPanel.webview.postMessage({
+        command: "startParsingMarkdown"
+      })
 
       engine
         .parseMD(text, {
@@ -350,6 +423,7 @@ export class MarkdownPreviewEnhancedView
           useRelativeFilePath: false,
           hideFrontMatter: false,
           triggeredBySave,
+          isForVSCodePreview: true
         })
         .then(({ markdown, html, tocHTML, JSAndCssFiles, yamlConfig }) => {
           // check JSAndCssFiles
@@ -360,24 +434,24 @@ export class MarkdownPreviewEnhancedView
           ) {
             this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles;
             // restart iframe
-            this.privateOnDidChange.fire(getPreviewUri(sourceUri));
+            this.refreshPreviewPanel(this.getPreview(sourceUri));
           } else {
-            vscode.commands.executeCommand(
-              "_workbench.htmlPreview.postMessage",
-              getPreviewUri(sourceUri),
-              {
-                command: "updateHTML",
-                html,
-                tocHTML,
-                totalLineCount: document.lineCount,
-                sourceUri: encodeURIComponent(sourceUri.toString()),
-                id: yamlConfig.id || "",
-                class: yamlConfig.class || "",
-              },
-            );
+            previewPanel.webview.postMessage({
+              command: "updateHTML",
+              html,
+              tocHTML,
+              totalLineCount: document.lineCount,
+              sourceUri: encodeURIComponent(sourceUri.toString()),
+              id: yamlConfig.id || "",
+              class: yamlConfig.class || "",
+            })
           }
         });
     });
+  }
+
+  public refreshPreviewPanel(previewPanel: vscode.WebviewPanel) {
+    console.log("@TODO refreshPreviewPanel");
   }
 
   public refreshPreview(sourceUri: Uri) {
@@ -385,7 +459,7 @@ export class MarkdownPreviewEnhancedView
     if (engine) {
       engine.clearCaches();
       // restart iframe
-      this.privateOnDidChange.fire(getPreviewUri(sourceUri));
+      this.refreshPreviewPanel(this.getPreview(sourceUri));
     }
   }
 
@@ -564,16 +638,11 @@ export class MarkdownPreviewEnhancedView
     }
   }
 
-  get onDidChange(): Event<Uri> {
-    return this.privateOnDidChange.event;
-  }
-
   public update(sourceUri: Uri) {
-    if (!this.config.liveUpdate) {
+    if (!this.config.liveUpdate || !this.getPreview(sourceUri)) {
       return;
     }
 
-    // console.log('update')
     if (!this.waiting) {
       this.waiting = true;
       setTimeout(() => {
@@ -587,6 +656,10 @@ export class MarkdownPreviewEnhancedView
   public updateConfiguration() {
     const newConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
     if (!this.config.isEqualTo(newConfig)) {
+      if (this.config.singlePreview !== newConfig.singlePreview) {
+        this.closeAllPreviews();
+      }
+      
       this.config = newConfig;
 
       for (const fsPath in this.engineMaps) {
@@ -597,12 +670,7 @@ export class MarkdownPreviewEnhancedView
       }
 
       // update all generated md documents
-      vscode.workspace.textDocuments.forEach((document) => {
-        if (document.uri.scheme === "markdown-preview-enhanced") {
-          // this.update(document.uri);
-          this.privateOnDidChange.fire(document.uri);
-        }
-      });
+      this.refreshAllPreviews();
     }
   }
 
@@ -642,7 +710,6 @@ export function getPreviewUri(uri: vscode.Uri) {
       scheme: "markdown-preview-enhanced",
       path: "single-preview.rendered",
     });
-    singlePreviewSouceUri = uri;
   } else {
     previewUri = uri.with({
       scheme: "markdown-preview-enhanced",

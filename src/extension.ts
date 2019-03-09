@@ -19,12 +19,7 @@ let editorScrollDelay = Date.now();
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   // assume only one preview supported.
-
   const contentProvider = new MarkdownPreviewEnhancedView(context);
-  const contentProviderRegistration = vscode.workspace.registerTextDocumentContentProvider(
-    "markdown-preview-enhanced",
-    contentProvider,
-  );
 
   function openPreview(uri?: vscode.Uri) {
     let resource = uri;
@@ -34,44 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
         resource = vscode.window.activeTextEditor.document.uri;
       }
     }
-
-    /*
-		if (!(resource instanceof vscode.Uri)) {
-			if (!vscode.window.activeTextEditor) {
-				// this is most likely toggling the preview
-				return vscode.commands.executeCommand('markdown.showSource');
-			}
-			// nothing found that could be shown or toggled
-			return;
-		}
-		*/
-
-    /*
-		if (contentProvider.isPreviewOn(vscode.window.activeTextEditor)) {
-			// return vscode.commands.executeCommand('workbench.action.closeActiveEditor', markdownURI)
-		} else {
-
-		}
-		*/
-    const previewUri = getPreviewUri(resource);
-    return vscode.commands
-      .executeCommand(
-        "vscode.previewHtml",
-        previewUri,
-        vscode.ViewColumn.Two,
-        useSinglePreview()
-          ? "MPE Preview"
-          : `Preview '${path.basename(resource.fsPath)}'`,
-      )
-      .then(
-        (success) => {
-          // contentProvider.update(previewUri)
-          // the line above is changed to webviewFinishLoading function.
-        },
-        (reason) => {
-          vscode.window.showErrorMessage(reason);
-        },
-      );
+    contentProvider.initPreview(resource, context);
   }
 
   function toggleScrollSync() {
@@ -240,6 +198,7 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   function webviewFinishLoading(uri) {
+    console.log("@webviewFinishLoading", uri);
     const sourceUri = vscode.Uri.parse(uri);
     contentProvider.updateMarkdown(sourceUri);
   }
@@ -461,7 +420,6 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document) => {
       if (isMarkdownFile(document)) {
-        // contentProvider.update(document.uri, true);
         contentProvider.updateMarkdown(document.uri, true);
       }
     }),
@@ -814,8 +772,6 @@ export function activate(context: vscode.ExtensionContext) {
       showUploadedImages,
     ),
   );
-
-  context.subscriptions.push(contentProviderRegistration);
 }
 
 function revealLine(uri, line) {
