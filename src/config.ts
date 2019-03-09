@@ -39,6 +39,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly scrollSync: boolean;
   public readonly liveUpdate: boolean;
   public readonly singlePreview: boolean;
+  public readonly automaticallyShowPreviewOfMarkdownBeingEdited: boolean;
 
   private constructor() {
     const config = vscode.workspace.getConfiguration(
@@ -87,6 +88,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.scrollSync = config.get<boolean>("scrollSync");
     this.liveUpdate = config.get<boolean>("liveUpdate");
     this.singlePreview = config.get<boolean>("singlePreview");
+    this.automaticallyShowPreviewOfMarkdownBeingEdited = config.get<boolean>(
+      "automaticallyShowPreviewOfMarkdownBeingEdited",
+    );
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

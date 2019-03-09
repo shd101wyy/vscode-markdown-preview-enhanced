@@ -167,7 +167,12 @@
                     "type": "boolean"
                 },
                 "markdown-preview-enhanced.singlePreview": {
-                    "description": "Open Only One Preview",
+                    "description": "Open Only One Preview.",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": {
+                    "description": "Automatically show preview of markdown being edited.",
                     "default": true,
                     "type": "boolean"
                 },
@@ -435,6 +440,7 @@
         "mocha": "^6.0.2",
         "prettier": "^1.16.4",
         "prettier-check": "^2.0.0",
+        "tslint": "^5.13.1",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "^3.0.3",
         "vscode": "^1.1.30"
