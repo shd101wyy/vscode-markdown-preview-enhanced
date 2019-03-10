@@ -351,6 +351,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function clickTagA(uri, href) {
     href = decodeURIComponent(href);
+    href = href.replace(/^vscode\-resource:\/\/\//, "file:///");
     if (
       [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
         path.extname(href),

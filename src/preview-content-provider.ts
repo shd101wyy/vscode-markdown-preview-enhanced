@@ -392,11 +392,12 @@ export class MarkdownPreviewEnhancedView {
     // init markdown engine
     let initialLine: number | undefined;
     if (editor && editor.document.uri.fsPath === sourceUri.fsPath) {
-      initialLine = await new Promise((resolve, reject)=> { // Hack: sometimes we only get 0. I couldn't find API to wait for editor getting loaded.
-        setTimeout(()=> {
+      initialLine = await new Promise((resolve, reject) => {
+        // Hack: sometimes we only get 0. I couldn't find API to wait for editor getting loaded.
+        setTimeout(() => {
           return resolve(editor.selections[0].active.line || 0);
-        }, 100)
-      })
+        }, 100);
+      });
     }
 
     const text = editor.document.getText();
