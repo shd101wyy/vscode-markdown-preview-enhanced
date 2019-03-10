@@ -10,7 +10,7 @@
     },
     "license": "NCSA",
     "engines": {
-        "vscode": "^1.20.0"
+        "vscode": "^1.30.0"
     },
     "categories": [
         "Other"
@@ -167,7 +167,12 @@
                     "type": "boolean"
                 },
                 "markdown-preview-enhanced.singlePreview": {
-                    "description": "Open Only One Preview",
+                    "description": "Open Only One Preview.",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": {
+                    "description": "Automatically show preview of markdown being edited.",
                     "default": true,
                     "type": "boolean"
                 },
@@ -424,19 +429,20 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.6",
-        "@types/vfile": "^2.2.2"
+        "@shd101wyy/mume": "^0.3.7",
+        "@types/vfile": "^3.0.2"
     },
     "devDependencies": {
         "@types/jquery": "^3.3.9",
         "@types/mocha": "^5.2.5",
-        "@types/node": "^10.10.3",
-        "eslint": "^5.6.0",
-        "mocha": "^5.2.0",
-        "prettier": "^1.14.3",
+        "@types/node": "^11.11.0",
+        "eslint": "^5.15.1",
+        "mocha": "^6.0.2",
+        "prettier": "^1.16.4",
         "prettier-check": "^2.0.0",
-        "tslint-config-prettier": "^1.15.0",
+        "tslint": "^5.13.1",
+        "tslint-config-prettier": "^1.18.0",
         "typescript": "^3.0.3",
-        "vscode": "^1.1.21"
+        "vscode": "^1.1.30"
     }
 }

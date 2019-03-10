@@ -38,6 +38,8 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   // preview config
   public readonly scrollSync: boolean;
   public readonly liveUpdate: boolean;
+  public readonly singlePreview: boolean;
+  public readonly automaticallyShowPreviewOfMarkdownBeingEdited: boolean;
 
   private constructor() {
     const config = vscode.workspace.getConfiguration(
@@ -85,23 +87,16 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
 
     this.scrollSync = config.get<boolean>("scrollSync");
     this.liveUpdate = config.get<boolean>("liveUpdate");
+    this.singlePreview = config.get<boolean>("singlePreview");
+    this.automaticallyShowPreviewOfMarkdownBeingEdited = config.get<boolean>(
+      "automaticallyShowPreviewOfMarkdownBeingEdited",
+    );
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
     const json1 = JSON.stringify(this);
     const json2 = JSON.stringify(otherConfig);
     return json1 === json2;
-
-    // this is not good because sometimes this[key] is of array type
-    /*
-    for (let key in this) {
-      if (this.hasOwnProperty(key)) {
-        if (this[key] !== otherConfig[key]) {
-          return false
-        }
-      }
-    }
-    */
   }
 
   [key: string]: any;

@@ -10,7 +10,6 @@ import {
   getPreviewUri,
   isMarkdownFile,
   MarkdownPreviewEnhancedView,
-  useSinglePreview,
 } from "./preview-content-provider";
 
 let editorScrollDelay = Date.now();
@@ -19,12 +18,7 @@ let editorScrollDelay = Date.now();
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   // assume only one preview supported.
-
   const contentProvider = new MarkdownPreviewEnhancedView(context);
-  const contentProviderRegistration = vscode.workspace.registerTextDocumentContentProvider(
-    "markdown-preview-enhanced",
-    contentProvider,
-  );
 
   function openPreview(uri?: vscode.Uri) {
     let resource = uri;
@@ -34,44 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
         resource = vscode.window.activeTextEditor.document.uri;
       }
     }
-
-    /*
-		if (!(resource instanceof vscode.Uri)) {
-			if (!vscode.window.activeTextEditor) {
-				// this is most likely toggling the preview
-				return vscode.commands.executeCommand('markdown.showSource');
-			}
-			// nothing found that could be shown or toggled
-			return;
-		}
-		*/
-
-    /*
-		if (contentProvider.isPreviewOn(vscode.window.activeTextEditor)) {
-			// return vscode.commands.executeCommand('workbench.action.closeActiveEditor', markdownURI)
-		} else {
-
-		}
-		*/
-    const previewUri = getPreviewUri(resource);
-    return vscode.commands
-      .executeCommand(
-        "vscode.previewHtml",
-        previewUri,
-        vscode.ViewColumn.Two,
-        useSinglePreview()
-          ? "MPE Preview"
-          : `Preview '${path.basename(resource.fsPath)}'`,
-      )
-      .then(
-        (success) => {
-          // contentProvider.update(previewUri)
-          // the line above is changed to webviewFinishLoading function.
-        },
-        (reason) => {
-          vscode.window.showErrorMessage(reason);
-        },
-      );
+    contentProvider.initPreview(resource, vscode.window.activeTextEditor);
   }
 
   function toggleScrollSync() {
@@ -345,18 +302,15 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const previewUri = getPreviewUri(textEditor.document.uri);
+    const sourceUri = textEditor.document.uri;
+    const previewUri = getPreviewUri(sourceUri);
     if (!previewUri) {
       return;
     }
 
-    vscode.commands.executeCommand(
-      "_workbench.htmlPreview.postMessage",
-      previewUri,
-      {
-        command: "runAllCodeChunks",
-      },
-    );
+    contentProvider.previewPostMessage(sourceUri, {
+      command: "runAllCodeChunks",
+    });
   }
 
   function runCodeChunkCommand() {
@@ -368,18 +322,14 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const previewUri = getPreviewUri(textEditor.document.uri);
+    const sourceUri = textEditor.document.uri;
+    const previewUri = getPreviewUri(sourceUri);
     if (!previewUri) {
       return;
     }
-
-    vscode.commands.executeCommand(
-      "_workbench.htmlPreview.postMessage",
-      previewUri,
-      {
-        command: "runCodeChunk",
-      },
-    );
+    contentProvider.previewPostMessage(sourceUri, {
+      command: "runCodeChunk",
+    });
   }
 
   function syncPreview() {
@@ -391,24 +341,17 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const previewUri = getPreviewUri(textEditor.document.uri);
-    if (!previewUri) {
-      return;
-    }
-
-    vscode.commands.executeCommand(
-      "_workbench.htmlPreview.postMessage",
-      previewUri,
-      {
-        command: "changeTextEditorSelection",
-        line: textEditor.selections[0].active.line,
-        forced: true,
-      },
-    );
+    const sourceUri = textEditor.document.uri;
+    contentProvider.previewPostMessage(sourceUri, {
+      command: "changeTextEditorSelection",
+      line: textEditor.selections[0].active.line,
+      forced: true,
+    });
   }
 
   function clickTagA(uri, href) {
     href = decodeURIComponent(href);
+    href = href.replace(/^vscode\-resource:\/\/\//, "file:///");
     if (
       [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
         path.extname(href),
@@ -461,7 +404,6 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document) => {
       if (isMarkdownFile(document)) {
-        // contentProvider.update(document.uri, true);
         contentProvider.updateMarkdown(document.uri, true);
       }
     }),
@@ -484,67 +426,53 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeTextEditorSelection((event) => {
       if (isMarkdownFile(event.textEditor.document)) {
-        const previewUri = getPreviewUri(event.textEditor.document.uri);
         const firstVisibleScreenRow = getTopVisibleLine(event.textEditor);
         const lastVisibleScreenRow = getBottomVisibleLine(event.textEditor);
         const topRatio =
           (event.selections[0].active.line - firstVisibleScreenRow) /
           (lastVisibleScreenRow - firstVisibleScreenRow);
-        vscode.commands.executeCommand(
-          "_workbench.htmlPreview.postMessage",
-          previewUri,
-          {
-            command: "changeTextEditorSelection",
-            line: event.selections[0].active.line,
-            topRatio,
-          },
-        );
+
+        contentProvider.previewPostMessage(event.textEditor.document.uri, {
+          command: "changeTextEditorSelection",
+          line: event.selections[0].active.line,
+          topRatio,
+        });
       }
     }),
   );
 
-  if (vscode.window["onDidChangeTextEditorVisibleRanges"]) {
-    context.subscriptions.push(
-      // I don't know why it doesn't exist in the newest @types/vscode
-      // But I see the official vscode markdown-preview extension uses it.
-      vscode.window["onDidChangeTextEditorVisibleRanges"]((event) => {
-        const textEditor = event.textEditor as vscode.TextEditor;
-        if (Date.now() < editorScrollDelay) {
-          return;
-        }
-        if (isMarkdownFile(textEditor.document)) {
-          const previewUri = getPreviewUri(textEditor.document.uri);
-          if (previewUri) {
-            if (!event.textEditor["visibleRanges"].length) {
-              return undefined;
-            } else {
-              const topLine = getTopVisibleLine(textEditor);
-              const bottomLine = getBottomVisibleLine(textEditor);
-              let midLine;
-              if (topLine === 0) {
-                midLine = 0;
-              } else if (
-                Math.floor(bottomLine) ===
-                textEditor.document.lineCount - 1
-              ) {
-                midLine = bottomLine;
-              } else {
-                midLine = Math.floor((topLine + bottomLine) / 2);
-              }
-              vscode.commands.executeCommand(
-                "_workbench.htmlPreview.postMessage",
-                previewUri,
-                {
-                  command: "changeTextEditorSelection",
-                  line: midLine,
-                },
-              );
-            }
+  context.subscriptions.push(
+    vscode.window.onDidChangeTextEditorVisibleRanges((event) => {
+      const textEditor = event.textEditor as vscode.TextEditor;
+      if (Date.now() < editorScrollDelay) {
+        return;
+      }
+      if (isMarkdownFile(textEditor.document)) {
+        const sourceUri = textEditor.document.uri;
+        if (!event.textEditor.visibleRanges.length) {
+          return undefined;
+        } else {
+          const topLine = getTopVisibleLine(textEditor);
+          const bottomLine = getBottomVisibleLine(textEditor);
+          let midLine;
+          if (topLine === 0) {
+            midLine = 0;
+          } else if (
+            Math.floor(bottomLine) ===
+            textEditor.document.lineCount - 1
+          ) {
+            midLine = bottomLine;
+          } else {
+            midLine = Math.floor((topLine + bottomLine) / 2);
           }
+          contentProvider.previewPostMessage(sourceUri, {
+            command: "changeTextEditorSelection",
+            line: midLine,
+          });
         }
-      }),
-    );
-  }
+      }
+    }),
+  );
 
   /**
    * Open preview automatically if the `automaticallyShowPreviewOfMarkdownBeingEdited` is on.
@@ -553,32 +481,37 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((textEditor) => {
       if (textEditor && textEditor.document && textEditor.document.uri) {
-        // console.log('onDidChangeActiveTextEditor', textEditor.document.uri)
         if (isMarkdownFile(textEditor.document)) {
           const sourceUri = textEditor.document.uri;
+          const config = vscode.workspace.getConfiguration(
+            "markdown-preview-enhanced",
+          );
+          const automaticallyShowPreviewOfMarkdownBeingEdited = config.get<
+            boolean
+          >("automaticallyShowPreviewOfMarkdownBeingEdited");
+          const isUsingSinglePreview = config.get<boolean>("singlePreview");
           /**
            * Is using single preview and the preview is on.
-           * When we switched text editor, update preview to that text editor.
+           * When we switched text ed()tor, update preview to that text editor.
            */
-          if (useSinglePreview() && contentProvider.isPreviewOn(sourceUri)) {
-            contentProvider.initMarkdownEngine(sourceUri);
-            contentProvider.updateMarkdown(sourceUri);
+
+          if (contentProvider.isPreviewOn(sourceUri)) {
+            if (
+              isUsingSinglePreview &&
+              !contentProvider.previewHasTheSameSingleSourceUri(sourceUri)
+            ) {
+              contentProvider.initPreview(sourceUri, textEditor);
+            } else if (
+              !isUsingSinglePreview &&
+              automaticallyShowPreviewOfMarkdownBeingEdited
+            ) {
+              const previewPanel = contentProvider.getPreview(sourceUri);
+              if (previewPanel) {
+                previewPanel.reveal(vscode.ViewColumn.Two, true);
+              }
+            }
           }
         }
-      } else {
-        // console.log('onDidChangeActiveTextEditor', ' preview', textEditor)
-      }
-    }),
-  );
-
-  context.subscriptions.push(
-    vscode.workspace.onDidCloseTextDocument((textDocument) => {
-      // console.log('onDidCloseTextDocument', textDocument.uri)
-      if (
-        textDocument &&
-        textDocument.uri.scheme === "markdown-preview-enhanced"
-      ) {
-        contentProvider.destroyEngine(textDocument.uri);
       }
     }),
   );
@@ -814,8 +747,6 @@ export function activate(context: vscode.ExtensionContext) {
       showUploadedImages,
     ),
   );
-
-  context.subscriptions.push(contentProviderRegistration);
 }
 
 function revealLine(uri, line) {
