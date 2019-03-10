@@ -321,7 +321,7 @@ export class MarkdownPreviewEnhancedView {
     return engine;
   }
 
-  public initPreview(sourceUri: vscode.Uri, editor: vscode.TextEditor) {
+  public async initPreview(sourceUri: vscode.Uri, editor: vscode.TextEditor) {
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: vscode.WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
@@ -392,7 +392,11 @@ export class MarkdownPreviewEnhancedView {
     // init markdown engine
     let initialLine: number | undefined;
     if (editor && editor.document.uri.fsPath === sourceUri.fsPath) {
-      initialLine = editor.selections[0].active.line;
+      initialLine = await new Promise((resolve, reject)=> { // Hack: sometimes we only get 0. I couldn't find API to wait for editor getting loaded.
+        setTimeout(()=> {
+          return resolve(editor.selections[0].active.line || 0);
+        }, 100)
+      })
     }
 
     const text = editor.document.getText();
