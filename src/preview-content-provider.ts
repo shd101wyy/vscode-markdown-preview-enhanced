@@ -64,12 +64,14 @@ export class MarkdownPreviewEnhancedView {
   }
 
   private refreshAllPreviews() {
-    // reset configs
+    // clear caches
     for (const key in this.engineMaps) {
       if (this.engineMaps.hasOwnProperty(key)) {
         const engine = this.engineMaps[key];
         if (engine) {
-          engine.resetConfig();
+          // No need to resetConfig.
+          // Otherwiser when user change settings like `previewTheme`, the preview won't change immediately.
+          // engine.resetConfig();
           engine.clearCaches();
         }
       }
