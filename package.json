@@ -20,7 +20,8 @@
     ],
     "activationEvents": [
         "onLanguage:markdown",
-        "onCommand:markdown-preview-enhanced-with-litvis.openPreview"
+        "onCommand:markdown-preview-enhanced-with-litvis.openPreview",
+        "onCommand:markdown-preview-enhanced-with-litvis.clearCache"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -33,6 +34,10 @@
                     "light": "./media/PreviewOnRightPane_16x.svg",
                     "dark": "./media/PreviewOnRightPane_16x_dark.svg"
                 }
+            },
+            {
+                "command": "markdown-preview-enhanced-with-litvis.clearCache",
+                "title": "Markdown Preview Enhanced with litvis: Clear Cache"
             },
             {
                 "command": "markdown-preview-enhanced-with-litvis.toggleScrollSync",

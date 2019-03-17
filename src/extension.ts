@@ -2,7 +2,8 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as path from "path";
 import * as vscode from "vscode";
-
+import * as os from "os";
+import { emptyDir } from "fs-extra";
 import { utility } from "mume-with-litvis";
 
 import { pasteImageFile, uploadImageFile } from "./image-helper";
@@ -23,6 +24,10 @@ export function activate(context: vscode.ExtensionContext) {
     "markdown-preview-enhanced",
     contentProvider,
   );
+
+  function clearCache() {
+    emptyDir(path.resolve(os.homedir(), ".mume/literate-elm"));
+  }
 
   function openPreview(uri?: vscode.Uri) {
     let resource = uri;
@@ -548,6 +553,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.openPreview",
       openPreview,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "markdown-preview-enhanced-with-litvis.clearCache",
+      clearCache,
     ),
   );
 
