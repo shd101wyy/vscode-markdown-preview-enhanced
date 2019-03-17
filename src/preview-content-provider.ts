@@ -233,7 +233,8 @@ export class MarkdownPreviewEnhancedView {
     if (useSinglePreview()) {
       this.singlePreviewPanel = null;
       this.singlePreviewPanelSourceUriTarget = null;
-      return (this.previewMaps = {});
+      this.preview2EditorMap = new Map();
+      this.previewMaps = {};
     } else {
       const previewPanel = this.getPreview(sourceUri);
       if (previewPanel) {
@@ -327,8 +328,23 @@ export class MarkdownPreviewEnhancedView {
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: vscode.WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
-      previewPanel = this.singlePreviewPanel;
-      this.singlePreviewPanelSourceUriTarget = sourceUri;
+      const oldResourceRoot =
+        this.getProjectDirectoryPath(
+          this.singlePreviewPanelSourceUriTarget,
+          vscode.workspace.workspaceFolders,
+        ) || path.dirname(this.singlePreviewPanelSourceUriTarget.fsPath);
+      const newResourceRoot =
+        this.getProjectDirectoryPath(
+          sourceUri,
+          vscode.workspace.workspaceFolders,
+        ) || path.dirname(sourceUri.fsPath);
+      if (oldResourceRoot !== newResourceRoot) {
+        this.singlePreviewPanel.dispose();
+        return this.initPreview(sourceUri, editor);
+      } else {
+        previewPanel = this.singlePreviewPanel;
+        this.singlePreviewPanelSourceUriTarget = sourceUri;
+      }
     } else if (this.previewMaps[sourceUri.fsPath]) {
       previewPanel = this.previewMaps[sourceUri.fsPath];
     } else {
@@ -341,7 +357,7 @@ export class MarkdownPreviewEnhancedView {
           this.getProjectDirectoryPath(
             sourceUri,
             vscode.workspace.workspaceFolders,
-          ),
+          ) || path.dirname(sourceUri.fsPath),
         ),
       ];
 
@@ -487,7 +503,7 @@ export class MarkdownPreviewEnhancedView {
     // not presentation mode
     vscode.workspace.openTextDocument(sourceUri).then((document) => {
       const text = document.getText();
-      previewPanel.webview.postMessage({
+      this.previewPostMessage(sourceUri, {
         command: "startParsingMarkdown",
       });
 
@@ -510,7 +526,7 @@ export class MarkdownPreviewEnhancedView {
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
-            previewPanel.webview.postMessage({
+            this.previewPostMessage(sourceUri, {
               command: "updateHTML",
               html,
               tocHTML,
