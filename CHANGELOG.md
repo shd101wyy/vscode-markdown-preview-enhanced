@@ -1,3 +1,10 @@
+## 0.10.0
+
+* New command: _Markdown Preview Enhanced with Litvis: Clear Cache_ (useful when need to upgrade Elm dependencies or when cache is corrupt)
+* Fix a number of regressions in Elm output parsing and URL fetching
+* Improve error handling in a couple of edge cases
+* Upgrade vega to 5.3.0
+
 ## 0.9.0
 
 * Upgrade vega to 5.0.0, vega-lite to 3.0.0-rc14 and vega-embed to 4.0.0-rc1 ([gicentre/mume-with-litvis#11bc9651](https://github.com/gicentre/mume-with-litvis/commit/11bc96514feedadd7e125398f3fee3fc5ff3a630))
