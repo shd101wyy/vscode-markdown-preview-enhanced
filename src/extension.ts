@@ -20,6 +20,20 @@ export function activate(context: vscode.ExtensionContext) {
   // assume only one preview supported.
   const contentProvider = new MarkdownPreviewEnhancedView(context);
 
+  function openPreviewToTheSide(uri?: vscode.Uri) {
+    let resource = uri;
+    if (!(resource instanceof vscode.Uri)) {
+      if (vscode.window.activeTextEditor) {
+        // we are relaxed and don't check for markdown files
+        resource = vscode.window.activeTextEditor.document.uri;
+      }
+    }
+    contentProvider.initPreview(resource, vscode.window.activeTextEditor, {
+      viewColumn: vscode.ViewColumn.Two,
+      preserveFocus: true,
+    });
+  }
+
   function openPreview(uri?: vscode.Uri) {
     let resource = uri;
     if (!(resource instanceof vscode.Uri)) {
@@ -28,7 +42,10 @@ export function activate(context: vscode.ExtensionContext) {
         resource = vscode.window.activeTextEditor.document.uri;
       }
     }
-    contentProvider.initPreview(resource, vscode.window.activeTextEditor);
+    contentProvider.initPreview(resource, vscode.window.activeTextEditor, {
+      viewColumn: vscode.ViewColumn.One,
+      preserveFocus: true,
+    });
   }
 
   function toggleScrollSync() {
@@ -500,7 +517,10 @@ export function activate(context: vscode.ExtensionContext) {
               isUsingSinglePreview &&
               !contentProvider.previewHasTheSameSingleSourceUri(sourceUri)
             ) {
-              contentProvider.initPreview(sourceUri, textEditor);
+              contentProvider.initPreview(sourceUri, textEditor, {
+                viewColumn: contentProvider.getPreview(sourceUri).viewColumn,
+                preserveFocus: true,
+              });
             } else if (
               !isUsingSinglePreview &&
               automaticallyShowPreviewOfMarkdownBeingEdited
@@ -527,6 +547,13 @@ export function activate(context: vscode.ExtensionContext) {
 		// console.log('onDidChangeonDidChangeVisibleTextEditors ', textEditors)
 	}))
 	*/
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "markdown-preview-enhanced.openPreviewToTheSide",
+      openPreviewToTheSide,
+    ),
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(

@@ -324,7 +324,11 @@ export class MarkdownPreviewEnhancedView {
     return engine;
   }
 
-  public async initPreview(sourceUri: vscode.Uri, editor: vscode.TextEditor) {
+  public async initPreview(
+    sourceUri: vscode.Uri,
+    editor: vscode.TextEditor,
+    viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean },
+  ) {
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: vscode.WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
@@ -340,7 +344,7 @@ export class MarkdownPreviewEnhancedView {
         ) || path.dirname(sourceUri.fsPath);
       if (oldResourceRoot !== newResourceRoot) {
         this.singlePreviewPanel.dispose();
-        return this.initPreview(sourceUri, editor);
+        return this.initPreview(sourceUri, editor, viewOptions);
       } else {
         previewPanel = this.singlePreviewPanel;
         this.singlePreviewPanelSourceUriTarget = sourceUri;
@@ -364,7 +368,7 @@ export class MarkdownPreviewEnhancedView {
       previewPanel = vscode.window.createWebviewPanel(
         "markdown-preview-enhanced",
         `Preview ${path.basename(sourceUri.fsPath)}`,
-        { viewColumn: vscode.ViewColumn.Two, preserveFocus: true },
+        viewOptions,
         {
           enableFindWidget: true,
           localResourceRoots,
@@ -550,7 +554,10 @@ export class MarkdownPreviewEnhancedView {
         editor.document.uri &&
         editor.document.uri.fsPath === sourceUri.fsPath
       ) {
-        this.initPreview(sourceUri, editor);
+        this.initPreview(sourceUri, editor, {
+          viewColumn: previewPanel.viewColumn,
+          preserveFocus: true,
+        });
       }
     });
   }
