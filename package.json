@@ -20,11 +20,20 @@
     ],
     "activationEvents": [
         "onLanguage:markdown",
-        "onCommand:markdown-preview-enhanced.openPreview"
+        "onCommand:markdown-preview-enhanced.openPreviewToTheSide"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [
+            {
+                "command": "markdown-preview-enhanced.openPreviewToTheSide",
+                "title": "Markdown Preview Enhanced: Open Preview to the Side",
+                "category": "Markdown",
+                "icon": {
+                    "light": "./media/PreviewOnRightPane_16x.svg",
+                    "dark": "./media/PreviewOnRightPane_16x_dark.svg"
+                }
+            },
             {
                 "command": "markdown-preview-enhanced.openPreview",
                 "title": "Markdown Preview Enhanced: Open Preview",
@@ -105,9 +114,15 @@
         ],
         "keybindings": [
             {
-                "command": "markdown-preview-enhanced.openPreview",
+                "command": "markdown-preview-enhanced.openPreviewToTheSide",
                 "key": "ctrl+k v",
                 "mac": "cmd+k v",
+                "when": "editorLangId == markdown"
+            },
+            {
+                "command": "markdown-preview-enhanced.openPreview",
+                "key": "ctrl+shift+v",
+                "mac": "cmd+shift+v",
                 "when": "editorLangId == markdown"
             },
             {
@@ -129,14 +144,14 @@
         "menus": {
             "editor/context": [
                 {
-                    "command": "markdown-preview-enhanced.openPreview",
+                    "command": "markdown-preview-enhanced.openPreviewToTheSide",
                     "when": "editorLangId == markdown",
                     "group": "markdown-preview-enhanced"
                 }
             ],
             "editor/title": [
                 {
-                    "command": "markdown-preview-enhanced.openPreview",
+                    "command": "markdown-preview-enhanced.openPreviewToTheSide",
                     "when": "editorLangId == markdown",
                     "group": "navigation"
                 }
@@ -219,7 +234,7 @@
                     ],
                     "type": "array"
                 },
-                "markdown-preview-enhanced.saveAsMarkdown.mathRenderingOnLineService": {
+                "markdown-preview-enhanced.mathRenderingOnlineService": {
                     "description": "Choose the Math expression rendering method option for GFM markdown export (Save as Markdown).",
                     "default": "https://latex.codecogs.com/gif.latex",
                     "type": "string",
@@ -439,7 +454,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.7",
+        "@shd101wyy/mume": "^0.3.8",
         "@types/vfile": "^3.0.2"
     },
     "devDependencies": {

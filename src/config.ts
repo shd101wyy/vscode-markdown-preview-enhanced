@@ -20,7 +20,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly mathRenderingOption: MathRenderingOption;
   public readonly mathInlineDelimiters: string[][];
   public readonly mathBlockDelimiters: string[][];
-  public readonly mathRenderingOnLineService: string;
+  public readonly mathRenderingOnlineService: string;
   public readonly codeBlockTheme: string;
   public readonly mermaidTheme: string;
   public readonly previewTheme: string;
@@ -69,8 +69,8 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     ) as MathRenderingOption;
     this.mathInlineDelimiters = config.get<string[][]>("mathInlineDelimiters");
     this.mathBlockDelimiters = config.get<string[][]>("mathBlockDelimiters");
-    this.mathRenderingOnLineService = config.get<string>(
-      "saveAsMarkdown.mathRenderingOnLineService",
+    this.mathRenderingOnlineService = config.get<string>(
+      "mathRenderingOnlineService",
     );
     this.codeBlockTheme = config.get<string>("codeBlockTheme");
     this.previewTheme = config.get<string>("previewTheme");

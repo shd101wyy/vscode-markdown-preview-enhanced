@@ -233,7 +233,8 @@ export class MarkdownPreviewEnhancedView {
     if (useSinglePreview()) {
       this.singlePreviewPanel = null;
       this.singlePreviewPanelSourceUriTarget = null;
-      return (this.previewMaps = {});
+      this.preview2EditorMap = new Map();
+      this.previewMaps = {};
     } else {
       const previewPanel = this.getPreview(sourceUri);
       if (previewPanel) {
@@ -323,12 +324,31 @@ export class MarkdownPreviewEnhancedView {
     return engine;
   }
 
-  public async initPreview(sourceUri: vscode.Uri, editor: vscode.TextEditor) {
+  public async initPreview(
+    sourceUri: vscode.Uri,
+    editor: vscode.TextEditor,
+    viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean },
+  ) {
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: vscode.WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
-      previewPanel = this.singlePreviewPanel;
-      this.singlePreviewPanelSourceUriTarget = sourceUri;
+      const oldResourceRoot =
+        this.getProjectDirectoryPath(
+          this.singlePreviewPanelSourceUriTarget,
+          vscode.workspace.workspaceFolders,
+        ) || path.dirname(this.singlePreviewPanelSourceUriTarget.fsPath);
+      const newResourceRoot =
+        this.getProjectDirectoryPath(
+          sourceUri,
+          vscode.workspace.workspaceFolders,
+        ) || path.dirname(sourceUri.fsPath);
+      if (oldResourceRoot !== newResourceRoot) {
+        this.singlePreviewPanel.dispose();
+        return this.initPreview(sourceUri, editor, viewOptions);
+      } else {
+        previewPanel = this.singlePreviewPanel;
+        this.singlePreviewPanelSourceUriTarget = sourceUri;
+      }
     } else if (this.previewMaps[sourceUri.fsPath]) {
       previewPanel = this.previewMaps[sourceUri.fsPath];
     } else {
@@ -341,14 +361,14 @@ export class MarkdownPreviewEnhancedView {
           this.getProjectDirectoryPath(
             sourceUri,
             vscode.workspace.workspaceFolders,
-          ),
+          ) || path.dirname(sourceUri.fsPath),
         ),
       ];
 
       previewPanel = vscode.window.createWebviewPanel(
         "markdown-preview-enhanced",
         `Preview ${path.basename(sourceUri.fsPath)}`,
-        { viewColumn: vscode.ViewColumn.Two, preserveFocus: true },
+        viewOptions,
         {
           enableFindWidget: true,
           localResourceRoots,
@@ -487,7 +507,7 @@ export class MarkdownPreviewEnhancedView {
     // not presentation mode
     vscode.workspace.openTextDocument(sourceUri).then((document) => {
       const text = document.getText();
-      previewPanel.webview.postMessage({
+      this.previewPostMessage(sourceUri, {
         command: "startParsingMarkdown",
       });
 
@@ -510,7 +530,7 @@ export class MarkdownPreviewEnhancedView {
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
-            previewPanel.webview.postMessage({
+            this.previewPostMessage(sourceUri, {
               command: "updateHTML",
               html,
               tocHTML,
@@ -534,7 +554,10 @@ export class MarkdownPreviewEnhancedView {
         editor.document.uri &&
         editor.document.uri.fsPath === sourceUri.fsPath
       ) {
-        this.initPreview(sourceUri, editor);
+        this.initPreview(sourceUri, editor, {
+          viewColumn: previewPanel.viewColumn,
+          preserveFocus: true,
+        });
       }
     });
   }
