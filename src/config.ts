@@ -69,7 +69,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     ) as MathRenderingOption;
     this.mathInlineDelimiters = config.get<string[][]>("mathInlineDelimiters");
     this.mathBlockDelimiters = config.get<string[][]>("mathBlockDelimiters");
-    this.mathRenderingOnlineService = config.get<string>("mathRenderingOnlineService")
+    this.mathRenderingOnlineService = config.get<string>(
+      "mathRenderingOnlineService",
+    );
     this.codeBlockTheme = config.get<string>("codeBlockTheme");
     this.previewTheme = config.get<string>("previewTheme");
     this.revealjsTheme = config.get<string>("revealjsTheme");
