@@ -234,6 +234,11 @@
                     ],
                     "type": "array"
                 },
+                "markdown-preview-enhanced.mathRenderingOnlineService": {
+                    "description": "Online service used to render math expressions when export as markdown file.",
+                    "default": "https://latex.codecogs.com/gif.latex",
+                    "type": "string"
+                },
                 "markdown-preview-enhanced.enableWikiLinkSyntax": {
                     "description": "Enable Wiki Link syntax support. More information can be found at https://help.github.com/articles/adding-links-to-wikis/",
                     "default": true,
@@ -444,7 +449,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.7",
+        "@shd101wyy/mume": "file:../mume",
         "@types/vfile": "^3.0.2"
     },
     "devDependencies": {
