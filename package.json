@@ -235,9 +235,14 @@
                     "type": "array"
                 },
                 "markdown-preview-enhanced.mathRenderingOnlineService": {
-                    "description": "Online service used to render math expressions when export as markdown file.",
+                    "description": "Choose the Math expression rendering method option for GFM markdown export (Save as Markdown).",
                     "default": "https://latex.codecogs.com/gif.latex",
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "https://latex.codecogs.com/gif.latex",
+                        "https://latex.codecogs.com/svg.latex",
+                        "https://latex.codecogs.com/png.latex"
+                    ]
                 },
                 "markdown-preview-enhanced.enableWikiLinkSyntax": {
                     "description": "Enable Wiki Link syntax support. More information can be found at https://help.github.com/articles/adding-links-to-wikis/",
