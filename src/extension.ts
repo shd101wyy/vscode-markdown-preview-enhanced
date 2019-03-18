@@ -44,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
     contentProvider.initPreview(resource, vscode.window.activeTextEditor, {
       viewColumn: vscode.ViewColumn.One,
-      preserveFocus: true,
+      preserveFocus: false,
     });
   }
 
