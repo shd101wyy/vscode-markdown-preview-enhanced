@@ -1,3 +1,8 @@
+## 0.10.2
+
+* Upgrade vega to 5.3.2, vega-lite to 3.0.2 and vega-embed to 4.0.0
+* Use JSDelivr as lib CDN instead of CloudFlare
+
 ## 0.10.1
 
 * Downgrade vega from 5.3.0 to 5.1.0 to avoid `Error: Cycle detected in dataflow graph`
