@@ -1,3 +1,8 @@
+## 0.10.3
+
+* Upgrade vega to 5.3.5 and vega-lite to 3.2.1
+* \[elm-string-representation] Allow any strings in keys except `" = "`
+
 ## 0.10.2
 
 * Upgrade vega to 5.3.2, vega-lite to 3.0.2 and vega-embed to 4.0.0
