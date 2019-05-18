@@ -522,14 +522,15 @@ export function activate(context: vscode.ExtensionContext) {
                 preserveFocus: true,
               });
             } else if (
-              !isUsingSinglePreview &&
-              automaticallyShowPreviewOfMarkdownBeingEdited
+              !isUsingSinglePreview
             ) {
               const previewPanel = contentProvider.getPreview(sourceUri);
               if (previewPanel) {
                 previewPanel.reveal(vscode.ViewColumn.Two, true);
               }
             }
+          } else if (automaticallyShowPreviewOfMarkdownBeingEdited) {
+            openPreviewToTheSide(sourceUri);
           }
         }
       }
