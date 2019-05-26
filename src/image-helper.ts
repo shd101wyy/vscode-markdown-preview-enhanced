@@ -69,18 +69,16 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
               imageFileName = imageFileName + uid;
             }
 
-            fs
-              .createReadStream(imageFilePath)
-              .pipe(
-                fs.createWriteStream(
-                  path.resolve(assetDirectoryPath, imageFileName),
-                ),
-              );
+            fs.createReadStream(imageFilePath).pipe(
+              fs.createWriteStream(
+                path.resolve(assetDirectoryPath, imageFileName),
+              ),
+            );
           } else if (err.code === "ENOENT") {
             // file doesn't exist
-            fs
-              .createReadStream(imageFilePath)
-              .pipe(fs.createWriteStream(destPath));
+            fs.createReadStream(imageFilePath).pipe(
+              fs.createWriteStream(destPath),
+            );
 
             if (imageFileName.lastIndexOf(".")) {
               description = imageFileName.slice(

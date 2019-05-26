@@ -10,7 +10,7 @@
     },
     "license": "BSD-3, NCSA",
     "engines": {
-        "vscode": "^1.12.0"
+        "vscode": "^1.30.0"
     },
     "categories": [
         "Other"
@@ -20,12 +20,21 @@
     ],
     "activationEvents": [
         "onLanguage:markdown",
-        "onCommand:markdown-preview-enhanced-with-litvis.openPreview",
+        "onCommand:markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
         "onCommand:markdown-preview-enhanced-with-litvis.clearCache"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [
+            {
+                "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
+                "title": "Markdown Preview Enhanced with litvis: Open Preview to the Side",
+                "category": "Markdown",
+                "icon": {
+                    "light": "./media/PreviewOnRightPane_16x.svg",
+                    "dark": "./media/PreviewOnRightPane_16x_dark.svg"
+                }
+            },
             {
                 "command": "markdown-preview-enhanced-with-litvis.openPreview",
                 "title": "Markdown Preview Enhanced with litvis: Open Preview",
@@ -92,12 +101,8 @@
                 "title": "Markdown Preview Enhanced with litvis: Open Mermaid Config"
             },
             {
-                "command": "markdown-preview-enhanced-with-litvis.openMathJaxConfig",
-                "title": "Markdown Preview Enhanced with litvis: Open MathJax Config"
-            },
-            {
-                "command": "markdown-preview-enhanced-with-litvis.openPhantomJSConfig",
-                "title": "Markdown Preview Enhanced with litvis: Open PhantomJS Config"
+                "command": "markdown-preview-enhanced-with-litvis.extendParser",
+                "title": "Markdown Preview Enhanced: Extend Parser"
             },
             {
                 "command": "markdown-preview-enhanced-with-litvis.extendParser",
@@ -110,9 +115,15 @@
         ],
         "keybindings": [
             {
-                "command": "markdown-preview-enhanced-with-litvis.openPreview",
+                "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
                 "key": "ctrl+k v",
                 "mac": "cmd+k v",
+                "when": "editorLangId == markdown"
+            },
+            {
+                "command": "markdown-preview-enhanced-with-litvis.openPreview",
+                "key": "ctrl+shift+v",
+                "mac": "cmd+shift+v",
                 "when": "editorLangId == markdown"
             },
             {
@@ -134,14 +145,14 @@
         "menus": {
             "editor/context": [
                 {
-                    "command": "markdown-preview-enhanced-with-litvis.openPreview",
+                    "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
                     "when": "editorLangId == markdown",
                     "group": "markdown-preview-enhanced-with-litvis"
                 }
             ],
             "editor/title": [
                 {
-                    "command": "markdown-preview-enhanced-with-litvis.openPreview",
+                    "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
                     "when": "editorLangId == markdown",
                     "group": "navigation"
                 }
@@ -152,7 +163,7 @@
             "title": "Markdown Preview Enhanced",
             "properties": {
                 "markdown-preview-enhanced-with-litvis.usePandocParser": {
-                    "description": "Enable this option will render markdown by pandoc instead of remarkable.",
+                    "description": "Enable this option will render markdown by pandoc instead of markdown-it.",
                     "default": false,
                     "type": "boolean"
                 },
@@ -172,7 +183,12 @@
                     "type": "boolean"
                 },
                 "markdown-preview-enhanced-with-litvis.singlePreview": {
-                    "description": "Open Only One Preview",
+                    "description": "Open Only One Preview.",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced-with-litvis.automaticallyShowPreviewOfMarkdownBeingEdited": {
+                    "description": "Automatically show preview of markdown being edited.",
                     "default": true,
                     "type": "boolean"
                 },
@@ -219,8 +235,23 @@
                     ],
                     "type": "array"
                 },
+                "markdown-preview-enhanced-with-litvis.mathRenderingOnlineService": {
+                    "description": "Choose the Math expression rendering method option for GFM markdown export (Save as Markdown).",
+                    "default": "https://latex.codecogs.com/gif.latex",
+                    "type": "string",
+                    "enum": [
+                        "https://latex.codecogs.com/gif.latex",
+                        "https://latex.codecogs.com/svg.latex",
+                        "https://latex.codecogs.com/png.latex"
+                    ]
+                },
                 "markdown-preview-enhanced-with-litvis.enableWikiLinkSyntax": {
                     "description": "Enable Wiki Link syntax support. More information can be found at https://help.github.com/articles/adding-links-to-wikis/",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced-with-litvis.enableLinkify": {
+                    "description": "Enable or disable conversion of URL-like text to links in the markdown preview.",
                     "default": true,
                     "type": "boolean"
                 },
@@ -259,9 +290,9 @@
                     "default": "mermaid.css",
                     "type": "string",
                     "enum": [
-                        "mermaid.css",
-                        "mermaid.dark.css",
-                        "mermaid.forest.css"
+                        "default",
+                        "dark",
+                        "forest"
                     ]
                 },
                 "markdown-preview-enhanced-with-litvis.codeBlockTheme": {
@@ -381,9 +412,9 @@
                     "default": false,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced-with-litvis.phantomPath": {
-                    "description": "PhantomJS executable path",
-                    "default": "phantomjs",
+                "markdown-preview-enhanced-with-litvis.chromePath": {
+                    "description": "Chrome executable path, which is used for Puppeteer export. Leaving it empty means mume will look for the path automatically.",
+                    "default": "",
                     "type": "string"
                 },
                 "markdown-preview-enhanced-with-litvis.pandocPath": {
@@ -410,6 +441,36 @@
                     "description": "Enables executing code chunks and importing javascript files. Please use this feature with caution because it may put your security at risk! Your machine can be hacked if someone makes you open a markdown with malicious code!",
                     "default": false,
                     "type": "boolean"
+                },
+                "markdown-preview-enhanced-with-litvis.enableHTML5Embed": {
+                    "description": " Enables transform audio video link to to html5 embed audio video tags.",
+                    "default": false,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced-with-litvis.HTML5EmbedUseImageSyntax": {
+                    "description": " Enables video/audio embed with ![]() syntax (default).",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced-with-litvis.HTML5EmbedUseLinkSyntax": {
+                    "description": "Enables video/audio embed with []() syntax.",
+                    "default": false,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced-with-litvis.HTML5EmbedIsAllowedHttp": {
+                    "description": "When true embed media with http:// schema in URLs. When false ignore and don't embed them.",
+                    "default": false,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced-with-litvis.HTML5EmbedAudioAttributes": {
+                    "description": "HTML attributes to pass to audio tags.",
+                    "default": "controls preload=\"metadata\" width=\"320\"",
+                    "type": "string"
+                },
+                "markdown-preview-enhanced-with-litvis.HTML5EmbedVideoAttributes": {
+                    "description": "HTML attributes to pass to video tags.",
+                    "default": "controls preload=\"metadata\" width=\"320\" height=\"240\"",
+                    "type": "string"
                 }
             }
         }
@@ -425,20 +486,20 @@
     },
     "dependencies": {
         "mume-with-litvis": "^0.15.0",
-        "vfile": "^2.3.0",
-        "vfile-sort": "^2.1.0"
+        "vfile-sort": "^2.2.0"
     },
     "devDependencies": {
-        "@types/jquery": "^3.2.17",
-        "@types/mocha": "^2.2.46",
-        "@types/node": "^9.3.0",
-        "@types/vfile": "^2.2.2",
-        "eslint": "^4.15.0",
-        "mocha": "^4.1.0",
-        "prettier": "^1.11.1",
+        "@types/jquery": "^3.3.9",
+        "@types/mocha": "^5.2.5",
+        "@types/node": "^11.11.0",
+        "@types/vfile": "^3.0.2",
+        "eslint": "^5.15.1",
+        "mocha": "^6.0.2",
+        "prettier": "^1.16.4",
         "prettier-check": "^2.0.0",
-        "tslint-config-prettier": "^1.10.0",
-        "typescript": "^2.6.2",
-        "vscode": "^1.1.13"
+        "tslint": "^5.13.1",
+        "tslint-config-prettier": "^1.18.0",
+        "typescript": "^3.0.3",
+        "vscode": "^1.1.30"
     }
 }

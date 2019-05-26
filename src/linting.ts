@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 
 const diagnosticCollection = vscode.languages.createDiagnosticCollection();
 
-export const updateLintingReport = (vFiles: Array<VFile<{}>> = []) => {
+export const updateLintingReport = (vFiles: Array<VFile> = []) => {
   diagnosticCollection.clear();
 
   vFiles.forEach((vFile) => {
