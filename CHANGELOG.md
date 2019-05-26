@@ -1,3 +1,9 @@
+## 0.11.0
+
+* Upgrade vega to 5.4.0 and vega-embed to 4.2.0
+* Support apache-arrow files in vega specs (https://github.com/gicentre/litvis/issues/31)
+* Fix incorrect parsing of keys in elm string representation (https://github.com/gicentre/litvis/issues/29#issuecomment-496008915)
+
 ## 0.10.3
 
 * Upgrade vega to 5.3.5 and vega-lite to 3.2.1
