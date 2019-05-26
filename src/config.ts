@@ -35,6 +35,12 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly pandocArguments: string[];
   public readonly latexEngine: string;
   public readonly enableScriptExecution: boolean;
+  public readonly enableHTML5Embed: boolean;
+  public readonly HTML5EmbedUseImageSyntax: boolean;
+  public readonly HTML5EmbedUseLinkSyntax: boolean;
+  public readonly HTML5EmbedIsAllowedHttp: boolean;
+  public readonly HTML5EmbedAudioAttributes: string;
+  public readonly HTML5EmbedVideoAttributes: string;
 
   // preview config
   public readonly scrollSync: boolean;
@@ -95,6 +101,13 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.automaticallyShowPreviewOfMarkdownBeingEdited = config.get<boolean>(
       "automaticallyShowPreviewOfMarkdownBeingEdited",
     );
+
+    this.enableHTML5Embed = config.get<boolean>("enableHTML5Embed");
+    this.HTML5EmbedUseImageSyntax = config.get<boolean>("HTML5EmbedUseImageSyntax");
+    this.HTML5EmbedUseLinkSyntax = config.get<boolean>("HTML5EmbedUseLinkSyntax");
+    this.HTML5EmbedIsAllowedHttp = config.get<boolean>("HTML5EmbedIsAllowedHttp");
+    this.HTML5EmbedAudioAttributes = config.get<string>("HTML5EmbedAudioAttributes");
+    this.HTML5EmbedVideoAttributes = config.get<string>("HTML5EmbedVideoAttributes");
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
