@@ -129,19 +129,6 @@ export function activate(context: vscode.ExtensionContext) {
     );
   }
 
-  function openPhantomJSConfig() {
-    const phantomjsConfigFilePath = utility.addFileProtocol(
-      path.resolve(
-        utility.extensionConfigDirectoryPath,
-        "./phantomjs_config.js",
-      ),
-    );
-    vscode.commands.executeCommand(
-      "vscode.open",
-      vscode.Uri.parse(phantomjsConfigFilePath),
-    );
-  }
-
   function extendParser() {
     const parserConfigPath = utility.addFileProtocol(
       path.resolve(utility.extensionConfigDirectoryPath, "./parser.js"),
@@ -261,11 +248,6 @@ export function activate(context: vscode.ExtensionContext) {
   function chromeExport(uri, type) {
     const sourceUri = vscode.Uri.parse(uri);
     contentProvider.chromeExport(sourceUri, type);
-  }
-
-  function phantomjsExport(uri, type) {
-    const sourceUri = vscode.Uri.parse(uri);
-    contentProvider.phantomjsExport(sourceUri, type);
   }
 
   function princeExport(uri) {
@@ -634,13 +616,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openPhantomJSConfig",
-      openPhantomJSConfig,
-    ),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
       "markdown-preview-enhanced.extendParser",
       extendParser,
     ),
@@ -711,10 +686,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("_mume.chromeExport", chromeExport),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.phantomjsExport", phantomjsExport),
   );
 
   context.subscriptions.push(

@@ -29,12 +29,18 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly imageFolderPath: string;
   public readonly imageUploader: string;
   public readonly printBackground: boolean;
-  public readonly phantomPath: string;
+  public readonly chromePath: string;
   public readonly pandocPath: string;
   public readonly pandocMarkdownFlavor: string;
   public readonly pandocArguments: string[];
   public readonly latexEngine: string;
   public readonly enableScriptExecution: boolean;
+  public readonly enableHTML5Embed: boolean;
+  public readonly HTML5EmbedUseImageSyntax: boolean;
+  public readonly HTML5EmbedUseLinkSyntax: boolean;
+  public readonly HTML5EmbedIsAllowedHttp: boolean;
+  public readonly HTML5EmbedAudioAttributes: string;
+  public readonly HTML5EmbedVideoAttributes: string;
 
   // preview config
   public readonly scrollSync: boolean;
@@ -79,7 +85,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.imageFolderPath = config.get<string>("imageFolderPath");
     this.imageUploader = config.get<string>("imageUploader");
     this.printBackground = config.get<boolean>("printBackground");
-    this.phantomPath = config.get<string>("phantomPath");
+    this.chromePath = config.get<string>("chromePath");
     this.pandocPath = config.get<string>("pandocPath");
     this.pandocMarkdownFlavor = config.get<string>("pandocMarkdownFlavor");
     this.pandocArguments = config
@@ -94,6 +100,23 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.singlePreview = config.get<boolean>("singlePreview");
     this.automaticallyShowPreviewOfMarkdownBeingEdited = config.get<boolean>(
       "automaticallyShowPreviewOfMarkdownBeingEdited",
+    );
+
+    this.enableHTML5Embed = config.get<boolean>("enableHTML5Embed");
+    this.HTML5EmbedUseImageSyntax = config.get<boolean>(
+      "HTML5EmbedUseImageSyntax",
+    );
+    this.HTML5EmbedUseLinkSyntax = config.get<boolean>(
+      "HTML5EmbedUseLinkSyntax",
+    );
+    this.HTML5EmbedIsAllowedHttp = config.get<boolean>(
+      "HTML5EmbedIsAllowedHttp",
+    );
+    this.HTML5EmbedAudioAttributes = config.get<string>(
+      "HTML5EmbedAudioAttributes",
+    );
+    this.HTML5EmbedVideoAttributes = config.get<string>(
+      "HTML5EmbedVideoAttributes",
     );
   }
 

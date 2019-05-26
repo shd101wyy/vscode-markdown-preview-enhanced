@@ -100,10 +100,6 @@
                 "title": "Markdown Preview Enhanced: Open MathJax Config"
             },
             {
-                "command": "markdown-preview-enhanced.openPhantomJSConfig",
-                "title": "Markdown Preview Enhanced: Open PhantomJS Config"
-            },
-            {
                 "command": "markdown-preview-enhanced.extendParser",
                 "title": "Markdown Preview Enhanced: Extend Parser"
             },
@@ -411,9 +407,9 @@
                     "default": false,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.phantomPath": {
-                    "description": "PhantomJS executable path",
-                    "default": "phantomjs",
+                "markdown-preview-enhanced.chromePath": {
+                    "description": "Chrome executable path, which is used for Puppeteer export. Leaving it empty means mume will look for the path automatically.",
+                    "default": "",
                     "type": "string"
                 },
                 "markdown-preview-enhanced.pandocPath": {
@@ -440,6 +436,36 @@
                     "description": "Enables executing code chunks and importing javascript files.\n⚠️ Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled.",
                     "default": false,
                     "type": "boolean"
+                },
+                "markdown-preview-enhanced.enableHTML5Embed": {
+                    "description": " Enables transform audio video link to to html5 embed audio video tags.",
+                    "default": false,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.HTML5EmbedUseImageSyntax": {
+                    "description": " Enables video/audio embed with ![]() syntax (default).",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.HTML5EmbedUseLinkSyntax": {
+                    "description": "Enables video/audio embed with []() syntax.",
+                    "default": false,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.HTML5EmbedIsAllowedHttp": {
+                    "description": "When true embed media with http:// schema in URLs. When false ignore and don't embed them.",
+                    "default": false,
+                    "type": "boolean"
+                },
+                "markdown-preview-enhanced.HTML5EmbedAudioAttributes": {
+                    "description": "HTML attributes to pass to audio tags.",
+                    "default": "controls preload=\"metadata\" width=\"320\"",
+                    "type": "string"
+                },
+                "markdown-preview-enhanced.HTML5EmbedVideoAttributes": {
+                    "description": "HTML attributes to pass to video tags.",
+                    "default": "controls preload=\"metadata\" width=\"320\" height=\"240\"",
+                    "type": "string"
                 }
             }
         }
@@ -454,7 +480,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.8",
+        "@shd101wyy/mume": "^0.4.0",
         "@types/vfile": "^3.0.2"
     },
     "devDependencies": {
