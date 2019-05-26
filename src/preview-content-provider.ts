@@ -612,32 +612,6 @@ export class MarkdownPreviewEnhancedView {
     }
   }
 
-  public phantomjsExport(sourceUri: Uri, type: string) {
-    const engine = this.getEngine(sourceUri);
-    if (engine) {
-      engine
-        .phantomjsExport({ fileType: type, openFileAfterGeneration: true })
-        .then((dest) => {
-          if (dest.endsWith("?print-pdf")) {
-            // presentation pdf
-            vscode.window.showInformationMessage(
-              `Please copy and open the link: { ${dest.replace(
-                /\_/g,
-                "\\_",
-              )} } in Chrome then Print as Pdf.`,
-            );
-          } else {
-            vscode.window.showInformationMessage(
-              `File ${path.basename(dest)} was created at path: ${dest}`,
-            );
-          }
-        })
-        .catch((error) => {
-          vscode.window.showErrorMessage(error);
-        });
-    }
-  }
-
   public princeExport(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {

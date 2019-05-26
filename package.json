@@ -100,10 +100,6 @@
                 "title": "Markdown Preview Enhanced: Open MathJax Config"
             },
             {
-                "command": "markdown-preview-enhanced.openPhantomJSConfig",
-                "title": "Markdown Preview Enhanced: Open PhantomJS Config"
-            },
-            {
                 "command": "markdown-preview-enhanced.extendParser",
                 "title": "Markdown Preview Enhanced: Extend Parser"
             },
