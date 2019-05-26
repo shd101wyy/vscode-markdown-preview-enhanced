@@ -29,7 +29,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly imageFolderPath: string;
   public readonly imageUploader: string;
   public readonly printBackground: boolean;
-  public readonly phantomPath: string;
+  public readonly chromePath: string;
   public readonly pandocPath: string;
   public readonly pandocMarkdownFlavor: string;
   public readonly pandocArguments: string[];
@@ -79,7 +79,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.imageFolderPath = config.get<string>("imageFolderPath");
     this.imageUploader = config.get<string>("imageUploader");
     this.printBackground = config.get<boolean>("printBackground");
-    this.phantomPath = config.get<string>("phantomPath");
+    this.chromePath = config.get<string>("chromePath");
     this.pandocPath = config.get<string>("pandocPath");
     this.pandocMarkdownFlavor = config.get<string>("pandocMarkdownFlavor");
     this.pandocArguments = config

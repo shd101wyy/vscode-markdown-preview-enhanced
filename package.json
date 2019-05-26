@@ -411,9 +411,9 @@
                     "default": false,
                     "type": "boolean"
                 },
-                "markdown-preview-enhanced.phantomPath": {
-                    "description": "PhantomJS executable path",
-                    "default": "phantomjs",
+                "markdown-preview-enhanced.chromePath": {
+                    "description": "Chrome executable path, which is used for Puppeteer export. Leaving it empty means mume will look for the path automatically.",
+                    "default": "",
                     "type": "string"
                 },
                 "markdown-preview-enhanced.pandocPath": {
@@ -454,7 +454,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.3.8",
+        "@shd101wyy/mume": "file:../mume",
         "@types/vfile": "^3.0.2"
     },
     "devDependencies": {
