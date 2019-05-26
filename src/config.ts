@@ -103,11 +103,21 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     );
 
     this.enableHTML5Embed = config.get<boolean>("enableHTML5Embed");
-    this.HTML5EmbedUseImageSyntax = config.get<boolean>("HTML5EmbedUseImageSyntax");
-    this.HTML5EmbedUseLinkSyntax = config.get<boolean>("HTML5EmbedUseLinkSyntax");
-    this.HTML5EmbedIsAllowedHttp = config.get<boolean>("HTML5EmbedIsAllowedHttp");
-    this.HTML5EmbedAudioAttributes = config.get<string>("HTML5EmbedAudioAttributes");
-    this.HTML5EmbedVideoAttributes = config.get<string>("HTML5EmbedVideoAttributes");
+    this.HTML5EmbedUseImageSyntax = config.get<boolean>(
+      "HTML5EmbedUseImageSyntax",
+    );
+    this.HTML5EmbedUseLinkSyntax = config.get<boolean>(
+      "HTML5EmbedUseLinkSyntax",
+    );
+    this.HTML5EmbedIsAllowedHttp = config.get<boolean>(
+      "HTML5EmbedIsAllowedHttp",
+    );
+    this.HTML5EmbedAudioAttributes = config.get<string>(
+      "HTML5EmbedAudioAttributes",
+    );
+    this.HTML5EmbedVideoAttributes = config.get<string>(
+      "HTML5EmbedVideoAttributes",
+    );
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

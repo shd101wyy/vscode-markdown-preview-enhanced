@@ -480,7 +480,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "file:../mume",
+        "@shd101wyy/mume": "^0.4.0",
         "@types/vfile": "^3.0.2"
     },
     "devDependencies": {
