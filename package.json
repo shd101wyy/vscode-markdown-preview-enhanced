@@ -2,7 +2,7 @@
     "name": "markdown-preview-enhanced",
     "displayName": "Markdown Preview Enhanced",
     "description": "Markdown Preview Enhanced ported to vscode",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "publisher": "shd101wyy",
     "repository": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced",
     "bugs": {
