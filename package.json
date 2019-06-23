@@ -408,14 +408,22 @@
                     "type": "boolean"
                 },
                 "markdown-preview-enhanced.chromePath": {
-                    "description": "Chrome executable path, which is used for Puppeteer export. Leaving it empty means mume will look for the path automatically.",
+                    "description": "Chrome executable path, which is used for Puppeteer export. Leaving it empty means the path will be found automatically.",
                     "default": "",
-                    "type": "string"
+                    "type": "string",
+                    "scope": "machine"
+                },
+                "markdown-preview-enhanced.imageMagickPath": {
+                    "description": "ImageMagick command line path. Should be either `magick` or `convert`. Leaving it empty means the path will be found automatically.",
+                    "default": "",
+                    "type": "string",
+                    "scope": "machine"
                 },
                 "markdown-preview-enhanced.pandocPath": {
                     "description": "Pandoc executable path",
                     "default": "pandoc",
-                    "type": "string"
+                    "type": "string",
+                    "scope": "machine"
                 },
                 "markdown-preview-enhanced.pandocMarkdownFlavor": {
                     "description": "The pandoc markdown flavor you want",
@@ -466,6 +474,11 @@
                     "description": "HTML attributes to pass to video tags.",
                     "default": "controls preload=\"metadata\" width=\"320\" height=\"240\"",
                     "type": "string"
+                },
+                "markdown-preview-enhanced.puppeteerWaitForTimeout": {
+                    "description": "Puppeteer waits for a certain timeout in milliseconds before the document export.",
+                    "default": 0,
+                    "type": "number"
                 }
             }
         }
@@ -480,7 +493,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.4.1",
+        "@shd101wyy/mume": "^0.4.2",
         "@types/vfile": "^3.0.2"
     },
     "devDependencies": {
@@ -488,7 +501,7 @@
         "@types/mocha": "^5.2.5",
         "@types/node": "^11.11.0",
         "eslint": "^5.15.1",
-        "mocha": "^6.0.2",
+        "mocha": "^6.1.4",
         "prettier": "^1.16.4",
         "prettier-check": "^2.0.0",
         "tslint": "^5.13.1",
