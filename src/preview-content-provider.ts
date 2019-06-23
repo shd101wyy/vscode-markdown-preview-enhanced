@@ -575,7 +575,7 @@ export class MarkdownPreviewEnhancedView {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       engine.openInBrowser({}).catch((error) => {
-        vscode.window.showErrorMessage(error);
+        vscode.window.showErrorMessage(error.toString());
       });
     }
   }
@@ -591,7 +591,7 @@ export class MarkdownPreviewEnhancedView {
           );
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error);
+          vscode.window.showErrorMessage(error.toString());
         });
     }
   }
@@ -607,7 +607,7 @@ export class MarkdownPreviewEnhancedView {
           );
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error);
+          vscode.window.showErrorMessage(error.toString());
         });
     }
   }
@@ -633,7 +633,7 @@ export class MarkdownPreviewEnhancedView {
           }
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error);
+          vscode.window.showErrorMessage(error.toString());
         });
     }
   }
@@ -649,7 +649,7 @@ export class MarkdownPreviewEnhancedView {
           );
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error);
+          vscode.window.showErrorMessage(error.toString());
         });
     }
   }
@@ -665,7 +665,7 @@ export class MarkdownPreviewEnhancedView {
           );
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error);
+          vscode.window.showErrorMessage(error.toString());
         });
     }
   }
@@ -681,7 +681,7 @@ export class MarkdownPreviewEnhancedView {
           );
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error);
+          vscode.window.showErrorMessage(error.toString());
         });
     }
   }

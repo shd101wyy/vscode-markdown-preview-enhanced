@@ -30,6 +30,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly imageUploader: string;
   public readonly printBackground: boolean;
   public readonly chromePath: string;
+  public readonly imageMagickPath: string;
   public readonly pandocPath: string;
   public readonly pandocMarkdownFlavor: string;
   public readonly pandocArguments: string[];
@@ -41,6 +42,8 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly HTML5EmbedIsAllowedHttp: boolean;
   public readonly HTML5EmbedAudioAttributes: string;
   public readonly HTML5EmbedVideoAttributes: string;
+  public readonly puppeteerWaitForTimeout: number;
+  public readonly usePuppeteerCore: boolean;
 
   // preview config
   public readonly scrollSync: boolean;
@@ -86,6 +89,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.imageUploader = config.get<string>("imageUploader");
     this.printBackground = config.get<boolean>("printBackground");
     this.chromePath = config.get<string>("chromePath");
+    this.imageMagickPath = config.get<string>("imageMagickPath");
     this.pandocPath = config.get<string>("pandocPath");
     this.pandocMarkdownFlavor = config.get<string>("pandocMarkdownFlavor");
     this.pandocArguments = config
@@ -118,6 +122,10 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.HTML5EmbedVideoAttributes = config.get<string>(
       "HTML5EmbedVideoAttributes",
     );
+    this.puppeteerWaitForTimeout = config.get<number>(
+      "puppeteerWaitForTimeout",
+    );
+    this.usePuppeteerCore = config.get<boolean>("usePuppeteerCore");
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
