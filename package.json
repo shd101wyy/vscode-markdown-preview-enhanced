@@ -479,6 +479,11 @@
                     "description": "Puppeteer waits for a certain timeout in milliseconds before the document export.",
                     "default": 0,
                     "type": "number"
+                },
+                "markdown-preview-enhanced.usePuppeteerCore": {
+                    "description": "If set to true, then locally installed puppeteer-core will be required. Otherwise, the puppeteer globally installed by `npm install -g puppeteer` will be required.",
+                    "default": true,
+                    "type": "boolean"
                 }
             }
         }
@@ -493,7 +498,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.4.2",
+        "@shd101wyy/mume": "^0.4.5",
         "@types/vfile": "^3.0.2"
     },
     "devDependencies": {

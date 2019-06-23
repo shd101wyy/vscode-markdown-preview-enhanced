@@ -43,6 +43,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly HTML5EmbedAudioAttributes: string;
   public readonly HTML5EmbedVideoAttributes: string;
   public readonly puppeteerWaitForTimeout: number;
+  public readonly usePuppeteerCore: boolean;
 
   // preview config
   public readonly scrollSync: boolean;
@@ -124,6 +125,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.puppeteerWaitForTimeout = config.get<number>(
       "puppeteerWaitForTimeout",
     );
+    this.usePuppeteerCore = config.get<boolean>("usePuppeteerCore");
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
