@@ -100,6 +100,10 @@
                 "title": "Markdown Preview Enhanced: Open MathJax Config"
             },
             {
+                "command": "markdown-preview-enhanced.openKaTeXConfig",
+                "title": "Markdown Preview Enhanced: Open KaTeX Config"
+            },
+            {
                 "command": "markdown-preview-enhanced.extendParser",
                 "title": "Markdown Preview Enhanced: Extend Parser"
             },
@@ -498,7 +502,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@shd101wyy/mume": "^0.4.5",
+        "@shd101wyy/mume": "file:../mume",
         "@types/vfile": "^3.0.2"
     },
     "devDependencies": {
