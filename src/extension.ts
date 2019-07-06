@@ -135,7 +135,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     vscode.commands.executeCommand(
       "vscode.open",
-      vscode.Uri.parse(katexConfigFilePath)
+      vscode.Uri.parse(katexConfigFilePath),
     );
   }
 
@@ -627,9 +627,9 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced.openKaTeXConfig",
-      openKaTeXConfig
-    )
-  )
+      openKaTeXConfig,
+    ),
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
