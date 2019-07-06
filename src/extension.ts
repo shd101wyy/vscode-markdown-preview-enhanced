@@ -129,6 +129,16 @@ export function activate(context: vscode.ExtensionContext) {
     );
   }
 
+  function openKaTeXConfig() {
+    const katexConfigFilePath = utility.addFileProtocol(
+      path.resolve(utility.extensionConfigDirectoryPath, "./katex_config.js"),
+    );
+    vscode.commands.executeCommand(
+      "vscode.open",
+      vscode.Uri.parse(katexConfigFilePath),
+    );
+  }
+
   function extendParser() {
     const parserConfigPath = utility.addFileProtocol(
       path.resolve(utility.extensionConfigDirectoryPath, "./parser.js"),
@@ -611,6 +621,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "markdown-preview-enhanced.openMathJaxConfig",
       openMathJaxConfig,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "markdown-preview-enhanced.openKaTeXConfig",
+      openKaTeXConfig,
     ),
   );
 
