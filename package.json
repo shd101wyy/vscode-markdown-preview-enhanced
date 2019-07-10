@@ -210,6 +210,10 @@
                     "description": "Use customized Math expression inline delimiters.",
                     "default": [
                         [
+                            "$`",
+                            "`$"
+                        ],
+                        [
                             "$",
                             "$"
                         ],
@@ -223,6 +227,10 @@
                 "markdown-preview-enhanced.mathBlockDelimiters": {
                     "description": "Use customized Math expression block delimiters.",
                     "default": [
+                        [
+                            "```math",
+                            "```"
+                        ],
                         [
                             "$$",
                             "$$"
