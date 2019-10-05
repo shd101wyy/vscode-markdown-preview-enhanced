@@ -45,10 +45,6 @@
                 }
             },
             {
-                "command": "markdown-preview-enhanced-with-litvis.clearCache",
-                "title": "Markdown Preview Enhanced with litvis: Clear Cache"
-            },
-            {
                 "command": "markdown-preview-enhanced-with-litvis.toggleScrollSync",
                 "title": "Markdown Preview Enhanced with litvis: Toggle Scroll Sync"
             },
@@ -111,6 +107,10 @@
             {
                 "command": "markdown-preview-enhanced-with-litvis.showUploadedImages",
                 "title": "Markdown Preview Enhanced with litvis: Show Uploaded Images"
+            },
+            {
+                "command": "markdown-preview-enhanced-with-litvis.clearCache",
+                "title": "Markdown Preview Enhanced with litvis: Clear Cache"
             }
         ],
         "keybindings": [
