@@ -10,7 +10,7 @@ import { pasteImageFile, uploadImageFile } from "./image-helper";
 import {
   getPreviewUri,
   isMarkdownFile,
-  MarkdownPreviewEnhancedView
+  MarkdownPreviewEnhancedView,
 } from "./preview-content-provider";
 
 let editorScrollDelay = Date.now();
@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
     contentProvider.initPreview(resource, vscode.window.activeTextEditor, {
       viewColumn: vscode.ViewColumn.Two,
-      preserveFocus: true
+      preserveFocus: true,
     });
   }
 
@@ -49,13 +49,13 @@ export function activate(context: vscode.ExtensionContext) {
     }
     contentProvider.initPreview(resource, vscode.window.activeTextEditor, {
       viewColumn: vscode.ViewColumn.One,
-      preserveFocus: false
+      preserveFocus: false,
     });
   }
 
   function toggleScrollSync() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced"
+      "markdown-preview-enhanced",
     );
     const scrollSync = !config.get<boolean>("scrollSync");
     config.update("scrollSync", scrollSync, true).then(() => {
@@ -70,7 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function toggleLiveUpdate() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced"
+      "markdown-preview-enhanced",
     );
     const liveUpdate = !config.get<boolean>("liveUpdate");
     config.update("liveUpdate", liveUpdate, true).then(() => {
@@ -85,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function toggleBreakOnSingleNewLine() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced"
+      "markdown-preview-enhanced",
     );
     const breakOnSingleNewLine = !config.get<boolean>("breakOnSingleNewLine");
     config
@@ -94,11 +94,11 @@ export function activate(context: vscode.ExtensionContext) {
         contentProvider.updateConfiguration();
         if (breakOnSingleNewLine) {
           vscode.window.showInformationMessage(
-            "Break On Single New Line is enabled"
+            "Break On Single New Line is enabled",
           );
         } else {
           vscode.window.showInformationMessage(
-            "Break On Single New Line is disabled"
+            "Break On Single New Line is disabled",
           );
         }
       });
@@ -106,58 +106,58 @@ export function activate(context: vscode.ExtensionContext) {
 
   function customizeCSS() {
     const globalStyleLessFile = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./style.less")
+      path.resolve(utility.extensionConfigDirectoryPath, "./style.less"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
-      vscode.Uri.parse(globalStyleLessFile)
+      vscode.Uri.parse(globalStyleLessFile),
     );
   }
 
   function openMermaidConfig() {
     const mermaidConfigFilePath = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./mermaid_config.js")
+      path.resolve(utility.extensionConfigDirectoryPath, "./mermaid_config.js"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
-      vscode.Uri.parse(mermaidConfigFilePath)
+      vscode.Uri.parse(mermaidConfigFilePath),
     );
   }
 
   function openMathJaxConfig() {
     const mathjaxConfigFilePath = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./mathjax_config.js")
+      path.resolve(utility.extensionConfigDirectoryPath, "./mathjax_config.js"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
-      vscode.Uri.parse(mathjaxConfigFilePath)
+      vscode.Uri.parse(mathjaxConfigFilePath),
     );
   }
 
   function extendParser() {
     const parserConfigPath = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./parser.js")
+      path.resolve(utility.extensionConfigDirectoryPath, "./parser.js"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
-      vscode.Uri.parse(parserConfigPath)
+      vscode.Uri.parse(parserConfigPath),
     );
   }
 
   function showUploadedImages() {
     const imageHistoryFilePath = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./image_history.md")
+      path.resolve(utility.extensionConfigDirectoryPath, "./image_history.md"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
-      vscode.Uri.parse(imageHistoryFilePath)
+      vscode.Uri.parse(imageHistoryFilePath),
     );
   }
 
   function insertNewSlide() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit(textEdit => {
+      editor.edit((textEdit) => {
         textEdit.insert(editor.selection.active, "<!-- slide -->\n");
       });
     }
@@ -166,7 +166,7 @@ export function activate(context: vscode.ExtensionContext) {
   function insertPagebreak() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit(textEdit => {
+      editor.edit((textEdit) => {
         textEdit.insert(editor.selection.active, "<!-- pagebreak -->\n");
       });
     }
@@ -175,10 +175,10 @@ export function activate(context: vscode.ExtensionContext) {
   function createTOC() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit(textEdit => {
+      editor.edit((textEdit) => {
         textEdit.insert(
           editor.selection.active,
-          '\n<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->\n'
+          '\n<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->\n',
         );
       });
     }
@@ -187,13 +187,13 @@ export function activate(context: vscode.ExtensionContext) {
   function insertTable() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit(textEdit => {
+      editor.edit((textEdit) => {
         textEdit.insert(
           editor.selection.active,
           `|   |   |
 |---|---|
 |   |   |
-`
+`,
         );
       });
     }
@@ -201,7 +201,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function openImageHelper() {
     contentProvider.openImageHelper(
-      vscode.window.activeTextEditor.document.uri
+      vscode.window.activeTextEditor.document.uri,
     );
   }
 
@@ -220,16 +220,16 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.window.visibleTextEditors
       .filter(
-        editor =>
+        (editor) =>
           isMarkdownFile(editor.document) &&
-          editor.document.uri.fsPath === sourceUri.fsPath
+          editor.document.uri.fsPath === sourceUri.fsPath,
       )
-      .forEach(editor => {
+      .forEach((editor) => {
         // const line = editor.selection.active.line
-        editor.edit(textEditorEdit => {
+        editor.edit((textEditorEdit) => {
           textEditorEdit.insert(
             editor.selection.active,
-            `![enter image description here](${imageUrl})`
+            `![enter image description here](${imageUrl})`,
           );
         });
       });
@@ -313,7 +313,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     contentProvider.previewPostMessage(sourceUri, {
-      command: "runAllCodeChunks"
+      command: "runAllCodeChunks",
     });
   }
 
@@ -332,7 +332,7 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
     contentProvider.previewPostMessage(sourceUri, {
-      command: "runCodeChunk"
+      command: "runCodeChunk",
     });
   }
 
@@ -349,7 +349,7 @@ export function activate(context: vscode.ExtensionContext) {
     contentProvider.previewPostMessage(sourceUri, {
       command: "changeTextEditorSelection",
       line: textEditor.selections[0].active.line,
-      forced: true
+      forced: true,
     });
   }
 
@@ -358,20 +358,20 @@ export function activate(context: vscode.ExtensionContext) {
     href = href.replace(/^vscode\-resource:\/\/\//, "file:///");
     if (
       [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
-        path.extname(href)
+        path.extname(href),
       ) >= 0
     ) {
       utility.openFile(href);
     } else if (href.match(/^file\:\/\/\//)) {
       // openFilePath = href.slice(8) # remove protocol
       let openFilePath = utility.addFileProtocol(
-        href.replace(/(\s*)[\#\?](.+)$/, "")
+        href.replace(/(\s*)[\#\?](.+)$/, ""),
       ); // remove #anchor and ?params...
       openFilePath = decodeURI(openFilePath);
       vscode.commands.executeCommand(
         "vscode.open",
         vscode.Uri.parse(openFilePath),
-        vscode.ViewColumn.One
+        vscode.ViewColumn.One,
       );
     } else {
       utility.openFile(href);
@@ -385,7 +385,7 @@ export function activate(context: vscode.ExtensionContext) {
       const editor = visibleTextEditors[i];
       if (editor.document.uri.fsPath === sourceUri.fsPath) {
         dataLine = parseInt(dataLine, 10);
-        editor.edit(edit => {
+        editor.edit((edit) => {
           let line = editor.document.lineAt(dataLine).text;
           if (line.match(/\[ \]/)) {
             line = line.replace("[ ]", "[x]");
@@ -395,9 +395,9 @@ export function activate(context: vscode.ExtensionContext) {
           edit.replace(
             new vscode.Range(
               new vscode.Position(dataLine, 0),
-              new vscode.Position(dataLine, line.length)
+              new vscode.Position(dataLine, line.length),
             ),
-            line
+            line,
           );
         });
         break;
@@ -406,29 +406,29 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   context.subscriptions.push(
-    vscode.workspace.onDidSaveTextDocument(document => {
+    vscode.workspace.onDidSaveTextDocument((document) => {
       if (isMarkdownFile(document)) {
         contentProvider.updateMarkdown(document.uri, true);
       }
-    })
+    }),
   );
 
   context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument(event => {
+    vscode.workspace.onDidChangeTextDocument((event) => {
       if (isMarkdownFile(event.document)) {
         contentProvider.update(event.document.uri);
       }
-    })
+    }),
   );
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(() => {
       contentProvider.updateConfiguration();
-    })
+    }),
   );
 
   context.subscriptions.push(
-    vscode.window.onDidChangeTextEditorSelection(event => {
+    vscode.window.onDidChangeTextEditorSelection((event) => {
       if (isMarkdownFile(event.textEditor.document)) {
         const firstVisibleScreenRow = getTopVisibleLine(event.textEditor);
         const lastVisibleScreenRow = getBottomVisibleLine(event.textEditor);
@@ -439,14 +439,14 @@ export function activate(context: vscode.ExtensionContext) {
         contentProvider.previewPostMessage(event.textEditor.document.uri, {
           command: "changeTextEditorSelection",
           line: event.selections[0].active.line,
-          topRatio
+          topRatio,
         });
       }
-    })
+    }),
   );
 
   context.subscriptions.push(
-    vscode.window.onDidChangeTextEditorVisibleRanges(event => {
+    vscode.window.onDidChangeTextEditorVisibleRanges((event) => {
       const textEditor = event.textEditor as vscode.TextEditor;
       if (Date.now() < editorScrollDelay) {
         return;
@@ -471,11 +471,11 @@ export function activate(context: vscode.ExtensionContext) {
           }
           contentProvider.previewPostMessage(sourceUri, {
             command: "changeTextEditorSelection",
-            line: midLine
+            line: midLine,
           });
         }
       }
-    })
+    }),
   );
 
   /**
@@ -483,12 +483,12 @@ export function activate(context: vscode.ExtensionContext) {
    * @param textEditor
    */
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(textEditor => {
+    vscode.window.onDidChangeActiveTextEditor((textEditor) => {
       if (textEditor && textEditor.document && textEditor.document.uri) {
         if (isMarkdownFile(textEditor.document)) {
           const sourceUri = textEditor.document.uri;
           const config = vscode.workspace.getConfiguration(
-            "markdown-preview-enhanced"
+            "markdown-preview-enhanced",
           );
           const automaticallyShowPreviewOfMarkdownBeingEdited = config.get<
             boolean
@@ -506,7 +506,7 @@ export function activate(context: vscode.ExtensionContext) {
             ) {
               contentProvider.initPreview(sourceUri, textEditor, {
                 viewColumn: contentProvider.getPreview(sourceUri).viewColumn,
-                preserveFocus: true
+                preserveFocus: true,
               });
             } else if (
               !isUsingSinglePreview &&
@@ -520,7 +520,7 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
       }
-    })
+    }),
   );
 
   /*
@@ -538,189 +538,189 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
-      openPreviewToTheSide
-    )
+      openPreviewToTheSide,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.openPreview",
-      openPreview
-    )
+      openPreview,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.clearCache",
-      clearCache
-    )
+      clearCache,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.toggleScrollSync",
-      toggleScrollSync
-    )
+      toggleScrollSync,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.toggleLiveUpdate",
-      toggleLiveUpdate
-    )
+      toggleLiveUpdate,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.toggleBreakOnSingleNewLine",
-      toggleBreakOnSingleNewLine
-    )
+      toggleBreakOnSingleNewLine,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.openImageHelper",
-      openImageHelper
-    )
+      openImageHelper,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.runAllCodeChunks",
-      runAllCodeChunksCommand
-    )
+      runAllCodeChunksCommand,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.runCodeChunk",
-      runCodeChunkCommand
-    )
+      runCodeChunkCommand,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.syncPreview",
-      syncPreview
-    )
+      syncPreview,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.customizeCss",
-      customizeCSS
-    )
+      customizeCSS,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.openMermaidConfig",
-      openMermaidConfig
-    )
+      openMermaidConfig,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.openMathJaxConfig",
-      openMathJaxConfig
-    )
+      openMathJaxConfig,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.extendParser",
-      extendParser
-    )
+      extendParser,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.showUploadedImages",
-      showUploadedImages
-    )
+      showUploadedImages,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.insertNewSlide",
-      insertNewSlide
-    )
+      insertNewSlide,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.insertTable",
-      insertTable
-    )
+      insertTable,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.insertPagebreak",
-      insertPagebreak
-    )
+      insertPagebreak,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.createTOC",
-      createTOC
-    )
+      createTOC,
+    ),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.revealLine", revealLine)
+    vscode.commands.registerCommand("_mume.revealLine", revealLine),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.insertImageUrl", insertImageUrl)
+    vscode.commands.registerCommand("_mume.insertImageUrl", insertImageUrl),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.pasteImageFile", pasteImageFile)
+    vscode.commands.registerCommand("_mume.pasteImageFile", pasteImageFile),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.uploadImageFile", uploadImageFile)
+    vscode.commands.registerCommand("_mume.uploadImageFile", uploadImageFile),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.refreshPreview", refreshPreview)
+    vscode.commands.registerCommand("_mume.refreshPreview", refreshPreview),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.openInBrowser", openInBrowser)
+    vscode.commands.registerCommand("_mume.openInBrowser", openInBrowser),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.htmlExport", htmlExport)
+    vscode.commands.registerCommand("_mume.htmlExport", htmlExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.chromeExport", chromeExport)
+    vscode.commands.registerCommand("_mume.chromeExport", chromeExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.princeExport", princeExport)
+    vscode.commands.registerCommand("_mume.princeExport", princeExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.eBookExport", eBookExport)
+    vscode.commands.registerCommand("_mume.eBookExport", eBookExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.pandocExport", pandocExport)
+    vscode.commands.registerCommand("_mume.pandocExport", pandocExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.markdownExport", markdownExport)
+    vscode.commands.registerCommand("_mume.markdownExport", markdownExport),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "_mume.webviewFinishLoading",
-      webviewFinishLoading
-    )
+      webviewFinishLoading,
+    ),
   );
 
   // context.subscriptions.push(vscode.commands.registerCommand('_mume.cacheSVG', cacheSVG))
@@ -728,34 +728,34 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "_mume.cacheCodeChunkResult",
-      cacheCodeChunkResult
-    )
+      cacheCodeChunkResult,
+    ),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.runCodeChunk", runCodeChunk)
+    vscode.commands.registerCommand("_mume.runCodeChunk", runCodeChunk),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.runAllCodeChunks", runAllCodeChunks)
+    vscode.commands.registerCommand("_mume.runAllCodeChunks", runAllCodeChunks),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.clickTagA", clickTagA)
+    vscode.commands.registerCommand("_mume.clickTagA", clickTagA),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "_mume.clickTaskListCheckbox",
-      clickTaskListCheckbox
-    )
+      clickTaskListCheckbox,
+    ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "_mume.showUploadedImageHistory",
-      showUploadedImages
-    )
+      showUploadedImages,
+    ),
   );
 }
 
@@ -764,14 +764,14 @@ function revealLine(uri, line) {
 
   vscode.window.visibleTextEditors
     .filter(
-      editor =>
+      (editor) =>
         isMarkdownFile(editor.document) &&
-        editor.document.uri.fsPath === sourceUri.fsPath
+        editor.document.uri.fsPath === sourceUri.fsPath,
     )
-    .forEach(editor => {
+    .forEach((editor) => {
       const sourceLine = Math.min(
         Math.floor(line),
-        editor.document.lineCount - 1
+        editor.document.lineCount - 1,
       );
       const fraction = line - sourceLine;
       const text = editor.document.lineAt(sourceLine).text;
@@ -779,7 +779,7 @@ function revealLine(uri, line) {
       editorScrollDelay = Date.now() + 500;
       editor.revealRange(
         new vscode.Range(sourceLine, start, sourceLine + 1, 0),
-        vscode.TextEditorRevealType.InCenter
+        vscode.TextEditorRevealType.InCenter,
       );
       editorScrollDelay = Date.now() + 500;
     });
@@ -792,7 +792,7 @@ function revealLine(uri, line) {
  * Floor to get real line number
  */
 export function getTopVisibleLine(
-  editor: vscode.TextEditor
+  editor: vscode.TextEditor,
 ): number | undefined {
   if (!editor["visibleRanges"].length) {
     return undefined;
@@ -812,7 +812,7 @@ export function getTopVisibleLine(
  * Floor to get real line number
  */
 export function getBottomVisibleLine(
-  editor: vscode.TextEditor
+  editor: vscode.TextEditor,
 ): number | undefined {
   if (!editor["visibleRanges"].length) {
     return undefined;

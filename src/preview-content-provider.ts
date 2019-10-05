@@ -55,11 +55,11 @@ export class MarkdownPreviewEnhancedView {
 
         const extensionVersion = require(path.resolve(
           this.context.extensionPath,
-          "./package.json"
+          "./package.json",
         ))["version"];
         if (extensionVersion !== mume.configs.config["vscode_mpe_version"]) {
           mume.utility.updateExtensionConfig({
-            vscode_mpe_version: extensionVersion
+            vscode_mpe_version: extensionVersion,
           });
         }
       });
@@ -100,7 +100,7 @@ export class MarkdownPreviewEnhancedView {
   private async modifySource(
     codeChunkData: mume.CodeChunkData,
     result: string,
-    filePath: string
+    filePath: string,
   ): Promise<string> {
     function insertResult(i: number, editor: TextEditor) {
       const lineCount = editor.document.lineCount;
@@ -140,21 +140,21 @@ export class MarkdownPreviewEnhancedView {
           return "";
         } // no need to modify output
 
-        editor.edit(edit => {
+        editor.edit((edit) => {
           edit.replace(
             new vscode.Range(
               new vscode.Position(start + 2, 0),
-              new vscode.Position(end - 1, 0)
+              new vscode.Position(end - 1, 0),
             ),
-            result + "\n"
+            result + "\n",
           );
         });
         return "";
       } else {
-        editor.edit(edit => {
+        editor.edit((edit) => {
           edit.insert(
             new vscode.Position(i + 1, 0),
-            `\n<!-- code_chunk_output -->\n\n${result}\n\n<!-- /code_chunk_output -->\n`
+            `\n<!-- code_chunk_output -->\n\n${result}\n\n<!-- /code_chunk_output -->\n`,
           );
         });
         return "";
@@ -268,7 +268,7 @@ export class MarkdownPreviewEnhancedView {
     if (process.platform === "win32") {
       pathString = pathString.replace(
         /^([a-zA-Z])\:\\/,
-        (_, $1) => `${$1.toUpperCase()}:\\`
+        (_, $1) => `${$1.toUpperCase()}:\\`,
       );
     }
     return pathString;
@@ -276,23 +276,23 @@ export class MarkdownPreviewEnhancedView {
 
   private getProjectDirectoryPath(
     sourceUri: Uri,
-    workspaceFolders: vscode.WorkspaceFolder[] = []
+    workspaceFolders: vscode.WorkspaceFolder[] = [],
   ) {
     const possibleWorkspaceFolders = workspaceFolders.filter(
-      workspaceFolder => {
+      (workspaceFolder) => {
         return (
           path
             .dirname(sourceUri.path.toUpperCase())
             .indexOf(workspaceFolder.uri.path.toUpperCase()) >= 0
         );
-      }
+      },
     );
 
     let projectDirectoryPath;
     if (possibleWorkspaceFolders.length) {
       // We pick the workspaceUri that has the longest path
       const workspaceFolder = possibleWorkspaceFolders.sort(
-        (x, y) => y.uri.fsPath.length - x.uri.fsPath.length
+        (x, y) => y.uri.fsPath.length - x.uri.fsPath.length,
       )[0];
       projectDirectoryPath = workspaceFolder.uri.fsPath;
     } else {
@@ -316,9 +316,9 @@ export class MarkdownPreviewEnhancedView {
         filePath: this.getFilePath(sourceUri),
         projectDirectoryPath: this.getProjectDirectoryPath(
           sourceUri,
-          vscode.workspace.workspaceFolders
+          vscode.workspace.workspaceFolders,
         ),
-        config: this.config
+        config: this.config,
       });
       this.engineMaps[sourceUri.fsPath] = engine;
       this.jsAndCssFilesMaps[sourceUri.fsPath] = [];
@@ -329,7 +329,7 @@ export class MarkdownPreviewEnhancedView {
   public async initPreview(
     sourceUri: vscode.Uri,
     editor: vscode.TextEditor,
-    viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean }
+    viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean },
   ) {
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: vscode.WebviewPanel;
@@ -337,12 +337,12 @@ export class MarkdownPreviewEnhancedView {
       const oldResourceRoot =
         this.getProjectDirectoryPath(
           this.singlePreviewPanelSourceUriTarget,
-          vscode.workspace.workspaceFolders
+          vscode.workspace.workspaceFolders,
         ) || path.dirname(this.singlePreviewPanelSourceUriTarget.fsPath);
       const newResourceRoot =
         this.getProjectDirectoryPath(
           sourceUri,
-          vscode.workspace.workspaceFolders
+          vscode.workspace.workspaceFolders,
         ) || path.dirname(sourceUri.fsPath);
       if (oldResourceRoot !== newResourceRoot) {
         this.singlePreviewPanel.dispose();
@@ -362,9 +362,9 @@ export class MarkdownPreviewEnhancedView {
         vscode.Uri.file(
           this.getProjectDirectoryPath(
             sourceUri,
-            vscode.workspace.workspaceFolders
-          ) || path.dirname(sourceUri.fsPath)
-        )
+            vscode.workspace.workspaceFolders,
+          ) || path.dirname(sourceUri.fsPath),
+        ),
       ];
 
       previewPanel = vscode.window.createWebviewPanel(
@@ -374,20 +374,20 @@ export class MarkdownPreviewEnhancedView {
         {
           enableFindWidget: true,
           localResourceRoots,
-          enableScripts: true // TODO: This might be set by enableScriptExecution config. But for now we just enable it.
-        }
+          enableScripts: true, // TODO: This might be set by enableScriptExecution config. But for now we just enable it.
+        },
       );
 
       // register previewPanel message events
       previewPanel.webview.onDidReceiveMessage(
-        message => {
+        (message) => {
           vscode.commands.executeCommand(
             `_mume.${message.command}`,
-            ...message.args
+            ...message.args,
           );
         },
         null,
-        this.context.subscriptions
+        this.context.subscriptions,
       );
 
       // unregister previewPanel
@@ -397,7 +397,7 @@ export class MarkdownPreviewEnhancedView {
           this.destroyEngine(sourceUri);
         },
         null,
-        this.context.subscriptions
+        this.context.subscriptions,
       );
 
       if (isUsingSinglePreview) {
@@ -436,12 +436,12 @@ export class MarkdownPreviewEnhancedView {
         config: {
           sourceUri: sourceUri.toString(),
           initialLine,
-          vscode: true
+          vscode: true,
         },
         isForVSCode: true,
-        contentSecurityPolicy: ""
+        contentSecurityPolicy: "",
       })
-      .then(html => {
+      .then((html) => {
         previewPanel.webview.html = html;
       });
   }
@@ -465,7 +465,7 @@ export class MarkdownPreviewEnhancedView {
         }
       }
 
-      previewPanels.forEach(previewPanel => previewPanel.dispose());
+      previewPanels.forEach((previewPanel) => previewPanel.dispose());
     }
 
     this.previewMaps = {};
@@ -507,10 +507,10 @@ export class MarkdownPreviewEnhancedView {
     }
 
     // not presentation mode
-    vscode.workspace.openTextDocument(sourceUri).then(document => {
+    vscode.workspace.openTextDocument(sourceUri).then((document) => {
       const text = document.getText();
       this.previewPostMessage(sourceUri, {
-        command: "startParsingMarkdown"
+        command: "startParsingMarkdown",
       });
 
       engine
@@ -519,7 +519,7 @@ export class MarkdownPreviewEnhancedView {
           useRelativeFilePath: false,
           hideFrontMatter: false,
           triggeredBySave,
-          isForVSCodePreview: true
+          isForVSCodePreview: true,
         })
         .then(({ markdown, html, tocHTML, JSAndCssFiles, yamlConfig }) => {
           // check JSAndCssFiles
@@ -539,7 +539,7 @@ export class MarkdownPreviewEnhancedView {
               totalLineCount: document.lineCount,
               sourceUri: sourceUri.toString(),
               id: yamlConfig.id || "",
-              class: yamlConfig.class || ""
+              class: yamlConfig.class || "",
             });
           }
         });
@@ -558,7 +558,7 @@ export class MarkdownPreviewEnhancedView {
       ) {
         this.initPreview(sourceUri, editor, {
           viewColumn: previewPanel.viewColumn,
-          preserveFocus: true
+          preserveFocus: true,
         });
       }
     });
@@ -576,7 +576,7 @@ export class MarkdownPreviewEnhancedView {
   public openInBrowser(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
-      engine.openInBrowser({}).catch(error => {
+      engine.openInBrowser({}).catch((error) => {
         vscode.window.showErrorMessage(error);
       });
     }
@@ -587,12 +587,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .htmlExport({ offline })
-        .then(dest => {
+        .then((dest) => {
           vscode.window.showInformationMessage(
-            `File ${path.basename(dest)} was created at path: ${dest}`
+            `File ${path.basename(dest)} was created at path: ${dest}`,
           );
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error);
         });
     }
@@ -603,12 +603,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .chromeExport({ fileType: type, openFileAfterGeneration: true })
-        .then(dest => {
+        .then((dest) => {
           vscode.window.showInformationMessage(
-            `File ${path.basename(dest)} was created at path: ${dest}`
+            `File ${path.basename(dest)} was created at path: ${dest}`,
           );
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error);
         });
     }
@@ -619,22 +619,22 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .princeExport({ openFileAfterGeneration: true })
-        .then(dest => {
+        .then((dest) => {
           if (dest.endsWith("?print-pdf")) {
             // presentation pdf
             vscode.window.showInformationMessage(
               `Please copy and open the link: { ${dest.replace(
                 /\_/g,
-                "\\_"
-              )} } in Chrome then Print as Pdf.`
+                "\\_",
+              )} } in Chrome then Print as Pdf.`,
             );
           } else {
             vscode.window.showInformationMessage(
-              `File ${path.basename(dest)} was created at path: ${dest}`
+              `File ${path.basename(dest)} was created at path: ${dest}`,
             );
           }
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error);
         });
     }
@@ -645,12 +645,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .eBookExport({ fileType, runAllCodeChunks: false })
-        .then(dest => {
+        .then((dest) => {
           vscode.window.showInformationMessage(
-            `eBook ${path.basename(dest)} was created as path: ${dest}`
+            `eBook ${path.basename(dest)} was created as path: ${dest}`,
           );
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error);
         });
     }
@@ -661,12 +661,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .pandocExport({ openFileAfterGeneration: true })
-        .then(dest => {
+        .then((dest) => {
           vscode.window.showInformationMessage(
-            `Document ${path.basename(dest)} was created as path: ${dest}`
+            `Document ${path.basename(dest)} was created as path: ${dest}`,
           );
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error);
         });
     }
@@ -677,12 +677,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .markdownExport({})
-        .then(dest => {
+        .then((dest) => {
           vscode.window.showInformationMessage(
-            `Document ${path.basename(dest)} was created as path: ${dest}`
+            `Document ${path.basename(dest)} was created as path: ${dest}`,
           );
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error);
         });
     }
@@ -766,7 +766,7 @@ export class MarkdownPreviewEnhancedView {
       return vscode.window.showWarningMessage("Please open preview first.");
     } else {
       return this.previewPostMessage(sourceUri, {
-        command: "openImageHelper"
+        command: "openImageHelper",
       });
     }
   }
@@ -789,13 +789,13 @@ export function getPreviewUri(uri: vscode.Uri) {
   if (useSinglePreview()) {
     previewUri = uri.with({
       scheme: "markdown-preview-enhanced",
-      path: "single-preview.rendered"
+      path: "single-preview.rendered",
     });
   } else {
     previewUri = uri.with({
       scheme: "markdown-preview-enhanced",
       path: uri.path + ".rendered",
-      query: uri.toString()
+      query: uri.toString(),
     });
   }
   return previewUri;
