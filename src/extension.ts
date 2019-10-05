@@ -1,10 +1,10 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as path from "path";
-import * as vscode from "vscode";
-import * as os from "os";
 import { emptyDir } from "fs-extra";
 import { utility } from "mume-with-litvis";
+import * as os from "os";
+import * as path from "path";
+import * as vscode from "vscode";
 
 import { pasteImageFile, uploadImageFile } from "./image-helper";
 import {
@@ -55,7 +55,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function toggleScrollSync() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      "markdown-preview-enhanced-with-litvis",
     );
     const scrollSync = !config.get<boolean>("scrollSync");
     config.update("scrollSync", scrollSync, true).then(() => {
@@ -70,7 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function toggleLiveUpdate() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      "markdown-preview-enhanced-with-litvis",
     );
     const liveUpdate = !config.get<boolean>("liveUpdate");
     config.update("liveUpdate", liveUpdate, true).then(() => {
@@ -85,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function toggleBreakOnSingleNewLine() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      "markdown-preview-enhanced-with-litvis",
     );
     const breakOnSingleNewLine = !config.get<boolean>("breakOnSingleNewLine");
     config
@@ -488,7 +488,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (isMarkdownFile(textEditor.document)) {
           const sourceUri = textEditor.document.uri;
           const config = vscode.workspace.getConfiguration(
-            "markdown-preview-enhanced",
+            "markdown-preview-enhanced-with-litvis",
           );
           const automaticallyShowPreviewOfMarkdownBeingEdited = config.get<
             boolean
