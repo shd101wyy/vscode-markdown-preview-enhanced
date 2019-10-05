@@ -84,18 +84,17 @@ Please follow these steps to enable full-featured formatting support for litvis 
 
 ## Keyboard shortcuts
 
-<!-- prettier-ignore -->
-| Shortcuts | Functionality |
+| Shortcuts                                   | Functionality              |
 | ------------------------------------------- | -------------------------- |
-| <kbd>cmd-k v</kbd> | Open preview to the Side |
-| <kbd>ctrl-shift-v</kbd> | Open preview |
-| <kbd>ctrl-shift-s</kbd> | Sync preview / Sync source |
-| <kbd>shift-enter</kbd> | Run Code Chunk |
-| <kbd>ctrl-shift-enter</kbd> | Run all Code Chunks |
-| <kbd>cmd-=</kbd> or <kbd>cmd-shift-=</kbd> | Preview zoom in |
-| <kbd>cmd--</kbd> or <kbd>cmd-shift-\_</kbd> | Preview zoom out |
-| <kbd>cmd-0</kbd> | Preview reset zoom |
-| <kbd>esc</kbd> | Toggle sidebar TOC |
+| <kbd>cmd-k v</kbd>                          | Open preview to the Side   |
+| <kbd>ctrl-shift-v</kbd>                     | Open preview               |
+| <kbd>ctrl-shift-s</kbd>                     | Sync preview / Sync source |
+| <kbd>shift-enter</kbd>                      | Run Code Chunk             |
+| <kbd>ctrl-shift-enter</kbd>                 | Run all Code Chunks        |
+| <kbd>cmd-=</kbd> or <kbd>cmd-shift-=</kbd>  | Preview zoom in            |
+| <kbd>cmd--</kbd> or <kbd>cmd-shift-\_</kbd> | Preview zoom out           |
+| <kbd>cmd-0</kbd>                            | Preview reset zoom         |
+| <kbd>esc</kbd>                              | Toggle sidebar TOC         |
 
 ## Getting linting feedback for litvis narratives
 
