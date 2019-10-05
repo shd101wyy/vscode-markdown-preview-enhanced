@@ -368,8 +368,8 @@
                     ]
                 },
                 "markdown-preview-enhanced-with-litvis.protocolsWhiteList": {
-                    "description": "Accepted protocols followed by `://` for links.",
-                    "default": "http, https, atom, file",
+                    "description": "Accepted protocols for links.",
+                    "default": "http://, https://, atom://, file://, mailto:, tel:", 
                     "type": "string"
                 },
                 "markdown-preview-enhanced-with-litvis.imageFolderPath": {
@@ -438,7 +438,7 @@
                     "type": "string"
                 },
                 "markdown-preview-enhanced-with-litvis.enableScriptExecution": {
-                    "description": "Enables executing code chunks and importing javascript files. Please use this feature with caution because it may put your security at risk! Your machine can be hacked if someone makes you open a markdown with malicious code!",
+                    "description": "Enables executing code chunks and importing javascript files.\n⚠️ Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled.",
                     "default": false,
                     "type": "boolean"
                 },
