@@ -25,16 +25,19 @@ It can be downloaded and installed from https://nodejs.org/.
 
 ```bash
 code --install-extension gicentre.markdown-preview-enhanced-with-litvis
-
-code --uninstall-extension shd101wyy.markdown-preview-enhanced
 ```
 
-VSCode does not support `--disable-extension` command, so if you want disable `shd101wyy.markdown-preview-enhanced` instead of uninstalling it, please do this via the app’s GUI.
+If you are using _Markdown Preview Enhanced_ extension (from which this project was forked), temporary uninstall or disable it:
+
+```bash
+code --uninstall-extension shd101wyy.markdown-preview-enhanced
+code --disable-extension shd101wyy.markdown-preview-enhanced
+```
 
 ## Getting started with litvis narratives
 
 Literate visualization uses [Elm](http://elm-lang.org) and [Vega-Lite](https://vega.github.io/vega-lite) in the form of a declarative visualization language [elm-vega](http://package.elm-lang.org/packages/gicentre/elm-vega/latest).
-While you don't have to use elm-vega in a litvis document it does enable quick declarative generation of interactive data graphics and therefore considerably enhances the capability of a litvis document.
+While you don't have to use elm-vega in a litvis document, it does enable quick declarative generation of interactive data graphics and therefore considerably enhances the capability of a litvis document.
 
 Creating your own litvis narrative is as easy as writing a markdown file.
 You can start with exploring the examples available at
@@ -42,9 +45,11 @@ https://github.com/gicentre/litvis/tree/master/examples.
 
 ## Formatting litvis narratives
 
-It is possible to automatically format litvis-enabled markdown files including embedded Elm code blocks with [Prettier](https://prettier.io/), which is an opinionated code formatting tool.
+It is possible to automatically format litvis-enabled markdown files (including Elm code blocks) using [Prettier](https://prettier.io/), which is a popular code formatting tool.
 
 Prettier is available in VSCode via [`prettier-vscode`](https://github.com/prettier/prettier-vscode) extension, but it does not format literate Elm code blocks in markdown files out of the box.
+
+Please follow these steps to enable full-featured formatting support for litvis in VSCode:
 
 Please follow these steps to enable full-featured formatting support for litvis in VSCode:
 
@@ -58,29 +63,10 @@ Please follow these steps to enable full-featured formatting support for litvis 
 
     ```
     npm init --yes
-    npm install github:kachkaev/prettier#fix-global-plugin-api-dist prettier-plugin-elm
+    npm install --global prettier prettier-plugin-elm
     ```
 
-    > Having a globally installed Prettier would be more convenient, but it is not supported by the VSCode extension yet.
-
-    > Installing from `github:kachkaev/prettier#...` instead of just `prettier` is necessary until [prettier/prettier#4192](https://github.com/prettier/prettier/pull/4192) is merged.
-
-1)  _(optional)_ Configure Prettier by creating `.prettierrc` with the following yaml:
-
-    ```yaml
-    overrides:
-      - files: "*.md"
-        options:
-          tabWidth: 4
-    ```
-
-    Doing this via bash:
-
-    ```bash
-    echo -e "overrides:\n- files: \"*.md\"\n  options:\n    tabWidth: 4" > .prettierrc
-    ```
-
-    This will indent bullet point lists in markdowns with four spaces instead of two.
+    > Having a globally installed Prettier would be more convenient, but it is not supported by the VSCode extension yet. See discussion in [prettier/prettier-vscode#958](https://github.com/prettier/prettier-vscode/issues/958).
 
 ## Keyboard shortcuts
 
