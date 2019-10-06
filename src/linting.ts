@@ -1,11 +1,10 @@
-// @ts-ignore
-import { VFile, VFileBase } from "vfile";
+import { VFile } from "vfile";
 import * as sort from "vfile-sort";
 import * as vscode from "vscode";
 
 const diagnosticCollection = vscode.languages.createDiagnosticCollection();
 
-export const updateLintingReport = (vFiles: Array<VFile<{}>> = []) => {
+export const updateLintingReport = (vFiles: VFile[] = []) => {
   diagnosticCollection.clear();
 
   vFiles.forEach((vFile) => {

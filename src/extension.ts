@@ -1,32 +1,42 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as path from "path";
-import * as vscode from "vscode";
-import * as os from "os";
 import { emptyDir } from "fs-extra";
 import { utility } from "mume-with-litvis";
+import * as os from "os";
+import * as path from "path";
+import * as vscode from "vscode";
 
 import { pasteImageFile, uploadImageFile } from "./image-helper";
 import {
   getPreviewUri,
   isMarkdownFile,
   MarkdownPreviewEnhancedView,
-  useSinglePreview,
 } from "./preview-content-provider";
+
+let editorScrollDelay = Date.now();
 
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   // assume only one preview supported.
-
   const contentProvider = new MarkdownPreviewEnhancedView(context);
-  const contentProviderRegistration = vscode.workspace.registerTextDocumentContentProvider(
-    "markdown-preview-enhanced",
-    contentProvider,
-  );
 
   function clearCache() {
     emptyDir(path.resolve(os.homedir(), ".mume/literate-elm"));
+  }
+
+  function openPreviewToTheSide(uri?: vscode.Uri) {
+    let resource = uri;
+    if (!(resource instanceof vscode.Uri)) {
+      if (vscode.window.activeTextEditor) {
+        // we are relaxed and don't check for markdown files
+        resource = vscode.window.activeTextEditor.document.uri;
+      }
+    }
+    contentProvider.initPreview(resource, vscode.window.activeTextEditor, {
+      viewColumn: vscode.ViewColumn.Two,
+      preserveFocus: true,
+    });
   }
 
   function openPreview(uri?: vscode.Uri) {
@@ -37,49 +47,15 @@ export function activate(context: vscode.ExtensionContext) {
         resource = vscode.window.activeTextEditor.document.uri;
       }
     }
-
-    /*
-		if (!(resource instanceof vscode.Uri)) {
-			if (!vscode.window.activeTextEditor) {
-				// this is most likely toggling the preview
-				return vscode.commands.executeCommand('markdown.showSource');
-			}
-			// nothing found that could be shown or toggled
-			return;
-		}
-		*/
-
-    /*
-		if (contentProvider.isPreviewOn(vscode.window.activeTextEditor)) {
-			// return vscode.commands.executeCommand('workbench.action.closeActiveEditor', markdownURI)
-		} else {
-
-		}
-		*/
-    const previewUri = getPreviewUri(resource);
-    return vscode.commands
-      .executeCommand(
-        "vscode.previewHtml",
-        previewUri,
-        vscode.ViewColumn.Two,
-        useSinglePreview()
-          ? "MPE Preview"
-          : `Preview '${path.basename(resource.fsPath)}'`,
-      )
-      .then(
-        (success) => {
-          // contentProvider.update(previewUri)
-          // the line above is changed to webviewFinishLoading function.
-        },
-        (reason) => {
-          vscode.window.showErrorMessage(reason);
-        },
-      );
+    contentProvider.initPreview(resource, vscode.window.activeTextEditor, {
+      viewColumn: vscode.ViewColumn.One,
+      preserveFocus: false,
+    });
   }
 
   function toggleScrollSync() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      "markdown-preview-enhanced-with-litvis",
     );
     const scrollSync = !config.get<boolean>("scrollSync");
     config.update("scrollSync", scrollSync, true).then(() => {
@@ -94,7 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function toggleLiveUpdate() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      "markdown-preview-enhanced-with-litvis",
     );
     const liveUpdate = !config.get<boolean>("liveUpdate");
     config.update("liveUpdate", liveUpdate, true).then(() => {
@@ -109,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function toggleBreakOnSingleNewLine() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      "markdown-preview-enhanced-with-litvis",
     );
     const breakOnSingleNewLine = !config.get<boolean>("breakOnSingleNewLine");
     config
@@ -155,19 +131,6 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand(
       "vscode.open",
       vscode.Uri.parse(mathjaxConfigFilePath),
-    );
-  }
-
-  function openPhantomJSConfig() {
-    const phantomjsConfigFilePath = utility.addFileProtocol(
-      path.resolve(
-        utility.extensionConfigDirectoryPath,
-        "./phantomjs_config.js",
-      ),
-    );
-    vscode.commands.executeCommand(
-      "vscode.open",
-      vscode.Uri.parse(phantomjsConfigFilePath),
     );
   }
 
@@ -292,11 +255,6 @@ export function activate(context: vscode.ExtensionContext) {
     contentProvider.chromeExport(sourceUri, type);
   }
 
-  function phantomjsExport(uri, type) {
-    const sourceUri = vscode.Uri.parse(uri);
-    contentProvider.phantomjsExport(sourceUri, type);
-  }
-
   function princeExport(uri) {
     const sourceUri = vscode.Uri.parse(uri);
     contentProvider.princeExport(sourceUri);
@@ -348,18 +306,15 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const previewUri = getPreviewUri(textEditor.document.uri);
+    const sourceUri = textEditor.document.uri;
+    const previewUri = getPreviewUri(sourceUri);
     if (!previewUri) {
       return;
     }
 
-    vscode.commands.executeCommand(
-      "_workbench.htmlPreview.postMessage",
-      previewUri,
-      {
-        command: "runAllCodeChunks",
-      },
-    );
+    contentProvider.previewPostMessage(sourceUri, {
+      command: "runAllCodeChunks",
+    });
   }
 
   function runCodeChunkCommand() {
@@ -371,18 +326,14 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const previewUri = getPreviewUri(textEditor.document.uri);
+    const sourceUri = textEditor.document.uri;
+    const previewUri = getPreviewUri(sourceUri);
     if (!previewUri) {
       return;
     }
-
-    vscode.commands.executeCommand(
-      "_workbench.htmlPreview.postMessage",
-      previewUri,
-      {
-        command: "runCodeChunk",
-      },
-    );
+    contentProvider.previewPostMessage(sourceUri, {
+      command: "runCodeChunk",
+    });
   }
 
   function syncPreview() {
@@ -394,24 +345,17 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const previewUri = getPreviewUri(textEditor.document.uri);
-    if (!previewUri) {
-      return;
-    }
-
-    vscode.commands.executeCommand(
-      "_workbench.htmlPreview.postMessage",
-      previewUri,
-      {
-        command: "changeTextEditorSelection",
-        line: textEditor.selections[0].active.line,
-        forced: true,
-      },
-    );
+    const sourceUri = textEditor.document.uri;
+    contentProvider.previewPostMessage(sourceUri, {
+      command: "changeTextEditorSelection",
+      line: textEditor.selections[0].active.line,
+      forced: true,
+    });
   }
 
   function clickTagA(uri, href) {
     href = decodeURIComponent(href);
+    href = href.replace(/^vscode\-resource:\/\/\//, "file:///");
     if (
       [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
         path.extname(href),
@@ -464,7 +408,6 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document) => {
       if (isMarkdownFile(document)) {
-        // contentProvider.update(document.uri, true);
         contentProvider.updateMarkdown(document.uri, true);
       }
     }),
@@ -487,15 +430,50 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeTextEditorSelection((event) => {
       if (isMarkdownFile(event.textEditor.document)) {
-        const previewUri = getPreviewUri(event.textEditor.document.uri);
-        vscode.commands.executeCommand(
-          "_workbench.htmlPreview.postMessage",
-          previewUri,
-          {
+        const firstVisibleScreenRow = getTopVisibleLine(event.textEditor);
+        const lastVisibleScreenRow = getBottomVisibleLine(event.textEditor);
+        const topRatio =
+          (event.selections[0].active.line - firstVisibleScreenRow) /
+          (lastVisibleScreenRow - firstVisibleScreenRow);
+
+        contentProvider.previewPostMessage(event.textEditor.document.uri, {
+          command: "changeTextEditorSelection",
+          line: event.selections[0].active.line,
+          topRatio,
+        });
+      }
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.window.onDidChangeTextEditorVisibleRanges((event) => {
+      const textEditor = event.textEditor as vscode.TextEditor;
+      if (Date.now() < editorScrollDelay) {
+        return;
+      }
+      if (isMarkdownFile(textEditor.document)) {
+        const sourceUri = textEditor.document.uri;
+        if (!event.textEditor.visibleRanges.length) {
+          return undefined;
+        } else {
+          const topLine = getTopVisibleLine(textEditor);
+          const bottomLine = getBottomVisibleLine(textEditor);
+          let midLine;
+          if (topLine === 0) {
+            midLine = 0;
+          } else if (
+            Math.floor(bottomLine) ===
+            textEditor.document.lineCount - 1
+          ) {
+            midLine = bottomLine;
+          } else {
+            midLine = Math.floor((topLine + bottomLine) / 2);
+          }
+          contentProvider.previewPostMessage(sourceUri, {
             command: "changeTextEditorSelection",
-            line: event.selections[0].active.line,
-          },
-        );
+            line: midLine,
+          });
+        }
       }
     }),
   );
@@ -507,32 +485,40 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((textEditor) => {
       if (textEditor && textEditor.document && textEditor.document.uri) {
-        // console.log('onDidChangeActiveTextEditor', textEditor.document.uri)
         if (isMarkdownFile(textEditor.document)) {
           const sourceUri = textEditor.document.uri;
+          const config = vscode.workspace.getConfiguration(
+            "markdown-preview-enhanced-with-litvis",
+          );
+          const automaticallyShowPreviewOfMarkdownBeingEdited = config.get<
+            boolean
+          >("automaticallyShowPreviewOfMarkdownBeingEdited");
+          const isUsingSinglePreview = config.get<boolean>("singlePreview");
           /**
            * Is using single preview and the preview is on.
-           * When we switched text editor, update preview to that text editor.
+           * When we switched text ed()tor, update preview to that text editor.
            */
-          if (useSinglePreview() && contentProvider.isPreviewOn(sourceUri)) {
-            contentProvider.initMarkdownEngine(sourceUri);
-            contentProvider.updateMarkdown(sourceUri);
+
+          if (contentProvider.isPreviewOn(sourceUri)) {
+            if (
+              isUsingSinglePreview &&
+              !contentProvider.previewHasTheSameSingleSourceUri(sourceUri)
+            ) {
+              contentProvider.initPreview(sourceUri, textEditor, {
+                viewColumn: contentProvider.getPreview(sourceUri).viewColumn,
+                preserveFocus: true,
+              });
+            } else if (
+              !isUsingSinglePreview &&
+              automaticallyShowPreviewOfMarkdownBeingEdited
+            ) {
+              const previewPanel = contentProvider.getPreview(sourceUri);
+              if (previewPanel) {
+                previewPanel.reveal(vscode.ViewColumn.Two, true);
+              }
+            }
           }
         }
-      } else {
-        // console.log('onDidChangeActiveTextEditor', ' preview', textEditor)
-      }
-    }),
-  );
-
-  context.subscriptions.push(
-    vscode.workspace.onDidCloseTextDocument((textDocument) => {
-      // console.log('onDidCloseTextDocument', textDocument.uri)
-      if (
-        textDocument &&
-        textDocument.uri.scheme === "markdown-preview-enhanced"
-      ) {
-        contentProvider.destroyEngine(textDocument.uri);
       }
     }),
   );
@@ -548,6 +534,13 @@ export function activate(context: vscode.ExtensionContext) {
 		// console.log('onDidChangeonDidChangeVisibleTextEditors ', textEditors)
 	}))
 	*/
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
+      openPreviewToTheSide,
+    ),
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -635,13 +628,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced-with-litvis.openPhantomJSConfig",
-      openPhantomJSConfig,
-    ),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
       "markdown-preview-enhanced-with-litvis.extendParser",
       extendParser,
     ),
@@ -715,10 +701,6 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.phantomjsExport", phantomjsExport),
-  );
-
-  context.subscriptions.push(
     vscode.commands.registerCommand("_mume.princeExport", princeExport),
   );
 
@@ -775,8 +757,6 @@ export function activate(context: vscode.ExtensionContext) {
       showUploadedImages,
     ),
   );
-
-  context.subscriptions.push(contentProviderRegistration);
 }
 
 function revealLine(uri, line) {
@@ -796,11 +776,56 @@ function revealLine(uri, line) {
       const fraction = line - sourceLine;
       const text = editor.document.lineAt(sourceLine).text;
       const start = Math.floor(fraction * text.length);
+      editorScrollDelay = Date.now() + 500;
       editor.revealRange(
         new vscode.Range(sourceLine, start, sourceLine + 1, 0),
         vscode.TextEditorRevealType.InCenter,
       );
+      editorScrollDelay = Date.now() + 500;
     });
+}
+
+/**
+ * Get the top-most visible range of `editor`.
+ *
+ * Returns a fractional line number based the visible character within the line.
+ * Floor to get real line number
+ */
+export function getTopVisibleLine(
+  editor: vscode.TextEditor,
+): number | undefined {
+  if (!editor["visibleRanges"].length) {
+    return undefined;
+  }
+
+  const firstVisiblePosition = editor["visibleRanges"][0].start;
+  const lineNumber = firstVisiblePosition.line;
+  const line = editor.document.lineAt(lineNumber);
+  const progress = firstVisiblePosition.character / (line.text.length + 2);
+  return lineNumber + progress;
+}
+
+/**
+ * Get the bottom-most visible range of `editor`.
+ *
+ * Returns a fractional line number based the visible character within the line.
+ * Floor to get real line number
+ */
+export function getBottomVisibleLine(
+  editor: vscode.TextEditor,
+): number | undefined {
+  if (!editor["visibleRanges"].length) {
+    return undefined;
+  }
+
+  const firstVisiblePosition = editor["visibleRanges"][0].end;
+  const lineNumber = firstVisiblePosition.line;
+  let text = "";
+  if (lineNumber < editor.document.lineCount) {
+    text = editor.document.lineAt(lineNumber).text;
+  }
+  const progress = firstVisiblePosition.character / (text.length + 2);
+  return lineNumber + progress;
 }
 
 // this method is called when your extension is deactivated

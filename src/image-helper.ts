@@ -17,7 +17,7 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
   }
 
   const imageFolderPath = vscode.workspace
-    .getConfiguration("markdown-preview-enhanced")
+    .getConfiguration("markdown-preview-enhanced-with-litvis")
     .get<string>("imageFolderPath");
   let imageFileName = path.basename(imageFilePath);
   const projectDirectoryPath = vscode.workspace.rootPath;
@@ -69,18 +69,16 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
               imageFileName = imageFileName + uid;
             }
 
-            fs
-              .createReadStream(imageFilePath)
-              .pipe(
-                fs.createWriteStream(
-                  path.resolve(assetDirectoryPath, imageFileName),
-                ),
-              );
+            fs.createReadStream(imageFilePath).pipe(
+              fs.createWriteStream(
+                path.resolve(assetDirectoryPath, imageFileName),
+              ),
+            );
           } else if (err.code === "ENOENT") {
             // file doesn't exist
-            fs
-              .createReadStream(imageFilePath)
-              .pipe(fs.createWriteStream(destPath));
+            fs.createReadStream(imageFilePath).pipe(
+              fs.createWriteStream(destPath),
+            );
 
             if (imageFileName.lastIndexOf(".")) {
               description = imageFileName.slice(
@@ -198,7 +196,7 @@ export function uploadImageFile(
       });
 
       const config = vscode.workspace.getConfiguration(
-        "markdown-preview-enhanced",
+        "markdown-preview-enhanced-with-litvis",
       );
       const AccessKey = config.get<string>("AccessKey") || "";
       const SecretKey = config.get<string>("SecretKey") || "";
