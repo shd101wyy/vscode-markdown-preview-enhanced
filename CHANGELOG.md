@@ -1,3 +1,8 @@
+## 0.12.0
+
+- Upgrade vega to 5.7.0, vega-lite to 4.0.0-beta.8, vega-embed to 5.1.3 and vega-loader-arrow to 0.14.1
+- Sync with upstream package to resolve various issues in the latest versions of editors (https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis/pull/2)
+
 ## 0.11.0
 
 - Upgrade vega to 5.4.0 and vega-embed to 4.2.0

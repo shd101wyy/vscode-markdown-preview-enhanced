@@ -2,7 +2,7 @@
     "name": "markdown-preview-enhanced-with-litvis",
     "displayName": "Markdown Preview Enhanced with litvis",
     "description": "Fork of markdown-preview-enhanced with added http://livis.org",
-    "version": "0.11.0",
+    "version": "0.12.0",
     "publisher": "gicentre",
     "repository": "https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis.git",
     "bugs": {
@@ -369,7 +369,7 @@
                 },
                 "markdown-preview-enhanced-with-litvis.protocolsWhiteList": {
                     "description": "Accepted protocols for links.",
-                    "default": "http://, https://, atom://, file://, mailto:, tel:", 
+                    "default": "http://, https://, atom://, file://, mailto:, tel:",
                     "type": "string"
                 },
                 "markdown-preview-enhanced-with-litvis.imageFolderPath": {
