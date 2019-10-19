@@ -1,0 +1,15 @@
+## extensions
+*.*
+!*.js
+!*.json
+!*.md
+!*.ts
+
+
+## same as in .gitignore
+node_modules
+out
+*.vsix
+
+
+## special cases
