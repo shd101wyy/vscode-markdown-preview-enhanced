@@ -7,9 +7,10 @@
 
 
 ## same as in .gitignore
+.vscode-test
+*.vsix
 node_modules
 out
-*.vsix
 
 
 ## special cases
