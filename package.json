@@ -12,12 +12,14 @@
   "license": "NCSA",
   "main": "./out/src/extension",
   "scripts": {
-    "check": "npm run check:prettier && npm run check:tsc && npm run check:tslint",
+    "check": "npm run check:eslint && npm run check:prettier && npm run check:tsc && npm run check:tslint",
+    "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
     "check:tsc": "tsc --project . --noEmit",
     "check:tslint": "tslint --project .",
     "compile": "tsc -p ./",
-    "fix": "npm run fix:tslint && npm run fix:prettier",
+    "fix": "npm run fix:eslint && npm run fix:tslint && npm run fix:prettier",
+    "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
     "fix:tslint": "tslint --project .",
     "postinstall": "node ./node_modules/vscode/bin/install",
@@ -32,6 +34,7 @@
   },
   "lint-staged": {
     "**/*.*": [
+      "eslint",
       "prettier --write",
       "git add"
     ]
