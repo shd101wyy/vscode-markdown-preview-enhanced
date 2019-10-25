@@ -40,7 +40,7 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.4.6",
+    "@shd101wyy/mume": "^0.4.7",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {
@@ -75,8 +75,8 @@
         "title": "Markdown Preview Enhanced: Open Preview to the Side",
         "category": "Markdown",
         "icon": {
-          "light": "./media/PreviewOnRightPane_16x.svg",
-          "dark": "./media/PreviewOnRightPane_16x_dark.svg"
+          "light": "./media/preview-right-light.svg",
+          "dark": "./media/preview-right-dark.svg"
         }
       },
       {
@@ -84,8 +84,8 @@
         "title": "Markdown Preview Enhanced: Open Preview",
         "category": "Markdown",
         "icon": {
-          "light": "./media/PreviewOnRightPane_16x.svg",
-          "dark": "./media/PreviewOnRightPane_16x_dark.svg"
+          "light": "./media/preview-right-light.svg",
+          "dark": "./media/preview-right-dark.svg"
         }
       },
       {
