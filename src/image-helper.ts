@@ -211,8 +211,8 @@ export function uploadImageFile(
         .then((url) => {
           setUploadedImageURL(imageFileName, url, editor, hint, curPos);
         })
-        .catch((err) => {
-          vscode.window.showErrorMessage(err);
+        .catch((error) => {
+          vscode.window.showErrorMessage(error.toString());
         });
     });
 }

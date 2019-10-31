@@ -1,4 +1,4 @@
+.vscode-test
+*.vsix
 node_modules
 out
-package-lock.json
-*.vsix
