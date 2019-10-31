@@ -51,8 +51,8 @@
     "eslint": "^5.15.1",
     "husky": "^3.0.9",
     "lint-staged": "^9.4.2",
-    "mocha": "^6.0.2",
-    "prettier": "^1.16.4",
+    "mocha": "^6.1.4",
+    "prettier": "^1.18.2",
     "prettier-plugin-packagejson": "^2.0.1",
     "tslint": "^5.13.1",
     "tslint-config-prettier": "^1.18.0",
@@ -77,8 +77,8 @@
         "title": "Markdown Preview Enhanced with litvis: Open Preview to the Side",
         "category": "Markdown",
         "icon": {
-          "light": "./media/PreviewOnRightPane_16x.svg",
-          "dark": "./media/PreviewOnRightPane_16x_dark.svg"
+          "light": "./media/preview-right-light.svg",
+          "dark": "./media/preview-right-dark.svg"
         }
       },
       {
@@ -86,8 +86,8 @@
         "title": "Markdown Preview Enhanced with litvis: Open Preview",
         "category": "Markdown",
         "icon": {
-          "light": "./media/PreviewOnRightPane_16x.svg",
-          "dark": "./media/PreviewOnRightPane_16x_dark.svg"
+          "light": "./media/preview-right-light.svg",
+          "dark": "./media/preview-right-dark.svg"
         }
       },
       {
@@ -143,8 +143,12 @@
         "title": "Markdown Preview Enhanced with litvis: Open Mermaid Config"
       },
       {
-        "command": "markdown-preview-enhanced-with-litvis.extendParser",
-        "title": "Markdown Preview Enhanced: Extend Parser"
+        "command": "markdown-preview-enhanced-with-litvis.openMathJaxConfig",
+        "title": "Markdown Preview Enhanced with litvis: Open MathJax Config"
+      },
+      {
+        "command": "markdown-preview-enhanced-with-litvis.openKaTeXConfig",
+        "title": "Markdown Preview Enhanced with litvis: Open KaTeX Config"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.extendParser",
@@ -206,7 +210,7 @@
     },
     "configuration": {
       "type": "object",
-      "title": "Markdown Preview Enhanced",
+      "title": "Markdown Preview Enhanced with litvis",
       "properties": {
         "markdown-preview-enhanced-with-litvis.usePandocParser": {
           "description": "Enable this option will render markdown by pandoc instead of markdown-it.",
@@ -459,14 +463,22 @@
           "type": "boolean"
         },
         "markdown-preview-enhanced-with-litvis.chromePath": {
-          "description": "Chrome executable path, which is used for Puppeteer export. Leaving it empty means mume will look for the path automatically.",
+          "description": "Chrome executable path, which is used for Puppeteer export. Leaving it empty means the path will be found automatically.",
           "default": "",
-          "type": "string"
+          "type": "string",
+          "scope": "machine"
+        },
+        "markdown-preview-enhanced-with-litvis.imageMagickPath": {
+          "description": "ImageMagick command line path. Should be either `magick` or `convert`. Leaving it empty means the path will be found automatically.",
+          "default": "",
+          "type": "string",
+          "scope": "machine"
         },
         "markdown-preview-enhanced-with-litvis.pandocPath": {
           "description": "Pandoc executable path",
           "default": "pandoc",
-          "type": "string"
+          "type": "string",
+          "scope": "machine"
         },
         "markdown-preview-enhanced-with-litvis.pandocMarkdownFlavor": {
           "description": "The pandoc markdown flavor you want",
@@ -517,6 +529,16 @@
           "description": "HTML attributes to pass to video tags.",
           "default": "controls preload=\"metadata\" width=\"320\" height=\"240\"",
           "type": "string"
+        },
+        "markdown-preview-enhanced-with-litvis.puppeteerWaitForTimeout": {
+          "description": "Puppeteer waits for a certain timeout in milliseconds before the document export.",
+          "default": 0,
+          "type": "number"
+        },
+        "markdown-preview-enhanced-with-litvis.usePuppeteerCore": {
+          "description": "If set to true, then locally installed puppeteer-core will be required. Otherwise, the puppeteer globally installed by `npm install -g puppeteer` will be required.",
+          "default": true,
+          "type": "boolean"
         }
       }
     }
