@@ -1,12 +1,31 @@
 {
   "name": "markdown-preview-enhanced-with-litvis",
-  "displayName": "Markdown Preview Enhanced with litvis",
-  "description": "Fork of markdown-preview-enhanced with added http://livis.org",
   "version": "0.12.0",
-  "publisher": "gicentre",
-  "repository": "https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis.git",
+  "description": "Fork of markdown-preview-enhanced with added http://livis.org",
+  "keywords": [
+    "markdown"
+  ],
   "bugs": {
     "url": "https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis/issues"
+  },
+  "repository": "https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis.git",
+  "license": "BSD-3, NCSA",
+  "main": "./out/src/extension",
+  "scripts": {
+    "check": "npm run check:eslint && npm run check:prettier && npm run check:tsc && npm run check:tslint",
+    "check:eslint": "eslint \"**/*\"",
+    "check:prettier": "prettier --check \"**/*.*\"",
+    "check:tsc": "tsc --project . --noEmit",
+    "check:tslint": "tslint --project .",
+    "compile": "tsc -p ./",
+    "fix": "npm run fix:eslint && npm run fix:tslint && npm run fix:prettier",
+    "fix:eslint": "eslint --fix \"**/*\"",
+    "fix:prettier": "prettier --write \"**/*.*\"",
+    "fix:tslint": "tslint --fix --project .",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test",
+    "vscode:prepublish": "npm run compile",
+    "watch": "tsc -watch -p ./"
   },
   "husky": {
     "hooks": {
@@ -20,22 +39,37 @@
       "git add"
     ]
   },
-  "license": "BSD-3, NCSA",
+  "dependencies": {
+    "mume-with-litvis": "^0.17.0",
+    "vfile-sort": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.3.9",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^11.11.0",
+    "@types/vfile": "^3.0.2",
+    "eslint": "^5.15.1",
+    "husky": "^3.0.9",
+    "lint-staged": "^9.4.2",
+    "mocha": "^6.0.2",
+    "prettier": "^1.16.4",
+    "prettier-plugin-packagejson": "^2.0.1",
+    "tslint": "^5.13.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.0.3",
+    "vscode": "^1.1.30"
+  },
   "engines": {
     "vscode": "^1.30.0"
   },
-  "categories": [
-    "Other"
-  ],
-  "keywords": [
-    "markdown"
-  ],
   "activationEvents": [
     "onLanguage:markdown",
     "onCommand:markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
     "onCommand:markdown-preview-enhanced-with-litvis.clearCache"
   ],
-  "main": "./out/src/extension",
+  "categories": [
+    "Other"
+  ],
   "contributes": {
     "commands": [
       {
@@ -487,40 +521,6 @@
       }
     }
   },
-  "scripts": {
-    "check": "npm run check:eslint && npm run check:prettier && npm run check:tsc && npm run check:tslint",
-    "check:eslint": "eslint \"**/*\"",
-    "check:prettier": "prettier --check \"**/*.*\"",
-    "check:tsc": "tsc --project . --noEmit",
-    "check:tslint": "tslint --project .",
-    "fix": "npm run fix:eslint && npm run fix:tslint && npm run fix:prettier",
-    "fix:eslint": "eslint --fix \"**/*\"",
-    "fix:prettier": "prettier --write \"**/*.*\"",
-    "fix:tslint": "tslint --fix --project .",
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "npm run compile && node ./node_modules/vscode/bin/test"
-  },
-  "dependencies": {
-    "mume-with-litvis": "^0.17.0",
-    "vfile-sort": "^2.2.0"
-  },
-  "devDependencies": {
-    "@types/jquery": "^3.3.9",
-    "@types/mocha": "^5.2.5",
-    "@types/node": "^11.11.0",
-    "@types/vfile": "^3.0.2",
-    "husky": "^3.0.9",
-    "lint-staged": "^9.4.2",
-    "eslint": "^5.15.1",
-    "mocha": "^6.0.2",
-    "prettier": "^1.16.4",
-    "prettier-check": "^2.0.0",
-    "tslint": "^5.13.1",
-    "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.0.3",
-    "vscode": "^1.1.30"
-  }
+  "displayName": "Markdown Preview Enhanced with litvis",
+  "publisher": "gicentre"
 }
