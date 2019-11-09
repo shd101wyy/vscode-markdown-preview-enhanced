@@ -1,3 +1,7 @@
+## 0.14.0
+
+- Upgrade vega-lite to 4.0.0-beta.11, fix outdated vega versions in CDN links (affects interactive mode only)
+
 ## 0.13.0
 
 - Update apache-arrow to 0.15.0, vega to 5.7.3, vega-lite to 4.0.0-beta.10 and vega-embed to 6.0.0

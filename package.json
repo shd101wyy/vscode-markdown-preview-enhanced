@@ -1,6 +1,6 @@
 {
   "name": "markdown-preview-enhanced-with-litvis",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Fork of markdown-preview-enhanced with added http://livis.org",
   "keywords": [
     "markdown"
@@ -40,7 +40,7 @@
     ]
   },
   "dependencies": {
-    "mume-with-litvis": "^0.17.0",
+    "mume-with-litvis": "^0.19.0",
     "vfile-sort": "^2.2.0"
   },
   "devDependencies": {
