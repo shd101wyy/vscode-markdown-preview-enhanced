@@ -40,7 +40,7 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.4.7",
+    "@shd101wyy/mume": "^0.4.8",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {
@@ -533,6 +533,11 @@
           "description": "If set to true, then locally installed puppeteer-core will be required. Otherwise, the puppeteer globally installed by `npm install -g puppeteer` will be required.",
           "default": true,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.puppeteerArgs": {
+          "description": "Args passed to puppeteer.launch({args: $puppeteerArgs})",
+          "default": [],
+          "type": "array"
         }
       }
     }
