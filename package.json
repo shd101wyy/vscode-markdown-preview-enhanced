@@ -255,6 +255,10 @@
           "description": "Use customized Math expression inline delimiters.",
           "default": [
             [
+              "$`",
+              "`$"
+            ],
+            [
               "$",
               "$"
             ],
