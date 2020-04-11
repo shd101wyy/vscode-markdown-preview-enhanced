@@ -1,4 +1,8 @@
-## 0.XX.0
+## 0.21.0
+
+- Upgrade vega to 5.10.1, vega-lite to 4.10.2 and vega-embed to 6.5.2
+
+## 0.20.0
 
 - Upgrade vega to 5.10.0, vega-lite to 4.5.1, vega-embed to 6.3.2 and apache-arrow to 0.16.0
 
