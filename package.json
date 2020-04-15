@@ -1,7 +1,11 @@
 {
   "name": "markdown-preview-enhanced",
+  "displayName": "Markdown Preview Enhanced",
   "version": "0.5.2",
   "description": "Markdown Preview Enhanced ported to vscode",
+  "categories": [
+    "Other"
+  ],
   "keywords": [
     "markdown"
   ],
@@ -10,6 +14,7 @@
   },
   "repository": "https://github.com/shd101wyy/vscode-markdown-preview-enhanced",
   "license": "NCSA",
+  "publisher": "shd101wyy",
   "main": "./out/src/extension",
   "scripts": {
     "check": "npm run check:eslint && npm run check:prettier && npm run check:tsc && npm run check:tslint",
@@ -27,47 +32,6 @@
     "vscode:prepublish": "npm run compile",
     "watch": "tsc -watch -p ./"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "**/*.*": [
-      "eslint",
-      "prettier --write",
-      "git add"
-    ]
-  },
-  "dependencies": {
-    "@shd101wyy/mume": "^0.4.9",
-    "@types/vfile": "^3.0.2"
-  },
-  "devDependencies": {
-    "@types/jquery": "^3.3.9",
-    "@types/mocha": "^5.2.5",
-    "@types/node": "^11.11.0",
-    "eslint": "^5.15.1",
-    "husky": "^3.0.9",
-    "lint-staged": "^9.4.2",
-    "mocha": "^6.1.4",
-    "prettier": "^1.18.2",
-    "prettier-plugin-packagejson": "^2.0.1",
-    "tslint": "^5.13.1",
-    "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.0.3",
-    "vscode": "^1.1.30"
-  },
-  "engines": {
-    "vscode": "^1.30.0"
-  },
-  "activationEvents": [
-    "onLanguage:markdown",
-    "onCommand:markdown-preview-enhanced.openPreviewToTheSide"
-  ],
-  "categories": [
-    "Other"
-  ],
   "contributes": {
     "commands": [
       {
@@ -157,51 +121,6 @@
         "title": "Markdown Preview Enhanced: Show Uploaded Images"
       }
     ],
-    "keybindings": [
-      {
-        "command": "markdown-preview-enhanced.openPreviewToTheSide",
-        "key": "ctrl+k v",
-        "mac": "cmd+k v",
-        "when": "editorLangId == markdown"
-      },
-      {
-        "command": "markdown-preview-enhanced.openPreview",
-        "key": "ctrl+shift+v",
-        "mac": "cmd+shift+v",
-        "when": "editorLangId == markdown"
-      },
-      {
-        "command": "markdown-preview-enhanced.runAllCodeChunks",
-        "key": "ctrl+shift+enter",
-        "when": "editorLangId == markdown"
-      },
-      {
-        "command": "markdown-preview-enhanced.runCodeChunk",
-        "key": "shift+enter",
-        "when": "editorLangId == markdown"
-      },
-      {
-        "command": "markdown-preview-enhanced.syncPreview",
-        "key": "ctrl+shift+s",
-        "when": "editorLangId == markdown"
-      }
-    ],
-    "menus": {
-      "editor/context": [
-        {
-          "command": "markdown-preview-enhanced.openPreviewToTheSide",
-          "when": "editorLangId == markdown",
-          "group": "markdown-preview-enhanced"
-        }
-      ],
-      "editor/title": [
-        {
-          "command": "markdown-preview-enhanced.openPreviewToTheSide",
-          "when": "editorLangId == markdown",
-          "group": "navigation"
-        }
-      ]
-    },
     "configuration": {
       "type": "object",
       "title": "Markdown Preview Enhanced",
@@ -540,8 +459,89 @@
           "type": "array"
         }
       }
+    },
+    "keybindings": [
+      {
+        "command": "markdown-preview-enhanced.openPreviewToTheSide",
+        "key": "ctrl+k v",
+        "mac": "cmd+k v",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.openPreview",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.runAllCodeChunks",
+        "key": "ctrl+shift+enter",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.runCodeChunk",
+        "key": "shift+enter",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.syncPreview",
+        "key": "ctrl+shift+s",
+        "when": "editorLangId == markdown"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "markdown-preview-enhanced.openPreviewToTheSide",
+          "when": "editorLangId == markdown",
+          "group": "markdown-preview-enhanced"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "markdown-preview-enhanced.openPreviewToTheSide",
+          "when": "editorLangId == markdown",
+          "group": "navigation"
+        }
+      ]
     }
   },
-  "displayName": "Markdown Preview Enhanced",
-  "publisher": "shd101wyy"
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onCommand:markdown-preview-enhanced.openPreviewToTheSide"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*.*": [
+      "eslint",
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "dependencies": {
+    "@shd101wyy/mume": "^0.4.12",
+    "@types/vfile": "^3.0.2"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.3.9",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^11.11.0",
+    "eslint": "^5.15.1",
+    "husky": "^3.0.9",
+    "lint-staged": "^9.4.2",
+    "mocha": "^6.1.4",
+    "prettier": "^1.18.2",
+    "prettier-plugin-packagejson": "^2.0.1",
+    "tslint": "^5.13.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.0.3",
+    "vscode": "^1.1.30"
+  },
+  "engines": {
+    "vscode": "^1.30.0"
+  }
 }
