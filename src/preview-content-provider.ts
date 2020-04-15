@@ -375,6 +375,9 @@ export class MarkdownPreviewEnhancedView {
           enableScripts: true, // TODO: This might be set by enableScriptExecution config. But for now we just enable it.
         },
       );
+      previewPanel.iconPath = vscode.Uri.file(
+        path.join(this.context.extensionPath, "media", "preview.svg"),
+      );
 
       // register previewPanel message events
       previewPanel.webview.onDidReceiveMessage(
