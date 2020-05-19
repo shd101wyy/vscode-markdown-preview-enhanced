@@ -250,7 +250,7 @@
         },
         "markdown-preview-enhanced.mermaidTheme": {
           "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
-          "default": "mermaid.css",
+          "default": "default",
           "type": "string",
           "enum": [
             "default",
