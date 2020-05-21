@@ -152,7 +152,7 @@
         },
         "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": {
           "description": "Automatically show preview of markdown being edited.",
-          "default": true,
+          "default": false,
           "type": "boolean"
         },
         "markdown-preview-enhanced.enableTypographer": {
