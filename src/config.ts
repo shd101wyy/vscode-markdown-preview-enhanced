@@ -7,6 +7,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     return new MarkdownPreviewEnhancedConfig();
   }
 
+  public readonly configPath: string;
   public readonly usePandocParser: boolean;
   public readonly breakOnSingleNewLine: boolean;
   public readonly enableTypographer: boolean;
@@ -57,6 +58,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
       "markdown-preview-enhanced",
     );
 
+    this.configPath = (config.get<string>("configPath") || "").trim();
     this.usePandocParser = config.get<boolean>("usePandocParser");
     this.breakOnSingleNewLine = config.get<boolean>("breakOnSingleNewLine");
     this.enableTypographer = config.get<boolean>("enableTypographer");
