@@ -1,5 +1,6 @@
 import * as mume from "@shd101wyy/mume";
 import { MarkdownEngine } from "@shd101wyy/mume";
+import { useExternalAddFileProtocolFunction } from "@shd101wyy/mume/out/src/utility";
 import { tmpdir } from "os";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -50,6 +51,22 @@ export class MarkdownPreviewEnhancedView {
       .then(() => {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this));
         MarkdownEngine.onModifySource(this.modifySource.bind(this));
+        useExternalAddFileProtocolFunction(
+          (filePath: string, preview: vscode.WebviewPanel) => {
+            // tslint:disable-next-line:no-console
+            if (preview) {
+              return preview.webview
+                .asWebviewUri(vscode.Uri.file(filePath))
+                .toString(true);
+            } else {
+              if (!filePath.startsWith("file://")) {
+                filePath = "file:///" + filePath;
+              }
+              filePath = filePath.replace(/^file\:\/+/, "file:///");
+              return filePath;
+            }
+          },
+        );
       });
   }
 
@@ -429,8 +446,8 @@ export class MarkdownPreviewEnhancedView {
           initialLine,
           vscode: true,
         },
-        vscodePreviewPanel: previewPanel,
         contentSecurityPolicy: "",
+        vscodePreviewPanel: previewPanel,
       })
       .then((html) => {
         previewPanel.webview.html = html;
