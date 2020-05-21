@@ -55,6 +55,26 @@
   version "0.5.5"
   resolved "https://registry.npm.taobao.org/@shd101wyy/mume/download/@shd101wyy/mume-0.5.5.tgz#3690f88ae7cac2da45c06d6161d8d33c7e74f766"
   integrity sha1-NpD4iufKwtpFwG1hYdjTPH5092Y=
+  dependencies:
+    babyparse "^0.4.6"
+    cheerio "^1.0.0-rc.3"
+    chrome-location "^1.2.1"
+    fs-extra "^8.0.1"
+    imagemagick-cli "^0.5.0"
+    js-yaml "^3.13.1"
+    less "^3.9.0"
+    lodash "^4.17.15"
+    mkdirp "^1.0.4"
+    node-fetch "^2.6.0"
+    puppeteer-core "1.15.0"
+    qiniu "^7.2.2"
+    request "^2.88.0"
+    slash "^2.0.0"
+    temp "^0.9.0"
+    twemoji "^12.1.5"
+    uslug "^1.0.4"
+    vega-loader "^4.1.0"
+    yamljs "^0.3.0"
 
 "@types/events@*":
   version "3.0.0"
