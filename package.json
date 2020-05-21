@@ -125,7 +125,7 @@
       "title": "Markdown Preview Enhanced",
       "properties": {
         "markdown-preview-enhanced.configPath": {
-          "description": "Default config directory. Leave it empty to use '~/.mume' as the config path",
+          "description": "Default config directory. Leave it empty to use '~/.mume' as the config path. Please reload vscode to take effect.",
           "default": "",
           "type": "string"
         },
@@ -527,7 +527,7 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.5.1",
+    "@shd101wyy/mume": "^0.5.2",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {

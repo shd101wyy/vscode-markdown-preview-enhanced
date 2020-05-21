@@ -345,7 +345,7 @@ export class MarkdownPreviewEnhancedView {
       const localResourceRoots = [
         vscode.Uri.file(this.context.extensionPath),
         vscode.Uri.file(mume.utility.extensionDirectoryPath),
-        vscode.Uri.file(mume.utility.extensionConfigDirectoryPath),
+        vscode.Uri.file(mume.getExtensionConfigPath()),
         vscode.Uri.file(tmpdir()),
         vscode.Uri.file(
           this.getProjectDirectoryPath(
