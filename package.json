@@ -27,7 +27,6 @@
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
     "fix:tslint": "tslint --project .",
-    "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "npm run compile && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "npm run compile",
     "watch": "tsc -watch -p ./"
@@ -125,6 +124,11 @@
       "type": "object",
       "title": "Markdown Preview Enhanced",
       "properties": {
+        "markdown-preview-enhanced.configPath": {
+          "description": "Default config directory. Leave it empty to use '~/.mume' as the config path",
+          "default": "",
+          "type": "string"
+        },
         "markdown-preview-enhanced.usePandocParser": {
           "description": "Enable this option will render markdown by pandoc instead of markdown-it.",
           "default": false,
@@ -523,13 +527,14 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.5.0",
+    "@shd101wyy/mume": "^0.5.1",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {
     "@types/jquery": "^3.3.9",
     "@types/mocha": "^5.2.5",
     "@types/node": "^11.11.0",
+    "@types/vscode": "^1.43.0",
     "eslint": "^5.15.1",
     "husky": "^3.0.9",
     "lint-staged": "^9.4.2",
@@ -538,8 +543,7 @@
     "prettier-plugin-packagejson": "^2.0.1",
     "tslint": "^5.13.1",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.0.3",
-    "vscode": "^1.1.30"
+    "typescript": "^3.0.3"
   },
   "engines": {
     "vscode": "^1.30.0"

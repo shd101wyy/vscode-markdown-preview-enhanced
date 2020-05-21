@@ -46,20 +46,10 @@ export class MarkdownPreviewEnhancedView {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
     mume
-      .init() // init markdown-preview-enhanced
+      .init(this.config.configPath) // init markdown-preview-enhanced
       .then(() => {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this));
         MarkdownEngine.onModifySource(this.modifySource.bind(this));
-
-        const extensionVersion = require(path.resolve(
-          this.context.extensionPath,
-          "./package.json",
-        ))["version"];
-        if (extensionVersion !== mume.configs.config["vscode_mpe_version"]) {
-          mume.utility.updateExtensionConfig({
-            vscode_mpe_version: extensionVersion,
-          });
-        }
       });
   }
 
@@ -274,7 +264,7 @@ export class MarkdownPreviewEnhancedView {
 
   private getProjectDirectoryPath(
     sourceUri: Uri,
-    workspaceFolders: vscode.WorkspaceFolder[] = [],
+    workspaceFolders: readonly vscode.WorkspaceFolder[] = [],
   ) {
     const possibleWorkspaceFolders = workspaceFolders.filter(
       (workspaceFolder) => {
@@ -439,7 +429,7 @@ export class MarkdownPreviewEnhancedView {
           initialLine,
           vscode: true,
         },
-        isForVSCode: true,
+        vscodePreviewPanel: previewPanel,
         contentSecurityPolicy: "",
       })
       .then((html) => {
@@ -514,13 +504,15 @@ export class MarkdownPreviewEnhancedView {
         command: "startParsingMarkdown",
       });
 
+      const preview = this.getPreview(sourceUri);
+
       engine
         .parseMD(text, {
           isForPreview: true,
           useRelativeFilePath: false,
           hideFrontMatter: false,
           triggeredBySave,
-          isForVSCodePreview: true,
+          vscodePreviewPanel: preview,
         })
         .then(({ markdown, html, tocHTML, JSAndCssFiles, yamlConfig }) => {
           // check JSAndCssFiles
