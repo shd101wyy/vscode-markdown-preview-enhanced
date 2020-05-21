@@ -148,10 +148,10 @@
     "@types/unist" "*"
     "@types/vfile-message" "*"
 
-"@types/vscode@^1.43.0":
-  version "1.45.1"
-  resolved "https://registry.npm.taobao.org/@types/vscode/download/@types/vscode-1.45.1.tgz#672fb8c2cc33cf14cd4d3bdaa19bb294fe2b2706"
-  integrity sha1-Zy+4wswzzxTNTTvaoZuylP4rJwY=
+"@types/vscode@1.30.0":
+  version "1.30.0"
+  resolved "https://registry.npm.taobao.org/@types/vscode/download/@types/vscode-1.30.0.tgz#3e17ab16530b91c2abec4f114c77d8606cb5e286"
+  integrity sha1-PherFlMLkcKr7E8RTHfYYGy14oY=
 
 acorn-jsx@^5.0.0:
   version "5.2.0"
