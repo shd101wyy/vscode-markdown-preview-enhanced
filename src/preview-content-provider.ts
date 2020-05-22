@@ -1,6 +1,7 @@
 import * as mume from "@shd101wyy/mume";
 import { MarkdownEngine } from "@shd101wyy/mume";
 import { useExternalAddFileProtocolFunction } from "@shd101wyy/mume/out/src/utility";
+import * as fs from "fs";
 import { tmpdir } from "os";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -67,6 +68,38 @@ export class MarkdownPreviewEnhancedView {
             }
           },
         );
+
+        const extensionVersion = require(path.resolve(
+          this.context.extensionPath,
+          "./package.json",
+        ))["version"];
+        if (extensionVersion !== mume.configs.config["vscode_mpe_version"]) {
+          fs.writeFileSync(
+            path.resolve(mume.getExtensionConfigPath(), "config.json"),
+            JSON.stringify(
+              Object.assign({}, mume.configs.config, {
+                vscode_mpe_version: extensionVersion,
+              }),
+            ),
+          );
+
+          const actions = ["Open GitHub Sponsors", "I already sponsored"];
+          vscode.window
+            .showInformationMessage(
+              "If you like using markdown-preview-enhanced, please consider sponsoring the developer to help make this project better 😊.",
+              ...actions,
+            )
+            .then((value) => {
+              // tslint:disable-next-line:no-console
+              console.log(value);
+              if (value === actions[0]) {
+                mume.utility.openFile("https://github.com/sponsors/shd101wyy");
+              }
+            });
+        }
+      })
+      .catch((error) => {
+        vscode.window.showErrorMessage(error.toString());
       });
   }
 
