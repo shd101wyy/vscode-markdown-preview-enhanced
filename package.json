@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "Markdown Preview Enhanced",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "description": "Markdown Preview Enhanced ported to vscode",
   "categories": [
     "Other"
