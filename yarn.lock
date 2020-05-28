@@ -51,10 +51,10 @@
   dependencies:
     any-observable "^0.3.0"
 
-"@shd101wyy/mume@^0.5.6":
-  version "0.5.6"
-  resolved "https://registry.npm.taobao.org/@shd101wyy/mume/download/@shd101wyy/mume-0.5.6.tgz?cache=0&sync_timestamp=1590152354362&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40shd101wyy%2Fmume%2Fdownload%2F%40shd101wyy%2Fmume-0.5.6.tgz#6faf2db6724b8706e279b953403242ec9bf9b1c3"
-  integrity sha1-b68ttnJLhwbieblTQDJC7Jv5scM=
+"@shd101wyy/mume@^0.5.7":
+  version "0.5.7"
+  resolved "https://registry.npm.taobao.org/@shd101wyy/mume/download/@shd101wyy/mume-0.5.7.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40shd101wyy%2Fmume%2Fdownload%2F%40shd101wyy%2Fmume-0.5.7.tgz#7ab638e780bcc761b68bf2176aa7709ddd139b28"
+  integrity sha1-erY454C8x2G2i/IXaqdwnd0Tmyg=
   dependencies:
     babyparse "^0.4.6"
     cheerio "^1.0.0-rc.3"
@@ -75,6 +75,13 @@
     uslug "^1.0.4"
     vega-loader "^4.1.0"
     yamljs "^0.3.0"
+
+"@types/cheerio@^0.22.18":
+  version "0.22.18"
+  resolved "https://registry.npm.taobao.org/@types/cheerio/download/@types/cheerio-0.22.18.tgz#19018dceae691509901e339d63edf1e935978fe6"
+  integrity sha1-GQGNzq5pFQmQHjOdY+3x6TWXj+Y=
+  dependencies:
+    "@types/node" "*"
 
 "@types/events@*":
   version "3.0.0"

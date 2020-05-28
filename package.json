@@ -527,10 +527,11 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.5.6",
+    "@shd101wyy/mume": "^0.5.7",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {
+    "@types/cheerio": "^0.22.18",
     "@types/jquery": "^3.3.9",
     "@types/mocha": "^5.2.5",
     "@types/node": "^11.11.0",
