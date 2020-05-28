@@ -84,10 +84,7 @@ export class MarkdownPreviewEnhancedView {
           );
 
           if (!config["already_sponsored"]) {
-            const actions = [
-              "Open GitHub Sponsors",
-              "I already sponsored (Won't show again)",
-            ];
+            const actions = ["Open GitHub Sponsors", "I already sponsored"];
             vscode.window
               .showInformationMessage(
                 "If you like using markdown-preview-enhanced, please consider sponsoring the developer to help make this project better 😊.",
