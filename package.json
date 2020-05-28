@@ -125,7 +125,7 @@
       "title": "Markdown Preview Enhanced",
       "properties": {
         "markdown-preview-enhanced.configPath": {
-          "description": "The configuration directory path. Leave it empty to use '~/.mume' as the config path. Please reload vscode to take effect. Replaces '${projectDir}' with the current project directory of the engine.",
+          "description": "The configuration directory path. Leave it empty to use '~/.mume' as the config path. Please reload vscode to take effect. Replaces '${projectDir}' or '${workspaceFolder}' with the current project directory of the engine.",
           "default": "",
           "type": "string"
         },
