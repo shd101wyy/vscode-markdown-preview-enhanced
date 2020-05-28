@@ -54,11 +54,12 @@ export class MarkdownPreviewEnhancedView {
         MarkdownEngine.onModifySource(this.modifySource.bind(this));
         useExternalAddFileProtocolFunction(
           (filePath: string, preview: vscode.WebviewPanel) => {
-            // tslint:disable-next-line:no-console
             if (preview) {
               return preview.webview
                 .asWebviewUri(vscode.Uri.file(filePath))
-                .toString(true);
+                .toString(true)
+                .replace(/%3F/gi, "?")
+                .replace(/%23/g, "#");
             } else {
               if (!filePath.startsWith("file://")) {
                 filePath = "file:///" + filePath;
@@ -74,28 +75,35 @@ export class MarkdownPreviewEnhancedView {
           "./package.json",
         ))["version"];
         if (extensionVersion !== mume.configs.config["vscode_mpe_version"]) {
+          const config = Object.assign({}, mume.configs.config, {
+            vscode_mpe_version: extensionVersion,
+          });
           fs.writeFileSync(
             path.resolve(mume.getExtensionConfigPath(), "config.json"),
-            JSON.stringify(
-              Object.assign({}, mume.configs.config, {
-                vscode_mpe_version: extensionVersion,
-              }),
-            ),
+            JSON.stringify(config),
           );
 
-          const actions = ["Open GitHub Sponsors", "I already sponsored"];
-          vscode.window
-            .showInformationMessage(
-              "If you like using markdown-preview-enhanced, please consider sponsoring the developer to help make this project better 😊.",
-              ...actions,
-            )
-            .then((value) => {
-              // tslint:disable-next-line:no-console
-              console.log(value);
-              if (value === actions[0]) {
-                mume.utility.openFile("https://github.com/sponsors/shd101wyy");
-              }
-            });
+          if (!config["already_sponsored"]) {
+            const actions = ["Open GitHub Sponsors", "I already sponsored"];
+            vscode.window
+              .showInformationMessage(
+                "If you like using markdown-preview-enhanced, please consider sponsoring the developer to help make this project better 😊.",
+                ...actions,
+              )
+              .then((value) => {
+                if (value === actions[0]) {
+                  mume.utility.openFile(
+                    "https://github.com/sponsors/shd101wyy",
+                  );
+                } else if (value === actions[1]) {
+                  config["already_sponsored"] = true;
+                  fs.writeFileSync(
+                    path.resolve(mume.getExtensionConfigPath(), "config.json"),
+                    JSON.stringify(config),
+                  );
+                }
+              });
+          }
         }
       })
       .catch((error) => {
