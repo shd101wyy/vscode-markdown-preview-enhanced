@@ -51,10 +51,10 @@
   dependencies:
     any-observable "^0.3.0"
 
-"@shd101wyy/mume@^0.5.7":
-  version "0.5.7"
-  resolved "https://registry.npm.taobao.org/@shd101wyy/mume/download/@shd101wyy/mume-0.5.7.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40shd101wyy%2Fmume%2Fdownload%2F%40shd101wyy%2Fmume-0.5.7.tgz#7ab638e780bcc761b68bf2176aa7709ddd139b28"
-  integrity sha1-erY454C8x2G2i/IXaqdwnd0Tmyg=
+"@shd101wyy/mume@^0.5.8":
+  version "0.5.8"
+  resolved "https://registry.npm.taobao.org/@shd101wyy/mume/download/@shd101wyy/mume-0.5.8.tgz?cache=0&sync_timestamp=1591587944597&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40shd101wyy%2Fmume%2Fdownload%2F%40shd101wyy%2Fmume-0.5.8.tgz#66b86ee5d9c0b67b3c9abf5e8f7d5992020b741b"
+  integrity sha1-Zrhu5dnAtns8mr9ej31ZkgILdBs=
   dependencies:
     babyparse "^0.4.6"
     cheerio "^1.0.0-rc.3"

@@ -83,7 +83,8 @@ export class MarkdownPreviewEnhancedView {
             JSON.stringify(config),
           );
 
-          if (!config["already_sponsored"]) {
+          if (!mume.configs.config["vscode_mpe_version"]) {
+            // Only show once
             const actions = ["Open GitHub Sponsors", "I already sponsored"];
             vscode.window
               .showInformationMessage(
