@@ -40,7 +40,7 @@
     ]
   },
   "dependencies": {
-    "mume-with-litvis": "^0.24.0",
+    "mume-with-litvis": "^0.25.0",
     "vfile-sort": "^2.2.0"
   },
   "devDependencies": {
