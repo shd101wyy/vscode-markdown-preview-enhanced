@@ -362,8 +362,10 @@ export function activate(context: vscode.ExtensionContext) {
     href = decodeURIComponent(href);
     href = href
       .replace(/^vscode\-resource:\/\//, "")
+      .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, "")
       .replace(/^file\/\/\//, "file:///");
     // tslint:disable-next-line:no-console
+    // console.log("Clicked: ", href);
     if (
       [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
         path.extname(href),
