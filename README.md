@@ -17,19 +17,19 @@ It can be downloaded and installed from <https://nodejs.org/>.
 
 ### Via VSCode’s GUI
 
-1. Click on the extensions icon in the left panel, search for _Markdown Preview Enhanced with litvis_ and click install.
+1.  Click on the extensions icon in the left panel, search for _Markdown Preview Enhanced with litvis_ and click install.
 
-1. If you are using _Markdown Preview Enhanced_ extension (from which this project was forked), temporary uninstall or disable it while you are trying out litvis.
+1.  If you are using _Markdown Preview Enhanced_ extension (from which this project was forked), temporary uninstall or disable it while you are trying out litvis.
 
 ### Via command line
 
-```bash
+```sh
 code --install-extension gicentre.markdown-preview-enhanced-with-litvis
 ```
 
 If you are using _Markdown Preview Enhanced_ extension (from which this project was forked), temporary uninstall or disable it:
 
-```bash
+```sh
 code --uninstall-extension shd101wyy.markdown-preview-enhanced
 code --disable-extension shd101wyy.markdown-preview-enhanced
 ```
@@ -53,20 +53,20 @@ Please follow these steps to enable full-featured formatting support for litvis 
 
 Please follow these steps to enable full-featured formatting support for litvis in VSCode:
 
-1. Install `esbenp.prettier-vscode` package via VSCode’s _Extensions_ panel or from a command line:
+1.  Install `esbenp.prettier-vscode` package via VSCode’s _Extensions_ panel or from a command line:
 
-   ```bash
-   code --install-extension esbenp.prettier-vscode
-   ```
+    ```sh
+    code --install-extension esbenp.prettier-vscode
+    ```
 
-1. Locally install Prettier and its [Elm plugin](https://github.com/gicentre/prettier-plugin-elm) via npm:
+1.  Locally install Prettier and its [Elm plugin](https://github.com/gicentre/prettier-plugin-elm) via npm:
 
-   ```
-   npm init --yes
-   npm install --global prettier prettier-plugin-elm
-   ```
+    ```sh
+    npm init --yes
+    npm install --global prettier prettier-plugin-elm
+    ```
 
-   > Having a globally installed Prettier would be more convenient, but it is not supported by the VSCode extension yet. See discussion in [prettier/prettier-vscode#958](https://github.com/prettier/prettier-vscode/issues/958).
+    > Having a globally installed Prettier would be more convenient, but it is not supported by the VSCode extension yet. See discussion in [prettier/prettier-vscode#958](https://github.com/prettier/prettier-vscode/issues/958).
 
 ## Keyboard shortcuts
 

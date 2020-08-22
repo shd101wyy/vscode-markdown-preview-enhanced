@@ -1,7 +1,11 @@
 {
   "name": "markdown-preview-enhanced-with-litvis",
+  "displayName": "Markdown Preview Enhanced with litvis",
   "version": "0.23.0",
   "description": "Fork of markdown-preview-enhanced with added http://livis.org",
+  "categories": [
+    "Other"
+  ],
   "keywords": [
     "markdown"
   ],
@@ -15,6 +19,7 @@
     "kachkaev",
     "gabyx"
   ],
+  "publisher": "gicentre",
   "main": "./out/src/extension",
   "scripts": {
     "check": "npm run check:eslint && npm run check:prettier && npm run check:tsc && npm run check:tslint",
@@ -31,49 +36,6 @@
     "vscode:prepublish": "npm run compile",
     "watch": "tsc -watch -p ./"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "**/*.*": [
-      "eslint",
-      "prettier --write",
-      "git add"
-    ]
-  },
-  "dependencies": {
-    "mume-with-litvis": "^0.26.0",
-    "vfile-sort": "^2.2.0"
-  },
-  "devDependencies": {
-    "@types/jquery": "^3.3.9",
-    "@types/mocha": "^5.2.5",
-    "@types/node": "^11.11.0",
-    "@types/vfile": "^3.0.2",
-    "eslint": "^5.15.1",
-    "husky": "^3.0.9",
-    "lint-staged": "^9.4.2",
-    "mocha": "^8.1.1",
-    "prettier": "^1.18.2",
-    "prettier-plugin-packagejson": "^2.0.1",
-    "tslint": "^5.13.1",
-    "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.0.3",
-    "vscode": "^1.1.30"
-  },
-  "engines": {
-    "vscode": "^1.30.0"
-  },
-  "activationEvents": [
-    "onLanguage:markdown",
-    "onCommand:markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
-    "onCommand:markdown-preview-enhanced-with-litvis.clearCache"
-  ],
-  "categories": [
-    "Other"
-  ],
   "contributes": {
     "commands": [
       {
@@ -167,51 +129,6 @@
         "title": "Markdown Preview Enhanced with litvis: Clear Cache"
       }
     ],
-    "keybindings": [
-      {
-        "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
-        "key": "ctrl+k v",
-        "mac": "cmd+k v",
-        "when": "editorLangId == markdown"
-      },
-      {
-        "command": "markdown-preview-enhanced-with-litvis.openPreview",
-        "key": "ctrl+shift+v",
-        "mac": "cmd+shift+v",
-        "when": "editorLangId == markdown"
-      },
-      {
-        "command": "markdown-preview-enhanced-with-litvis.runAllCodeChunks",
-        "key": "ctrl+shift+enter",
-        "when": "editorLangId == markdown"
-      },
-      {
-        "command": "markdown-preview-enhanced-with-litvis.runCodeChunk",
-        "key": "shift+enter",
-        "when": "editorLangId == markdown"
-      },
-      {
-        "command": "markdown-preview-enhanced-with-litvis.syncPreview",
-        "key": "ctrl+shift+s",
-        "when": "editorLangId == markdown"
-      }
-    ],
-    "menus": {
-      "editor/context": [
-        {
-          "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
-          "when": "editorLangId == markdown",
-          "group": "markdown-preview-enhanced"
-        }
-      ],
-      "editor/title": [
-        {
-          "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
-          "when": "editorLangId == markdown",
-          "group": "navigation"
-        }
-      ]
-    },
     "configuration": {
       "type": "object",
       "title": "Markdown Preview Enhanced with litvis",
@@ -248,7 +165,7 @@
         },
         "markdown-preview-enhanced-with-litvis.automaticallyShowPreviewOfMarkdownBeingEdited": {
           "description": "Automatically show preview of markdown being edited.",
-          "default": false,
+          "default": true,
           "type": "boolean"
         },
         "markdown-preview-enhanced-with-litvis.enableTypographer": {
@@ -555,8 +472,91 @@
           "type": "array"
         }
       }
+    },
+    "keybindings": [
+      {
+        "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
+        "key": "ctrl+k v",
+        "mac": "cmd+k v",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced-with-litvis.openPreview",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced-with-litvis.runAllCodeChunks",
+        "key": "ctrl+shift+enter",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced-with-litvis.runCodeChunk",
+        "key": "shift+enter",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced-with-litvis.syncPreview",
+        "key": "ctrl+shift+s",
+        "when": "editorLangId == markdown"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
+          "when": "editorLangId == markdown",
+          "group": "markdown-preview-enhanced-with-litvis"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
+          "when": "editorLangId == markdown",
+          "group": "navigation"
+        }
+      ]
     }
   },
-  "displayName": "Markdown Preview Enhanced with litvis",
-  "publisher": "gicentre"
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onCommand:markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
+    "onCommand:markdown-preview-enhanced-with-litvis.clearCache"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*.*": [
+      "eslint",
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "dependencies": {
+    "mume-with-litvis": "^0.26.0",
+    "vfile-sort": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.18",
+    "@types/jquery": "^3.3.9",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^11.11.0",
+    "@types/vscode": "1.40.0",
+    "eslint": "^5.15.1",
+    "husky": "^3.0.9",
+    "lint-staged": "^9.4.2",
+    "mocha": "^6.1.4",
+    "prettier": "^1.18.2",
+    "prettier-plugin-packagejson": "^2.0.1",
+    "tslint": "^5.13.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.0.3"
+  },
+  "engines": {
+    "vscode": "^1.40.0"
+  }
 }
