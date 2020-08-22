@@ -1,10 +1,11 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import { emptyDir } from "fs-extra";
-import { utility, getExtensionConfigPath } from "mume-with-litvis";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
+
+import { utility, getExtensionConfigPath } from "mume-with-litvis";
 
 import { pasteImageFile, uploadImageFile } from "./image-helper";
 import {

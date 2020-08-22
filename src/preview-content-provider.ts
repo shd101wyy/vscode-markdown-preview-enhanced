@@ -49,7 +49,7 @@ export class MarkdownPreviewEnhancedView {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
     mume
-      .init(this.config.configPath) // init markdown-preview-enhanced
+      .init(this.config.configPath) // init markdown-preview-enhanced-with-litvis
       .then(() => {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this));
         MarkdownEngine.onModifySource(this.modifySource.bind(this));
