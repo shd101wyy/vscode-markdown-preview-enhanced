@@ -7,6 +7,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     return new MarkdownPreviewEnhancedConfig();
   }
 
+  public readonly configPath: string;
   public readonly usePandocParser: boolean;
   public readonly breakOnSingleNewLine: boolean;
   public readonly enableTypographer: boolean;
@@ -44,6 +45,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly HTML5EmbedVideoAttributes: string;
   public readonly puppeteerWaitForTimeout: number;
   public readonly usePuppeteerCore: boolean;
+  public readonly puppeteerArgs: string[];
 
   // preview config
   public readonly scrollSync: boolean;
@@ -56,6 +58,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
       "markdown-preview-enhanced-with-litvis",
     );
 
+    this.configPath = (config.get<string>("configPath") || "").trim();
     this.usePandocParser = config.get<boolean>("usePandocParser");
     this.breakOnSingleNewLine = config.get<boolean>("breakOnSingleNewLine");
     this.enableTypographer = config.get<boolean>("enableTypographer");
@@ -126,6 +129,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
       "puppeteerWaitForTimeout",
     );
     this.usePuppeteerCore = config.get<boolean>("usePuppeteerCore");
+    this.puppeteerArgs = config.get<string[]>("puppeteerArgs");
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

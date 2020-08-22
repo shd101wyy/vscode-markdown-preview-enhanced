@@ -1,5 +1,7 @@
 import * as mume from "mume-with-litvis";
 import { MarkdownEngine } from "mume-with-litvis";
+import { useExternalAddFileProtocolFunction } from "mume-with-litvis/out/src/utility";
+import * as fs from "fs";
 import { tmpdir } from "os";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -47,21 +49,45 @@ export class MarkdownPreviewEnhancedView {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
     mume
-      .init() // init markdown-preview-enhanced-with-litvis
+      .init(this.config.configPath) // init markdown-preview-enhanced-with-litvis
       .then(() => {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this));
         MarkdownEngine.onModifySource(this.modifySource.bind(this));
         mume.MarkdownEngine.onUpdateLintingReport(updateLintingReport);
+        useExternalAddFileProtocolFunction(
+          (filePath: string, preview: vscode.WebviewPanel) => {
+            if (preview) {
+              return preview.webview
+                .asWebviewUri(vscode.Uri.file(filePath))
+                .toString(true)
+                .replace(/%3F/gi, "?")
+                .replace(/%23/g, "#");
+            } else {
+              if (!filePath.startsWith("file://")) {
+                filePath = "file:///" + filePath;
+              }
+              filePath = filePath.replace(/^file\:\/+/, "file:///");
+              return filePath;
+            }
+          },
+        );
 
         const extensionVersion = require(path.resolve(
           this.context.extensionPath,
           "./package.json",
         ))["version"];
         if (extensionVersion !== mume.configs.config["vscode_mpe_version"]) {
-          mume.utility.updateExtensionConfig({
+          const config = Object.assign({}, mume.configs.config, {
             vscode_mpe_version: extensionVersion,
           });
+          fs.writeFileSync(
+            path.resolve(mume.getExtensionConfigPath(), "config.json"),
+            JSON.stringify(config),
+          );
         }
+      })
+      .catch((error) => {
+        vscode.window.showErrorMessage(error.toString());
       });
   }
 
@@ -276,7 +302,7 @@ export class MarkdownPreviewEnhancedView {
 
   private getProjectDirectoryPath(
     sourceUri: Uri,
-    workspaceFolders: vscode.WorkspaceFolder[] = [],
+    workspaceFolders: readonly vscode.WorkspaceFolder[] = [],
   ) {
     const possibleWorkspaceFolders = workspaceFolders.filter(
       (workspaceFolder) => {
@@ -357,7 +383,7 @@ export class MarkdownPreviewEnhancedView {
       const localResourceRoots = [
         vscode.Uri.file(this.context.extensionPath),
         vscode.Uri.file(mume.utility.extensionDirectoryPath),
-        vscode.Uri.file(mume.utility.extensionConfigDirectoryPath),
+        vscode.Uri.file(mume.getExtensionConfigPath()),
         vscode.Uri.file(tmpdir()),
         vscode.Uri.file(
           this.getProjectDirectoryPath(
@@ -376,6 +402,9 @@ export class MarkdownPreviewEnhancedView {
           localResourceRoots,
           enableScripts: true, // TODO: This might be set by enableScriptExecution config. But for now we just enable it.
         },
+      );
+      previewPanel.iconPath = vscode.Uri.file(
+        path.join(this.context.extensionPath, "media", "preview.svg"),
       );
 
       // register previewPanel message events
@@ -438,8 +467,8 @@ export class MarkdownPreviewEnhancedView {
           initialLine,
           vscode: true,
         },
-        isForVSCode: true,
         contentSecurityPolicy: "",
+        vscodePreviewPanel: previewPanel,
       })
       .then((html) => {
         previewPanel.webview.html = html;
@@ -513,13 +542,15 @@ export class MarkdownPreviewEnhancedView {
         command: "startParsingMarkdown",
       });
 
+      const preview = this.getPreview(sourceUri);
+
       engine
         .parseMD(text, {
           isForPreview: true,
           useRelativeFilePath: false,
           hideFrontMatter: false,
           triggeredBySave,
-          isForVSCodePreview: true,
+          vscodePreviewPanel: preview,
         })
         .then(({ markdown, html, tocHTML, JSAndCssFiles, yamlConfig }) => {
           // check JSAndCssFiles

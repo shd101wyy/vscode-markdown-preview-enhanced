@@ -1,10 +1,11 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import { emptyDir } from "fs-extra";
-import { utility } from "mume-with-litvis";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
+
+import { utility, getExtensionConfigPath } from "mume-with-litvis";
 
 import { pasteImageFile, uploadImageFile } from "./image-helper";
 import {
@@ -106,7 +107,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function customizeCSS() {
     const globalStyleLessFile = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./style.less"),
+      path.resolve(getExtensionConfigPath(), "./style.less"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
@@ -116,7 +117,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function openMermaidConfig() {
     const mermaidConfigFilePath = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./mermaid_config.js"),
+      path.resolve(getExtensionConfigPath(), "./mermaid_config.js"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
@@ -126,7 +127,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function openMathJaxConfig() {
     const mathjaxConfigFilePath = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./mathjax_config.js"),
+      path.resolve(getExtensionConfigPath(), "./mathjax_config.js"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
@@ -136,7 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function openKaTeXConfig() {
     const katexConfigFilePath = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./katex_config.js"),
+      path.resolve(getExtensionConfigPath(), "./katex_config.js"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
@@ -146,7 +147,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function extendParser() {
     const parserConfigPath = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./parser.js"),
+      path.resolve(getExtensionConfigPath(), "./parser.js"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
@@ -156,7 +157,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function showUploadedImages() {
     const imageHistoryFilePath = utility.addFileProtocol(
-      path.resolve(utility.extensionConfigDirectoryPath, "./image_history.md"),
+      path.resolve(getExtensionConfigPath(), "./image_history.md"),
     );
     vscode.commands.executeCommand(
       "vscode.open",
@@ -365,14 +366,19 @@ export function activate(context: vscode.ExtensionContext) {
 
   function clickTagA(uri, href) {
     href = decodeURIComponent(href);
-    href = href.replace(/^vscode\-resource:\/\/\//, "file:///");
+    href = href
+      .replace(/^vscode\-resource:\/\//, "")
+      .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, "")
+      .replace(/^file\/\/\//, "file:///");
+    // tslint:disable-next-line:no-console
+    // console.log("Clicked: ", href);
     if (
       [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
         path.extname(href),
       ) >= 0
     ) {
       utility.openFile(href);
-    } else if (href.match(/^file\:\/\/\//)) {
+    } else if (href.match(/^file:\/\/\//)) {
       // openFilePath = href.slice(8) # remove protocol
       let openFilePath = utility.addFileProtocol(
         href.replace(/(\s*)[\#\?](.+)$/, ""),
@@ -518,15 +524,14 @@ export function activate(context: vscode.ExtensionContext) {
                 viewColumn: contentProvider.getPreview(sourceUri).viewColumn,
                 preserveFocus: true,
               });
-            } else if (
-              !isUsingSinglePreview &&
-              automaticallyShowPreviewOfMarkdownBeingEdited
-            ) {
+            } else if (!isUsingSinglePreview) {
               const previewPanel = contentProvider.getPreview(sourceUri);
               if (previewPanel) {
                 previewPanel.reveal(vscode.ViewColumn.Two, true);
               }
             }
+          } else if (automaticallyShowPreviewOfMarkdownBeingEdited) {
+            openPreviewToTheSide(sourceUri);
           }
         }
       }
