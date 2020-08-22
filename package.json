@@ -10,6 +10,11 @@
   },
   "repository": "https://github.com/gicentre/vscode-markdown-preview-enhanced-with-litvis.git",
   "license": "BSD-3, NCSA",
+  "contributors": [
+    "shd101wyy",
+    "kachkaev",
+    "gabyx"
+  ],
   "main": "./out/src/extension",
   "scripts": {
     "check": "npm run check:eslint && npm run check:prettier && npm run check:tsc && npm run check:tslint",
@@ -22,7 +27,6 @@
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
     "fix:tslint": "tslint --fix --project .",
-    "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "npm run compile && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "npm run compile",
     "watch": "tsc -watch -p ./"
@@ -197,7 +201,7 @@
         {
           "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
           "when": "editorLangId == markdown",
-          "group": "markdown-preview-enhanced-with-litvis"
+          "group": "markdown-preview-enhanced"
         }
       ],
       "editor/title": [
@@ -212,6 +216,11 @@
       "type": "object",
       "title": "Markdown Preview Enhanced with litvis",
       "properties": {
+        "markdown-preview-enhanced-with-litvis.configPath": {
+          "description": "The configuration directory path. Leave it empty to use '~/.mume' as the config path. Please reload vscode to take effect.",
+          "default": "",
+          "type": "string"
+        },
         "markdown-preview-enhanced-with-litvis.usePandocParser": {
           "description": "Enable this option will render markdown by pandoc instead of markdown-it.",
           "default": false,
@@ -239,7 +248,7 @@
         },
         "markdown-preview-enhanced-with-litvis.automaticallyShowPreviewOfMarkdownBeingEdited": {
           "description": "Automatically show preview of markdown being edited.",
-          "default": true,
+          "default": false,
           "type": "boolean"
         },
         "markdown-preview-enhanced-with-litvis.enableTypographer": {
@@ -337,7 +346,7 @@
         },
         "markdown-preview-enhanced-with-litvis.mermaidTheme": {
           "description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
-          "default": "mermaid.css",
+          "default": "default",
           "type": "string",
           "enum": [
             "default",
@@ -539,6 +548,11 @@
           "description": "If set to true, then locally installed puppeteer-core will be required. Otherwise, the puppeteer globally installed by `npm install -g puppeteer` will be required.",
           "default": true,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced-with-litvis.puppeteerArgs": {
+          "description": "Args passed to puppeteer.launch({args: $puppeteerArgs})",
+          "default": [],
+          "type": "array"
         }
       }
     }

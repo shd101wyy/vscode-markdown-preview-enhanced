@@ -11,15 +11,15 @@ This research was in part supported by the EU under the EC Grant Agreement No. F
 ## Prerequisites
 
 Please ensure that you have a reasonably recent version of Node.js installed on your machine before proceeding to the setup.
-It can be downloaded and installed from https://nodejs.org/.
+It can be downloaded and installed from <https://nodejs.org/>.
 
 ## Setup for VSCode users
 
 ### Via VSCode’s GUI
 
-1.  Click on the extensions icon in the left panel, search for _Markdown Preview Enhanced with litvis_ and click install.
+1. Click on the extensions icon in the left panel, search for _Markdown Preview Enhanced with litvis_ and click install.
 
-1.  If you are using _Markdown Preview Enhanced_ extension (from which this project was forked), temporary uninstall or disable it while you are trying out litvis.
+1. If you are using _Markdown Preview Enhanced_ extension (from which this project was forked), temporary uninstall or disable it while you are trying out litvis.
 
 ### Via command line
 
@@ -41,7 +41,7 @@ While you don't have to use elm-vega in a litvis document, it does enable quick 
 
 Creating your own litvis narrative is as easy as writing a markdown file.
 You can start with exploring the examples available at
-https://github.com/gicentre/litvis/tree/master/examples.
+<https://github.com/gicentre/litvis/tree/master/examples>.
 
 ## Formatting litvis narratives
 
@@ -53,34 +53,34 @@ Please follow these steps to enable full-featured formatting support for litvis 
 
 Please follow these steps to enable full-featured formatting support for litvis in VSCode:
 
-1.  Install `esbenp.prettier-vscode` package via VSCode’s _Extensions_ panel or from a command line:
+1. Install `esbenp.prettier-vscode` package via VSCode’s _Extensions_ panel or from a command line:
 
-    ```bash
-    code --install-extension esbenp.prettier-vscode
-    ```
+   ```bash
+   code --install-extension esbenp.prettier-vscode
+   ```
 
-1.  Locally install Prettier and its [Elm plugin](https://github.com/gicentre/prettier-plugin-elm) via npm:
+1. Locally install Prettier and its [Elm plugin](https://github.com/gicentre/prettier-plugin-elm) via npm:
 
-    ```
-    npm init --yes
-    npm install --global prettier prettier-plugin-elm
-    ```
+   ```
+   npm init --yes
+   npm install --global prettier prettier-plugin-elm
+   ```
 
-    > Having a globally installed Prettier would be more convenient, but it is not supported by the VSCode extension yet. See discussion in [prettier/prettier-vscode#958](https://github.com/prettier/prettier-vscode/issues/958).
+   > Having a globally installed Prettier would be more convenient, but it is not supported by the VSCode extension yet. See discussion in [prettier/prettier-vscode#958](https://github.com/prettier/prettier-vscode/issues/958).
 
 ## Keyboard shortcuts
 
-| Shortcuts                                   | Functionality              |
-| ------------------------------------------- | -------------------------- |
-| <kbd>cmd-k v</kbd>                          | Open preview to the Side   |
-| <kbd>ctrl-shift-v</kbd>                     | Open preview               |
-| <kbd>ctrl-shift-s</kbd>                     | Sync preview / Sync source |
-| <kbd>shift-enter</kbd>                      | Run Code Chunk             |
-| <kbd>ctrl-shift-enter</kbd>                 | Run all Code Chunks        |
-| <kbd>cmd-=</kbd> or <kbd>cmd-shift-=</kbd>  | Preview zoom in            |
-| <kbd>cmd--</kbd> or <kbd>cmd-shift-\_</kbd> | Preview zoom out           |
-| <kbd>cmd-0</kbd>                            | Preview reset zoom         |
-| <kbd>esc</kbd>                              | Toggle sidebar TOC         |
+| Shortcuts                                         | Functionality              |
+| ------------------------------------------------- | -------------------------- |
+| <kbd>cmd-k v</kbd> or <kbd>ctrl-k v</kbd>         | Open preview to the Side   |
+| <kbd>cmd-shift-v</kbd> or <kbd>ctrl-shift-v</kbd> | Open preview               |
+| <kbd>ctrl-shift-s</kbd>                           | Sync preview / Sync source |
+| <kbd>shift-enter</kbd>                            | Run Code Chunk             |
+| <kbd>ctrl-shift-enter</kbd>                       | Run all Code Chunks        |
+| <kbd>cmd-=</kbd> or <kbd>cmd-shift-=</kbd>        | Preview zoom in            |
+| <kbd>cmd--</kbd> or <kbd>cmd-shift-\_</kbd>       | Preview zoom out           |
+| <kbd>cmd-0</kbd>                                  | Preview reset zoom         |
+| <kbd>esc</kbd>                                    | Toggle sidebar TOC         |
 
 ## Getting linting feedback for litvis narratives
 
