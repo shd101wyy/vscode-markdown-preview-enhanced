@@ -1,3 +1,8 @@
+## 0.25.0
+
+- Upgrade vega to 5.15.0 and vega-lite to 4.15.0
+- Bump dependencies
+
 ## 0.24.0
 
 - Sync fork with the upstream project
