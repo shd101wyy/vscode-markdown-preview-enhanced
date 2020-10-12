@@ -1,8 +1,8 @@
 {
   "name": "markdown-preview-enhanced",
-  "displayName": "Markdown Preview Enhanced",
+  "displayName": "%displayName%",
   "version": "0.5.13",
-  "description": "Markdown Preview Enhanced ported to vscode",
+  "description": "%description%",
   "categories": [
     "Other"
   ],
@@ -40,7 +40,7 @@
     "commands": [
       {
         "command": "markdown-preview-enhanced.openPreviewToTheSide",
-        "title": "Markdown Preview Enhanced: Open Preview to the Side",
+        "title": "%markdown-preview-enhanced.openPreviewToTheSide.title%",
         "category": "Markdown",
         "icon": {
           "light": "./media/preview-right-light.svg",
@@ -49,7 +49,7 @@
       },
       {
         "command": "markdown-preview-enhanced.openPreview",
-        "title": "Markdown Preview Enhanced: Open Preview",
+        "title": "%markdown-preview-enhanced.openPreview.title%",
         "category": "Markdown",
         "icon": {
           "light": "./media/preview-right-light.svg",
@@ -58,71 +58,71 @@
       },
       {
         "command": "markdown-preview-enhanced.toggleScrollSync",
-        "title": "Markdown Preview Enhanced: Toggle Scroll Sync"
+        "title": "%markdown-preview-enhanced.toggleScrollSync.title%"
       },
       {
         "command": "markdown-preview-enhanced.toggleLiveUpdate",
-        "title": "Markdown Preview Enhanced: Toggle Live Update"
+        "title": "%markdown-preview-enhanced.toggleLiveUpdate.title%"
       },
       {
         "command": "markdown-preview-enhanced.toggleBreakOnSingleNewLine",
-        "title": "Markdown Preview Enhanced: Toggle Break On Single New Line"
+        "title": "%markdown-preview-enhanced.toggleBreakOnSingleNewLine.title%"
       },
       {
         "command": "markdown-preview-enhanced.openImageHelper",
-        "title": "Markdown Preview Enhanced: Image Helper"
+        "title": "%markdown-preview-enhanced.openImageHelper.title%"
       },
       {
         "command": "markdown-preview-enhanced.runAllCodeChunks",
-        "title": "Markdown Preview Enhanced: Run All Code Chunks"
+        "title": "%markdown-preview-enhanced.runAllCodeChunks.title%"
       },
       {
         "command": "markdown-preview-enhanced.runCodeChunk",
-        "title": "Markdown Preview Enhanced: Run Code Chunk"
+        "title": "%markdown-preview-enhanced.runCodeChunk.title%"
       },
       {
         "command": "markdown-preview-enhanced.syncPreview",
-        "title": "Markdown Preview Enhanced: Sync Preview"
+        "title": "%markdown-preview-enhanced.syncPreview.title%"
       },
       {
         "command": "markdown-preview-enhanced.customizeCss",
-        "title": "Markdown Preview Enhanced: Customize CSS"
+        "title": "%markdown-preview-enhanced.customizeCss.title%"
       },
       {
         "command": "markdown-preview-enhanced.insertNewSlide",
-        "title": "Markdown Preview Enhanced: Insert New Slide"
+        "title": "%markdown-preview-enhanced.insertNewSlide.title%"
       },
       {
         "command": "markdown-preview-enhanced.insertTable",
-        "title": "Markdown Preview Enhanced: Insert Table"
+        "title": "%markdown-preview-enhanced.insertTable.title%"
       },
       {
         "command": "markdown-preview-enhanced.insertPagebreak",
-        "title": "Markdown Preview Enhanced: Insert Page Break"
+        "title": "%markdown-preview-enhanced.insertPagebreak.title%"
       },
       {
         "command": "markdown-preview-enhanced.createTOC",
-        "title": "Markdown Preview Enhanced: Create TOC"
+        "title": "%markdown-preview-enhanced.createTOC.title%"
       },
       {
         "command": "markdown-preview-enhanced.openMermaidConfig",
-        "title": "Markdown Preview Enhanced: Open Mermaid Config"
+        "title": "%markdown-preview-enhanced.openMermaidConfig.title%"
       },
       {
         "command": "markdown-preview-enhanced.openMathJaxConfig",
-        "title": "Markdown Preview Enhanced: Open MathJax Config"
+        "title": "%markdown-preview-enhanced.openMathJaxConfig.title%"
       },
       {
         "command": "markdown-preview-enhanced.openKaTeXConfig",
-        "title": "Markdown Preview Enhanced: Open KaTeX Config"
+        "title": "%markdown-preview-enhanced.openKaTeXConfig.title%"
       },
       {
         "command": "markdown-preview-enhanced.extendParser",
-        "title": "Markdown Preview Enhanced: Extend Parser"
+        "title": "%markdown-preview-enhanced.extendParser.title%"
       },
       {
         "command": "markdown-preview-enhanced.showUploadedImages",
-        "title": "Markdown Preview Enhanced: Show Uploaded Images"
+        "title": "%markdown-preview-enhanced.showUploadedImages.title%"
       }
     ],
     "configuration": {
