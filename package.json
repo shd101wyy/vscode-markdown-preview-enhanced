@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced-with-litvis",
   "displayName": "Markdown Preview Enhanced with litvis",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "description": "Fork of markdown-preview-enhanced with added https://www.gicentre.net/litvis",
   "categories": [
     "Other"
