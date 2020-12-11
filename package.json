@@ -227,6 +227,11 @@
           "default": true,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.useGitHubStylePipedLink": {
+          "description": "If checked, we use GitHub style piped wiki links, i.e. [[linkText|wikiLink]]. Otherwise, we use [[wikiLink|linkText]] as the original Wikipedia style.",
+          "default": true,
+          "type": "boolean",
+        },
         "markdown-preview-enhanced.wikiLinkFileExtension": {
           "description": "By default, the extension for wikilink is `.md`. For example: [[test]] will direct to file path `test.md`.",
           "default": ".md",
