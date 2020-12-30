@@ -51,10 +51,10 @@
   dependencies:
     any-observable "^0.3.0"
 
-"@shd101wyy/mume@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.npmjs.org/@shd101wyy/mume/-/mume-0.6.1.tgz#07e066fc1d142cc282f53f15cf437d76349bf140"
-  integrity sha512-XQqb4o1IigFe5/7h8P7VUJnTCuha/mKp4lDcheyyhyWeRGOJWHbpPXyvWhSpicJaK4jN1dNN7eBiYQ/96+Uy3w==
+"@shd101wyy/mume@^0.6.2":
+  version "0.6.2"
+  resolved "https://registry.npmjs.org/@shd101wyy/mume/-/mume-0.6.2.tgz#87ab9d5579f1be3381e894a4860055be4bacc361"
+  integrity sha512-C1dGQjapQIgLZ5zOq8rWW5gJ3giFE3Laf4TxYkpPex2VKiNSedCZS44FdBxjn14ks36ap2IU8SV4FaQ7imjVMA==
   dependencies:
     babyparse "^0.4.6"
     cheerio "^1.0.0-rc.3"
