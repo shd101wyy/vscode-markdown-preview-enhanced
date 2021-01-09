@@ -546,7 +546,7 @@
     "vfile-sort": "^2.2.0"
   },
   "devDependencies": {
-    "@types/cheerio": "^0.22.18",
+    "@types/cheerio": "0.22.21",
     "@types/jquery": "^3.3.9",
     "@types/mocha": "^5.2.5",
     "@types/node": "^11.11.0",

@@ -1,3 +1,7 @@
+## 0.27.1
+
+- Fix minor issue with TypeScript typings
+
 ## 0.27.0
 
 - Sync fork with the upstream project
