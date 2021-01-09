@@ -1,8 +1,8 @@
 {
   "name": "markdown-preview-enhanced-with-litvis",
-  "displayName": "Markdown Preview Enhanced with litvis",
+  "displayName": "%displayName%",
   "version": "0.26.0",
-  "description": "Fork of markdown-preview-enhanced with added https://www.gicentre.net/litvis",
+  "description": "%description%",
   "categories": [
     "Other"
   ],
@@ -40,7 +40,7 @@
     "commands": [
       {
         "command": "markdown-preview-enhanced-with-litvis.openPreviewToTheSide",
-        "title": "Markdown Preview Enhanced with litvis: Open Preview to the Side",
+        "title": "%markdown-preview-enhanced-with-litvis.openPreviewToTheSide.title%",
         "category": "Markdown",
         "icon": {
           "light": "./media/preview-right-light.svg",
@@ -49,7 +49,7 @@
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.openPreview",
-        "title": "Markdown Preview Enhanced with litvis: Open Preview",
+        "title": "%markdown-preview-enhanced-with-litvis.openPreview.title%",
         "category": "Markdown",
         "icon": {
           "light": "./media/preview-right-light.svg",
@@ -58,75 +58,75 @@
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.toggleScrollSync",
-        "title": "Markdown Preview Enhanced with litvis: Toggle Scroll Sync"
+        "title": "%markdown-preview-enhanced-with-litvis.toggleScrollSync.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.toggleLiveUpdate",
-        "title": "Markdown Preview Enhanced with litvis: Toggle Live Update"
+        "title": "%markdown-preview-enhanced-with-litvis.toggleLiveUpdate.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.toggleBreakOnSingleNewLine",
-        "title": "Markdown Preview Enhanced with litvis: Toggle Break On Single New Line"
+        "title": "%markdown-preview-enhanced-with-litvis.toggleBreakOnSingleNewLine.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.openImageHelper",
-        "title": "Markdown Preview Enhanced with litvis: Image Helper"
+        "title": "%markdown-preview-enhanced-with-litvis.openImageHelper.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.runAllCodeChunks",
-        "title": "Markdown Preview Enhanced with litvis: Run All Code Chunks"
+        "title": "%markdown-preview-enhanced-with-litvis.runAllCodeChunks.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.runCodeChunk",
-        "title": "Markdown Preview Enhanced with litvis: Run Code Chunk"
+        "title": "%markdown-preview-enhanced-with-litvis.runCodeChunk.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.syncPreview",
-        "title": "Markdown Preview Enhanced with litvis: Sync Preview"
+        "title": "%markdown-preview-enhanced-with-litvis.syncPreview.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.customizeCss",
-        "title": "Markdown Preview Enhanced with litvis: Customize CSS"
+        "title": "%markdown-preview-enhanced-with-litvis.customizeCss.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.insertNewSlide",
-        "title": "Markdown Preview Enhanced with litvis: Insert New Slide"
+        "title": "%markdown-preview-enhanced-with-litvis.insertNewSlide.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.insertTable",
-        "title": "Markdown Preview Enhanced with litvis: Insert Table"
+        "title": "%markdown-preview-enhanced-with-litvis.insertTable.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.insertPagebreak",
-        "title": "Markdown Preview Enhanced with litvis: Insert Page Break"
+        "title": "%markdown-preview-enhanced-with-litvis.insertPagebreak.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.createTOC",
-        "title": "Markdown Preview Enhanced with litvis: Create TOC"
+        "title": "%markdown-preview-enhanced-with-litvis.createTOC.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.openMermaidConfig",
-        "title": "Markdown Preview Enhanced with litvis: Open Mermaid Config"
+        "title": "%markdown-preview-enhanced-with-litvis.openMermaidConfig.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.openMathJaxConfig",
-        "title": "Markdown Preview Enhanced with litvis: Open MathJax Config"
+        "title": "%markdown-preview-enhanced-with-litvis.openMathJaxConfig.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.openKaTeXConfig",
-        "title": "Markdown Preview Enhanced with litvis: Open KaTeX Config"
+        "title": "%markdown-preview-enhanced-with-litvis.openKaTeXConfig.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.extendParser",
-        "title": "Markdown Preview Enhanced with litvis: Extend Parser"
+        "title": "%markdown-preview-enhanced-with-litvis.extendParser.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.showUploadedImages",
-        "title": "Markdown Preview Enhanced with litvis: Show Uploaded Images"
+        "title": "%markdown-preview-enhanced-with-litvis.showUploadedImages.title%"
       },
       {
         "command": "markdown-preview-enhanced-with-litvis.clearCache",
-        "title": "Markdown Preview Enhanced with litvis: Clear Cache"
+        "title": "%markdown-preview-enhanced-with-litvis.clearCache.title%"
       }
     ],
     "configuration": {
@@ -228,6 +228,11 @@
         },
         "markdown-preview-enhanced-with-litvis.enableLinkify": {
           "description": "Enable or disable conversion of URL-like text to links in the markdown preview.",
+          "default": true,
+          "type": "boolean"
+        },
+        "markdown-preview-enhanced-with-litvis.useGitHubStylePipedLink": {
+          "description": "If checked, we use GitHub style piped wiki links, i.e. [[linkText|wikiLink]]. Otherwise, we use [[wikiLink|linkText]] as the original Wikipedia style.",
           "default": true,
           "type": "boolean"
         },

@@ -5,7 +5,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 
-import { utility, getExtensionConfigPath } from "mume-with-litvis";
+import { getExtensionConfigPath, utility } from "mume-with-litvis";
 
 import { pasteImageFile, uploadImageFile } from "./image-helper";
 import {

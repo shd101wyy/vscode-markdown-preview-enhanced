@@ -1,7 +1,7 @@
+import * as fs from "fs";
 import * as mume from "mume-with-litvis";
 import { MarkdownEngine } from "mume-with-litvis";
 import { useExternalAddFileProtocolFunction } from "mume-with-litvis/out/src/utility";
-import * as fs from "fs";
 import { tmpdir } from "os";
 import * as path from "path";
 import * as vscode from "vscode";
