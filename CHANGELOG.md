@@ -1,3 +1,7 @@
+## 0.27.2
+
+- Fix issue with package sub-dependencies
+
 ## 0.27.1
 
 - Fix minor issue with TypeScript typings
