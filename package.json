@@ -537,7 +537,7 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.6.2",
+    "@shd101wyy/mume": "^0.6.3",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {
