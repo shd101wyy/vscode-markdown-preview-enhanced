@@ -953,11 +953,6 @@ domelementtype@1, domelementtype@^1.3.0, domelementtype@^1.3.1:
   resolved "https://registry.yarnpkg.com/domelementtype/-/domelementtype-1.3.1.tgz#d048c44b37b0d10a7f2a3d5fee3f4333d790481f"
   integrity sha512-BSKB+TSpMpFI/HOxCNr1O8aMOTZ8hT3pM3GQ0w/mWRmkhEDSFJkkyzz4XQsBV44BChwGkrDfMyjVD0eA2aFV3w==
 
-domelementtype@^2.0.1:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/domelementtype/-/domelementtype-2.1.0.tgz#a851c080a6d1c3d94344aed151d99f669edf585e"
-  integrity sha512-LsTgx/L5VpD+Q8lmsXSHW2WpA+eBlZ9HPf3erD1IoPF00/3JKHZ3BknUVA2QGDNu69ZNmyFmCWBSO45XjYKC5w==
-
 domhandler@^2.3.0:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/domhandler/-/domhandler-2.4.2.tgz#8805097e933d65e85546f726d60f5eb88b44f803"
@@ -1026,11 +1021,6 @@ entities@^1.1.1, entities@~1.1.1:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/entities/-/entities-1.1.2.tgz#bdfa735299664dfafd34529ed4f8522a275fea56"
   integrity sha512-f2LZMYl1Fzu7YSBKg+RoROelpOaNrcGmE9AZubeDfrCEia483oW4MI4VyFd5VNHIgQ/7qm1I0wUHK1eJnn2y2w==
-
-entities@^2.0.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/entities/-/entities-2.1.0.tgz#992d3129cf7df6870b96c57858c249a120f8b8b5"
-  integrity sha512-hCx1oky9PFrJ611mf0ifBLBRW8lUUVRlFolb5gWRfIELabBlbp9xZvrqZLZAs+NxFnbfQoeGd8wDkygjg7U85w==
 
 errno@^0.1.1:
   version "0.1.8"
@@ -1782,10 +1772,10 @@ imagemagick-cli@^0.5.0:
   dependencies:
     debug "^4.1.1"
 
-immer@^7.0.8:
-  version "7.0.15"
-  resolved "https://registry.yarnpkg.com/immer/-/immer-7.0.15.tgz#dc3bc6db87401659d2e737c67a21b227c484a4ad"
-  integrity sha512-yM7jo9+hvYgvdCQdqvhCNRRio0SCXc8xDPzA25SvKWa7b1WVPjLwQs1VYU5JPXjcJPTqAa5NP5dqpORGYBQ2AA==
+immer@^8.0.1:
+  version "8.0.1"
+  resolved "https://registry.yarnpkg.com/immer/-/immer-8.0.1.tgz#9c73db683e2b3975c424fb0572af5889877ae656"
+  integrity sha512-aqXhGP7//Gui2+UrEtvxZxSquQVXTpZ7KDxfCcKAF3Vysvw0CViVaW9RZ1j1xlIYqaaaipBoqdqeibkc18PNvA==
 
 import-fresh@^3.0.0, import-fresh@^3.2.1:
   version "3.3.0"
@@ -2187,17 +2177,17 @@ literate-elm@^0.8.1:
     object-hash "^2.0.3"
     sleep-promise "^8.0.1"
 
-litvis-integration-mume@0.9.3:
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/litvis-integration-mume/-/litvis-integration-mume-0.9.3.tgz#e919009a62d9e68a26e6dd321410ef65ebab9073"
-  integrity sha512-+37+txIqobq6isKbe6RHPxrRehmmXc2F+9yfUOygML2s36zHzmtGXd7sjYbJInfsSco7vniCN2KytTAD/Ukcmg==
+litvis-integration-mume@0.9.4:
+  version "0.9.4"
+  resolved "https://registry.yarnpkg.com/litvis-integration-mume/-/litvis-integration-mume-0.9.4.tgz#b96c3f485976148bf2f19468e8622a34fc1b8d7f"
+  integrity sha512-Zsf27ZhSrY8RBqWTiGpKVzIdZXLT0ltDP+NVvZRGDRrud6p/XVkrQ4L2+JeZBTLHsLXKPY8JZWCXSGzZZeCfCQ==
   dependencies:
     block-attributes "^0.4.0"
     block-info "^0.4.0"
     cheerio "1.0.0-rc.3"
     elm-string-representation "^1.2.1"
     html-entities "^1.3.1"
-    litvis "^0.9.3"
+    litvis "^0.9.4"
     lodash "^4.17.20"
     lru-cache "^6.0.0"
     narrative-schema "^0.4.2"
@@ -2209,16 +2199,16 @@ litvis-integration-mume@0.9.3:
     vfile "^4.2.0"
     yamljs "^0.3.0"
 
-litvis@^0.9.3:
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/litvis/-/litvis-0.9.3.tgz#21fa3ef31da68ccd09118e68f30fa6e765b21d5c"
-  integrity sha512-UAdiCwBp2MgSWggvIUSliyGJkNFYyfPWr7qbjNMMLWnP2GKUGW+Efarn2KxxbY1bcViJdzPUkXFA3ZE4u1w4vA==
+litvis@^0.9.4:
+  version "0.9.4"
+  resolved "https://registry.yarnpkg.com/litvis/-/litvis-0.9.4.tgz#fffc6b5942f3363d17b47b78137f5cebc46a54ac"
+  integrity sha512-FIziQjm0OVd1OXNngwfp+tsbWhYT6K3XHXzSIXP7O0EaBX0wQUw9eM31apaCcVeEaFtO9YG/5uWbgUjUzy+CdQ==
   dependencies:
     block-attributes "^0.4.0"
     block-info "^0.4.0"
     data-with-position "^0.4.1"
     fs-extra "^9.0.1"
-    immer "^7.0.8"
+    immer "^8.0.1"
     is-whitespace-character "^1.0.4"
     kind-of "^6.0.3"
     literate-elm "^0.8.1"
@@ -2448,10 +2438,10 @@ ms@2.1.2, ms@^2.0.0, ms@^2.1.1:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
-mume-with-litvis@^0.30.0:
-  version "0.30.0"
-  resolved "https://registry.yarnpkg.com/mume-with-litvis/-/mume-with-litvis-0.30.0.tgz#e017bbbe0ff64dfaac3be20796543098a15ee44a"
-  integrity sha512-XjMLUfjONBn29ZVaM8540iRl+KeAQ4i67ZI42iykYvK8vEtP6wx8z6MupCtsd1ArKexCPSPCR9LwW+qban//uw==
+mume-with-litvis@^0.31.0:
+  version "0.31.0"
+  resolved "https://registry.yarnpkg.com/mume-with-litvis/-/mume-with-litvis-0.31.0.tgz#58fc9dc712e7aa0287c12f48d3f1a5b2e7155007"
+  integrity sha512-xVevxnOfWoGyW/hXYt9tP0i0a3uXHqrYrEVT9kPUsDp4YbfJdqsA6Y8BvUEjgvgupvdTVjr3TPvExHXMVc5hQw==
   dependencies:
     apache-arrow "^0.17.0"
     babyparse "^0.4.6"
@@ -2463,7 +2453,7 @@ mume-with-litvis@^0.30.0:
     imagemagick-cli "^0.5.0"
     js-yaml "^3.14.0"
     less "^3.12.2"
-    litvis-integration-mume "0.9.3"
+    litvis-integration-mume "0.9.4"
     lodash "^4.17.20"
     mkdirp "^1.0.4"
     node-fetch "^2.6.1"
@@ -3269,11 +3259,6 @@ safe-buffer@^5.0.1, safe-buffer@^5.1.2, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.2.tgz#991ec69d296e0313747d59bdfd2b745c35f8828d"
   integrity sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==
-
-safe-buffer@~5.2.0:
-  version "5.2.1"
-  resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.2.1.tgz#1eaf9fa9bdb1fdd4ec75f58f9cdb4e6b7827eec6"
-  integrity sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==
 
 "safer-buffer@>= 2.1.2 < 3", safer-buffer@^2.0.2, safer-buffer@^2.1.0, safer-buffer@~2.1.0:
   version "2.1.2"
