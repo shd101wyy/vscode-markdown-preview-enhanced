@@ -1,10 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
+import { getExtensionConfigPath, utility } from "@shd101wyy/mume";
 import * as path from "path";
 import * as vscode from "vscode";
-
-import { getExtensionConfigPath, utility } from "@shd101wyy/mume";
-
 import { pasteImageFile, uploadImageFile } from "./image-helper";
 import {
   getPreviewUri,
@@ -415,6 +413,13 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
+  function setPreviewTheme(uri, theme) {
+    const config = vscode.workspace.getConfiguration(
+      "markdown-preview-enhanced",
+    );
+    config.update("previewTheme", theme, true);
+  }
+
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document) => {
       if (isMarkdownFile(document)) {
@@ -765,6 +770,10 @@ export function activate(context: vscode.ExtensionContext) {
       "_mume.showUploadedImageHistory",
       showUploadedImages,
     ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("_mume.setPreviewTheme", setPreviewTheme),
   );
 }
 

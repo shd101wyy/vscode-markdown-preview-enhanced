@@ -99,10 +99,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.imageMagickPath = config.get<string>("imageMagickPath");
     this.pandocPath = config.get<string>("pandocPath");
     this.pandocMarkdownFlavor = config.get<string>("pandocMarkdownFlavor");
-    this.pandocArguments = config
-      .get<string>("pandocArguments")
-      .split(",")
-      .map((x) => x.trim());
+    this.pandocArguments = config.get<string[]>("pandocArguments");
     this.latexEngine = config.get<string>("latexEngine");
     this.enableScriptExecution = config.get<boolean>("enableScriptExecution");
 

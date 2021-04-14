@@ -413,9 +413,9 @@
           "type": "string"
         },
         "markdown-preview-enhanced.pandocArguments": {
-          "description": "Comma separated pandoc arguments e.g. `--smart, --filter=/bin/exe`. Please use long argument names.",
-          "default": "",
-          "type": "string"
+          "description": "Args passed to pandoc command e.g. [\"--smart\", \"--filter=/bin/exe\"] Please use long argument names.",
+          "default": [],
+          "type": "array"
         },
         "markdown-preview-enhanced.latexEngine": {
           "description": "Default latex engine for Pandoc export and latex code chunk.",
@@ -537,7 +537,7 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.6.4",
+    "@shd101wyy/mume": "^0.6.6",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {
