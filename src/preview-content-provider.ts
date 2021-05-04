@@ -50,23 +50,18 @@ export class MarkdownPreviewEnhancedView {
 
   public updateObject() {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
-
-    var projectDirectoryPath = vscode.workspace.getWorkspaceFolder(
-      vscode.window.activeTextEditor.document.uri,
+    const projectDirectoryPath = vscode.workspace.getWorkspaceFolder(
+      vscode.window.activeTextEditor?.document?.uri,
     ).uri.fsPath;
 
-    if (projectDirectoryPath == undefined) {
-      return;
+    let configPath: string = this.config.configPath;
+    if (configPath != "" && projectDirectoryPath != undefined) {
+      configPath = path.resolve(
+        configPath
+          .replace("${projectDir}", projectDirectoryPath)
+          .replace("${workspaceFolder}", projectDirectoryPath),
+      );
     }
-
-    var configPath =
-      this.config.configPath == ""
-        ? ""
-        : path.resolve(
-            this.config.configPath
-              .replace("${projectDir}", projectDirectoryPath)
-              .replace("${workspaceFolder}", projectDirectoryPath),
-          );
 
     mume
       .init(configPath) // init markdown-preview-enhanced
