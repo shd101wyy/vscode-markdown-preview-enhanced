@@ -59,11 +59,14 @@ export class MarkdownPreviewEnhancedView {
       return;
     }
 
-    var configPath = path.resolve(
-      this.config.configPath
-        .replace("${projectDir}", projectDirectoryPath)
-        .replace("${workspaceFolder}", projectDirectoryPath),
-    );
+    var configPath =
+      this.config.configPath == ""
+        ? ""
+        : path.resolve(
+            this.config.configPath
+              .replace("${projectDir}", projectDirectoryPath)
+              .replace("${workspaceFolder}", projectDirectoryPath),
+          );
 
     mume
       .init(configPath) // init markdown-preview-enhanced
