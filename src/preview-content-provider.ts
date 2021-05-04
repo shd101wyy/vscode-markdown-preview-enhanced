@@ -394,8 +394,6 @@ export class MarkdownPreviewEnhancedView {
     editor: vscode.TextEditor,
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean },
   ) {
-    this.updateObject();
-
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: vscode.WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
@@ -411,6 +409,7 @@ export class MarkdownPreviewEnhancedView {
         ) || path.dirname(sourceUri.fsPath);
       if (oldResourceRoot !== newResourceRoot) {
         this.singlePreviewPanel.dispose();
+        this.updateObject();
         return this.initPreview(sourceUri, editor, viewOptions);
       } else {
         previewPanel = this.singlePreviewPanel;
