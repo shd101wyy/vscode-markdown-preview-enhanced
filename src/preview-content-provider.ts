@@ -45,10 +45,28 @@ export class MarkdownPreviewEnhancedView {
   private config: MarkdownPreviewEnhancedConfig;
 
   public constructor(private context: vscode.ExtensionContext) {
+    this.updateObject();
+  }
+
+  public updateObject() {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
+    var projectDirectoryPath = vscode.workspace.getWorkspaceFolder(
+      vscode.window.activeTextEditor.document.uri,
+    ).uri.fsPath;
+
+    if (projectDirectoryPath == undefined) {
+      return;
+    }
+
+    var configPath = path.resolve(
+      this.config.configPath
+        .replace("${projectDir}", projectDirectoryPath)
+        .replace("${workspaceFolder}", projectDirectoryPath),
+    );
+
     mume
-      .init(this.config.configPath) // init markdown-preview-enhanced
+      .init(configPath) // init markdown-preview-enhanced
       .then(() => {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this));
         MarkdownEngine.onModifySource(this.modifySource.bind(this));
@@ -378,6 +396,8 @@ export class MarkdownPreviewEnhancedView {
     editor: vscode.TextEditor,
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean },
   ) {
+    this.updateObject();
+
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: vscode.WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
