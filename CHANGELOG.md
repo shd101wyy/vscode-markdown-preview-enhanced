@@ -1,3 +1,10 @@
+## 0.29.0
+
+- Upgrade `vega-lite` from v4 to v5
+- Change how `vega`, `vega-embed`, `vega-lite`, `vega-loader`, `loader-arrow` and `apache-arrow` are embedded.
+  The versions are no longer pinned.
+  To upgrade to the latest version in the curren semver major band, all you need is to reinstall the extension.
+
 ## 0.28.0
 
 - Upgrade vega to 5.19.1
