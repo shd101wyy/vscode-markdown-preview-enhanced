@@ -1,3 +1,7 @@
+## 0.29.1
+
+- Fix extension loading by removing [`@types/vfile`](https://www.npmjs.com/package/@types/vfile)
+
 ## 0.29.0
 
 - Upgrade `vega-lite` from v4 to v5
