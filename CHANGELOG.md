@@ -1,3 +1,7 @@
+## 0.29.2
+
+- Fix apache arrow loader
+
 ## 0.29.1
 
 - Fix extension loading by removing [`@types/vfile`](https://www.npmjs.com/package/@types/vfile)
