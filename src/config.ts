@@ -47,6 +47,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly puppeteerWaitForTimeout: number;
   public readonly usePuppeteerCore: boolean;
   public readonly puppeteerArgs: string[];
+  public readonly plantumlServer: string;
 
   // preview config
   public readonly scrollSync: boolean;
@@ -131,6 +132,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     );
     this.usePuppeteerCore = config.get<boolean>("usePuppeteerCore");
     this.puppeteerArgs = config.get<string[]>("puppeteerArgs");
+    this.plantumlServer = config.get<string>("plantumlServer");
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
