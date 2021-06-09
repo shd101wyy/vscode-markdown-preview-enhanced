@@ -361,9 +361,11 @@ export function activate(context: vscode.ExtensionContext) {
     href = href
       .replace(/^vscode\-resource:\/\//, "")
       .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, "")
-      .replace(/^file\/\/\//, "file:///");
-    // tslint:disable-next-line:no-console
-    // console.log("Clicked: ", href);
+      .replace(/^file\/\/\//, "file:///")
+      .replace(
+        /^https?:\/\/(.+?)\.vscode-webview-test.com\/vscode-resource\/file\/+/,
+        "file:///",
+      );
     if (
       [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
         path.extname(href),
