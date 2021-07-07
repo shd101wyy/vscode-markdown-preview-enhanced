@@ -365,7 +365,8 @@ export function activate(context: vscode.ExtensionContext) {
       .replace(
         /^https?:\/\/(.+?)\.vscode-webview-test.com\/vscode-resource\/file\/+/,
         "file:///",
-      );
+      )
+      .replace(/^https?:\/\/file(.+?)\.vscode-webview\.net\/+/, "file:///");
     if (
       [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
         path.extname(href),
