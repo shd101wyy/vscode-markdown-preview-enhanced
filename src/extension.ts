@@ -6,7 +6,6 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import { getExtensionConfigPath, utility } from "mume-with-litvis";
-
 import { pasteImageFile, uploadImageFile } from "./image-helper";
 import {
   getPreviewUri,
@@ -369,9 +368,12 @@ export function activate(context: vscode.ExtensionContext) {
     href = href
       .replace(/^vscode\-resource:\/\//, "")
       .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, "")
-      .replace(/^file\/\/\//, "file:///");
-    // tslint:disable-next-line:no-console
-    // console.log("Clicked: ", href);
+      .replace(/^file\/\/\//, "file:///")
+      .replace(
+        /^https?:\/\/(.+?)\.vscode-webview-test.com\/vscode-resource\/file\/+/,
+        "file:///",
+      )
+      .replace(/^https?:\/\/file(.+?)\.vscode-webview\.net\/+/, "file:///");
     if (
       [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
         path.extname(href),
@@ -419,6 +421,13 @@ export function activate(context: vscode.ExtensionContext) {
         break;
       }
     }
+  }
+
+  function setPreviewTheme(uri, theme) {
+    const config = vscode.workspace.getConfiguration(
+      "markdown-preview-enhanced",
+    );
+    config.update("previewTheme", theme, true);
   }
 
   context.subscriptions.push(
@@ -778,6 +787,10 @@ export function activate(context: vscode.ExtensionContext) {
       "_mume.showUploadedImageHistory",
       showUploadedImages,
     ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("_mume.setPreviewTheme", setPreviewTheme),
   );
 }
 

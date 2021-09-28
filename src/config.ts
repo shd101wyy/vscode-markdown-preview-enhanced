@@ -47,6 +47,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly puppeteerWaitForTimeout: number;
   public readonly usePuppeteerCore: boolean;
   public readonly puppeteerArgs: string[];
+  public readonly plantumlServer: string;
 
   // preview config
   public readonly scrollSync: boolean;
@@ -99,10 +100,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.imageMagickPath = config.get<string>("imageMagickPath");
     this.pandocPath = config.get<string>("pandocPath");
     this.pandocMarkdownFlavor = config.get<string>("pandocMarkdownFlavor");
-    this.pandocArguments = config
-      .get<string>("pandocArguments")
-      .split(",")
-      .map((x) => x.trim());
+    this.pandocArguments = config.get<string[]>("pandocArguments");
     this.latexEngine = config.get<string>("latexEngine");
     this.enableScriptExecution = config.get<boolean>("enableScriptExecution");
 
@@ -134,6 +132,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     );
     this.usePuppeteerCore = config.get<boolean>("usePuppeteerCore");
     this.puppeteerArgs = config.get<string[]>("puppeteerArgs");
+    this.plantumlServer = config.get<string>("plantumlServer");
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
