@@ -547,7 +547,7 @@
     ]
   },
   "dependencies": {
-    "mume-with-litvis": "^0.32.4",
+    "mume-with-litvis": "^0.33.0",
     "vfile-sort": "^2.2.0"
   },
   "devDependencies": {
