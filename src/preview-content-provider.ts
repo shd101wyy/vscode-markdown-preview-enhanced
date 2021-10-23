@@ -82,29 +82,6 @@ export class MarkdownPreviewEnhancedView {
             path.resolve(mume.getExtensionConfigPath(), "config.json"),
             JSON.stringify(config),
           );
-
-          if (!mume.configs.config["vscode_mpe_version"]) {
-            // Only show once
-            const actions = ["Open GitHub Sponsors", "I already sponsored"];
-            vscode.window
-              .showInformationMessage(
-                "If you like using markdown-preview-enhanced, please consider sponsoring the developer to help make this project better 😊.",
-                ...actions,
-              )
-              .then((value) => {
-                if (value === actions[0]) {
-                  mume.utility.openFile(
-                    "https://github.com/sponsors/shd101wyy",
-                  );
-                } else if (value === actions[1]) {
-                  config["already_sponsored"] = true;
-                  fs.writeFileSync(
-                    path.resolve(mume.getExtensionConfigPath(), "config.json"),
-                    JSON.stringify(config),
-                  );
-                }
-              });
-          }
         }
       })
       .catch((error) => {
