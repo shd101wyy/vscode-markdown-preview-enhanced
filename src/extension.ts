@@ -13,10 +13,9 @@ import {
 let editorScrollDelay = Date.now();
 
 // hide default vscode markdown preview buttons if necessary
-const config = vscode.workspace.getConfiguration("markdown-preview-enhanced");
-const hideDefaultVSCodeMarkdownPreviewButtons = config.get<boolean>(
-  "hideDefaultVSCodeMarkdownPreviewButtons",
-);
+const hideDefaultVSCodeMarkdownPreviewButtons = vscode.workspace
+  .getConfiguration("markdown-preview-enhanced")
+  .get<boolean>("hideDefaultVSCodeMarkdownPreviewButtons");
 if (hideDefaultVSCodeMarkdownPreviewButtons) {
   vscode.commands.executeCommand(
     "setContext",
@@ -60,6 +59,9 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   function toggleScrollSync() {
+    const config = vscode.workspace.getConfiguration(
+      "markdown-preview-enhanced",
+    );
     const scrollSync = !config.get<boolean>("scrollSync");
     config.update("scrollSync", scrollSync, true).then(() => {
       contentProvider.updateConfiguration();
@@ -72,6 +74,9 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   function toggleLiveUpdate() {
+    const config = vscode.workspace.getConfiguration(
+      "markdown-preview-enhanced",
+    );
     const liveUpdate = !config.get<boolean>("liveUpdate");
     config.update("liveUpdate", liveUpdate, true).then(() => {
       contentProvider.updateConfiguration();
@@ -84,6 +89,9 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   function toggleBreakOnSingleNewLine() {
+    const config = vscode.workspace.getConfiguration(
+      "markdown-preview-enhanced",
+    );
     const breakOnSingleNewLine = !config.get<boolean>("breakOnSingleNewLine");
     config
       .update("breakOnSingleNewLine", breakOnSingleNewLine, true)
@@ -421,6 +429,9 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   function setPreviewTheme(uri, theme) {
+    const config = vscode.workspace.getConfiguration(
+      "markdown-preview-enhanced",
+    );
     config.update("previewTheme", theme, true);
   }
 
@@ -505,6 +516,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor((textEditor) => {
       if (textEditor && textEditor.document && textEditor.document.uri) {
         if (isMarkdownFile(textEditor.document)) {
+          const config = vscode.workspace.getConfiguration(
+            "markdown-preview-enhanced",
+          );
           const sourceUri = textEditor.document.uri;
           const automaticallyShowPreviewOfMarkdownBeingEdited = config.get<
             boolean
