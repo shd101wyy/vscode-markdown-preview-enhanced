@@ -476,6 +476,11 @@
           "description": "Render using PlantUML server instead of binary. Leave it empty to use the builtin plantuml.jar binary (`java` is required in system path). Eg: \"http://localhost:8080/svg/\"",
           "default": "",
           "type": "string"
+        },
+        "markdown-preview-enhanced.hideDefaultVSCodeMarkdownPreviewButtons": {
+          "description": "Hide the default VSCode markdown preview extension buttons. Restarting the editor is required to make this config take effect.",
+          "default": true,
+          "type": "boolean"
         }
       }
     },
@@ -542,7 +547,7 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.6.9",
+    "@shd101wyy/mume": "^0.7.0",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {

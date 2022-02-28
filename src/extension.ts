@@ -12,6 +12,18 @@ import {
 
 let editorScrollDelay = Date.now();
 
+// hide default vscode markdown preview buttons if necessary
+const hideDefaultVSCodeMarkdownPreviewButtons = vscode.workspace
+  .getConfiguration("markdown-preview-enhanced")
+  .get<boolean>("hideDefaultVSCodeMarkdownPreviewButtons");
+if (hideDefaultVSCodeMarkdownPreviewButtons) {
+  vscode.commands.executeCommand(
+    "setContext",
+    "hasCustomMarkdownPreview",
+    true,
+  );
+}
+
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -504,10 +516,10 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor((textEditor) => {
       if (textEditor && textEditor.document && textEditor.document.uri) {
         if (isMarkdownFile(textEditor.document)) {
-          const sourceUri = textEditor.document.uri;
           const config = vscode.workspace.getConfiguration(
             "markdown-preview-enhanced",
           );
+          const sourceUri = textEditor.document.uri;
           const automaticallyShowPreviewOfMarkdownBeingEdited = config.get<
             boolean
           >("automaticallyShowPreviewOfMarkdownBeingEdited");
