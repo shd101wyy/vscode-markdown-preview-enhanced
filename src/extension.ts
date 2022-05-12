@@ -370,8 +370,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   function clickTagA(uri, href) {
     href = decodeURIComponent(href);
-    // tslint:disable-next-line:no-console
-    console.log(href);
     href = href
       .replace(/^vscode\-resource:\/\//, "")
       .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, "")
