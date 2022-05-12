@@ -375,6 +375,10 @@ export function activate(context: vscode.ExtensionContext) {
       .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, "")
       .replace(/^file\/\/\//, "file:///")
       .replace(
+        /^https:\/\/file\+\.vscode-resource.vscode-cdn.net\//,
+        "file:///",
+      )
+      .replace(
         /^https?:\/\/(.+?)\.vscode-webview-test.com\/vscode-resource\/file\/+/,
         "file:///",
       )
