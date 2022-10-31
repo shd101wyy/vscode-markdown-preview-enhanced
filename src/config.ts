@@ -1,5 +1,11 @@
 import { MarkdownEngineConfig } from "@shd101wyy/mume";
-import { MathRenderingOption } from "@shd101wyy/mume/out/src/markdown-engine-config";
+import {
+  CodeBlockTheme,
+  MathRenderingOption,
+  MermaidTheme,
+  PreviewTheme,
+  RevealJsTheme,
+} from "@shd101wyy/mume/out/src/markdown-engine-config";
 import * as vscode from "vscode";
 
 export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
@@ -23,10 +29,10 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly mathInlineDelimiters: string[][];
   public readonly mathBlockDelimiters: string[][];
   public readonly mathRenderingOnlineService: string;
-  public readonly codeBlockTheme: string;
-  public readonly mermaidTheme: string;
-  public readonly previewTheme: string;
-  public readonly revealjsTheme: string;
+  public readonly codeBlockTheme: CodeBlockTheme;
+  public readonly mermaidTheme: MermaidTheme;
+  public readonly previewTheme: PreviewTheme;
+  public readonly revealjsTheme: RevealJsTheme;
   public readonly protocolsWhiteList: string;
   public readonly imageFolderPath: string;
   public readonly imageUploader: string;
@@ -81,7 +87,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.frontMatterRenderingOption = config.get<string>(
       "frontMatterRenderingOption",
     );
-    this.mermaidTheme = config.get<string>("mermaidTheme");
+    this.mermaidTheme = config.get<MermaidTheme>("mermaidTheme");
     this.mathRenderingOption = config.get<string>(
       "mathRenderingOption",
     ) as MathRenderingOption;
@@ -90,9 +96,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.mathRenderingOnlineService = config.get<string>(
       "mathRenderingOnlineService",
     );
-    this.codeBlockTheme = config.get<string>("codeBlockTheme");
-    this.previewTheme = config.get<string>("previewTheme");
-    this.revealjsTheme = config.get<string>("revealjsTheme");
+    this.codeBlockTheme = config.get<CodeBlockTheme>("codeBlockTheme");
+    this.previewTheme = config.get<PreviewTheme>("previewTheme");
+    this.revealjsTheme = config.get<RevealJsTheme>("revealjsTheme");
     this.protocolsWhiteList = config.get<string>("protocolsWhiteList");
     this.imageFolderPath = config.get<string>("imageFolderPath");
     this.imageUploader = config.get<string>("imageUploader");
