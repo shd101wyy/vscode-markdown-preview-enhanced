@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "%description%",
   "categories": [
     "Other"
@@ -547,7 +547,7 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "0.7.1",
+    "@shd101wyy/mume": "0.7.3",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {
