@@ -68,6 +68,24 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     );
 
     this.configPath = (config.get<string>("configPath") || "").trim();
+    // replace predefined variables in config path
+    // ... workspaceFolder
+    if (this.configPath.includes("${workspaceFolder}")) {
+      if (vscode.workspace.workspaceFolders !== undefined) {
+        // let workspaceFolder = vscode.workspace.workspaceFolders[0].uri.path ;
+        let workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+
+        this.configPath = this.configPath.replace(
+          "${workspaceFolder}",
+          workspaceFolder,
+        );
+      } else {
+        vscode.window.showErrorMessage(
+          "Working folder not found, open a folder an try again",
+        );
+      }
+    }
+
     this.usePandocParser = config.get<boolean>("usePandocParser");
     this.breakOnSingleNewLine = config.get<boolean>("breakOnSingleNewLine");
     this.enableTypographer = config.get<boolean>("enableTypographer");
