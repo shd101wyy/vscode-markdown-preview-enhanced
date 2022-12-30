@@ -7,6 +7,7 @@ import {
   RevealJsTheme,
 } from "@shd101wyy/mume/out/src/markdown-engine-config";
 import * as vscode from "vscode";
+import { PathResolver } from "./utils/path-resolver";
 
 export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public static getCurrentConfig() {
@@ -68,52 +69,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     );
 
     this.configPath = (config.get<string>("configPath") || "").trim();
-    // replace predefined variables in config path
-    {
-      // ... workspaceFolder
-      if (this.configPath.includes("${workspaceFolder}")) {
-        if (vscode.workspace.workspaceFolders !== undefined) {
-          // determine workspace folder
-          // let workspaceFolder = vscode.workspace.workspaceFolders[0].uri.path ;
-          let workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
-
-          // replace in configPath
-          this.configPath = this.configPath.replace(
-            "${workspaceFolder}",
-            workspaceFolder,
-          );
-
-          // log
-          //vscode.window.showInformationMessage(
-          //  `Resolved config (workspace folder): ${this.configPath}`,
-          //);
-        } else {
-          vscode.window.showErrorMessage(
-            "Working folder not found, open a folder an try again",
-          );
-        }
-      }
-    }
-
-    // replace environment variables in config path
-    {
-      // try to replace environment variables for windows (%ENV_VAR%) and bash (${ENV_VAR} as well as $ENV_VAR)
-      // line as suggested in https://stackoverflow.com/questions/21363912/how-to-resolve-a-path-that-includes-an-environment-variable-in-nodejs
-      let resolvedConfigPath = this.configPath.replace(
-        /%([A-Z_]+[A-Z0-9_]*)%|\$([A-Z_]+[A-Z0-9_]*)|\${([A-Z0-9_]*)}/gi,
-        (_, windows, bash1, bash2) => process.env[windows || bash1 || bash2],
-      );
-      // check if something changed
-      if (resolvedConfigPath != this.configPath) {
-        // update config path
-        this.configPath = resolvedConfigPath;
-
-        // log
-        //vscode.window.showInformationMessage(
-        //  `Resolved config (environment variables): ${this.configPath}`,
-        //);
-      }
-    }
+    this.configPath = PathResolver.resolvePath(this.configPath);
 
     this.usePandocParser = config.get<boolean>("usePandocParser");
     this.breakOnSingleNewLine = config.get<boolean>("breakOnSingleNewLine");
