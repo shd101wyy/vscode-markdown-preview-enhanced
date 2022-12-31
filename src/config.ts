@@ -7,6 +7,7 @@ import {
   RevealJsTheme,
 } from "@shd101wyy/mume/out/src/markdown-engine-config";
 import * as vscode from "vscode";
+import { PathResolver } from "./utils/path-resolver";
 
 export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public static getCurrentConfig() {
@@ -68,6 +69,8 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     );
 
     this.configPath = (config.get<string>("configPath") || "").trim();
+    this.configPath = PathResolver.resolvePath(this.configPath);
+
     this.usePandocParser = config.get<boolean>("usePandocParser");
     this.breakOnSingleNewLine = config.get<boolean>("breakOnSingleNewLine");
     this.enableTypographer = config.get<boolean>("enableTypographer");
