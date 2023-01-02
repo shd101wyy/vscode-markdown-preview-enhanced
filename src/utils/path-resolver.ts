@@ -8,15 +8,15 @@ export class PathResolver {
     let result = path;
 
     // guard: empty
-    if (result.trim() == "") {
+    if (result.trim() === "") {
       return path;
     }
 
     // resolve VS Code predefined variables
-    result = this.resolve_vscode_predefined_variables(result);
+    result = this.resolveVscodePredefinedVariables(result);
 
     // resolve environment variables
-    result = this.resolve_environment_variable(result);
+    result = this.resolveEnvironmentVariable(result);
 
     // done
     return result;
@@ -25,11 +25,11 @@ export class PathResolver {
   /**
    * resolve vscode predefined variables in string
    */
-  public static resolve_vscode_predefined_variables(path: string) {
+  public static resolveVscodePredefinedVariables(path: string) {
     let result = path;
 
     // ... workspaceFolder
-    result = this.resolve_vscode_predefined_variable_workspaceFolder(result);
+    result = this.resolveVscodePredefinedVariableWorkspaceFolder(result);
 
     // done
     return result;
@@ -38,16 +38,16 @@ export class PathResolver {
   /**
    * resolve vscode predefined variables in string
    */
-  public static resolve_vscode_predefined_variable_workspaceFolder(
-    path: string,
-  ) {
+  public static resolveVscodePredefinedVariableWorkspaceFolder(path: string) {
     let result = path;
 
     // guard: nothing to do
-    if (!path.includes("${workspaceFolder}")) return path;
+    if (!path.includes("${workspaceFolder}")) {
+      return path;
+    }
 
     // guard: error
-    if (vscode.workspace.workspaceFolders == undefined) {
+    if (vscode.workspace.workspaceFolders === undefined) {
       vscode.window.showErrorMessage(
         "Working folder not found, open a folder an try again",
       );
@@ -57,15 +57,15 @@ export class PathResolver {
 
     // determine workspace folder
     // let workspaceFolder = vscode.workspace.workspaceFolders[0].uri.path ;
-    let workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
     // replace in configPath
     result = path.replace("${workspaceFolder}", workspaceFolder);
 
     // log
-    //vscode.window.showInformationMessage(
+    // vscode.window.showInformationMessage(
     //  `Resolved '${this}' to '${result}'`
-    //);
+    // );
 
     // done
     return result;
@@ -74,7 +74,7 @@ export class PathResolver {
   /**
    * resolve environment variables in string
    */
-  public static resolve_environment_variable(path: string) {
+  public static resolveEnvironmentVariable(path: string) {
     // try to replace environment variables for windows (%ENV_VAR%) and bash (${ENV_VAR} as well as $ENV_VAR)
     // line as suggested in https://stackoverflow.com/questions/21363912/how-to-resolve-a-path-that-includes-an-environment-variable-in-nodejs
     return path.replace(
