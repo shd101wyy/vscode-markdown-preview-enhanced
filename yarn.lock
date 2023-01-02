@@ -51,10 +51,10 @@
   dependencies:
     any-observable "^0.3.0"
 
-"@shd101wyy/mume@0.7.3":
-  version "0.7.3"
-  resolved "https://registry.yarnpkg.com/@shd101wyy/mume/-/mume-0.7.3.tgz#1bf684f400d9e88b943f1a7ce14314ae770c01c9"
-  integrity sha512-MdkiBTHqS4s1ofdUFisvpeFOghjJCcTIHOrV9+Q9ZEPB6LkYwx6RB28WhJWfiw0qrZVUAOKkOeFMJImPOjzLLA==
+"@shd101wyy/mume@0.7.4":
+  version "0.7.4"
+  resolved "https://registry.yarnpkg.com/@shd101wyy/mume/-/mume-0.7.4.tgz#683a9c429105d7189667024954b60d786d9aeca7"
+  integrity sha512-3aPdO4OSBh5B5A/sOv9aQT6gihYDvb1AcpicxLKQGkE0CCYoA9Bn7T+LQ5IvVYZdZAEDSRZ8AZxWoJ35xe5OSA==
   dependencies:
     babyparse "^0.4.6"
     cheerio "1.0.0-rc.3"
@@ -155,10 +155,10 @@
     "@types/unist" "*"
     "@types/vfile-message" "*"
 
-"@types/vscode@1.40.0":
-  version "1.40.0"
-  resolved "https://registry.npm.taobao.org/@types/vscode/download/@types/vscode-1.40.0.tgz#47d19e9e32da512c986f579fe6afbc8d3e6e0c55"
-  integrity sha1-R9GenjLaUSyYb1ef5q+8jT5uDFU=
+"@types/vscode@1.70.0":
+  version "1.70.0"
+  resolved "https://registry.yarnpkg.com/@types/vscode/-/vscode-1.70.0.tgz#9cb14cdaac9f450a7005ae2db49ecee4a084c983"
+  integrity sha512-3/9Fz0F2eBgwciazc94Ien+9u1elnjFg9YAhvAb3qDy/WeFWD9VrOPU7CIytryOVUdbxus8uzL4VZYONA0gDtA==
 
 acorn-jsx@^5.0.0:
   version "5.2.0"
