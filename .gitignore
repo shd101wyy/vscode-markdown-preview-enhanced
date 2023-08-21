@@ -2,3 +2,4 @@
 *.vsix
 node_modules
 out
+.direnv
