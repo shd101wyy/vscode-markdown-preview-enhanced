@@ -8,3 +8,5 @@ src/**
 tsconfig.json
 vsc-extension-quickstart.md
 styles/src/**
+.envrc
+.direnv/**
