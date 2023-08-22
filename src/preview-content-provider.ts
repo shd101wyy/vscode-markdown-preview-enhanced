@@ -6,7 +6,8 @@ import { tmpdir } from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { TextEditor, Uri } from "vscode";
-import { MarkdownPreviewEnhancedConfig } from "./config";
+import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from "./config";
+import { PreviewTheme } from "@shd101wyy/mume/out/src/markdown-engine-config";
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -43,6 +44,8 @@ export class MarkdownPreviewEnhancedView {
   private jsAndCssFilesMaps: { [key: string]: string[] } = {};
 
   private config: MarkdownPreviewEnhancedConfig;
+
+  private systemColorScheme: "light" | "dark" = "light";
 
   public constructor(private context: vscode.ExtensionContext) {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
@@ -336,13 +339,17 @@ export class MarkdownPreviewEnhancedView {
   public initMarkdownEngine(sourceUri: Uri): MarkdownEngine {
     let engine = this.getEngine(sourceUri);
     if (!engine) {
+      const previewTheme = this.getPreviewTheme(
+        this.config.previewTheme,
+        this.config.previewColorScheme,
+      );
       engine = new MarkdownEngine({
         filePath: this.getFilePath(sourceUri),
         projectDirectoryPath: this.getProjectDirectoryPath(
           sourceUri,
           vscode.workspace.workspaceFolders,
         ),
-        config: this.config,
+        config: { ...this.config, previewTheme },
       });
       this.engineMaps[sourceUri.fsPath] = engine;
       this.jsAndCssFilesMaps[sourceUri.fsPath] = [];
@@ -766,9 +773,35 @@ export class MarkdownPreviewEnhancedView {
     }
   }
 
-  public updateConfiguration() {
+  private getEditorColorScheme(): "light" | "dark" {
+    if (
+      [
+        vscode.ColorThemeKind.Light,
+        vscode.ColorThemeKind.HighContrastLight,
+      ].find((themeKind) => {
+        return vscode.window.activeColorTheme.kind === themeKind;
+      })
+    ) {
+      return "light";
+    } else {
+      return "dark";
+    }
+  }
+
+  public setSystemColorScheme(colorScheme: "light" | "dark") {
+    if (this.systemColorScheme !== colorScheme) {
+      this.systemColorScheme = colorScheme;
+      if (
+        this.config.previewColorScheme === PreviewColorScheme.systemColorScheme
+      ) {
+        this.updateConfiguration(true);
+      }
+    }
+  }
+
+  public updateConfiguration(forceUpdate = false) {
     const newConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
-    if (!this.config.isEqualTo(newConfig)) {
+    if (forceUpdate || !this.config.isEqualTo(newConfig)) {
       // if `singlePreview` setting is changed, close all previews.
       if (this.config.singlePreview !== newConfig.singlePreview) {
         this.closeAllPreviews(this.config.singlePreview);
@@ -778,13 +811,61 @@ export class MarkdownPreviewEnhancedView {
         for (const fsPath in this.engineMaps) {
           if (this.engineMaps.hasOwnProperty(fsPath)) {
             const engine = this.engineMaps[fsPath];
-            engine.updateConfiguration(newConfig);
+            const previewTheme = this.getPreviewTheme(
+              newConfig.previewTheme,
+              newConfig.previewColorScheme,
+            );
+            // Update markdown engine configuration
+            engine.updateConfiguration({ ...newConfig, previewTheme });
           }
         }
 
         // update all generated md documents
         this.refreshAllPreviews();
       }
+    }
+  }
+
+  private getPreviewThemeByLightOrDark(
+    theme: PreviewTheme,
+    color: "light" | "dark",
+  ): PreviewTheme {
+    switch (theme) {
+      case "atom-dark.css":
+      case "atom-light.css": {
+        return color === "light" ? "atom-light.css" : "atom-dark.css";
+      }
+      case "github-dark.css":
+      case "github-light.css": {
+        return color === "light" ? "github-light.css" : "github-dark.css";
+      }
+      case "one-light.css":
+      case "one-dark.css": {
+        return color === "light" ? "one-light.css" : "one-dark.css";
+      }
+      case "solarized-light.css":
+      case "solarized-dark.css": {
+        return color === "light" ? "solarized-light.css" : "solarized-dark.css";
+      }
+      default: {
+        return theme;
+      }
+    }
+  }
+
+  private getPreviewTheme(
+    theme: PreviewTheme,
+    colorScheme: PreviewColorScheme,
+  ): PreviewTheme {
+    if (colorScheme === PreviewColorScheme.editorColorScheme) {
+      return this.getPreviewThemeByLightOrDark(
+        theme,
+        this.getEditorColorScheme(),
+      );
+    } else if (colorScheme === PreviewColorScheme.systemColorScheme) {
+      return this.getPreviewThemeByLightOrDark(theme, this.systemColorScheme);
+    } else {
+      return theme;
     }
   }
 

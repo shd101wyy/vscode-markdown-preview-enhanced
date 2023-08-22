@@ -10,6 +10,7 @@ import {
   isMarkdownFile,
   MarkdownPreviewEnhancedView,
 } from "./preview-content-provider";
+import { PreviewColorScheme } from "./config";
 
 let editorScrollDelay = Date.now();
 
@@ -221,8 +222,16 @@ export function activate(context: vscode.ExtensionContext) {
     );
   }
 
-  function webviewFinishLoading(uri) {
+  function webviewFinishLoading(
+    uri: string,
+    {
+      systemColorScheme,
+    }: {
+      systemColorScheme: "light" | "dark";
+    },
+  ) {
     const sourceUri = vscode.Uri.parse(uri);
+    contentProvider.setSystemColorScheme(systemColorScheme);
     contentProvider.updateMarkdown(sourceUri);
   }
 
@@ -599,6 +608,21 @@ export function activate(context: vscode.ExtensionContext) {
             openPreviewToTheSide(sourceUri);
           }
         }
+      }
+    }),
+  );
+
+  // Changed editor color theme
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveColorTheme((theme) => {
+      const config = vscode.workspace.getConfiguration(
+        "markdown-preview-enhanced",
+      );
+      if (
+        config.get<PreviewColorScheme>("previewColorScheme") ===
+        PreviewColorScheme.editorColorScheme
+      ) {
+        contentProvider.updateConfiguration(true);
       }
     }),
   );

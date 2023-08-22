@@ -1,4 +1,9 @@
-let
-  sources = import ./nix/sources.nix;
-  pkgs = import sources.nixpkgs { };
-in pkgs.mkShell { buildInputs = with pkgs; [ nodejs-16_x yarn ]; }
+{ pkgs ? import <nixpkgs> { } }:
+with pkgs;
+mkShell {
+  buildInputs = [ nodejs yarn ];
+  shellHook = ''
+    # ...
+  '';
+}
+

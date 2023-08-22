@@ -164,6 +164,20 @@
           "default": false,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.previewColorScheme": {
+          "type": "string",
+          "enum": [
+            "selectedPreviewTheme",
+            "systemColorScheme",
+            "editorColorScheme"
+          ],
+          "default": "selectedPreviewTheme",
+          "markdownEnumDescriptions": [
+            "Use the `markdown-preview-enhanced.previewTheme` setting.",
+            "Follow system color scheme. If set to true, then the theme of markdown preview will automatically switch between light and dark when your system switch between light and dark. For example, if you set the current preview theme to `github-light.css`, then when your system is dark, the preview theme will be switched to `github-dark.css` automatically. If set to false, then the theme of markdown preview will not be changed automatically.",
+            "Use the same theme as the editor (light or dark). If set to true, then the theme of markdown preview will automatically switch between light and dark when you switch between vscode light and dark theme. For example, if you set the current preview theme to `github-light.css`, then when you switch to vscode dark theme, the preview theme will be switched to `github-dark.css` automatically. If set to false, then the theme of markdown preview will not be changed automatically."
+          ]
+        },
         "markdown-preview-enhanced.enableTypographer": {
           "description": "Enable smartypants and other sweet transforms.",
           "default": false,
@@ -323,6 +337,24 @@
             "solarized-dark.css",
             "solarized-light.css",
             "vue.css"
+          ],
+          "markdownEnumDescriptions": [
+            "Atom Dark",
+            "Atom Light",
+            "Atom Material",
+            "GitHub Dark",
+            "GitHub Light",
+            "Gothic",
+            "Medium",
+            "Monokai",
+            "Newsprint",
+            "Night",
+            "None",
+            "One Dark",
+            "One Light",
+            "Solarized Dark",
+            "Solarized Light",
+            "Vue"
           ]
         },
         "markdown-preview-enhanced.revealjsTheme": {
@@ -481,6 +513,11 @@
           "description": "Hide the default VSCode markdown preview extension buttons. Restarting the editor is required to make this config take effect.",
           "default": true,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.jsdelivrCdnHost": {
+          "markdownDescription": "jsDelivr CDN host. Example values: `cdn.jsdelivr.net`, `fastly.jsdelivr.net`, `gcore.jsdelivr.net`, `testingcf.jsdelivr.net`",
+          "default": "cdn.jsdelivr.net",
+          "type": "string"
         }
       }
     },
@@ -547,7 +584,7 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "0.7.6",
+    "@shd101wyy/mume": "0.7.7",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {
