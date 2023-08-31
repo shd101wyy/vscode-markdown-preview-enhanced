@@ -5,6 +5,7 @@ import {
   MermaidTheme,
   PreviewTheme,
   RevealJsTheme,
+  utility,
 } from '@shd101wyy/mume';
 import * as vscode from 'vscode';
 import { PathResolver } from './utils/path-resolver.js';
@@ -36,6 +37,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly mathInlineDelimiters: string[][];
   public readonly mathBlockDelimiters: string[][];
   public readonly mathRenderingOnlineService: string;
+  public readonly mathjaxV3ScriptSrc: string;
   public readonly codeBlockTheme: CodeBlockTheme;
   public readonly mermaidTheme: MermaidTheme;
   public readonly previewTheme: PreviewTheme;
@@ -77,7 +79,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
       'markdown-preview-enhanced',
     );
 
-    this.configPath = (config.get<string>('configPath') || '').trim();
+    this.configPath = (
+      config.get<string>('configPath') || utility.getConfigPath()
+    ).trim();
     this.configPath = PathResolver.resolvePath(this.configPath);
 
     this.usePandocParser = config.get<boolean>('usePandocParser');
@@ -108,6 +112,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.mathRenderingOnlineService = config.get<string>(
       'mathRenderingOnlineService',
     );
+    this.mathjaxV3ScriptSrc = config.get<string>('mathjaxV3ScriptSrc');
     this.codeBlockTheme = config.get<CodeBlockTheme>('codeBlockTheme');
     this.previewTheme = config.get<PreviewTheme>('previewTheme');
     this.revealjsTheme = config.get<RevealJsTheme>('revealjsTheme');

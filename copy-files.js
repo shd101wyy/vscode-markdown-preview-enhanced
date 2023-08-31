@@ -1,24 +1,23 @@
 /**
  * Copy files from
- * - ./node_modules/@shd101wyy/mume/dependencies/. to ./mume/dependencies/
- * - ./node_modules/@shd101wyy/mume/styles/.       to ./mume/styles/
- * - ./node_modules/@shd101wyy/mume/out/webview/.  to ./mume/out/webview/
+ * - ./node_modules/@shd101wyy/mume/out/dependencies/. to ./mume/dependencies/
+ * - ./node_modules/@shd101wyy/mume/out/styles/.       to ./mume/styles/
+ * - ./node_modules/@shd101wyy/mume/out/webview/.      to ./mume/webview/
  */
 const fs = require('fs');
-const path = require('path');
 
 const copyData = [
   {
-    source: './node_modules/@shd101wyy/mume/dependencies/',
+    source: './node_modules/@shd101wyy/mume/out/dependencies/',
     target: './mume/dependencies/',
   },
   {
-    source: './node_modules/@shd101wyy/mume/styles/',
+    source: './node_modules/@shd101wyy/mume/out/styles/',
     target: './mume/styles/',
   },
   {
     source: './node_modules/@shd101wyy/mume/out/webview/',
-    target: './mume/out/webview/',
+    target: './mume/webview/',
   },
 ];
 
@@ -34,3 +33,5 @@ copyData.forEach(data => {
 copyData.forEach(data => {
   fs.cpSync(data.source, data.target, { recursive: true });
 });
+
+console.log('Copy files done.');

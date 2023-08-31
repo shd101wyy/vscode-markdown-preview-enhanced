@@ -33,8 +33,7 @@ async function main() {
         // bundle: false,
         // external: undefined,
       });
-
-      await Promise.all([cjsContext.watch()]);
+      await cjsContext.watch();
     } else {
       // Build mode
       // CommonJS

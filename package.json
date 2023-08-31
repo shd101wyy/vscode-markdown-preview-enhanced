@@ -27,7 +27,7 @@
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
     "check:tsc": "tsc --project . --noEmit",
-    "copy:files": "node copyfiles.js",
+    "copy:files": "node copy-files.js",
     "fix": "npm run fix:eslint && npm run fix:eslint && npm run fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
@@ -229,6 +229,11 @@
             "https://latex.codecogs.com/svg.latex",
             "https://latex.codecogs.com/png.latex"
           ]
+        },
+        "markdown-preview-enhanced.mathjaxV3ScriptSrc": {
+          "description": "MathJax v3 script source. Leave it empty to use the default CDN.",
+          "default": "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
+          "type": "string"
         },
         "markdown-preview-enhanced.enableWikiLinkSyntax": {
           "description": "Enable Wiki Link syntax support. More information can be found at https://help.github.com/articles/adding-links-to-wikis/",

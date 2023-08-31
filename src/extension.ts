@@ -133,7 +133,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function openMathJaxConfig() {
     const mathjaxConfigFilePath = utility.addFileProtocol(
-      path.resolve(getExtensionConfigPath(), './mathjax_config.js'),
+      path.resolve(getExtensionConfigPath(), './mathjax_config_v3.js'),
     );
     vscode.commands.executeCommand(
       'vscode.open',
