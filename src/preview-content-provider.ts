@@ -1,13 +1,11 @@
-import * as mume from "@shd101wyy/mume";
-import { MarkdownEngine } from "@shd101wyy/mume";
-import { useExternalAddFileProtocolFunction } from "@shd101wyy/mume/out/src/utility";
-import * as fs from "fs";
-import { tmpdir } from "os";
-import * as path from "path";
-import * as vscode from "vscode";
-import { TextEditor, Uri } from "vscode";
-import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from "./config";
-import { PreviewTheme } from "@shd101wyy/mume/out/src/markdown-engine-config";
+import * as mume from '@shd101wyy/mume';
+import { CodeChunkData, MarkdownEngine, PreviewTheme } from '@shd101wyy/mume';
+import * as fs from 'fs';
+import { tmpdir } from 'os';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import { TextEditor, Uri } from 'vscode';
+import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -45,7 +43,7 @@ export class MarkdownPreviewEnhancedView {
 
   private config: MarkdownPreviewEnhancedConfig;
 
-  private systemColorScheme: "light" | "dark" = "light";
+  private systemColorScheme: 'light' | 'dark' = 'light';
 
   public constructor(private context: vscode.ExtensionContext) {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
@@ -55,19 +53,19 @@ export class MarkdownPreviewEnhancedView {
       .then(() => {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this));
         MarkdownEngine.onModifySource(this.modifySource.bind(this));
-        useExternalAddFileProtocolFunction(
+        mume.utility.useExternalAddFileProtocolFunction(
           (filePath: string, preview: vscode.WebviewPanel) => {
             if (preview) {
               return preview.webview
                 .asWebviewUri(vscode.Uri.file(filePath))
                 .toString(true)
-                .replace(/%3F/gi, "?")
-                .replace(/%23/g, "#");
+                .replace(/%3F/gi, '?')
+                .replace(/%23/g, '#');
             } else {
-              if (!filePath.startsWith("file://")) {
-                filePath = "file:///" + filePath;
+              if (!filePath.startsWith('file://')) {
+                filePath = 'file:///' + filePath;
               }
-              filePath = filePath.replace(/^file\:\/+/, "file:///");
+              filePath = filePath.replace(/^file\:\/+/, 'file:///');
               return filePath;
             }
           },
@@ -75,19 +73,19 @@ export class MarkdownPreviewEnhancedView {
 
         const extensionVersion = require(path.resolve(
           this.context.extensionPath,
-          "./package.json",
-        ))["version"];
-        if (extensionVersion !== mume.configs.config["vscode_mpe_version"]) {
+          './package.json',
+        ))['version'];
+        if (extensionVersion !== mume.configs.config['vscode_mpe_version']) {
           const config = Object.assign({}, mume.configs.config, {
             vscode_mpe_version: extensionVersion,
           });
           fs.writeFileSync(
-            path.resolve(mume.getExtensionConfigPath(), "config.json"),
+            path.resolve(mume.getExtensionConfigPath(), 'config.json'),
             JSON.stringify(config),
           );
         }
       })
-      .catch((error) => {
+      .catch(error => {
         vscode.window.showErrorMessage(error.toString());
       });
   }
@@ -125,7 +123,7 @@ export class MarkdownPreviewEnhancedView {
    * @param filePath
    */
   private async modifySource(
-    codeChunkData: mume.CodeChunkData,
+    codeChunkData: CodeChunkData,
     result: string,
     filePath: string,
   ): Promise<string> {
@@ -137,7 +135,7 @@ export class MarkdownPreviewEnhancedView {
         if (
           editor.document
             .lineAt(j)
-            .text.startsWith("<!-- code_chunk_output -->")
+            .text.startsWith('<!-- code_chunk_output -->')
         ) {
           start = j;
           break;
@@ -151,7 +149,7 @@ export class MarkdownPreviewEnhancedView {
           if (
             editor.document
               .lineAt(end)
-              .text.startsWith("<!-- /code_chunk_output -->")
+              .text.startsWith('<!-- /code_chunk_output -->')
           ) {
             break;
           }
@@ -159,32 +157,32 @@ export class MarkdownPreviewEnhancedView {
         }
 
         // if output not changed, then no need to modify editor buffer
-        let r = "";
+        let r = '';
         for (let i2 = start + 2; i2 < end - 1; i2++) {
-          r += editor.document.lineAt(i2).text + "\n";
+          r += editor.document.lineAt(i2).text + '\n';
         }
-        if (r === result + "\n") {
-          return "";
+        if (r === result + '\n') {
+          return '';
         } // no need to modify output
 
-        editor.edit((edit) => {
+        editor.edit(edit => {
           edit.replace(
             new vscode.Range(
               new vscode.Position(start + 2, 0),
               new vscode.Position(end - 1, 0),
             ),
-            result + "\n",
+            result + '\n',
           );
         });
-        return "";
+        return '';
       } else {
-        editor.edit((edit) => {
+        editor.edit(edit => {
           edit.insert(
             new vscode.Position(i + 1, 0),
             `\n<!-- code_chunk_output -->\n\n${result}\n\n<!-- /code_chunk_output -->\n`,
           );
         });
-        return "";
+        return '';
       }
     }
 
@@ -194,7 +192,7 @@ export class MarkdownPreviewEnhancedView {
       if (this.formatPathIfNecessary(editor.document.uri.fsPath) === filePath) {
         let codeChunkOffset = 0;
         const targetCodeChunkOffset =
-          codeChunkData.normalizedInfo.attributes["code_chunk_offset"];
+          codeChunkData.normalizedInfo.attributes['code_chunk_offset'];
 
         const lineCount = editor.document.lineCount;
         for (let i2 = 0; i2 < lineCount; i2++) {
@@ -223,7 +221,7 @@ export class MarkdownPreviewEnhancedView {
         break;
       }
     }
-    return "";
+    return '';
   }
 
   /**
@@ -292,7 +290,7 @@ export class MarkdownPreviewEnhancedView {
    * @param pathString
    */
   private formatPathIfNecessary(pathString: string) {
-    if (process.platform === "win32") {
+    if (process.platform === 'win32') {
       pathString = pathString.replace(
         /^([a-zA-Z])\:\\/,
         (_, $1) => `${$1.toUpperCase()}:\\`,
@@ -306,7 +304,7 @@ export class MarkdownPreviewEnhancedView {
     workspaceFolders: readonly vscode.WorkspaceFolder[] = [],
   ) {
     const possibleWorkspaceFolders = workspaceFolders.filter(
-      (workspaceFolder) => {
+      workspaceFolder => {
         return (
           path
             .dirname(sourceUri.path.toUpperCase())
@@ -323,7 +321,7 @@ export class MarkdownPreviewEnhancedView {
       )[0];
       projectDirectoryPath = workspaceFolder.uri.fsPath;
     } else {
-      projectDirectoryPath = "";
+      projectDirectoryPath = '';
     }
 
     return this.formatPathIfNecessary(projectDirectoryPath);
@@ -399,7 +397,7 @@ export class MarkdownPreviewEnhancedView {
       ];
 
       previewPanel = vscode.window.createWebviewPanel(
-        "markdown-preview-enhanced",
+        'markdown-preview-enhanced',
         `Preview ${path.basename(sourceUri.fsPath)}`,
         viewOptions,
         {
@@ -409,12 +407,12 @@ export class MarkdownPreviewEnhancedView {
         },
       );
       previewPanel.iconPath = vscode.Uri.file(
-        path.join(this.context.extensionPath, "media", "preview.svg"),
+        path.join(this.context.extensionPath, 'media', 'preview.svg'),
       );
 
       // register previewPanel message events
       previewPanel.webview.onDidReceiveMessage(
-        (message) => {
+        message => {
           vscode.commands.executeCommand(
             `_mume.${message.command}`,
             ...message.args,
@@ -472,10 +470,10 @@ export class MarkdownPreviewEnhancedView {
           initialLine,
           vscode: true,
         },
-        contentSecurityPolicy: "",
+        contentSecurityPolicy: '',
         vscodePreviewPanel: previewPanel,
       })
-      .then((html) => {
+      .then(html => {
         previewPanel.webview.html = html;
       });
   }
@@ -499,7 +497,7 @@ export class MarkdownPreviewEnhancedView {
         }
       }
 
-      previewPanels.forEach((previewPanel) => previewPanel.dispose());
+      previewPanels.forEach(previewPanel => previewPanel.dispose());
     }
 
     this.previewMaps = {};
@@ -541,10 +539,10 @@ export class MarkdownPreviewEnhancedView {
     }
 
     // not presentation mode
-    vscode.workspace.openTextDocument(sourceUri).then((document) => {
+    vscode.workspace.openTextDocument(sourceUri).then(document => {
       const text = document.getText();
       this.previewPostMessage(sourceUri, {
-        command: "startParsingMarkdown",
+        command: 'startParsingMarkdown',
       });
 
       const preview = this.getPreview(sourceUri);
@@ -562,20 +560,20 @@ export class MarkdownPreviewEnhancedView {
           if (
             JSON.stringify(JSAndCssFiles) !==
               JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath]) ||
-            yamlConfig["isPresentationMode"]
+            yamlConfig['isPresentationMode']
           ) {
             this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles;
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
             this.previewPostMessage(sourceUri, {
-              command: "updateHTML",
+              command: 'updateHTML',
               html,
               tocHTML,
               totalLineCount: document.lineCount,
               sourceUri: sourceUri.toString(),
-              id: yamlConfig.id || "",
-              class: yamlConfig.class || "",
+              id: yamlConfig.id || '',
+              class: yamlConfig.class || '',
             });
           }
         });
@@ -612,7 +610,7 @@ export class MarkdownPreviewEnhancedView {
   public openInBrowser(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
-      engine.openInBrowser({}).catch((error) => {
+      engine.openInBrowser({}).catch(error => {
         vscode.window.showErrorMessage(error.toString());
       });
     }
@@ -623,12 +621,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .htmlExport({ offline })
-        .then((dest) => {
+        .then(dest => {
           vscode.window.showInformationMessage(
             `File ${path.basename(dest)} was created at path: ${dest}`,
           );
         })
-        .catch((error) => {
+        .catch(error => {
           vscode.window.showErrorMessage(error.toString());
         });
     }
@@ -639,12 +637,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .chromeExport({ fileType: type, openFileAfterGeneration: true })
-        .then((dest) => {
+        .then(dest => {
           vscode.window.showInformationMessage(
             `File ${path.basename(dest)} was created at path: ${dest}`,
           );
         })
-        .catch((error) => {
+        .catch(error => {
           vscode.window.showErrorMessage(error.toString());
         });
     }
@@ -655,13 +653,13 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .princeExport({ openFileAfterGeneration: true })
-        .then((dest) => {
-          if (dest.endsWith("?print-pdf")) {
+        .then(dest => {
+          if (dest.endsWith('?print-pdf')) {
             // presentation pdf
             vscode.window.showInformationMessage(
               `Please copy and open the link: { ${dest.replace(
                 /\_/g,
-                "\\_",
+                '\\_',
               )} } in Chrome then Print as Pdf.`,
             );
           } else {
@@ -670,7 +668,7 @@ export class MarkdownPreviewEnhancedView {
             );
           }
         })
-        .catch((error) => {
+        .catch(error => {
           vscode.window.showErrorMessage(error.toString());
         });
     }
@@ -681,12 +679,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .eBookExport({ fileType, runAllCodeChunks: false })
-        .then((dest) => {
+        .then(dest => {
           vscode.window.showInformationMessage(
             `eBook ${path.basename(dest)} was created as path: ${dest}`,
           );
         })
-        .catch((error) => {
+        .catch(error => {
           vscode.window.showErrorMessage(error.toString());
         });
     }
@@ -697,12 +695,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .pandocExport({ openFileAfterGeneration: true })
-        .then((dest) => {
+        .then(dest => {
           vscode.window.showInformationMessage(
             `Document ${path.basename(dest)} was created as path: ${dest}`,
           );
         })
-        .catch((error) => {
+        .catch(error => {
           vscode.window.showErrorMessage(error.toString());
         });
     }
@@ -713,12 +711,12 @@ export class MarkdownPreviewEnhancedView {
     if (engine) {
       engine
         .markdownExport({})
-        .then((dest) => {
+        .then(dest => {
           vscode.window.showInformationMessage(
             `Document ${path.basename(dest)} was created as path: ${dest}`,
           );
         })
-        .catch((error) => {
+        .catch(error => {
           vscode.window.showErrorMessage(error.toString());
         });
     }
@@ -773,22 +771,22 @@ export class MarkdownPreviewEnhancedView {
     }
   }
 
-  private getEditorColorScheme(): "light" | "dark" {
+  private getEditorColorScheme(): 'light' | 'dark' {
     if (
       [
         vscode.ColorThemeKind.Light,
         vscode.ColorThemeKind.HighContrastLight,
-      ].find((themeKind) => {
+      ].find(themeKind => {
         return vscode.window.activeColorTheme.kind === themeKind;
       })
     ) {
-      return "light";
+      return 'light';
     } else {
-      return "dark";
+      return 'dark';
     }
   }
 
-  public setSystemColorScheme(colorScheme: "light" | "dark") {
+  public setSystemColorScheme(colorScheme: 'light' | 'dark') {
     if (this.systemColorScheme !== colorScheme) {
       this.systemColorScheme = colorScheme;
       if (
@@ -828,24 +826,24 @@ export class MarkdownPreviewEnhancedView {
 
   private getPreviewThemeByLightOrDark(
     theme: PreviewTheme,
-    color: "light" | "dark",
+    color: 'light' | 'dark',
   ): PreviewTheme {
     switch (theme) {
-      case "atom-dark.css":
-      case "atom-light.css": {
-        return color === "light" ? "atom-light.css" : "atom-dark.css";
+      case 'atom-dark.css':
+      case 'atom-light.css': {
+        return color === 'light' ? 'atom-light.css' : 'atom-dark.css';
       }
-      case "github-dark.css":
-      case "github-light.css": {
-        return color === "light" ? "github-light.css" : "github-dark.css";
+      case 'github-dark.css':
+      case 'github-light.css': {
+        return color === 'light' ? 'github-light.css' : 'github-dark.css';
       }
-      case "one-light.css":
-      case "one-dark.css": {
-        return color === "light" ? "one-light.css" : "one-dark.css";
+      case 'one-light.css':
+      case 'one-dark.css': {
+        return color === 'light' ? 'one-light.css' : 'one-dark.css';
       }
-      case "solarized-light.css":
-      case "solarized-dark.css": {
-        return color === "light" ? "solarized-light.css" : "solarized-dark.css";
+      case 'solarized-light.css':
+      case 'solarized-dark.css': {
+        return color === 'light' ? 'solarized-light.css' : 'solarized-dark.css';
       }
       default: {
         return theme;
@@ -870,13 +868,13 @@ export class MarkdownPreviewEnhancedView {
   }
 
   public openImageHelper(sourceUri: Uri) {
-    if (sourceUri.scheme === "markdown-preview-enhanced") {
-      return vscode.window.showWarningMessage("Please focus a markdown file.");
+    if (sourceUri.scheme === 'markdown-preview-enhanced') {
+      return vscode.window.showWarningMessage('Please focus a markdown file.');
     } else if (!this.isPreviewOn(sourceUri)) {
-      return vscode.window.showWarningMessage("Please open preview first.");
+      return vscode.window.showWarningMessage('Please open preview first.');
     } else {
       return this.previewPostMessage(sourceUri, {
-        command: "openImageHelper",
+        command: 'openImageHelper',
       });
     }
   }
@@ -886,25 +884,25 @@ export class MarkdownPreviewEnhancedView {
  * check whehter to use only one preview or not
  */
 export function useSinglePreview() {
-  const config = vscode.workspace.getConfiguration("markdown-preview-enhanced");
-  return config.get<boolean>("singlePreview");
+  const config = vscode.workspace.getConfiguration('markdown-preview-enhanced');
+  return config.get<boolean>('singlePreview');
 }
 
 export function getPreviewUri(uri: vscode.Uri) {
-  if (uri.scheme === "markdown-preview-enhanced") {
+  if (uri.scheme === 'markdown-preview-enhanced') {
     return uri;
   }
 
   let previewUri: Uri;
   if (useSinglePreview()) {
     previewUri = uri.with({
-      scheme: "markdown-preview-enhanced",
-      path: "single-preview.rendered",
+      scheme: 'markdown-preview-enhanced',
+      path: 'single-preview.rendered',
     });
   } else {
     previewUri = uri.with({
-      scheme: "markdown-preview-enhanced",
-      path: uri.path + ".rendered",
+      scheme: 'markdown-preview-enhanced',
+      path: uri.path + '.rendered',
       query: uri.toString(),
     });
   }
@@ -913,7 +911,7 @@ export function getPreviewUri(uri: vscode.Uri) {
 
 export function isMarkdownFile(document: vscode.TextDocument) {
   return (
-    document.languageId === "markdown" &&
-    document.uri.scheme !== "markdown-preview-enhanced"
+    document.languageId === 'markdown' &&
+    document.uri.scheme !== 'markdown-preview-enhanced'
   ); // prevent processing of own documents
 }

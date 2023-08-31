@@ -1,27 +1,27 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { getExtensionConfigPath, utility } from "@shd101wyy/mume";
-import * as fs from "fs";
-import * as path from "path";
-import * as vscode from "vscode";
-import { pasteImageFile, uploadImageFile } from "./image-helper";
+import { getExtensionConfigPath, utility } from '@shd101wyy/mume';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import { PreviewColorScheme } from './config';
+import { pasteImageFile, uploadImageFile } from './image-helper';
 import {
+  MarkdownPreviewEnhancedView,
   getPreviewUri,
   isMarkdownFile,
-  MarkdownPreviewEnhancedView,
-} from "./preview-content-provider";
-import { PreviewColorScheme } from "./config";
+} from './preview-content-provider';
 
 let editorScrollDelay = Date.now();
 
 // hide default vscode markdown preview buttons if necessary
 const hideDefaultVSCodeMarkdownPreviewButtons = vscode.workspace
-  .getConfiguration("markdown-preview-enhanced")
-  .get<boolean>("hideDefaultVSCodeMarkdownPreviewButtons");
+  .getConfiguration('markdown-preview-enhanced')
+  .get<boolean>('hideDefaultVSCodeMarkdownPreviewButtons');
 if (hideDefaultVSCodeMarkdownPreviewButtons) {
   vscode.commands.executeCommand(
-    "setContext",
-    "hasCustomMarkdownPreview",
+    'setContext',
+    'hasCustomMarkdownPreview',
     true,
   );
 }
@@ -62,50 +62,50 @@ export function activate(context: vscode.ExtensionContext) {
 
   function toggleScrollSync() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      'markdown-preview-enhanced',
     );
-    const scrollSync = !config.get<boolean>("scrollSync");
-    config.update("scrollSync", scrollSync, true).then(() => {
+    const scrollSync = !config.get<boolean>('scrollSync');
+    config.update('scrollSync', scrollSync, true).then(() => {
       contentProvider.updateConfiguration();
       if (scrollSync) {
-        vscode.window.showInformationMessage("Scroll Sync is enabled");
+        vscode.window.showInformationMessage('Scroll Sync is enabled');
       } else {
-        vscode.window.showInformationMessage("Scroll Sync is disabled");
+        vscode.window.showInformationMessage('Scroll Sync is disabled');
       }
     });
   }
 
   function toggleLiveUpdate() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      'markdown-preview-enhanced',
     );
-    const liveUpdate = !config.get<boolean>("liveUpdate");
-    config.update("liveUpdate", liveUpdate, true).then(() => {
+    const liveUpdate = !config.get<boolean>('liveUpdate');
+    config.update('liveUpdate', liveUpdate, true).then(() => {
       contentProvider.updateConfiguration();
       if (liveUpdate) {
-        vscode.window.showInformationMessage("Live Update is enabled");
+        vscode.window.showInformationMessage('Live Update is enabled');
       } else {
-        vscode.window.showInformationMessage("Live Update is disabled");
+        vscode.window.showInformationMessage('Live Update is disabled');
       }
     });
   }
 
   function toggleBreakOnSingleNewLine() {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      'markdown-preview-enhanced',
     );
-    const breakOnSingleNewLine = !config.get<boolean>("breakOnSingleNewLine");
+    const breakOnSingleNewLine = !config.get<boolean>('breakOnSingleNewLine');
     config
-      .update("breakOnSingleNewLine", breakOnSingleNewLine, true)
+      .update('breakOnSingleNewLine', breakOnSingleNewLine, true)
       .then(() => {
         contentProvider.updateConfiguration();
         if (breakOnSingleNewLine) {
           vscode.window.showInformationMessage(
-            "Break On Single New Line is enabled",
+            'Break On Single New Line is enabled',
           );
         } else {
           vscode.window.showInformationMessage(
-            "Break On Single New Line is disabled",
+            'Break On Single New Line is disabled',
           );
         }
       });
@@ -113,60 +113,60 @@ export function activate(context: vscode.ExtensionContext) {
 
   function customizeCSS() {
     const globalStyleLessFile = utility.addFileProtocol(
-      path.resolve(getExtensionConfigPath(), "./style.less"),
+      path.resolve(getExtensionConfigPath(), './style.less'),
     );
     vscode.commands.executeCommand(
-      "vscode.open",
+      'vscode.open',
       vscode.Uri.parse(globalStyleLessFile),
     );
   }
 
   function openMermaidConfig() {
     const mermaidConfigFilePath = utility.addFileProtocol(
-      path.resolve(getExtensionConfigPath(), "./mermaid_config.js"),
+      path.resolve(getExtensionConfigPath(), './mermaid_config.js'),
     );
     vscode.commands.executeCommand(
-      "vscode.open",
+      'vscode.open',
       vscode.Uri.parse(mermaidConfigFilePath),
     );
   }
 
   function openMathJaxConfig() {
     const mathjaxConfigFilePath = utility.addFileProtocol(
-      path.resolve(getExtensionConfigPath(), "./mathjax_config.js"),
+      path.resolve(getExtensionConfigPath(), './mathjax_config.js'),
     );
     vscode.commands.executeCommand(
-      "vscode.open",
+      'vscode.open',
       vscode.Uri.parse(mathjaxConfigFilePath),
     );
   }
 
   function openKaTeXConfig() {
     const katexConfigFilePath = utility.addFileProtocol(
-      path.resolve(getExtensionConfigPath(), "./katex_config.js"),
+      path.resolve(getExtensionConfigPath(), './katex_config.js'),
     );
     vscode.commands.executeCommand(
-      "vscode.open",
+      'vscode.open',
       vscode.Uri.parse(katexConfigFilePath),
     );
   }
 
   function extendParser() {
     const parserConfigPath = utility.addFileProtocol(
-      path.resolve(getExtensionConfigPath(), "./parser.js"),
+      path.resolve(getExtensionConfigPath(), './parser.js'),
     );
     vscode.commands.executeCommand(
-      "vscode.open",
+      'vscode.open',
       vscode.Uri.parse(parserConfigPath),
     );
   }
 
   function showUploadedImages() {
     const imageHistoryFilePath = utility.addFileProtocol(
-      path.resolve(getExtensionConfigPath(), "./image_history.md"),
+      path.resolve(getExtensionConfigPath(), './image_history.md'),
     );
     vscode.commands.executeCommand(
-      "vscode.open",
+      'vscode.open',
       vscode.Uri.parse(imageHistoryFilePath),
     );
   }
@@ -174,8 +174,8 @@ export function activate(context: vscode.ExtensionContext) {
   function insertNewSlide() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit((textEdit) => {
-        textEdit.insert(editor.selection.active, "<!-- slide -->\n");
+      editor.edit(textEdit => {
+        textEdit.insert(editor.selection.active, '<!-- slide -->\n');
       });
     }
   }
@@ -183,8 +183,8 @@ export function activate(context: vscode.ExtensionContext) {
   function insertPagebreak() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit((textEdit) => {
-        textEdit.insert(editor.selection.active, "<!-- pagebreak -->\n");
+      editor.edit(textEdit => {
+        textEdit.insert(editor.selection.active, '<!-- pagebreak -->\n');
       });
     }
   }
@@ -192,7 +192,7 @@ export function activate(context: vscode.ExtensionContext) {
   function createTOC() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit((textEdit) => {
+      editor.edit(textEdit => {
         textEdit.insert(
           editor.selection.active,
           '\n<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->\n',
@@ -204,7 +204,7 @@ export function activate(context: vscode.ExtensionContext) {
   function insertTable() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit((textEdit) => {
+      editor.edit(textEdit => {
         textEdit.insert(
           editor.selection.active,
           `|   |   |
@@ -227,7 +227,7 @@ export function activate(context: vscode.ExtensionContext) {
     {
       systemColorScheme,
     }: {
-      systemColorScheme: "light" | "dark";
+      systemColorScheme: 'light' | 'dark';
     },
   ) {
     const sourceUri = vscode.Uri.parse(uri);
@@ -245,13 +245,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.window.visibleTextEditors
       .filter(
-        (editor) =>
+        editor =>
           isMarkdownFile(editor.document) &&
           editor.document.uri.fsPath === sourceUri.fsPath,
       )
-      .forEach((editor) => {
+      .forEach(editor => {
         // const line = editor.selection.active.line
-        editor.edit((textEditorEdit) => {
+        editor.edit(textEditorEdit => {
           textEditorEdit.insert(
             editor.selection.active,
             `![enter image description here](${imageUrl})`,
@@ -338,7 +338,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     contentProvider.previewPostMessage(sourceUri, {
-      command: "runAllCodeChunks",
+      command: 'runAllCodeChunks',
     });
   }
 
@@ -357,7 +357,7 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
     contentProvider.previewPostMessage(sourceUri, {
-      command: "runCodeChunk",
+      command: 'runCodeChunk',
     });
   }
 
@@ -372,7 +372,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const sourceUri = textEditor.document.uri;
     contentProvider.previewPostMessage(sourceUri, {
-      command: "changeTextEditorSelection",
+      command: 'changeTextEditorSelection',
       line: textEditor.selections[0].active.line,
       forced: true,
     });
@@ -381,20 +381,20 @@ export function activate(context: vscode.ExtensionContext) {
   function clickTagA(uri, href) {
     href = decodeURIComponent(href);
     href = href
-      .replace(/^vscode\-resource:\/\//, "")
-      .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, "")
-      .replace(/^file\/\/\//, "file:///")
+      .replace(/^vscode\-resource:\/\//, '')
+      .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, '')
+      .replace(/^file\/\/\//, 'file:///')
       .replace(
         /^https:\/\/file\+\.vscode-resource.vscode-cdn.net\//,
-        "file:///",
+        'file:///',
       )
       .replace(
         /^https?:\/\/(.+?)\.vscode-webview-test.com\/vscode-resource\/file\/+/,
-        "file:///",
+        'file:///',
       )
-      .replace(/^https?:\/\/file(.+?)\.vscode-webview\.net\/+/, "file:///");
+      .replace(/^https?:\/\/file(.+?)\.vscode-webview\.net\/+/, 'file:///');
     if (
-      [".pdf", ".xls", ".xlsx", ".doc", ".ppt", ".docx", ".pptx"].indexOf(
+      ['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(
         path.extname(href),
       ) >= 0
     ) {
@@ -435,8 +435,8 @@ export function activate(context: vscode.ExtensionContext) {
       // (by specifying view column in which it is already shown)
 
       if (fs.existsSync(fileUri.fsPath)) {
-        vscode.workspace.openTextDocument(fileUri.path).then((doc) => {
-          vscode.window.showTextDocument(doc, col).then((editor) => {
+        vscode.workspace.openTextDocument(fileUri.path).then(doc => {
+          vscode.window.showTextDocument(doc, col).then(editor => {
             // if there was line fragment, jump to line
             if (line >= 0) {
               let viewPos = vscode.TextEditorRevealType.InCenter;
@@ -451,7 +451,7 @@ export function activate(context: vscode.ExtensionContext) {
         });
       } else {
         vscode.commands.executeCommand(
-          "vscode.open",
+          'vscode.open',
           fileUri,
           vscode.ViewColumn.One,
         );
@@ -468,12 +468,12 @@ export function activate(context: vscode.ExtensionContext) {
       const editor = visibleTextEditors[i];
       if (editor.document.uri.fsPath === sourceUri.fsPath) {
         dataLine = parseInt(dataLine, 10);
-        editor.edit((edit) => {
+        editor.edit(edit => {
           let line = editor.document.lineAt(dataLine).text;
           if (line.match(/\[ \]/)) {
-            line = line.replace("[ ]", "[x]");
+            line = line.replace('[ ]', '[x]');
           } else {
-            line = line.replace(/\[[xX]\]/, "[ ]");
+            line = line.replace(/\[[xX]\]/, '[ ]');
           }
           edit.replace(
             new vscode.Range(
@@ -490,13 +490,13 @@ export function activate(context: vscode.ExtensionContext) {
 
   function setPreviewTheme(uri, theme) {
     const config = vscode.workspace.getConfiguration(
-      "markdown-preview-enhanced",
+      'markdown-preview-enhanced',
     );
-    config.update("previewTheme", theme, true);
+    config.update('previewTheme', theme, true);
   }
 
   context.subscriptions.push(
-    vscode.workspace.onDidSaveTextDocument((document) => {
+    vscode.workspace.onDidSaveTextDocument(document => {
       if (isMarkdownFile(document)) {
         contentProvider.updateMarkdown(document.uri, true);
       }
@@ -504,7 +504,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument((event) => {
+    vscode.workspace.onDidChangeTextDocument(event => {
       if (isMarkdownFile(event.document)) {
         contentProvider.update(event.document.uri);
       }
@@ -518,7 +518,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.window.onDidChangeTextEditorSelection((event) => {
+    vscode.window.onDidChangeTextEditorSelection(event => {
       if (isMarkdownFile(event.textEditor.document)) {
         const firstVisibleScreenRow = getTopVisibleLine(event.textEditor);
         const lastVisibleScreenRow = getBottomVisibleLine(event.textEditor);
@@ -527,7 +527,7 @@ export function activate(context: vscode.ExtensionContext) {
           (lastVisibleScreenRow - firstVisibleScreenRow);
 
         contentProvider.previewPostMessage(event.textEditor.document.uri, {
-          command: "changeTextEditorSelection",
+          command: 'changeTextEditorSelection',
           line: event.selections[0].active.line,
           topRatio,
         });
@@ -536,7 +536,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.window.onDidChangeTextEditorVisibleRanges((event) => {
+    vscode.window.onDidChangeTextEditorVisibleRanges(event => {
       const textEditor = event.textEditor as vscode.TextEditor;
       if (Date.now() < editorScrollDelay) {
         return;
@@ -560,7 +560,7 @@ export function activate(context: vscode.ExtensionContext) {
             midLine = Math.floor((topLine + bottomLine) / 2);
           }
           contentProvider.previewPostMessage(sourceUri, {
-            command: "changeTextEditorSelection",
+            command: 'changeTextEditorSelection',
             line: midLine,
           });
         }
@@ -573,17 +573,17 @@ export function activate(context: vscode.ExtensionContext) {
    * @param textEditor
    */
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor((textEditor) => {
+    vscode.window.onDidChangeActiveTextEditor(textEditor => {
       if (textEditor && textEditor.document && textEditor.document.uri) {
         if (isMarkdownFile(textEditor.document)) {
           const config = vscode.workspace.getConfiguration(
-            "markdown-preview-enhanced",
+            'markdown-preview-enhanced',
           );
           const sourceUri = textEditor.document.uri;
           const automaticallyShowPreviewOfMarkdownBeingEdited = config.get<
             boolean
-          >("automaticallyShowPreviewOfMarkdownBeingEdited");
-          const isUsingSinglePreview = config.get<boolean>("singlePreview");
+          >('automaticallyShowPreviewOfMarkdownBeingEdited');
+          const isUsingSinglePreview = config.get<boolean>('singlePreview');
           /**
            * Is using single preview and the preview is on.
            * When we switched text ed()tor, update preview to that text editor.
@@ -614,12 +614,12 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Changed editor color theme
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveColorTheme((theme) => {
+    vscode.window.onDidChangeActiveColorTheme(theme => {
       const config = vscode.workspace.getConfiguration(
-        "markdown-preview-enhanced",
+        'markdown-preview-enhanced',
       );
       if (
-        config.get<PreviewColorScheme>("previewColorScheme") ===
+        config.get<PreviewColorScheme>('previewColorScheme') ===
         PreviewColorScheme.editorColorScheme
       ) {
         contentProvider.updateConfiguration(true);
@@ -641,188 +641,188 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openPreviewToTheSide",
+      'markdown-preview-enhanced.openPreviewToTheSide',
       openPreviewToTheSide,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openPreview",
+      'markdown-preview-enhanced.openPreview',
       openPreview,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.toggleScrollSync",
+      'markdown-preview-enhanced.toggleScrollSync',
       toggleScrollSync,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.toggleLiveUpdate",
+      'markdown-preview-enhanced.toggleLiveUpdate',
       toggleLiveUpdate,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.toggleBreakOnSingleNewLine",
+      'markdown-preview-enhanced.toggleBreakOnSingleNewLine',
       toggleBreakOnSingleNewLine,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openImageHelper",
+      'markdown-preview-enhanced.openImageHelper',
       openImageHelper,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.runAllCodeChunks",
+      'markdown-preview-enhanced.runAllCodeChunks',
       runAllCodeChunksCommand,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.runCodeChunk",
+      'markdown-preview-enhanced.runCodeChunk',
       runCodeChunkCommand,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.syncPreview",
+      'markdown-preview-enhanced.syncPreview',
       syncPreview,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.customizeCss",
+      'markdown-preview-enhanced.customizeCss',
       customizeCSS,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openMermaidConfig",
+      'markdown-preview-enhanced.openMermaidConfig',
       openMermaidConfig,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openMathJaxConfig",
+      'markdown-preview-enhanced.openMathJaxConfig',
       openMathJaxConfig,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.openKaTeXConfig",
+      'markdown-preview-enhanced.openKaTeXConfig',
       openKaTeXConfig,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.extendParser",
+      'markdown-preview-enhanced.extendParser',
       extendParser,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.showUploadedImages",
+      'markdown-preview-enhanced.showUploadedImages',
       showUploadedImages,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.insertNewSlide",
+      'markdown-preview-enhanced.insertNewSlide',
       insertNewSlide,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.insertTable",
+      'markdown-preview-enhanced.insertTable',
       insertTable,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.insertPagebreak",
+      'markdown-preview-enhanced.insertPagebreak',
       insertPagebreak,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "markdown-preview-enhanced.createTOC",
+      'markdown-preview-enhanced.createTOC',
       createTOC,
     ),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.revealLine", revealLine),
+    vscode.commands.registerCommand('_mume.revealLine', revealLine),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.insertImageUrl", insertImageUrl),
+    vscode.commands.registerCommand('_mume.insertImageUrl', insertImageUrl),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.pasteImageFile", pasteImageFile),
+    vscode.commands.registerCommand('_mume.pasteImageFile', pasteImageFile),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.uploadImageFile", uploadImageFile),
+    vscode.commands.registerCommand('_mume.uploadImageFile', uploadImageFile),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.refreshPreview", refreshPreview),
+    vscode.commands.registerCommand('_mume.refreshPreview', refreshPreview),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.openInBrowser", openInBrowser),
+    vscode.commands.registerCommand('_mume.openInBrowser', openInBrowser),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.htmlExport", htmlExport),
+    vscode.commands.registerCommand('_mume.htmlExport', htmlExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.chromeExport", chromeExport),
+    vscode.commands.registerCommand('_mume.chromeExport', chromeExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.princeExport", princeExport),
+    vscode.commands.registerCommand('_mume.princeExport', princeExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.eBookExport", eBookExport),
+    vscode.commands.registerCommand('_mume.eBookExport', eBookExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.pandocExport", pandocExport),
+    vscode.commands.registerCommand('_mume.pandocExport', pandocExport),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.markdownExport", markdownExport),
+    vscode.commands.registerCommand('_mume.markdownExport', markdownExport),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "_mume.webviewFinishLoading",
+      '_mume.webviewFinishLoading',
       webviewFinishLoading,
     ),
   );
@@ -831,39 +831,39 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "_mume.cacheCodeChunkResult",
+      '_mume.cacheCodeChunkResult',
       cacheCodeChunkResult,
     ),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.runCodeChunk", runCodeChunk),
+    vscode.commands.registerCommand('_mume.runCodeChunk', runCodeChunk),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.runAllCodeChunks", runAllCodeChunks),
+    vscode.commands.registerCommand('_mume.runAllCodeChunks', runAllCodeChunks),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.clickTagA", clickTagA),
+    vscode.commands.registerCommand('_mume.clickTagA', clickTagA),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "_mume.clickTaskListCheckbox",
+      '_mume.clickTaskListCheckbox',
       clickTaskListCheckbox,
     ),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "_mume.showUploadedImageHistory",
+      '_mume.showUploadedImageHistory',
       showUploadedImages,
     ),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("_mume.setPreviewTheme", setPreviewTheme),
+    vscode.commands.registerCommand('_mume.setPreviewTheme', setPreviewTheme),
   );
 }
 
@@ -872,11 +872,11 @@ function revealLine(uri, line) {
 
   vscode.window.visibleTextEditors
     .filter(
-      (editor) =>
+      editor =>
         isMarkdownFile(editor.document) &&
         editor.document.uri.fsPath === sourceUri.fsPath,
     )
-    .forEach((editor) => {
+    .forEach(editor => {
       const sourceLine = Math.min(
         Math.floor(line),
         editor.document.lineCount - 1,
@@ -902,11 +902,11 @@ function revealLine(uri, line) {
 export function getTopVisibleLine(
   editor: vscode.TextEditor,
 ): number | undefined {
-  if (!editor["visibleRanges"].length) {
+  if (!editor['visibleRanges'].length) {
     return undefined;
   }
 
-  const firstVisiblePosition = editor["visibleRanges"][0].start;
+  const firstVisiblePosition = editor['visibleRanges'][0].start;
   const lineNumber = firstVisiblePosition.line;
   const line = editor.document.lineAt(lineNumber);
   const progress = firstVisiblePosition.character / (line.text.length + 2);
@@ -922,13 +922,13 @@ export function getTopVisibleLine(
 export function getBottomVisibleLine(
   editor: vscode.TextEditor,
 ): number | undefined {
-  if (!editor["visibleRanges"].length) {
+  if (!editor['visibleRanges'].length) {
     return undefined;
   }
 
-  const firstVisiblePosition = editor["visibleRanges"][0].end;
+  const firstVisiblePosition = editor['visibleRanges'][0].end;
   const lineNumber = firstVisiblePosition.line;
-  let text = "";
+  let text = '';
   if (lineNumber < editor.document.lineCount) {
     text = editor.document.lineAt(lineNumber).text;
   }

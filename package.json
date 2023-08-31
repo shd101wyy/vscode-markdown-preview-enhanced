@@ -494,11 +494,6 @@
           "default": 0,
           "type": "number"
         },
-        "markdown-preview-enhanced.usePuppeteerCore": {
-          "description": "If set to true, then locally installed puppeteer-core will be required. Otherwise, the puppeteer globally installed by `npm install -g puppeteer` will be required.",
-          "default": true,
-          "type": "boolean"
-        },
         "markdown-preview-enhanced.puppeteerArgs": {
           "description": "Args passed to puppeteer.launch({args: $puppeteerArgs})",
           "default": [],
@@ -517,6 +512,16 @@
         "markdown-preview-enhanced.jsdelivrCdnHost": {
           "markdownDescription": "jsDelivr CDN host. Example values: `cdn.jsdelivr.net`, `fastly.jsdelivr.net`, `gcore.jsdelivr.net`, `testingcf.jsdelivr.net`",
           "default": "cdn.jsdelivr.net",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.plantumlJarPath": {
+          "description": "Absolute path to the plantuml.jar file (`java` is required in system path).",
+          "default": "",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.krokiServer": {
+          "description": "The URL of the Kroki server to use.  ",
+          "default": "https://kroki.io",
           "type": "string"
         }
       }
@@ -568,8 +573,7 @@
     }
   },
   "activationEvents": [
-    "onLanguage:markdown",
-    "onCommand:markdown-preview-enhanced.openPreviewToTheSide"
+    "onLanguage:markdown"
   ],
   "husky": {
     "hooks": {
@@ -584,26 +588,28 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "0.7.7",
+    "@shd101wyy/mume": "../mume",
     "@types/vfile": "^3.0.2"
   },
   "devDependencies": {
-    "@types/cheerio": "^0.22.18",
-    "@types/jquery": "^3.3.9",
+    "@types/cheerio": "0.22.11",
     "@types/mocha": "^5.2.5",
-    "@types/node": "^11.11.0",
-    "@types/vscode": "1.70.0",
-    "eslint": "^5.15.1",
+    "@types/node": "16",
+    "@types/vscode": "1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.5.0",
+    "@typescript-eslint/parser": "^6.5.0",
+    "eslint": "^8.48.0",
     "husky": "^3.0.9",
     "lint-staged": "^9.4.2",
     "mocha": "^6.1.4",
     "prettier": "^1.18.2",
     "prettier-plugin-packagejson": "^2.0.1",
-    "tslint": "^5.13.1",
-    "tslint-config-prettier": "^1.18.0",
-    "typescript": "4.9.4"
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.2.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
   },
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.80.0"
   }
 }

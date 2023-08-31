@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 
 export class PathResolver {
   /**
@@ -8,7 +8,7 @@ export class PathResolver {
     let result = path;
 
     // guard: empty
-    if (result.trim() === "") {
+    if (result.trim() === '') {
       return path;
     }
 
@@ -42,14 +42,14 @@ export class PathResolver {
     let result = path;
 
     // guard: nothing to do
-    if (!path.includes("${workspaceFolder}")) {
+    if (!path.includes('${workspaceFolder}')) {
       return path;
     }
 
     // guard: error
     if (vscode.workspace.workspaceFolders === undefined) {
       vscode.window.showErrorMessage(
-        "Working folder not found, open a folder an try again",
+        'Working folder not found, open a folder an try again',
       );
 
       return path;
@@ -60,7 +60,7 @@ export class PathResolver {
     const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
     // replace in configPath
-    result = path.replace("${workspaceFolder}", workspaceFolder);
+    result = path.replace('${workspaceFolder}', workspaceFolder);
 
     // log
     // vscode.window.showInformationMessage(
