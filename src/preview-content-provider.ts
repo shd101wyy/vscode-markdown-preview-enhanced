@@ -7,6 +7,13 @@ import * as vscode from 'vscode';
 import { TextEditor, Uri } from 'vscode';
 import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
 
+// NOTE: The __dirname is actually the out/native folder
+mume.utility.setExtentensionDirectoryPath(
+  path.resolve(__dirname, '../../mume/'),
+);
+console.log(path.resolve(__dirname, '../../mume/'));
+console.log(mume.utility.getExtensionDirectoryPath());
+
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
 // https://github.com/Microsoft/vscode/tree/master/extensions/markdown/src
@@ -385,7 +392,7 @@ export class MarkdownPreviewEnhancedView {
     } else {
       const localResourceRoots = [
         vscode.Uri.file(this.context.extensionPath),
-        vscode.Uri.file(mume.utility.extensionDirectoryPath),
+        vscode.Uri.file(mume.utility.getExtensionDirectoryPath()),
         vscode.Uri.file(mume.getExtensionConfigPath()),
         vscode.Uri.file(tmpdir()),
         vscode.Uri.file(
@@ -395,6 +402,7 @@ export class MarkdownPreviewEnhancedView {
           ) || path.dirname(sourceUri.fsPath),
         ),
       ];
+      console.log(localResourceRoots);
 
       previewPanel = vscode.window.createWebviewPanel(
         'markdown-preview-enhanced',

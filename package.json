@@ -20,21 +20,20 @@
     "gabyx"
   ],
   "publisher": "shd101wyy",
-  "main": "./out/src/extension",
+  "main": "./out/native/extension.js",
   "scripts": {
-    "check": "npm run check:eslint && npm run check:prettier && npm run check:tsc && npm run check:tslint",
+    "build": "yarn copy:files && rm -rf ./out && node build.js",
+    "check": "npm run check:eslint && npm run check:prettier && npm run check:tsc",
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
     "check:tsc": "tsc --project . --noEmit",
-    "check:tslint": "tslint --project .",
-    "compile": "tsc -p ./",
-    "fix": "npm run fix:eslint && npm run fix:tslint && npm run fix:prettier",
+    "copy:files": "node copyfiles.js",
+    "fix": "npm run fix:eslint && npm run fix:eslint && npm run fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
-    "fix:tslint": "tslint --project .",
-    "test": "npm run compile && node ./node_modules/vscode/bin/test",
-    "vscode:prepublish": "npm run compile",
-    "watch": "tsc -watch -p ./"
+    "test": "npm run build && node ./node_modules/vscode/bin/test",
+    "vscode:prepublish": "npm run build",
+    "watch": "yarn copy:files && rm -rf ./out && node build.js --watch"
   },
   "contributes": {
     "commands": [
@@ -598,6 +597,7 @@
     "@types/vscode": "1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
+    "esbuild": "^0.19.2",
     "eslint": "^8.48.0",
     "husky": "^3.0.9",
     "lint-staged": "^9.4.2",

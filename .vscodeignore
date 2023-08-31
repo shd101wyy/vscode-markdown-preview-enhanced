@@ -10,3 +10,11 @@ vsc-extension-quickstart.md
 styles/src/**
 .envrc
 .direnv/**
+flake.lock
+flake.nix
+shell.nix
+node_modules
+.eslintignore
+.prettierignore
+build.js
+prettier.config.js
