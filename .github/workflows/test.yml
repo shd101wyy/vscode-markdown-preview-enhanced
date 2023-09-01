@@ -28,6 +28,7 @@ jobs:
           yarn global add @vscode/vsce
           yarn install
           yarn run check:all
+          yarn run build
           # yarn test
           vsce package
           ls -lah *.vsix

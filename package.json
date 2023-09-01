@@ -587,8 +587,7 @@
   "lint-staged": {
     "**/*.*": [
       "eslint",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "dependencies": {
