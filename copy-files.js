@@ -26,7 +26,9 @@ fs.rmdirSync('./mume', { recursive: true });
 
 // Make source directories
 copyData.forEach(data => {
-  fs.mkdirSync(data.target, { recursive: true });
+  if (fs.existsSync(data.target)) {
+    fs.mkdirSync(data.target, { recursive: true });
+  }
 });
 
 // Copy directories
