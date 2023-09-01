@@ -25,9 +25,9 @@ jobs:
       - name: 'Build and test'
         run: |
           corepack enable
-          yarn global add vsce
+          yarn global add @vscode/vsce
           yarn install
-          yarn check
+          yarn run check:all
           # yarn test
           vsce package
           ls -lah *.vsix
