@@ -11,8 +11,6 @@ import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
 mume.utility.setExtentensionDirectoryPath(
   path.resolve(__dirname, '../../mume/'),
 );
-console.log(path.resolve(__dirname, '../../mume/'));
-console.log(mume.utility.getExtensionDirectoryPath());
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -402,7 +400,6 @@ export class MarkdownPreviewEnhancedView {
           ) || path.dirname(sourceUri.fsPath),
         ),
       ];
-      console.log(localResourceRoots);
 
       previewPanel = vscode.window.createWebviewPanel(
         'markdown-preview-enhanced',
@@ -581,7 +578,17 @@ export class MarkdownPreviewEnhancedView {
               totalLineCount: document.lineCount,
               sourceUri: sourceUri.toString(),
               id: yamlConfig.id || '',
-              class: yamlConfig.class || '',
+              class:
+                (yamlConfig.class || '') +
+                ` ${
+                  this.systemColorScheme === 'dark'
+                    ? 'system-dark'
+                    : 'system-ligtht'
+                } ${
+                  this.getEditorColorScheme() === 'dark'
+                    ? 'editor-dark'
+                    : 'editor-light'
+                }`,
             });
           }
         });

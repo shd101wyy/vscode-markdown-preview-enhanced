@@ -288,8 +288,10 @@
   dependencies:
     any-observable "^0.3.0"
 
-"@shd101wyy/mume@../mume":
+"@shd101wyy/mume@0.7.8":
   version "0.7.8"
+  resolved "https://registry.yarnpkg.com/@shd101wyy/mume/-/mume-0.7.8.tgz#300bcc4c1309fbc29b9dd016c388bc7c02cc1240"
+  integrity sha512-f2psFcF/ViWpRs5a24hmsnHEwHDijCgbgd3aHULYu466ZWFXBJ2FLGVVeMBXCbHu0a7y7PQhjJLhBq0CQnOIIQ==
   dependencies:
     "@viz-js/viz" "^3.1.0"
     async-mutex "^0.4.0"
