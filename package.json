@@ -23,16 +23,16 @@
   "main": "./out/native/extension.js",
   "scripts": {
     "build": "yarn copy:files && rm -rf ./out && node build.js",
-    "check": "npm run check:eslint && npm run check:prettier && npm run check:tsc",
+    "check": "yarn check:eslint && yarn check:prettier && yarn check:tsc",
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
     "check:tsc": "tsc --project . --noEmit",
     "copy:files": "node copy-files.js",
-    "fix": "npm run fix:eslint && npm run fix:eslint && npm run fix:prettier",
+    "fix": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
-    "test": "npm run build && node ./node_modules/vscode/bin/test",
-    "vscode:prepublish": "npm run build",
+    "test": "yarn build && node ./node_modules/vscode/bin/test",
+    "vscode:prepublish": "yarn build",
     "watch": "yarn copy:files && rm -rf ./out && node build.js --watch"
   },
   "contributes": {
