@@ -1,9 +1,8 @@
-import { utility } from "@shd101wyy/mume";
-import * as fs from "fs";
-import * as path from "path";
-import * as vscode from "vscode";
-
-import { isMarkdownFile } from "./preview-content-provider";
+import { utility } from '@shd101wyy/mume';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import { isMarkdownFile } from './preview-content-provider';
 
 /**
  * Copy ans paste image at imageFilePath to config.imageForlderPath.
@@ -12,21 +11,21 @@ import { isMarkdownFile } from "./preview-content-provider";
  * @param imageFilePath
  */
 export function pasteImageFile(sourceUri: any, imageFilePath: string) {
-  if (typeof sourceUri === "string") {
+  if (typeof sourceUri === 'string') {
     sourceUri = vscode.Uri.parse(sourceUri);
   }
 
   const imageFolderPath = vscode.workspace
-    .getConfiguration("markdown-preview-enhanced")
-    .get<string>("imageFolderPath");
+    .getConfiguration('markdown-preview-enhanced')
+    .get<string>('imageFolderPath');
   let imageFileName = path.basename(imageFilePath);
   const projectDirectoryPath = vscode.workspace.rootPath;
   let assetDirectoryPath;
   let description;
-  if (imageFolderPath[0] === "/") {
+  if (imageFolderPath[0] === '/') {
     assetDirectoryPath = path.resolve(
       projectDirectoryPath,
-      "." + imageFolderPath,
+      '.' + imageFolderPath,
     );
   } else {
     assetDirectoryPath = path.resolve(
@@ -42,18 +41,18 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
 
   vscode.window.visibleTextEditors
     .filter(
-      (editor) =>
+      editor =>
         isMarkdownFile(editor.document) &&
         editor.document.uri.fsPath === sourceUri.fsPath,
     )
-    .forEach((editor) => {
-      fs.mkdir(assetDirectoryPath, (error) => {
+    .forEach(editor => {
+      fs.mkdir(assetDirectoryPath, error => {
         fs.stat(destPath, (err, stat) => {
           if (err == null) {
             // file existed
-            const lastDotOffset = imageFileName.lastIndexOf(".");
+            const lastDotOffset = imageFileName.lastIndexOf('.');
             const uid =
-              "_" +
+              '_' +
               Math.random()
                 .toString(36)
                 .substr(2, 9);
@@ -74,16 +73,16 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
                 path.resolve(assetDirectoryPath, imageFileName),
               ),
             );
-          } else if (err.code === "ENOENT") {
+          } else if (err.code === 'ENOENT') {
             // file doesn't exist
             fs.createReadStream(imageFilePath).pipe(
               fs.createWriteStream(destPath),
             );
 
-            if (imageFileName.lastIndexOf(".")) {
+            if (imageFileName.lastIndexOf('.')) {
               description = imageFileName.slice(
                 0,
-                imageFileName.lastIndexOf("."),
+                imageFileName.lastIndexOf('.'),
               );
             } else {
               description = imageFileName;
@@ -97,11 +96,11 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
           );
 
           let url = `${imageFolderPath}/${imageFileName}`;
-          if (url.indexOf(" ") >= 0) {
-            url = url.replace(/ /g, "%20");
+          if (url.indexOf(' ') >= 0) {
+            url = url.replace(/ /g, '%20');
           }
 
-          editor.edit((textEditorEdit) => {
+          editor.edit(textEditorEdit => {
             textEditorEdit.insert(
               editor.selection.active,
               `![${description}](${url})`,
@@ -120,7 +119,7 @@ function replaceHint(
 ): boolean {
   const textLine = editor.document.lineAt(line);
   if (textLine.text.indexOf(hint) >= 0) {
-    editor.edit((textEdit) => {
+    editor.edit(textEdit => {
       textEdit.replace(
         new vscode.Range(
           new vscode.Position(line, 0),
@@ -142,8 +141,8 @@ function setUploadedImageURL(
   curPos: vscode.Position,
 ) {
   let description;
-  if (imageFileName.lastIndexOf(".")) {
-    description = imageFileName.slice(0, imageFileName.lastIndexOf("."));
+  if (imageFileName.lastIndexOf('.')) {
+    description = imageFileName.slice(0, imageFileName.lastIndexOf('.'));
   } else {
     description = imageFileName;
   }
@@ -173,45 +172,45 @@ export function uploadImageFile(
   imageUploader: string,
 ) {
   // console.log('uploadImageFile', sourceUri, imageFilePath, imageUploader)
-  if (typeof sourceUri === "string") {
+  if (typeof sourceUri === 'string') {
     sourceUri = vscode.Uri.parse(sourceUri);
   }
   const imageFileName = path.basename(imageFilePath);
 
   vscode.window.visibleTextEditors
     .filter(
-      (editor) =>
+      editor =>
         isMarkdownFile(editor.document) &&
         editor.document.uri.fsPath === sourceUri.fsPath,
     )
-    .forEach((editor) => {
+    .forEach(editor => {
       const uid = Math.random()
         .toString(36)
         .substr(2, 9);
       const hint = `![Uploading ${imageFileName}… (${uid})]()`;
       const curPos = editor.selection.active;
 
-      editor.edit((textEditorEdit) => {
+      editor.edit(textEditorEdit => {
         textEditorEdit.insert(curPos, hint);
       });
 
       const config = vscode.workspace.getConfiguration(
-        "markdown-preview-enhanced",
+        'markdown-preview-enhanced',
       );
-      const AccessKey = config.get<string>("AccessKey") || "";
-      const SecretKey = config.get<string>("SecretKey") || "";
-      const Bucket = config.get<string>("Bucket") || "";
-      const Domain = config.get<string>("Domain") || "";
+      const AccessKey = config.get<string>('AccessKey') || '';
+      const SecretKey = config.get<string>('SecretKey') || '';
+      const Bucket = config.get<string>('Bucket') || '';
+      const Domain = config.get<string>('Domain') || '';
 
       utility
         .uploadImage(imageFilePath, {
           method: imageUploader,
           qiniu: { AccessKey, SecretKey, Bucket, Domain },
         })
-        .then((url) => {
+        .then(url => {
           setUploadedImageURL(imageFileName, url, editor, hint, curPos);
         })
-        .catch((error) => {
+        .catch(error => {
           vscode.window.showErrorMessage(error.toString());
         });
     });

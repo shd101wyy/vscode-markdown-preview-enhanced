@@ -1,0 +1,34 @@
+name: "Test"
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    name: "Test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: 'Install nodejs 18'
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+      - name: 'Build and test'
+        run: |
+          corepack enable
+          yarn global add @vscode/vsce
+          yarn install
+          yarn run check:all
+          yarn run build
+          # yarn test
+          vsce package
+          ls -lah *.vsix

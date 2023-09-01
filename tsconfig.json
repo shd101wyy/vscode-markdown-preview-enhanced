@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es6",
+    "target": "ES2020",
     "noUnusedLocals": true,
     "sourceMap": true,
     "outDir": "out",
-    "lib": ["es6", "dom"],
-    "rootDir": "."
+    "lib": ["ES2020", "WebWorker"],
+    "rootDir": "src"
   },
   "include": ["src/**/*", "test/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "out"]
 }
