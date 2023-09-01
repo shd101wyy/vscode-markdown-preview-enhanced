@@ -22,13 +22,13 @@ const copyData = [
 ];
 
 // Delete ./mume directory
-fs.rmdirSync('./mume', { recursive: true });
+if (fs.existsSync('./mume')) {
+  fs.rmdirSync('./mume', { recursive: true });
+}
 
 // Make source directories
 copyData.forEach(data => {
-  if (fs.existsSync(data.target)) {
-    fs.mkdirSync(data.target, { recursive: true });
-  }
+  fs.mkdirSync(data.target, { recursive: true });
 });
 
 // Copy directories
