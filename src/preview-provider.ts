@@ -12,8 +12,8 @@ import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
 import {
-  getGlobalConfigPath,
   getProjectDirectoryPath,
+  globalConfigPath,
   isMarkdownFile,
 } from './utils';
 
@@ -106,15 +106,39 @@ export class PreviewProvider {
     // If not, then use the global config.
     const crossnoteDir = path.join(workspaceDir, '.crossnote');
     if (!existsSync(crossnoteDir)) {
-      const globalConfig = await loadConfigsInDirectory(
-        getGlobalConfigPath(),
-        wrapNodeFSAsApi(),
-        true,
-      );
-      this.notebook.updateConfig(globalConfig);
+      try {
+        const globalConfig = await loadConfigsInDirectory(
+          globalConfigPath,
+          wrapNodeFSAsApi(),
+          true,
+        );
+        this.notebook.updateConfig(globalConfig);
+      } catch (error) {
+        console.error(error);
+      }
     }
 
     return this;
+  }
+
+  public async updateCrossnoteConfig(directory: string) {
+    // If directory is globalConfigDirectory && ${workspaceDir}/.crossnote directory exists
+    // then return without updating.
+    if (
+      directory === globalConfigPath &&
+      existsSync(path.join(this.notebook.notebookPath, '.crossnote'))
+    ) {
+      return;
+    }
+
+    if (existsSync(directory)) {
+      const configs = await loadConfigsInDirectory(
+        directory,
+        wrapNodeFSAsApi(),
+        false,
+      );
+      this.notebook.updateConfig(configs);
+    }
   }
 
   public static async getPreviewContentProvider(
@@ -221,7 +245,7 @@ export class PreviewProvider {
       const localResourceRoots = [
         vscode.Uri.file(this.context.extensionPath),
         vscode.Uri.file(utility.getCrossnoteBuildDirectory()),
-        vscode.Uri.file(getGlobalConfigPath()),
+        vscode.Uri.file(globalConfigPath),
         vscode.Uri.file(tmpdir()),
         vscode.Uri.file(
           getProjectDirectoryPath(sourceUri) || path.dirname(sourceUri.fsPath),

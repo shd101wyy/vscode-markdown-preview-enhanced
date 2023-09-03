@@ -384,7 +384,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         // - mermaid.json
         // - mathjax_v3.json
         // - katex.json
-        // - parser.js
+        // - parser.mjs
         // If so, refresh the preview of the workspace.
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(
           document.uri,
@@ -399,10 +399,13 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
               'mermaid.json',
               'mathjax_v3.json',
               'katex.json',
-              'parser.js',
+              'parser.mjs',
             ].includes(path.basename(relativePath))
           ) {
             const provider = await getPreviewContentProvider(document.uri);
+            await provider.updateCrossnoteConfig(
+              path.join(workspaceDir, '.crossnote'),
+            );
             provider.refreshAllPreviews();
           }
         }

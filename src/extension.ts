@@ -6,9 +6,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { initExtensionCommon } from './extension-common';
 import { getAllPreviewProviders } from './preview-provider';
-import { getGlobalConfigPath } from './utils';
-
-let editorScrollDelay = Date.now();
+import { globalConfigPath } from './utils';
 
 // hide default vscode markdown preview buttons if necessary
 const hideDefaultVSCodeMarkdownPreviewButtons = vscode.workspace
@@ -25,31 +23,39 @@ if (hideDefaultVSCodeMarkdownPreviewButtons) {
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Watch the file changes in global config directory.
-  fs.watch(getGlobalConfigPath(), async (eventType, fileName) => {
-    if (
-      eventType === 'change' &&
-      [
-        'style.less',
-        'mermaid.json',
-        'mathjax_v3.json',
-        'katex.json',
-        'parser.js',
-      ].includes(fileName ?? '')
-    ) {
-      const providers = getAllPreviewProviders();
-      providers.forEach(provider => {
-        provider.refreshAllPreviews();
-      });
+  try {
+    if (!fs.existsSync(globalConfigPath)) {
+      fs.mkdirSync(globalConfigPath, { recursive: true });
     }
-  });
+    // Watch the file changes in global config directory.
+    fs.watch(globalConfigPath, async (eventType, fileName) => {
+      if (
+        eventType === 'change' &&
+        [
+          'style.less',
+          'mermaid.json',
+          'mathjax_v3.json',
+          'katex.json',
+          'parser.mjs',
+        ].includes(fileName ?? '')
+      ) {
+        const providers = getAllPreviewProviders();
+        providers.forEach(async provider => {
+          await provider.updateCrossnoteConfig(globalConfigPath);
+          provider.refreshAllPreviews();
+        });
+      }
+    });
+  } catch (error) {
+    console.error(error);
+  }
 
   // Init the extension-common module
   initExtensionCommon(context);
 
   function customizeCSS() {
     const globalStyleLessFile = utility.addFileProtocol(
-      path.resolve(getGlobalConfigPath(), './style.less'),
+      path.resolve(globalConfigPath, './style.less'),
     );
     vscode.commands.executeCommand(
       'vscode.open',
@@ -59,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function openMermaidConfig() {
     const mermaidConfigFilePath = utility.addFileProtocol(
-      path.resolve(getGlobalConfigPath(), './mermaid.json'),
+      path.resolve(globalConfigPath, './mermaid.json'),
     );
     vscode.commands.executeCommand(
       'vscode.open',
@@ -69,7 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function openMathJaxConfig() {
     const mathjaxConfigFilePath = utility.addFileProtocol(
-      path.resolve(getGlobalConfigPath(), './mathjax_v3.json'),
+      path.resolve(globalConfigPath, './mathjax_v3.json'),
     );
     vscode.commands.executeCommand(
       'vscode.open',
@@ -79,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function openKaTeXConfig() {
     const katexConfigFilePath = utility.addFileProtocol(
-      path.resolve(getGlobalConfigPath(), './katex.json'),
+      path.resolve(globalConfigPath, './katex.json'),
     );
     vscode.commands.executeCommand(
       'vscode.open',
@@ -89,7 +95,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function extendParser() {
     const parserConfigPath = utility.addFileProtocol(
-      path.resolve(getGlobalConfigPath(), './parser.js'),
+      path.resolve(globalConfigPath, './parser.mjs'),
     );
     vscode.commands.executeCommand(
       'vscode.open',
@@ -99,7 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function showUploadedImages() {
     const imageHistoryFilePath = utility.addFileProtocol(
-      path.resolve(getGlobalConfigPath(), './image_history.md'),
+      path.resolve(globalConfigPath, './image_history.md'),
     );
     vscode.commands.executeCommand(
       'vscode.open',

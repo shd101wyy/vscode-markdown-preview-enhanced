@@ -27,7 +27,7 @@ export function getProjectDirectoryPath(uri: vscode.Uri): string {
   }
 }
 
-export function getGlobalConfigPath(): string {
+function getGlobalConfigPath(): string {
   if (process.platform === 'win32') {
     return path.join(os.homedir(), './.crossnote');
   } else {
@@ -41,6 +41,7 @@ export function getGlobalConfigPath(): string {
     }
   }
 }
+export const globalConfigPath = getGlobalConfigPath();
 
 export function isMarkdownFile(document: vscode.TextDocument) {
   return (
