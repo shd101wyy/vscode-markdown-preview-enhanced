@@ -18,8 +18,6 @@
   <a href="https://a.paddle.com/v2/click/16413/111548?link=1227"><img src="https://img.shields.io/badge/LEARN-VSCODE%20POWER%20USER%20COURSE%20%E2%86%92-gray.svg?colorB=4D2AFF" alt="Become VSCode Power User"></a>
 </p>
 
-If you are interested, please try out our new prototype web app: [0xGG/crossnote](https://github.com/0xGG/crossnote)
-
 ## Supporting this project
 
 Markdown Preview Enhanced is an open source project released under the [University of Illinois/NCSA Open Source License](LICENSE.md). Its ongoing development is made possible thanks to the support by these awesome [backers](https://shd101wyy.github.io/markdown-preview-enhanced/#/backers). You can help make this project better by [supporting us on GitHub Sponsors](https://github.com/sponsors/shd101wyy), [PayPal](https://shd101wyy.github.io/markdown-preview-enhanced/#/paypal), or [微信支付 Wechat Pay](https://shd101wyy.github.io/markdown-preview-enhanced/#/wechat). Thank you!

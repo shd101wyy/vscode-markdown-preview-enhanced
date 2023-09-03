@@ -6,7 +6,9 @@
     "sourceMap": true,
     "outDir": "out",
     "lib": ["ES2020", "WebWorker"],
-    "rootDir": "src"
+    "rootDir": "src",
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "out"]

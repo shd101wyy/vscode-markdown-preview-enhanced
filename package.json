@@ -27,7 +27,7 @@
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
     "check:tsc": "tsc --project . --noEmit",
-    "copy:files": "node copy-files.js",
+    "copy:files": "gulp copy-files",
     "fix:all": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
@@ -129,7 +129,7 @@
       "title": "Markdown Preview Enhanced",
       "properties": {
         "markdown-preview-enhanced.configPath": {
-          "description": "The configuration directory path. Leave it empty to use '~/.mume' as the config path. Please reload vscode to take effect.",
+          "description": "The configuration directory path. Leave it empty to use '$HOME/.crossnote' for Windows or '$XDG_CONFIG_HOME/.crossnote' or '$HOME/.local/state/crossnote' as the config path.",
           "default": "",
           "type": "string"
         },
@@ -591,8 +591,8 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "0.7.9",
-    "@types/vfile": "^3.0.2"
+    "@types/vfile": "^3.0.2",
+    "crossnote": "../mume"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",
@@ -603,6 +603,7 @@
     "@typescript-eslint/parser": "^6.5.0",
     "esbuild": "^0.19.2",
     "eslint": "^8.48.0",
+    "gulp": "^4.0.2",
     "husky": "^3.0.9",
     "lint-staged": "^9.4.2",
     "mocha": "^6.1.4",

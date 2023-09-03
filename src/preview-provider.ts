@@ -1,30 +1,70 @@
-import * as mume from '@shd101wyy/mume';
-import { CodeChunkData, MarkdownEngine, PreviewTheme } from '@shd101wyy/mume';
-import * as fs from 'fs';
+import {
+  Notebook,
+  PreviewTheme,
+  loadConfigsInDirectory,
+  utility,
+  wrapNodeFSAsApi,
+} from 'crossnote';
+import { existsSync } from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { TextEditor, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
+import {
+  getGlobalConfigPath,
+  getProjectDirectoryPath,
+  isMarkdownFile,
+} from './utils';
 
 // NOTE: The __dirname is actually the out/native folder
-mume.utility.setExtentensionDirectoryPath(
-  path.resolve(__dirname, '../../mume/'),
-);
+utility.setCrossnoteBuildDirectory(path.resolve(__dirname, '../../crossnote/'));
+
+utility.useExternalAddFileProtocolFunction((filePath, preview) => {
+  if (preview) {
+    return preview.webview
+      .asWebviewUri(vscode.Uri.file(filePath))
+      .toString(true)
+      .replace(/%3F/gi, '?')
+      .replace(/%23/g, '#');
+  } else {
+    if (!filePath.startsWith('file://')) {
+      filePath = 'file:///' + filePath;
+    }
+    filePath = filePath.replace(/^file\:\/+/, 'file:///');
+    return filePath;
+  }
+});
+
+/**
+ * key is `workspaceDir`
+ * value is the `PreviewProvider`
+ */
+const WORKSPACE_DIR_PREVIEW_PROVIDER_MAP: {
+  [key: string]: PreviewProvider;
+} = {};
+
+export function getAllPreviewProviders(): PreviewProvider[] {
+  return Object.values(WORKSPACE_DIR_PREVIEW_PROVIDER_MAP);
+}
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
 // https://github.com/Microsoft/vscode/tree/master/extensions/markdown/src
 // https://github.com/tomoki1207/gfm-preview/blob/master/src/gfmProvider.ts
 // https://github.com/cbreeden/vscode-markdownit
-export class MarkdownPreviewEnhancedView {
+export class PreviewProvider {
   private waiting: boolean = false;
 
   /**
-   * The key is markdown file fsPath
-   * value is MarkdownEngine
+   * Each PreviewProvider has a one notebook.
    */
-  private engineMaps: { [key: string]: MarkdownEngine } = {};
+  private notebook: Notebook;
+
+  /**
+   * VSCode extension context
+   */
+  private context: vscode.ExtensionContext;
 
   /**
    * The key is markdown file fspath
@@ -37,8 +77,8 @@ export class MarkdownPreviewEnhancedView {
     vscode.TextEditor
   > = new Map();
 
-  private singlePreviewPanel: vscode.WebviewPanel;
-  private singlePreviewPanelSourceUriTarget: Uri;
+  private singlePreviewPanel: vscode.WebviewPanel | null;
+  private singlePreviewPanelSourceUriTarget: Uri | null;
 
   /**
    * The key is markdown file fsPath
@@ -50,64 +90,51 @@ export class MarkdownPreviewEnhancedView {
 
   private systemColorScheme: 'light' | 'dark' = 'light';
 
-  public constructor(private context: vscode.ExtensionContext) {
-    this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
-
-    mume
-      .init(this.config.configPath) // init markdown-preview-enhanced
-      .then(() => {
-        mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this));
-        MarkdownEngine.onModifySource(this.modifySource.bind(this));
-        mume.utility.useExternalAddFileProtocolFunction(
-          (filePath: string, preview: vscode.WebviewPanel) => {
-            if (preview) {
-              return preview.webview
-                .asWebviewUri(vscode.Uri.file(filePath))
-                .toString(true)
-                .replace(/%3F/gi, '?')
-                .replace(/%23/g, '#');
-            } else {
-              if (!filePath.startsWith('file://')) {
-                filePath = 'file:///' + filePath;
-              }
-              filePath = filePath.replace(/^file\:\/+/, 'file:///');
-              return filePath;
-            }
-          },
-        );
-
-        const extensionVersion = require(path.resolve(
-          this.context.extensionPath,
-          './package.json',
-        ))['version'];
-        if (extensionVersion !== mume.configs.config['vscode_mpe_version']) {
-          const config = Object.assign({}, mume.configs.config, {
-            vscode_mpe_version: extensionVersion,
-          });
-          fs.writeFileSync(
-            path.resolve(mume.getExtensionConfigPath(), 'config.json'),
-            JSON.stringify(config),
-          );
-        }
-      })
-      .catch(error => {
-        vscode.window.showErrorMessage(error.toString());
-      });
+  public constructor() {
+    // Please use `init` method to initialize this class.
   }
 
-  private refreshAllPreviews() {
-    // clear caches
-    for (const key in this.engineMaps) {
-      if (this.engineMaps.hasOwnProperty(key)) {
-        const engine = this.engineMaps[key];
-        if (engine) {
-          // No need to resetConfig.
-          // Otherwiser when user change settings like `previewTheme`, the preview won't change immediately.
-          // engine.resetConfig();
-          engine.clearCaches();
-        }
-      }
+  private async init(context: vscode.ExtensionContext, workspaceDir: string) {
+    this.context = context;
+    this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
+    this.notebook = await Notebook.init({
+      notebookPath: workspaceDir,
+      config: { ...this.config },
+    });
+
+    // Check if ${workspaceDir}/.crossnote directory exists
+    // If not, then use the global config.
+    const crossnoteDir = path.join(workspaceDir, '.crossnote');
+    if (!existsSync(crossnoteDir)) {
+      const globalConfig = await loadConfigsInDirectory(
+        getGlobalConfigPath(),
+        wrapNodeFSAsApi(),
+        true,
+      );
+      this.notebook.updateConfig(globalConfig);
     }
+
+    return this;
+  }
+
+  public static async getPreviewContentProvider(
+    uri: vscode.Uri,
+    context: vscode.ExtensionContext,
+  ) {
+    const workspaceDir = getProjectDirectoryPath(uri);
+    if (workspaceDir in WORKSPACE_DIR_PREVIEW_PROVIDER_MAP) {
+      return WORKSPACE_DIR_PREVIEW_PROVIDER_MAP[workspaceDir];
+    } else {
+      const provider = new PreviewProvider();
+      await provider.init(context, workspaceDir);
+      WORKSPACE_DIR_PREVIEW_PROVIDER_MAP[workspaceDir] = provider;
+      return provider;
+    }
+  }
+
+  public refreshAllPreviews() {
+    // clear caches
+    this.notebook.clearAllNoteMarkdownEngineCaches();
 
     // refresh iframes
     if (useSinglePreview()) {
@@ -122,126 +149,10 @@ export class MarkdownPreviewEnhancedView {
   }
 
   /**
-   * modify markdown source, append `result` after corresponding code chunk.
-   * @param codeChunkData
-   * @param result
-   * @param filePath
-   */
-  private async modifySource(
-    codeChunkData: CodeChunkData,
-    result: string,
-    filePath: string,
-  ): Promise<string> {
-    function insertResult(i: number, editor: TextEditor) {
-      const lineCount = editor.document.lineCount;
-      let start = 0;
-      // find <!-- code_chunk_output -->
-      for (let j = i + 1; j < i + 6 && j < lineCount; j++) {
-        if (
-          editor.document
-            .lineAt(j)
-            .text.startsWith('<!-- code_chunk_output -->')
-        ) {
-          start = j;
-          break;
-        }
-      }
-      if (start) {
-        // found
-        // TODO: modify exited output
-        let end = start + 1;
-        while (end < lineCount) {
-          if (
-            editor.document
-              .lineAt(end)
-              .text.startsWith('<!-- /code_chunk_output -->')
-          ) {
-            break;
-          }
-          end += 1;
-        }
-
-        // if output not changed, then no need to modify editor buffer
-        let r = '';
-        for (let i2 = start + 2; i2 < end - 1; i2++) {
-          r += editor.document.lineAt(i2).text + '\n';
-        }
-        if (r === result + '\n') {
-          return '';
-        } // no need to modify output
-
-        editor.edit(edit => {
-          edit.replace(
-            new vscode.Range(
-              new vscode.Position(start + 2, 0),
-              new vscode.Position(end - 1, 0),
-            ),
-            result + '\n',
-          );
-        });
-        return '';
-      } else {
-        editor.edit(edit => {
-          edit.insert(
-            new vscode.Position(i + 1, 0),
-            `\n<!-- code_chunk_output -->\n\n${result}\n\n<!-- /code_chunk_output -->\n`,
-          );
-        });
-        return '';
-      }
-    }
-
-    const visibleTextEditors = vscode.window.visibleTextEditors;
-    for (let i = 0; i < visibleTextEditors.length; i++) {
-      const editor = visibleTextEditors[i];
-      if (this.formatPathIfNecessary(editor.document.uri.fsPath) === filePath) {
-        let codeChunkOffset = 0;
-        const targetCodeChunkOffset =
-          codeChunkData.normalizedInfo.attributes['code_chunk_offset'];
-
-        const lineCount = editor.document.lineCount;
-        for (let i2 = 0; i2 < lineCount; i2++) {
-          const line = editor.document.lineAt(i2);
-          if (line.text.match(/^```(.+)\"?cmd\"?\s*[=\s}]/)) {
-            if (codeChunkOffset === targetCodeChunkOffset) {
-              i2 = i2 + 1;
-              while (i2 < lineCount) {
-                if (editor.document.lineAt(i2).text.match(/^\`\`\`\s*/)) {
-                  break;
-                }
-                i2 += 1;
-              }
-              return insertResult(i2, editor);
-            } else {
-              codeChunkOffset++;
-            }
-          } else if (line.text.match(/\@import\s+(.+)\"?cmd\"?\s*[=\s}]/)) {
-            if (codeChunkOffset === targetCodeChunkOffset) {
-              return insertResult(i2, editor);
-            } else {
-              codeChunkOffset++;
-            }
-          }
-        }
-        break;
-      }
-    }
-    return '';
-  }
-
-  /**
-   * return markdown engine of sourceUri
-   * @param sourceUri
-   */
-  public getEngine(sourceUri: Uri): MarkdownEngine {
-    return this.engineMaps[sourceUri.fsPath];
-  }
-
-  /**
    * return markdown preview of sourceUri
    * @param sourceUri
    */
-  public getPreview(sourceUri: Uri): vscode.WebviewPanel {
+  public getPreview(sourceUri: Uri): vscode.WebviewPanel | null {
     if (useSinglePreview()) {
       return this.singlePreviewPanel;
     } else {
@@ -277,87 +188,12 @@ export class MarkdownPreviewEnhancedView {
   }
 
   /**
-   * remove engine from this.engineMaps
-   * @param sourceUri
+   * TODO: Free memory
    */
-  public destroyEngine(sourceUri: Uri) {
-    if (useSinglePreview()) {
-      return (this.engineMaps = {});
-    }
-    const engine = this.getEngine(sourceUri);
-    if (engine) {
-      delete this.engineMaps[sourceUri.fsPath]; // destroy engine
-    }
-  }
+  public destroyEngine(sourceUri: vscode.Uri) {}
 
-  /**
-   * Format pathString if it is on Windows. Convert `c:\` like string to `C:\`
-   * @param pathString
-   */
-  private formatPathIfNecessary(pathString: string) {
-    if (process.platform === 'win32') {
-      pathString = pathString.replace(
-        /^([a-zA-Z])\:\\/,
-        (_, $1) => `${$1.toUpperCase()}:\\`,
-      );
-    }
-    return pathString;
-  }
-
-  private getProjectDirectoryPath(
-    sourceUri: Uri,
-    workspaceFolders: readonly vscode.WorkspaceFolder[] = [],
-  ) {
-    const possibleWorkspaceFolders = workspaceFolders.filter(
-      workspaceFolder => {
-        return (
-          path
-            .dirname(sourceUri.path.toUpperCase())
-            .indexOf(workspaceFolder.uri.path.toUpperCase()) >= 0
-        );
-      },
-    );
-
-    let projectDirectoryPath;
-    if (possibleWorkspaceFolders.length) {
-      // We pick the workspaceUri that has the longest path
-      const workspaceFolder = possibleWorkspaceFolders.sort(
-        (x, y) => y.uri.fsPath.length - x.uri.fsPath.length,
-      )[0];
-      projectDirectoryPath = workspaceFolder.uri.fsPath;
-    } else {
-      projectDirectoryPath = '';
-    }
-
-    return this.formatPathIfNecessary(projectDirectoryPath);
-  }
-
-  private getFilePath(sourceUri: Uri) {
-    return this.formatPathIfNecessary(sourceUri.fsPath);
-  }
-
-  /**
-   * Initialize MarkdownEngine for this markdown file
-   */
-  public initMarkdownEngine(sourceUri: Uri): MarkdownEngine {
-    let engine = this.getEngine(sourceUri);
-    if (!engine) {
-      const previewTheme = this.getPreviewTheme(
-        this.config.previewTheme,
-        this.config.previewColorScheme,
-      );
-      engine = new MarkdownEngine({
-        filePath: this.getFilePath(sourceUri),
-        projectDirectoryPath: this.getProjectDirectoryPath(
-          sourceUri,
-          vscode.workspace.workspaceFolders,
-        ),
-        config: { ...this.config, previewTheme },
-      });
-      this.engineMaps[sourceUri.fsPath] = engine;
-      this.jsAndCssFilesMaps[sourceUri.fsPath] = [];
-    }
-    return engine;
+  private getEngine(sourceUri: Uri) {
+    return this.notebook.getNoteMarkdownEngine(sourceUri.fsPath);
   }
 
   public async initPreview(
@@ -368,16 +204,10 @@ export class MarkdownPreviewEnhancedView {
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: vscode.WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
-      const oldResourceRoot =
-        this.getProjectDirectoryPath(
-          this.singlePreviewPanelSourceUriTarget,
-          vscode.workspace.workspaceFolders,
-        ) || path.dirname(this.singlePreviewPanelSourceUriTarget.fsPath);
-      const newResourceRoot =
-        this.getProjectDirectoryPath(
-          sourceUri,
-          vscode.workspace.workspaceFolders,
-        ) || path.dirname(sourceUri.fsPath);
+      const oldResourceRoot = this.singlePreviewPanelSourceUriTarget
+        ? getProjectDirectoryPath(this.singlePreviewPanelSourceUriTarget)
+        : '';
+      const newResourceRoot = getProjectDirectoryPath(sourceUri);
       if (oldResourceRoot !== newResourceRoot) {
         this.singlePreviewPanel.dispose();
         return this.initPreview(sourceUri, editor, viewOptions);
@@ -390,14 +220,11 @@ export class MarkdownPreviewEnhancedView {
     } else {
       const localResourceRoots = [
         vscode.Uri.file(this.context.extensionPath),
-        vscode.Uri.file(mume.utility.getExtensionDirectoryPath()),
-        vscode.Uri.file(mume.getExtensionConfigPath()),
+        vscode.Uri.file(utility.getCrossnoteBuildDirectory()),
+        vscode.Uri.file(getGlobalConfigPath()),
         vscode.Uri.file(tmpdir()),
         vscode.Uri.file(
-          this.getProjectDirectoryPath(
-            sourceUri,
-            vscode.workspace.workspaceFolders,
-          ) || path.dirname(sourceUri.fsPath),
+          getProjectDirectoryPath(sourceUri) || path.dirname(sourceUri.fsPath),
         ),
       ];
 
@@ -419,7 +246,7 @@ export class MarkdownPreviewEnhancedView {
       previewPanel.webview.onDidReceiveMessage(
         message => {
           vscode.commands.executeCommand(
-            `_mume.${message.command}`,
+            `_crossnote.${message.command}`,
             ...message.args,
           );
         },
@@ -454,7 +281,7 @@ export class MarkdownPreviewEnhancedView {
     let initialLine: number | undefined;
     if (editor && editor.document.uri.fsPath === sourceUri.fsPath) {
       initialLine = await new Promise((resolve, reject) => {
-        // Hack: sometimes we only get 0. I couldn't find API to wait for editor getting loaded.
+        // HACK: sometimes we only get 0. I couldn't find API to wait for editor getting loaded.
         setTimeout(() => {
           return resolve(editor.selections[0].active.line || 0);
         }, 100);
@@ -462,17 +289,13 @@ export class MarkdownPreviewEnhancedView {
     }
 
     const text = editor.document.getText();
-    let engine = this.getEngine(sourceUri);
-    if (!engine) {
-      engine = this.initMarkdownEngine(sourceUri);
-    }
-
+    const engine = this.getEngine(sourceUri);
     engine
       .generateHTMLTemplateForPreview({
         inputString: text,
         config: {
           sourceUri: sourceUri.toString(),
-          initialLine,
+          initialLine: initialLine as number,
           vscode: true,
         },
         contentSecurityPolicy: '',
@@ -492,7 +315,7 @@ export class MarkdownPreviewEnhancedView {
         this.singlePreviewPanel.dispose();
       }
     } else {
-      const previewPanels = [];
+      const previewPanels: vscode.WebviewPanel[] = [];
       for (const key in this.previewMaps) {
         if (this.previewMaps.hasOwnProperty(key)) {
           const previewPanel = this.previewMaps[key];
@@ -507,7 +330,7 @@ export class MarkdownPreviewEnhancedView {
 
     this.previewMaps = {};
     this.preview2EditorMap = new Map();
-    this.engineMaps = {};
+    // this.engineMaps = {};
     this.singlePreviewPanel = null;
     this.singlePreviewPanelSourceUriTarget = null;
   }
@@ -529,10 +352,6 @@ export class MarkdownPreviewEnhancedView {
 
   public updateMarkdown(sourceUri: Uri, triggeredBySave?: boolean) {
     const engine = this.getEngine(sourceUri);
-    if (!engine) {
-      return;
-    }
-
     const previewPanel = this.getPreview(sourceUri);
     if (!previewPanel) {
       return;
@@ -595,7 +414,11 @@ export class MarkdownPreviewEnhancedView {
     });
   }
 
-  public refreshPreviewPanel(sourceUri: Uri) {
+  public refreshPreviewPanel(sourceUri: Uri | null) {
+    if (!sourceUri) {
+      return;
+    }
+
     this.preview2EditorMap.forEach((editor, previewPanel) => {
       if (
         previewPanel &&
@@ -606,7 +429,7 @@ export class MarkdownPreviewEnhancedView {
         editor.document.uri.fsPath === sourceUri.fsPath
       ) {
         this.initPreview(sourceUri, editor, {
-          viewColumn: previewPanel.viewColumn,
+          viewColumn: previewPanel.viewColumn ?? vscode.ViewColumn.One,
           preserveFocus: true,
         });
       }
@@ -821,18 +644,12 @@ export class MarkdownPreviewEnhancedView {
         this.config = newConfig;
       } else {
         this.config = newConfig;
-        for (const fsPath in this.engineMaps) {
-          if (this.engineMaps.hasOwnProperty(fsPath)) {
-            const engine = this.engineMaps[fsPath];
-            const previewTheme = this.getPreviewTheme(
-              newConfig.previewTheme,
-              newConfig.previewColorScheme,
-            );
-            // Update markdown engine configuration
-            engine.updateConfiguration({ ...newConfig, previewTheme });
-          }
-        }
 
+        const previewTheme = this.getPreviewTheme(
+          newConfig.previewTheme,
+          newConfig.previewColorScheme,
+        );
+        this.notebook.updateConfig({ ...newConfig, previewTheme });
         // update all generated md documents
         this.refreshAllPreviews();
       }
@@ -922,11 +739,4 @@ export function getPreviewUri(uri: vscode.Uri) {
     });
   }
   return previewUri;
-}
-
-export function isMarkdownFile(document: vscode.TextDocument) {
-  return (
-    document.languageId === 'markdown' &&
-    document.uri.scheme !== 'markdown-preview-enhanced'
-  ); // prevent processing of own documents
 }
