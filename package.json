@@ -88,6 +88,10 @@
         "title": "%markdown-preview-enhanced.customizeCss.title%"
       },
       {
+        "command": "markdown-preview-enhanced.customizeCssInWorkspace",
+        "title": "%markdown-preview-enhanced.customizeCssInWorkspace.title%"
+      },
+      {
         "command": "markdown-preview-enhanced.insertNewSlide",
         "title": "%markdown-preview-enhanced.insertNewSlide.title%"
       },
@@ -118,6 +122,22 @@
       {
         "command": "markdown-preview-enhanced.extendParser",
         "title": "%markdown-preview-enhanced.extendParser.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.openMermaidConfigInWorkspace",
+        "title": "%markdown-preview-enhanced.openMermaidConfigInWorkspace.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.openMathJaxConfigInWorkspace",
+        "title": "%markdown-preview-enhanced.openMathJaxConfigInWorkspace.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.openKaTeXConfigInWorkspace",
+        "title": "%markdown-preview-enhanced.openKaTeXConfigInWorkspace.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.extendParserInWorkspace",
+        "title": "%markdown-preview-enhanced.extendParserInWorkspace.title%"
       },
       {
         "command": "markdown-preview-enhanced.showUploadedImages",

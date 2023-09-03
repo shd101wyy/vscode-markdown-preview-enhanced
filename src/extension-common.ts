@@ -1,4 +1,5 @@
 // For both node.js and browser environments
+import { utility } from 'crossnote';
 import * as vscode from 'vscode';
 import { PreviewColorScheme } from './config';
 import { pasteImageFile, uploadImageFile } from './image-helper';
@@ -9,6 +10,7 @@ import {
 } from './preview-provider';
 import {
   getBottomVisibleLine,
+  getProjectDirectoryPath,
   getTopVisibleLine,
   isMarkdownFile,
 } from './utils';
@@ -17,6 +19,17 @@ import path = require('path');
 let editorScrollDelay = Date.now();
 
 export function initExtensionCommon(context: vscode.ExtensionContext) {
+  function getCurrentWorkingDirectory() {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (activeEditor) {
+      return getProjectDirectoryPath(activeEditor.document.uri);
+    } else {
+      const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
+      const workspaceFolderUri = workspaceFolders[0]?.uri;
+      return getProjectDirectoryPath(workspaceFolderUri);
+    }
+  }
+
   async function getPreviewContentProvider(uri: vscode.Uri) {
     return await PreviewProvider.getPreviewContentProvider(uri, context);
   }
@@ -370,6 +383,59 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
       'markdown-preview-enhanced',
     );
     config.update('previewTheme', theme, true);
+  }
+
+  function customizeCSSInWorkspace() {
+    const styleLessFile = utility.addFileProtocol(
+      path.resolve(getCurrentWorkingDirectory(), './.crossnote/style.less'),
+    );
+    vscode.commands.executeCommand(
+      'vscode.open',
+      vscode.Uri.parse(styleLessFile),
+    );
+  }
+
+  function openMermaidConfigInWorkspace() {
+    const mermaidConfigFilePath = utility.addFileProtocol(
+      path.resolve(getCurrentWorkingDirectory(), './.crossnote/mermaid.json'),
+    );
+    vscode.commands.executeCommand(
+      'vscode.open',
+      vscode.Uri.parse(mermaidConfigFilePath),
+    );
+  }
+
+  function openMathJaxConfigInWorkspace() {
+    const mathjaxConfigFilePath = utility.addFileProtocol(
+      path.resolve(
+        getCurrentWorkingDirectory(),
+        './.crossnote/mathjax_v3.json',
+      ),
+    );
+    vscode.commands.executeCommand(
+      'vscode.open',
+      vscode.Uri.parse(mathjaxConfigFilePath),
+    );
+  }
+
+  function openKaTeXConfigInWorkspace() {
+    const katexConfigFilePath = utility.addFileProtocol(
+      path.resolve(getCurrentWorkingDirectory(), './.crossnote/katex.json'),
+    );
+    vscode.commands.executeCommand(
+      'vscode.open',
+      vscode.Uri.parse(katexConfigFilePath),
+    );
+  }
+
+  function extendParserInWorkspace() {
+    const parserConfigPath = utility.addFileProtocol(
+      path.resolve(getCurrentWorkingDirectory(), './.crossnote/parser.mjs'),
+    );
+    vscode.commands.executeCommand(
+      'vscode.open',
+      vscode.Uri.parse(parserConfigPath),
+    );
   }
 
   context.subscriptions.push(
@@ -770,6 +836,41 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       '_crossnote.setPreviewTheme',
       setPreviewTheme,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.customizeCssInWorkspace',
+      customizeCSSInWorkspace,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.openMermaidConfigInWorkspace',
+      openMermaidConfigInWorkspace,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.openMathJaxConfigInWorkspace',
+      openMathJaxConfigInWorkspace,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.openKaTeXConfigInWorkspace',
+      openKaTeXConfigInWorkspace,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.extendParserInWorkspace',
+      extendParserInWorkspace,
     ),
   );
 }
