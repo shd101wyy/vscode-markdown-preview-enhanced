@@ -29,7 +29,6 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly enableWikiLinkSyntax: boolean;
   public readonly enableLinkify: boolean;
   public readonly useGitHubStylePipedLink: boolean;
-  public readonly wikiLinkFileExtension: string;
   public readonly enableEmojiSyntax: boolean;
   public readonly enableExtendedTableSyntax: boolean;
   public readonly enableCriticMarkupSyntax: boolean;
@@ -98,9 +97,6 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.useGitHubStylePipedLink =
       config.get<boolean>('useGitHubStylePipedLink') ??
       defaultConfig.useGitHubStylePipedLink;
-    this.wikiLinkFileExtension =
-      config.get<string>('wikiLinkFileExtension') ??
-      defaultConfig.wikiLinkFileExtension;
     this.enableEmojiSyntax =
       config.get<boolean>('enableEmojiSyntax') ??
       defaultConfig.enableEmojiSyntax;

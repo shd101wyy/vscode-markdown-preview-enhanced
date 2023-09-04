@@ -15,6 +15,27 @@ const nativeConfig = {
   external: ['vscode'],
 };
 
+// FIX: 
+const defaultDocument = {
+  readyState: 'ready',
+
+};
+const defaultWindow = {
+  document: {
+    currentScript: {
+      dataset: {},
+    },
+  },
+  location: {
+    protocol: 'https:',
+  },
+  less: {
+    onReady: false,
+    async: false,
+    manual: true
+  },
+};
+
 /**
  * @type {import('esbuild').BuildOptions}
  */
@@ -33,14 +54,17 @@ const webConfig = {
         fs: true,
       },
       globals: {
-        window: true,
+        // global: true,
       },
     }),
   ],
   define: {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    window: 'globalThis',
-    global: 'globalThis',
+    // window: 'globalThis',
+    // global: 'globalThis',
+    // window: "globalThis",
+    window: JSON.stringify(defaultWindow),
+    // document: JSON.stringify(defaultDocument),
     'process.env.IS_VSCODE_WEB_EXTENSION': '"true"',
   },
 };

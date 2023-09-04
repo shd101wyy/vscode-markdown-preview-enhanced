@@ -2,7 +2,7 @@ import { utility } from 'crossnote';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { isMarkdownFile } from './utils';
+import { getWorkspaceFolderUri, isMarkdownFile } from './utils';
 
 /**
  * Copy ans paste image at imageFilePath to config.imageForlderPath.
@@ -18,8 +18,7 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
       .getConfiguration('markdown-preview-enhanced')
       .get<string>('imageFolderPath') ?? '';
   let imageFileName = path.basename(imageFilePath);
-  const projectDirectoryPath = vscode.workspace.getWorkspaceFolder(uri)?.uri
-    .fsPath;
+  const projectDirectoryPath = getWorkspaceFolderUri(uri).fsPath;
   if (!projectDirectoryPath) {
     return vscode.window.showErrorMessage('Cannot find workspace');
   }

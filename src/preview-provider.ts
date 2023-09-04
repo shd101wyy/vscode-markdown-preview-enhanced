@@ -11,6 +11,7 @@ import { Uri } from 'vscode';
 import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
 import {
   getCrossnoteVersion,
+  getWorkspaceFolderUri,
   globalConfigPath,
   isMarkdownFile,
   isVSCodeWebExtension,
@@ -188,25 +189,20 @@ export class PreviewProvider {
     uri: vscode.Uri,
     context: vscode.ExtensionContext,
   ) {
-    const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-    console.log('* getPreviewContentProvider: ', uri, workspaceFolder);
+    const workspaceUri = getWorkspaceFolderUri(uri);
+    console.log('* getPreviewContentProvider: ', uri, workspaceUri);
     console.log('* all workspaces: ', vscode.workspace.workspaceFolders);
-    if (!workspaceFolder) {
-      throw new Error('Cannot find workspace directory');
-    }
 
-    if (WORKSPACE_PREVIEW_PROVIDER_MAP.has(workspaceFolder.uri.fsPath)) {
-      const provider = WORKSPACE_PREVIEW_PROVIDER_MAP.get(
-        workspaceFolder.uri.fsPath,
-      );
+    if (WORKSPACE_PREVIEW_PROVIDER_MAP.has(workspaceUri.fsPath)) {
+      const provider = WORKSPACE_PREVIEW_PROVIDER_MAP.get(workspaceUri.fsPath);
       if (!provider) {
         throw new Error('Cannot find preview provider');
       }
       return provider;
     } else {
       const provider = new PreviewProvider();
-      await provider.init(context, workspaceFolder.uri);
-      WORKSPACE_PREVIEW_PROVIDER_MAP.set(workspaceFolder.uri.fsPath, provider);
+      await provider.init(context, workspaceUri);
+      WORKSPACE_PREVIEW_PROVIDER_MAP.set(workspaceUri.fsPath, provider);
       return provider;
     }
   }
@@ -284,12 +280,10 @@ export class PreviewProvider {
     let previewPanel: vscode.WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
       const oldResourceRoot = this.singlePreviewPanelSourceUriTarget
-        ? vscode.workspace.getWorkspaceFolder(
-            this.singlePreviewPanelSourceUriTarget,
-          )
+        ? getWorkspaceFolderUri(this.singlePreviewPanelSourceUriTarget)
         : undefined;
-      const newResourceRoot = vscode.workspace.getWorkspaceFolder(sourceUri);
-      if (oldResourceRoot?.uri.fsPath !== newResourceRoot?.uri.fsPath) {
+      const newResourceRoot = getWorkspaceFolderUri(sourceUri);
+      if (oldResourceRoot?.fsPath !== newResourceRoot.fsPath) {
         this.singlePreviewPanel.dispose();
         return this.initPreview(sourceUri, editor, viewOptions);
       } else {
@@ -305,7 +299,7 @@ export class PreviewProvider {
         vscode.Uri.file(globalConfigPath),
         vscode.Uri.file(tmpdir()),
       ];
-      const workspaceUri = vscode.workspace.getWorkspaceFolder(sourceUri)?.uri;
+      const workspaceUri = getWorkspaceFolderUri(sourceUri);
       if (workspaceUri) {
         localResourceRoots.push(workspaceUri);
       }

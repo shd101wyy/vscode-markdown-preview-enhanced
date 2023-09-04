@@ -17,6 +17,30 @@ function formatPathIfNecessary(pathString: string) {
   return pathString;
 }
 
+/**
+ * Get the workspace folder uri of the given uri
+ * @param uri
+ */
+export function getWorkspaceFolderUri(uri: vscode.Uri) {
+  const workspace = vscode.workspace.getWorkspaceFolder(uri);
+  if (workspace) {
+    return workspace.uri;
+  }
+
+  const workspaces = vscode.workspace.workspaceFolders;
+  if (workspaces) {
+    for (let i = 0; i < workspaces.length; i++) {
+      const workspace = workspaces[i];
+      if (uri.fsPath.startsWith(workspace.uri.fsPath)) {
+        return workspace.uri;
+      }
+    }
+  }
+
+  // Return the folder of uri
+  return vscode.Uri.file(path.dirname(uri.fsPath));
+}
+
 function getGlobalConfigPath(): string {
   if (process.platform === 'win32') {
     return path.join(os.homedir(), './.crossnote');

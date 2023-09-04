@@ -11,6 +11,7 @@ import {
 import {
   getBottomVisibleLine,
   getTopVisibleLine,
+  getWorkspaceFolderUri,
   isMarkdownFile,
 } from './utils';
 import path = require('path');
@@ -33,8 +34,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   function getCurrentWorkingDirectory() {
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor) {
-      return vscode.workspace.getWorkspaceFolder(activeEditor.document.uri)
-        ?.uri;
+      return getWorkspaceFolderUri(activeEditor.document.uri);
     } else {
       const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
       const workspaceFolderUri = workspaceFolders[0]?.uri;
@@ -407,7 +407,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     }
     const styleLessFile = vscode.Uri.joinPath(
       currentWorkingDirectory,
-      "'./.crossnote/style.less",
+      './.crossnote/style.less',
     );
     vscode.commands.executeCommand('vscode.open', styleLessFile);
   }
@@ -553,6 +553,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
       if (fileExists) {
         // Open fileUri
+        /*
         vscode.workspace.openTextDocument(fileUri.path).then(doc => {
           vscode.window.showTextDocument(doc, col).then(editor => {
             // if there was line fragment, jump to line
@@ -567,6 +568,13 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
             }
           });
         });
+        */
+        vscode.commands.executeCommand(
+          'vscode.open',
+          fileUri,
+          col,
+          line >= 0 ? new vscode.Position(line, 0) : undefined,
+        );
       } else {
         vscode.commands.executeCommand(
           'vscode.open',
@@ -593,29 +601,25 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         // - katex.json
         // - parser.mjs
         // If so, refresh the preview of the workspace.
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(
-          document.uri,
-        );
-        if (workspaceFolder) {
-          const workspaceDir = workspaceFolder.uri.fsPath;
-          const relativePath = path.relative(workspaceDir, document.uri.fsPath);
-          console.log('- relativePath: ', relativePath);
-          if (
-            relativePath.startsWith('.crossnote') &&
-            [
-              'style.less',
-              'mermaid.json',
-              'mathjax_v3.json',
-              'katex.json',
-              'parser.mjs',
-            ].includes(path.basename(relativePath))
-          ) {
-            const provider = await getPreviewContentProvider(document.uri);
-            await provider.updateCrossnoteConfig(
-              path.join(workspaceDir, '.crossnote'),
-            );
-            provider.refreshAllPreviews();
-          }
+        const workspaceUri = getWorkspaceFolderUri(document.uri);
+        const workspaceDir = workspaceUri.fsPath;
+        const relativePath = path.relative(workspaceDir, document.uri.fsPath);
+        console.log('- relativePath: ', relativePath);
+        if (
+          relativePath.startsWith('.crossnote') &&
+          [
+            'style.less',
+            'mermaid.json',
+            'mathjax_v3.json',
+            'katex.json',
+            'parser.mjs',
+          ].includes(path.basename(relativePath))
+        ) {
+          const provider = await getPreviewContentProvider(document.uri);
+          await provider.updateCrossnoteConfig(
+            path.join(workspaceDir, '.crossnote'),
+          );
+          provider.refreshAllPreviews();
         }
       }
     }),
