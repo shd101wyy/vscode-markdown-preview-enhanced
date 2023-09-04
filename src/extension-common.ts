@@ -10,7 +10,6 @@ import {
 } from './preview-provider';
 import {
   getBottomVisibleLine,
-  getProjectDirectoryPath,
   getTopVisibleLine,
   isMarkdownFile,
 } from './utils';
@@ -18,15 +17,28 @@ import path = require('path');
 
 let editorScrollDelay = Date.now();
 
+// hide default vscode markdown preview buttons if necessary
+const hideDefaultVSCodeMarkdownPreviewButtons = vscode.workspace
+  .getConfiguration('markdown-preview-enhanced')
+  .get<boolean>('hideDefaultVSCodeMarkdownPreviewButtons');
+if (hideDefaultVSCodeMarkdownPreviewButtons) {
+  vscode.commands.executeCommand(
+    'setContext',
+    'hasCustomMarkdownPreview',
+    true,
+  );
+}
+
 export function initExtensionCommon(context: vscode.ExtensionContext) {
   function getCurrentWorkingDirectory() {
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor) {
-      return getProjectDirectoryPath(activeEditor.document.uri);
+      return vscode.workspace.getWorkspaceFolder(activeEditor.document.uri)
+        ?.uri;
     } else {
       const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
       const workspaceFolderUri = workspaceFolders[0]?.uri;
-      return getProjectDirectoryPath(workspaceFolderUri);
+      return workspaceFolderUri;
     }
   }
 
@@ -42,6 +54,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     if (!uri) {
       uri = editor.document.uri;
     }
+    console.log('openPreviewToTheSide: ', uri);
 
     const previewProvider = await getPreviewContentProvider(uri);
     previewProvider.initPreview(uri, editor, {
@@ -181,14 +194,14 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     previewProvider.openImageHelper(uri);
   }
 
-  async function webviewFinishLoading(
-    uri: string,
-    {
-      systemColorScheme,
-    }: {
-      systemColorScheme: 'light' | 'dark';
-    },
-  ) {
+  async function webviewFinishLoading({
+    uri,
+    systemColorScheme,
+  }: {
+    uri: string;
+    systemColorScheme: 'light' | 'dark';
+  }) {
+    console.log('webviewFinishLoading: ', uri, systemColorScheme);
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.setSystemColorScheme(systemColorScheme);
@@ -386,56 +399,184 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   }
 
   function customizeCSSInWorkspace() {
-    const styleLessFile = utility.addFileProtocol(
-      path.resolve(getCurrentWorkingDirectory(), './.crossnote/style.less'),
+    const currentWorkingDirectory = getCurrentWorkingDirectory();
+    if (!currentWorkingDirectory) {
+      return vscode.window.showErrorMessage(
+        'Please open a folder before customizing CSS',
+      );
+    }
+    const styleLessFile = vscode.Uri.joinPath(
+      currentWorkingDirectory,
+      "'./.crossnote/style.less",
     );
-    vscode.commands.executeCommand(
-      'vscode.open',
-      vscode.Uri.parse(styleLessFile),
-    );
+    vscode.commands.executeCommand('vscode.open', styleLessFile);
   }
 
   function openMermaidConfigInWorkspace() {
-    const mermaidConfigFilePath = utility.addFileProtocol(
-      path.resolve(getCurrentWorkingDirectory(), './.crossnote/mermaid.json'),
+    const currentWorkingDirectory = getCurrentWorkingDirectory();
+    if (!currentWorkingDirectory) {
+      return vscode.window.showErrorMessage(
+        'Please open a folder before customizing Mermaid config',
+      );
+    }
+
+    const mermaidConfigFilePath = vscode.Uri.joinPath(
+      currentWorkingDirectory,
+      './.crossnote/mermaid.json',
     );
-    vscode.commands.executeCommand(
-      'vscode.open',
-      vscode.Uri.parse(mermaidConfigFilePath),
-    );
+    vscode.commands.executeCommand('vscode.open', mermaidConfigFilePath);
   }
 
   function openMathJaxConfigInWorkspace() {
-    const mathjaxConfigFilePath = utility.addFileProtocol(
-      path.resolve(
-        getCurrentWorkingDirectory(),
-        './.crossnote/mathjax_v3.json',
-      ),
+    const currentWorkingDirectory = getCurrentWorkingDirectory();
+    if (!currentWorkingDirectory) {
+      return vscode.window.showErrorMessage(
+        'Please open a folder before customizing MathJax config',
+      );
+    }
+
+    const mathjaxConfigFilePath = vscode.Uri.joinPath(
+      currentWorkingDirectory,
+      './.crossnote/mathjax_v3.json',
     );
-    vscode.commands.executeCommand(
-      'vscode.open',
-      vscode.Uri.parse(mathjaxConfigFilePath),
-    );
+    vscode.commands.executeCommand('vscode.open', mathjaxConfigFilePath);
   }
 
   function openKaTeXConfigInWorkspace() {
-    const katexConfigFilePath = utility.addFileProtocol(
-      path.resolve(getCurrentWorkingDirectory(), './.crossnote/katex.json'),
+    const currentWorkingDirectory = getCurrentWorkingDirectory();
+    if (!currentWorkingDirectory) {
+      return vscode.window.showErrorMessage(
+        'Please open a folder before customizing KaTeX config',
+      );
+    }
+
+    const katexConfigFilePath = vscode.Uri.joinPath(
+      currentWorkingDirectory,
+      './.crossnote/katex.json',
     );
-    vscode.commands.executeCommand(
-      'vscode.open',
-      vscode.Uri.parse(katexConfigFilePath),
-    );
+    vscode.commands.executeCommand('vscode.open', katexConfigFilePath);
   }
 
   function extendParserInWorkspace() {
-    const parserConfigPath = utility.addFileProtocol(
-      path.resolve(getCurrentWorkingDirectory(), './.crossnote/parser.mjs'),
+    const currentWorkingDirectory = getCurrentWorkingDirectory();
+    if (!currentWorkingDirectory) {
+      return vscode.window.showErrorMessage(
+        'Please open a folder before extending parser',
+      );
+    }
+
+    const parserConfigPath = vscode.Uri.joinPath(
+      currentWorkingDirectory,
+      './.crossnote/parser.mjs',
     );
-    vscode.commands.executeCommand(
-      'vscode.open',
-      vscode.Uri.parse(parserConfigPath),
-    );
+    vscode.commands.executeCommand('vscode.open', parserConfigPath);
+  }
+
+  async function clickTagA({
+    uri,
+    href,
+    scheme,
+  }: {
+    uri: string;
+    href: string;
+    scheme: string;
+  }) {
+    href = decodeURIComponent(href);
+    href = href
+      .replace(/^vscode\-resource:\/\//, '')
+      .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, '')
+      .replace(/^file\/\/\//, '${scheme}:///')
+      .replace(
+        /^https:\/\/file\+\.vscode-resource.vscode-cdn.net\//,
+        `${scheme}:///`,
+      )
+      .replace(
+        /^https?:\/\/(.+?)\.vscode-webview-test.com\/vscode-resource\/file\/+/,
+        `${scheme}:///`,
+      )
+      .replace(
+        /^https?:\/\/file(.+?)\.vscode-webview\.net\/+/,
+        `${scheme}:///`,
+      );
+    console.log(`* clickTagA: `, href);
+    if (
+      ['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(
+        path.extname(href),
+      ) >= 0
+    ) {
+      try {
+        utility.openFile(href);
+      } catch (error) {
+        vscode.window.showErrorMessage(error);
+      }
+    } else if (href.startsWith(`${scheme}:///`)) {
+      // openFilePath = href.slice(8) # remove protocol
+      const openFilePath = decodeURI(href);
+      console.log('* openFilePath: ', href);
+      const fileUri = vscode.Uri.parse(openFilePath);
+      console.log('* fileUri: ', fileUri);
+
+      // determine from link fragment to which line to jump
+      let line = -1;
+      const found = fileUri.fragment.match(/^L(\d+)/);
+      if (found) {
+        line = parseInt(found[1], 10);
+        if (line > 0) {
+          line = line - 1;
+        }
+      }
+
+      // find if there is already opened such file
+      // and remember in which view column it is
+      let col = vscode.ViewColumn.One;
+      tgrLoop: for (const tabGroup of vscode.window.tabGroups.all) {
+        for (const tab of tabGroup.tabs) {
+          if (tab.input instanceof vscode.TabInputText) {
+            if (tab.input.uri.path === fileUri.path) {
+              col = tabGroup.viewColumn;
+              break tgrLoop;
+            }
+          }
+        }
+      }
+
+      // open file if needed, if not we will use already opened editor
+      // (by specifying view column in which it is already shown)
+
+      let fileExists = false;
+      try {
+        fileExists = !!(await vscode.workspace.fs.stat(fileUri));
+      } catch (error) {
+        fileExists = false;
+      }
+      console.log('* fileExists: ', fileExists);
+
+      if (fileExists) {
+        // Open fileUri
+        vscode.workspace.openTextDocument(fileUri.path).then(doc => {
+          vscode.window.showTextDocument(doc, col).then(editor => {
+            // if there was line fragment, jump to line
+            if (line >= 0) {
+              let viewPos = vscode.TextEditorRevealType.InCenter;
+              if (editor.selection.active.line === line) {
+                viewPos = vscode.TextEditorRevealType.InCenterIfOutsideViewport;
+              }
+              const sel = new vscode.Selection(line, 0, line, 0);
+              editor.selection = sel;
+              editor.revealRange(sel, viewPos);
+            }
+          });
+        });
+      } else {
+        vscode.commands.executeCommand(
+          'vscode.open',
+          fileUri,
+          vscode.ViewColumn.One,
+        );
+      }
+    } else {
+      utility.openFile(href);
+    }
   }
 
   context.subscriptions.push(
@@ -458,6 +599,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         if (workspaceFolder) {
           const workspaceDir = workspaceFolder.uri.fsPath;
           const relativePath = path.relative(workspaceDir, document.uri.fsPath);
+          console.log('- relativePath: ', relativePath);
           if (
             relativePath.startsWith('.crossnote') &&
             [
@@ -872,6 +1014,10 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
       'markdown-preview-enhanced.extendParserInWorkspace',
       extendParserInWorkspace,
     ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('_crossnote.clickTagA', clickTagA),
   );
 }
 

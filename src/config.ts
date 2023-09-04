@@ -10,6 +10,7 @@ import {
   getDefaultNotebookConfig,
 } from 'crossnote';
 import * as vscode from 'vscode';
+import { isVSCodeWebExtension } from './utils';
 
 export enum PreviewColorScheme {
   selectedPreviewTheme = 'selectedPreviewTheme',
@@ -80,8 +81,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     );
     const defaultConfig = getDefaultNotebookConfig();
 
-    this.usePandocParser =
-      config.get<boolean>('usePandocParser') ?? defaultConfig.usePandocParser;
+    this.usePandocParser = isVSCodeWebExtension()
+      ? false // pandoc is not supported in web extension
+      : config.get<boolean>('usePandocParser') ?? defaultConfig.usePandocParser;
     this.breakOnSingleNewLine =
       config.get<boolean>('breakOnSingleNewLine') ??
       defaultConfig.breakOnSingleNewLine;

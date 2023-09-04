@@ -3,30 +3,60 @@ import {
   PreviewTheme,
   loadConfigsInDirectory,
   utility,
-  wrapNodeFSAsApi,
 } from 'crossnote';
-import { existsSync } from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
 import {
-  getProjectDirectoryPath,
+  getCrossnoteVersion,
   globalConfigPath,
   isMarkdownFile,
+  isVSCodeWebExtension,
+  isVSCodewebExtensionDevMode,
 } from './utils';
+import { wrapVSCodeFSAsApi } from './vscode-fs';
 
-// NOTE: The __dirname is actually the out/native folder
-utility.setCrossnoteBuildDirectory(path.resolve(__dirname, '../../crossnote/'));
+if (isVSCodeWebExtension()) {
+  console.debug('* Using crossnote version: ', getCrossnoteVersion());
+  if (isVSCodewebExtensionDevMode()) {
+    console.debug('* Now under the dev mode');
+    console.debug('* Loading /crossnote directory at http://localhost:6789/');
+    utility.setCrossnoteBuildDirectory('http://localhost:6789/');
+  } else {
+    const config = vscode.workspace.getConfiguration(
+      'markdown-preview-enhanced',
+    );
+    const jsdelivrCdnHost =
+      config.get<string>('jsdelivrCdnHost') ?? 'cdn.jsdelivr.net';
+    utility.setCrossnoteBuildDirectory(
+      `https://${jsdelivrCdnHost}/npm/crossnote@${getCrossnoteVersion}/out/`,
+    );
+  }
+} else {
+  // NOTE: The __dirname is actually the out/native folder
+  utility.setCrossnoteBuildDirectory(
+    path.resolve(__dirname, '../../crossnote/'),
+  );
+}
 
 utility.useExternalAddFileProtocolFunction((filePath, preview) => {
   if (preview) {
-    return preview.webview
-      .asWebviewUri(vscode.Uri.file(filePath))
-      .toString(true)
-      .replace(/%3F/gi, '?')
-      .replace(/%23/g, '#');
+    if (filePath.startsWith('/http:/localhost:6789/')) {
+      return filePath.replace(
+        '/http:/localhost:6789/',
+        'http://localhost:6789/',
+      );
+    } else if (filePath.startsWith('/https:/')) {
+      return filePath.replace('/https:/', 'https://');
+    } else {
+      return preview.webview
+        .asWebviewUri(vscode.Uri.file(filePath))
+        .toString(true)
+        .replace(/%3F/gi, '?')
+        .replace(/%23/g, '#');
+    }
   } else {
     if (!filePath.startsWith('file://')) {
       filePath = 'file:///' + filePath;
@@ -40,12 +70,13 @@ utility.useExternalAddFileProtocolFunction((filePath, preview) => {
  * key is `workspaceDir`
  * value is the `PreviewProvider`
  */
-const WORKSPACE_DIR_PREVIEW_PROVIDER_MAP: {
-  [key: string]: PreviewProvider;
-} = {};
+const WORKSPACE_PREVIEW_PROVIDER_MAP: Map<
+  string, // workspaceDir fsPath
+  PreviewProvider
+> = new Map();
 
 export function getAllPreviewProviders(): PreviewProvider[] {
-  return Object.values(WORKSPACE_DIR_PREVIEW_PROVIDER_MAP);
+  return Array.from(WORKSPACE_PREVIEW_PROVIDER_MAP.values());
 }
 
 // http://www.typescriptlang.org/play/
@@ -94,22 +125,30 @@ export class PreviewProvider {
     // Please use `init` method to initialize this class.
   }
 
-  private async init(context: vscode.ExtensionContext, workspaceDir: string) {
+  private async init(
+    context: vscode.ExtensionContext,
+    workspaceDir: vscode.Uri,
+  ) {
     this.context = context;
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
     this.notebook = await Notebook.init({
-      notebookPath: workspaceDir,
+      notebookPath: workspaceDir.fsPath,
       config: { ...this.config },
+      fs: wrapVSCodeFSAsApi(workspaceDir.scheme),
     });
 
     // Check if ${workspaceDir}/.crossnote directory exists
     // If not, then use the global config.
-    const crossnoteDir = path.join(workspaceDir, '.crossnote');
-    if (!existsSync(crossnoteDir)) {
+    const crossnoteDir = vscode.Uri.joinPath(workspaceDir, './.crossnote');
+    if (
+      !(await this.notebook.fs.exists(crossnoteDir.fsPath)) &&
+      !isVSCodeWebExtension()
+    ) {
       try {
+        console.log('* 1. loadConfigsInDirectory');
         const globalConfig = await loadConfigsInDirectory(
           globalConfigPath,
-          wrapNodeFSAsApi(),
+          this.notebook.fs,
           true,
         );
         this.notebook.updateConfig(globalConfig);
@@ -122,19 +161,23 @@ export class PreviewProvider {
   }
 
   public async updateCrossnoteConfig(directory: string) {
+    console.log('updateCrossnoteConfig: ', directory);
     // If directory is globalConfigDirectory && ${workspaceDir}/.crossnote directory exists
     // then return without updating.
     if (
       directory === globalConfigPath &&
-      existsSync(path.join(this.notebook.notebookPath, '.crossnote'))
+      (await this.notebook.fs.exists(
+        path.join(this.notebook.notebookPath, '.crossnote'),
+      ))
     ) {
       return;
     }
 
-    if (existsSync(directory)) {
+    if (await this.notebook.fs.exists(directory)) {
+      console.log('* 2. loadConfigsInDirectory');
       const configs = await loadConfigsInDirectory(
         directory,
-        wrapNodeFSAsApi(),
+        this.notebook.fs,
         false,
       );
       this.notebook.updateConfig(configs);
@@ -145,13 +188,25 @@ export class PreviewProvider {
     uri: vscode.Uri,
     context: vscode.ExtensionContext,
   ) {
-    const workspaceDir = getProjectDirectoryPath(uri);
-    if (workspaceDir in WORKSPACE_DIR_PREVIEW_PROVIDER_MAP) {
-      return WORKSPACE_DIR_PREVIEW_PROVIDER_MAP[workspaceDir];
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+    console.log('* getPreviewContentProvider: ', uri, workspaceFolder);
+    console.log('* all workspaces: ', vscode.workspace.workspaceFolders);
+    if (!workspaceFolder) {
+      throw new Error('Cannot find workspace directory');
+    }
+
+    if (WORKSPACE_PREVIEW_PROVIDER_MAP.has(workspaceFolder.uri.fsPath)) {
+      const provider = WORKSPACE_PREVIEW_PROVIDER_MAP.get(
+        workspaceFolder.uri.fsPath,
+      );
+      if (!provider) {
+        throw new Error('Cannot find preview provider');
+      }
+      return provider;
     } else {
       const provider = new PreviewProvider();
-      await provider.init(context, workspaceDir);
-      WORKSPACE_DIR_PREVIEW_PROVIDER_MAP[workspaceDir] = provider;
+      await provider.init(context, workspaceFolder.uri);
+      WORKSPACE_PREVIEW_PROVIDER_MAP.set(workspaceFolder.uri.fsPath, provider);
       return provider;
     }
   }
@@ -229,10 +284,12 @@ export class PreviewProvider {
     let previewPanel: vscode.WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
       const oldResourceRoot = this.singlePreviewPanelSourceUriTarget
-        ? getProjectDirectoryPath(this.singlePreviewPanelSourceUriTarget)
-        : '';
-      const newResourceRoot = getProjectDirectoryPath(sourceUri);
-      if (oldResourceRoot !== newResourceRoot) {
+        ? vscode.workspace.getWorkspaceFolder(
+            this.singlePreviewPanelSourceUriTarget,
+          )
+        : undefined;
+      const newResourceRoot = vscode.workspace.getWorkspaceFolder(sourceUri);
+      if (oldResourceRoot?.uri.fsPath !== newResourceRoot?.uri.fsPath) {
         this.singlePreviewPanel.dispose();
         return this.initPreview(sourceUri, editor, viewOptions);
       } else {
@@ -247,10 +304,11 @@ export class PreviewProvider {
         vscode.Uri.file(utility.getCrossnoteBuildDirectory()),
         vscode.Uri.file(globalConfigPath),
         vscode.Uri.file(tmpdir()),
-        vscode.Uri.file(
-          getProjectDirectoryPath(sourceUri) || path.dirname(sourceUri.fsPath),
-        ),
       ];
+      const workspaceUri = vscode.workspace.getWorkspaceFolder(sourceUri)?.uri;
+      if (workspaceUri) {
+        localResourceRoots.push(workspaceUri);
+      }
 
       previewPanel = vscode.window.createWebviewPanel(
         'markdown-preview-enhanced',
@@ -324,6 +382,7 @@ export class PreviewProvider {
         },
         contentSecurityPolicy: '',
         vscodePreviewPanel: previewPanel,
+        isVSCodeWebExtension: isVSCodeWebExtension(),
       })
       .then(html => {
         previewPanel.webview.html = html;
@@ -420,6 +479,7 @@ export class PreviewProvider {
               tocHTML,
               totalLineCount: document.lineCount,
               sourceUri: sourceUri.toString(),
+              sourceScheme: sourceUri.scheme,
               id: yamlConfig.id || '',
               class:
                 (yamlConfig.class || '') +
@@ -431,7 +491,7 @@ export class PreviewProvider {
                   this.getEditorColorScheme() === 'dark'
                     ? 'editor-dark'
                     : 'editor-light'
-                }`,
+                } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
             });
           }
         });
@@ -472,9 +532,13 @@ export class PreviewProvider {
   public openInBrowser(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
-      engine.openInBrowser({}).catch(error => {
-        vscode.window.showErrorMessage(error.toString());
-      });
+      if (isVSCodeWebExtension()) {
+        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+      } else {
+        engine.openInBrowser({}).catch(error => {
+          vscode.window.showErrorMessage(error.toString());
+        });
+      }
     }
   }
 
@@ -497,74 +561,90 @@ export class PreviewProvider {
   public chromeExport(sourceUri: Uri, type: string) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
-      engine
-        .chromeExport({ fileType: type, openFileAfterGeneration: true })
-        .then(dest => {
-          vscode.window.showInformationMessage(
-            `File ${path.basename(dest)} was created at path: ${dest}`,
-          );
-        })
-        .catch(error => {
-          vscode.window.showErrorMessage(error.toString());
-        });
+      if (isVSCodeWebExtension()) {
+        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+      } else {
+        engine
+          .chromeExport({ fileType: type, openFileAfterGeneration: true })
+          .then(dest => {
+            vscode.window.showInformationMessage(
+              `File ${path.basename(dest)} was created at path: ${dest}`,
+            );
+          })
+          .catch(error => {
+            vscode.window.showErrorMessage(error.toString());
+          });
+      }
     }
   }
 
   public princeExport(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
-      engine
-        .princeExport({ openFileAfterGeneration: true })
-        .then(dest => {
-          if (dest.endsWith('?print-pdf')) {
-            // presentation pdf
-            vscode.window.showInformationMessage(
-              `Please copy and open the link: { ${dest.replace(
-                /\_/g,
-                '\\_',
-              )} } in Chrome then Print as Pdf.`,
-            );
-          } else {
-            vscode.window.showInformationMessage(
-              `File ${path.basename(dest)} was created at path: ${dest}`,
-            );
-          }
-        })
-        .catch(error => {
-          vscode.window.showErrorMessage(error.toString());
-        });
+      if (isVSCodeWebExtension()) {
+        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+      } else {
+        engine
+          .princeExport({ openFileAfterGeneration: true })
+          .then(dest => {
+            if (dest.endsWith('?print-pdf')) {
+              // presentation pdf
+              vscode.window.showInformationMessage(
+                `Please copy and open the link: { ${dest.replace(
+                  /\_/g,
+                  '\\_',
+                )} } in Chrome then Print as Pdf.`,
+              );
+            } else {
+              vscode.window.showInformationMessage(
+                `File ${path.basename(dest)} was created at path: ${dest}`,
+              );
+            }
+          })
+          .catch(error => {
+            vscode.window.showErrorMessage(error.toString());
+          });
+      }
     }
   }
 
   public eBookExport(sourceUri: Uri, fileType: string) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
-      engine
-        .eBookExport({ fileType, runAllCodeChunks: false })
-        .then(dest => {
-          vscode.window.showInformationMessage(
-            `eBook ${path.basename(dest)} was created as path: ${dest}`,
-          );
-        })
-        .catch(error => {
-          vscode.window.showErrorMessage(error.toString());
-        });
+      if (isVSCodeWebExtension()) {
+        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+      } else {
+        engine
+          .eBookExport({ fileType, runAllCodeChunks: false })
+          .then(dest => {
+            vscode.window.showInformationMessage(
+              `eBook ${path.basename(dest)} was created as path: ${dest}`,
+            );
+          })
+          .catch(error => {
+            vscode.window.showErrorMessage(error.toString());
+          });
+      }
     }
   }
 
   public pandocExport(sourceUri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
-      engine
-        .pandocExport({ openFileAfterGeneration: true })
-        .then(dest => {
-          vscode.window.showInformationMessage(
-            `Document ${path.basename(dest)} was created as path: ${dest}`,
-          );
-        })
-        .catch(error => {
-          vscode.window.showErrorMessage(error.toString());
-        });
+      if (isVSCodeWebExtension()) {
+        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+      } else {
+        engine
+          .pandocExport({ openFileAfterGeneration: true })
+          .then(dest => {
+            vscode.window.showInformationMessage(
+              `Document ${path.basename(dest)} was created as path: ${dest}`,
+            );
+          })
+          .catch(error => {
+            vscode.window.showErrorMessage(error.toString());
+          });
+      }
     }
   }
 

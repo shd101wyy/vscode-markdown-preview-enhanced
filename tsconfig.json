@@ -5,11 +5,21 @@
     "noUnusedLocals": true,
     "sourceMap": true,
     "outDir": "out",
-    "lib": ["ES2020", "WebWorker"],
-    "rootDir": "src",
+    "lib": [
+      "ES2020",
+      "WebWorker"
+    ],
+    "rootDir": ".",
     "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*", "test/**/*"],
-  "exclude": ["node_modules", "out"]
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "out"
+  ]
 }

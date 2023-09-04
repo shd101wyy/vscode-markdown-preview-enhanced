@@ -21,6 +21,7 @@
   ],
   "publisher": "shd101wyy",
   "main": "./out/native/extension.js",
+  "browser": "./out/web/extension.js",
   "scripts": {
     "build": "yarn copy:files && rm -rf ./out && node build.js",
     "check:all": "yarn check:eslint && yarn check:prettier && yarn check:tsc",
@@ -31,9 +32,10 @@
     "fix:all": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
+    "run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "yarn build",
-    "watch": "yarn copy:files && rm -rf ./out && node build.js --watch"
+    "watch": "yarn copy:files && rm -rf ./out && concurrently \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\""
   },
   "contributes": {
     "commands": [
@@ -621,9 +623,13 @@
     "@types/vscode": "1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
+    "@vscode/test-web": "^0.0.45",
+    "concurrently": "^8.2.1",
     "esbuild": "^0.19.2",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
     "eslint": "^8.48.0",
     "gulp": "^4.0.2",
+    "http-server": "^14.1.1",
     "husky": "^3.0.9",
     "lint-staged": "^9.4.2",
     "mocha": "^6.1.4",

@@ -1,6 +1,8 @@
 import path = require('path');
 import * as os from 'os';
 import * as vscode from 'vscode';
+import * as packageJSON from '../package.json';
+
 /**
  * Format pathString if it is on Windows. Convert `c:\` like string to `C:\`
  * @param pathString
@@ -13,18 +15,6 @@ function formatPathIfNecessary(pathString: string) {
     );
   }
   return pathString;
-}
-
-export function getProjectDirectoryPath(uri: vscode.Uri): string {
-  if (!uri) {
-    return '';
-  }
-  const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
-  if (workspaceFolder) {
-    return formatPathIfNecessary(workspaceFolder.uri.fsPath);
-  } else {
-    return path.dirname(uri.fsPath);
-  }
 }
 
 function getGlobalConfigPath(): string {
@@ -93,7 +83,14 @@ export function getBottomVisibleLine(
   return lineNumber + progress;
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {
-  //
+export function isVSCodeWebExtension() {
+  return process.env.IS_VSCODE_WEB_EXTENSION === 'true';
+}
+
+export function isVSCodewebExtensionDevMode() {
+  return process.env.IS_VSCODE_WEB_EXTENSION_DEV_MODE === 'true';
+}
+
+export function getCrossnoteVersion() {
+  return packageJSON.dependencies['crossnote'];
 }
