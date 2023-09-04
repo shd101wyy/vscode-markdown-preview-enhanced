@@ -1797,8 +1797,10 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@../mume:
-  version "0.8.0"
+crossnote@^0.8.2:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.2.tgz#26d00ffd8be21a49cb26c5191f9085dcf7d2d633"
+  integrity sha512-wNnUjCfVxN/osgnqnOAT8yYFJo5svEndXuQLoZkCb1NOTw8hdPi0gUNTsAocQZKa6bqcdgR5YfqjWxoX0mVugQ==
   dependencies:
     "@viz-js/viz" "^3.1.0"
     async-mutex "^0.4.0"

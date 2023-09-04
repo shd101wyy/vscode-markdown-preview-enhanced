@@ -32,7 +32,7 @@ if (isVSCodeWebExtension()) {
     const jsdelivrCdnHost =
       config.get<string>('jsdelivrCdnHost') ?? 'cdn.jsdelivr.net';
     utility.setCrossnoteBuildDirectory(
-      `https://${jsdelivrCdnHost}/npm/crossnote@${getCrossnoteVersion}/out/`,
+      `https://${jsdelivrCdnHost}/npm/crossnote@${getCrossnoteVersion()}/out/`,
     );
   }
 } else {
@@ -146,7 +146,6 @@ export class PreviewProvider {
       !isVSCodeWebExtension()
     ) {
       try {
-        console.log('* 1. loadConfigsInDirectory');
         const globalConfig = await loadConfigsInDirectory(
           globalConfigPath,
           this.notebook.fs,
@@ -162,7 +161,6 @@ export class PreviewProvider {
   }
 
   public async updateCrossnoteConfig(directory: string) {
-    console.log('updateCrossnoteConfig: ', directory);
     // If directory is globalConfigDirectory && ${workspaceDir}/.crossnote directory exists
     // then return without updating.
     if (
@@ -175,7 +173,6 @@ export class PreviewProvider {
     }
 
     if (await this.notebook.fs.exists(directory)) {
-      console.log('* 2. loadConfigsInDirectory');
       const configs = await loadConfigsInDirectory(
         directory,
         this.notebook.fs,
@@ -190,9 +187,6 @@ export class PreviewProvider {
     context: vscode.ExtensionContext,
   ) {
     const workspaceUri = getWorkspaceFolderUri(uri);
-    console.log('* getPreviewContentProvider: ', uri, workspaceUri);
-    console.log('* all workspaces: ', vscode.workspace.workspaceFolders);
-
     if (WORKSPACE_PREVIEW_PROVIDER_MAP.has(workspaceUri.fsPath)) {
       const provider = WORKSPACE_PREVIEW_PROVIDER_MAP.get(workspaceUri.fsPath);
       if (!provider) {

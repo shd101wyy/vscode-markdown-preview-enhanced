@@ -23,6 +23,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     return new MarkdownPreviewEnhancedConfig();
   }
 
+  public readonly configPath: string;
   public readonly usePandocParser: boolean;
   public readonly breakOnSingleNewLine: boolean;
   public readonly enableTypographer: boolean;
@@ -80,6 +81,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     );
     const defaultConfig = getDefaultNotebookConfig();
 
+    this.configPath = config.get<string>('configPath') ?? '';
     this.usePandocParser = isVSCodeWebExtension()
       ? false // pandoc is not supported in web extension
       : config.get<boolean>('usePandocParser') ?? defaultConfig.usePandocParser;

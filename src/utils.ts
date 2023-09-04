@@ -42,6 +42,12 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
 }
 
 function getGlobalConfigPath(): string {
+  const config = vscode.workspace.getConfiguration('markdown-preview-enhanced');
+  const configPath = config.get<string>('configPath');
+  if (configPath && configPath !== '') {
+    return configPath.replace(/^~/, os.homedir());
+  }
+
   if (process.platform === 'win32') {
     return path.join(os.homedir(), './.crossnote');
   } else {

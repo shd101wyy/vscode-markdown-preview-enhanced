@@ -22,11 +22,8 @@ export function wrapVSCodeFSAsApi(scheme: string): FileSystemApi {
       }
     },
     readFile: async (path: string): Promise<string> => {
-      console.log('* readFile: ', path);
       path = path.replace(/^\//, '');
-      console.log('** ', path);
       const uri = getUri(path, scheme);
-      console.log('* uri: ', uri);
       const data = await vscode.workspace.fs.readFile(uri);
       return new TextDecoder('utf-8').decode(data);
     },

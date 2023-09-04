@@ -54,7 +54,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     if (!uri) {
       uri = editor.document.uri;
     }
-    console.log('openPreviewToTheSide: ', uri);
 
     const previewProvider = await getPreviewContentProvider(uri);
     previewProvider.initPreview(uri, editor, {
@@ -201,7 +200,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     uri: string;
     systemColorScheme: 'light' | 'dark';
   }) {
-    console.log('webviewFinishLoading: ', uri, systemColorScheme);
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.setSystemColorScheme(systemColorScheme);
@@ -498,7 +496,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         /^https?:\/\/file(.+?)\.vscode-webview\.net\/+/,
         `${scheme}:///`,
       );
-    console.log(`* clickTagA: `, href);
     if (
       ['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(
         path.extname(href),
@@ -512,9 +509,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     } else if (href.startsWith(`${scheme}:///`)) {
       // openFilePath = href.slice(8) # remove protocol
       const openFilePath = decodeURI(href);
-      console.log('* openFilePath: ', href);
       const fileUri = vscode.Uri.parse(openFilePath);
-      console.log('* fileUri: ', fileUri);
 
       // determine from link fragment to which line to jump
       let line = -1;
@@ -549,7 +544,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
       } catch (error) {
         fileExists = false;
       }
-      console.log('* fileExists: ', fileExists);
 
       if (fileExists) {
         // Open fileUri
@@ -604,7 +598,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         const workspaceUri = getWorkspaceFolderUri(document.uri);
         const workspaceDir = workspaceUri.fsPath;
         const relativePath = path.relative(workspaceDir, document.uri.fsPath);
-        console.log('- relativePath: ', relativePath);
         if (
           relativePath.startsWith('.crossnote') &&
           [

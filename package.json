@@ -32,10 +32,11 @@
     "fix:all": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
-    "run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
+    "run-in-browser": "concurrently \"vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .\" \"npx http-server ./crossnote -p 6789 --cors\"",
+    "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "yarn build",
-    "watch": "yarn copy:files && rm -rf ./out && concurrently \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\""
+    "watch": "yarn copy:files && rm -rf ./out && node build.js --watch"
   },
   "contributes": {
     "commands": [
@@ -151,7 +152,7 @@
       "title": "Markdown Preview Enhanced",
       "properties": {
         "markdown-preview-enhanced.configPath": {
-          "description": "The configuration directory path. Leave it empty to use '$HOME/.crossnote' for Windows or '$XDG_CONFIG_HOME/.crossnote' or '$HOME/.local/state/crossnote' as the config path.",
+          "markdownDescription": "Restart is required after changes. The configuration directory path. Leave it empty to use `$HOME/.crossnote` for Windows or `$XDG_CONFIG_HOME/.crossnote` or `$HOME/.local/state/crossnote` as the config path.",
           "default": "",
           "type": "string"
         },
@@ -609,7 +610,7 @@
   },
   "dependencies": {
     "@types/vfile": "^3.0.2",
-    "crossnote": "../mume"
+    "crossnote": "^0.8.2"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",

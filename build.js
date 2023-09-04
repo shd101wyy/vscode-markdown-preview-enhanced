@@ -15,10 +15,9 @@ const nativeConfig = {
   external: ['vscode'],
 };
 
-// FIX: 
+// FIX:
 const defaultDocument = {
   readyState: 'ready',
-
 };
 const defaultWindow = {
   document: {
@@ -32,7 +31,6 @@ const defaultWindow = {
   less: {
     onReady: false,
     async: false,
-    manual: true
   },
 };
 
