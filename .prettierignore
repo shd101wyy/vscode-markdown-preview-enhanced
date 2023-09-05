@@ -5,13 +5,13 @@
 !*.md
 !*.ts
 
-
 ## same as in .gitignore
 .vscode-test
 *.vsix
 node_modules
 out
-
+tsconfig.json
 
 ## special cases
 mume
+crossnote

@@ -10,15 +10,15 @@
 </p>
 
 <p align="center">
-<a href="https://atom.io/packages/markdown-preview-enhanced">atom</a>
+<a href="https://atom.io/packages/markdown-preview-enhanced">Atom</a>
 &
-<a href="https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced">vscode</a>
+<a href="https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced">VSCode</a> 
+&
+<a href="https://vscode.dev">VSCode for the Web</a>
 <br>
 <br>
   <a href="https://a.paddle.com/v2/click/16413/111548?link=1227"><img src="https://img.shields.io/badge/LEARN-VSCODE%20POWER%20USER%20COURSE%20%E2%86%92-gray.svg?colorB=4D2AFF" alt="Become VSCode Power User"></a>
 </p>
-
-If you are interested, please try out our new prototype web app: [0xGG/crossnote](https://github.com/0xGG/crossnote)
 
 ## Supporting this project
 

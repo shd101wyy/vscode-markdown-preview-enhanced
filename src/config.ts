@@ -1,14 +1,16 @@
 import {
   CodeBlockTheme,
-  MarkdownEngineConfig,
+  FrontMatterRenderingOption,
   MathRenderingOption,
   MermaidTheme,
+  NotebookConfig,
+  ParserConfig,
   PreviewTheme,
   RevealJsTheme,
-  utility,
-} from '@shd101wyy/mume';
+  getDefaultNotebookConfig,
+} from 'crossnote';
 import * as vscode from 'vscode';
-import { PathResolver } from './utils/path-resolver.js';
+import { isVSCodeWebExtension } from './utils';
 
 export enum PreviewColorScheme {
   selectedPreviewTheme = 'selectedPreviewTheme',
@@ -16,7 +18,7 @@ export enum PreviewColorScheme {
   editorColorScheme = 'editorColorScheme',
 }
 
-export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
+export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public static getCurrentConfig() {
     return new MarkdownPreviewEnhancedConfig();
   }
@@ -28,11 +30,10 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly enableWikiLinkSyntax: boolean;
   public readonly enableLinkify: boolean;
   public readonly useGitHubStylePipedLink: boolean;
-  public readonly wikiLinkFileExtension: string;
   public readonly enableEmojiSyntax: boolean;
   public readonly enableExtendedTableSyntax: boolean;
   public readonly enableCriticMarkupSyntax: boolean;
-  public readonly frontMatterRenderingOption: string;
+  public readonly frontMatterRenderingOption: FrontMatterRenderingOption;
   public readonly mathRenderingOption: MathRenderingOption;
   public readonly mathInlineDelimiters: string[][];
   public readonly mathBlockDelimiters: string[][];
@@ -78,94 +79,138 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     const config = vscode.workspace.getConfiguration(
       'markdown-preview-enhanced',
     );
+    const defaultConfig = getDefaultNotebookConfig();
 
-    this.configPath = (
-      config.get<string>('configPath') || utility.getConfigPath()
-    ).trim();
-    this.configPath = PathResolver.resolvePath(this.configPath);
+    this.configPath = config.get<string>('configPath') ?? '';
+    this.usePandocParser = isVSCodeWebExtension()
+      ? false // pandoc is not supported in web extension
+      : config.get<boolean>('usePandocParser') ?? defaultConfig.usePandocParser;
+    this.breakOnSingleNewLine =
+      config.get<boolean>('breakOnSingleNewLine') ??
+      defaultConfig.breakOnSingleNewLine;
+    this.enableTypographer =
+      config.get<boolean>('enableTypographer') ??
+      defaultConfig.enableTypographer;
+    this.enableWikiLinkSyntax =
+      config.get<boolean>('enableWikiLinkSyntax') ??
+      defaultConfig.enableWikiLinkSyntax;
+    this.enableLinkify =
+      config.get<boolean>('enableLinkify') ?? defaultConfig.enableLinkify;
+    this.useGitHubStylePipedLink =
+      config.get<boolean>('useGitHubStylePipedLink') ??
+      defaultConfig.useGitHubStylePipedLink;
+    this.enableEmojiSyntax =
+      config.get<boolean>('enableEmojiSyntax') ??
+      defaultConfig.enableEmojiSyntax;
+    this.enableExtendedTableSyntax =
+      config.get<boolean>('enableExtendedTableSyntax') ??
+      defaultConfig.enableExtendedTableSyntax;
+    this.enableCriticMarkupSyntax =
+      config.get<boolean>('enableCriticMarkupSyntax') ??
+      defaultConfig.enableCriticMarkupSyntax;
+    this.frontMatterRenderingOption =
+      config.get<FrontMatterRenderingOption>('frontMatterRenderingOption') ??
+      defaultConfig.frontMatterRenderingOption;
+    this.mermaidTheme =
+      config.get<MermaidTheme>('mermaidTheme') ?? defaultConfig.mermaidTheme;
+    this.mathRenderingOption =
+      (config.get<string>('mathRenderingOption') as MathRenderingOption) ??
+      defaultConfig.mathRenderingOption;
+    this.mathInlineDelimiters =
+      config.get<string[][]>('mathInlineDelimiters') ??
+      defaultConfig.mathInlineDelimiters;
+    this.mathBlockDelimiters =
+      config.get<string[][]>('mathBlockDelimiters') ??
+      defaultConfig.mathBlockDelimiters;
+    this.mathRenderingOnlineService =
+      config.get<string>('mathRenderingOnlineService') ??
+      defaultConfig.mathRenderingOnlineService;
+    this.mathjaxV3ScriptSrc =
+      config.get<string>('mathjaxV3ScriptSrc') ??
+      defaultConfig.mathjaxV3ScriptSrc;
+    this.codeBlockTheme =
+      config.get<CodeBlockTheme>('codeBlockTheme') ??
+      defaultConfig.codeBlockTheme;
+    this.previewTheme =
+      config.get<PreviewTheme>('previewTheme') ?? defaultConfig.previewTheme;
+    this.revealjsTheme =
+      config.get<RevealJsTheme>('revealjsTheme') ?? defaultConfig.revealjsTheme;
+    this.protocolsWhiteList =
+      config.get<string>('protocolsWhiteList') ??
+      defaultConfig.protocolsWhiteList;
+    this.imageFolderPath =
+      config.get<string>('imageFolderPath') ?? defaultConfig.imageFolderPath;
+    this.imageUploader = config.get<string>('imageUploader') ?? 'imgur';
+    this.printBackground =
+      config.get<boolean>('printBackground') ?? defaultConfig.printBackground;
+    this.chromePath =
+      config.get<string>('chromePath') ?? defaultConfig.chromePath;
+    this.imageMagickPath =
+      config.get<string>('imageMagickPath') ?? defaultConfig.imageMagickPath;
+    this.pandocPath =
+      config.get<string>('pandocPath') ?? defaultConfig.pandocPath;
+    this.pandocMarkdownFlavor =
+      config.get<string>('pandocMarkdownFlavor') ??
+      defaultConfig.pandocMarkdownFlavor;
+    this.pandocArguments =
+      config.get<string[]>('pandocArguments') ?? defaultConfig.pandocArguments;
+    this.latexEngine =
+      config.get<string>('latexEngine') ?? defaultConfig.latexEngine;
+    this.enableScriptExecution =
+      config.get<boolean>('enableScriptExecution') ??
+      defaultConfig.enableScriptExecution;
 
-    this.usePandocParser = config.get<boolean>('usePandocParser');
-    this.breakOnSingleNewLine = config.get<boolean>('breakOnSingleNewLine');
-    this.enableTypographer = config.get<boolean>('enableTypographer');
-    this.enableWikiLinkSyntax = config.get<boolean>('enableWikiLinkSyntax');
-    this.enableLinkify = config.get<boolean>('enableLinkify');
-    this.useGitHubStylePipedLink = config.get<boolean>(
-      'useGitHubStylePipedLink',
-    );
-    this.wikiLinkFileExtension = config.get<string>('wikiLinkFileExtension');
-    this.enableEmojiSyntax = config.get<boolean>('enableEmojiSyntax');
-    this.enableExtendedTableSyntax = config.get<boolean>(
-      'enableExtendedTableSyntax',
-    );
-    this.enableCriticMarkupSyntax = config.get<boolean>(
-      'enableCriticMarkupSyntax',
-    );
-    this.frontMatterRenderingOption = config.get<string>(
-      'frontMatterRenderingOption',
-    );
-    this.mermaidTheme = config.get<MermaidTheme>('mermaidTheme');
-    this.mathRenderingOption = config.get<string>(
-      'mathRenderingOption',
-    ) as MathRenderingOption;
-    this.mathInlineDelimiters = config.get<string[][]>('mathInlineDelimiters');
-    this.mathBlockDelimiters = config.get<string[][]>('mathBlockDelimiters');
-    this.mathRenderingOnlineService = config.get<string>(
-      'mathRenderingOnlineService',
-    );
-    this.mathjaxV3ScriptSrc = config.get<string>('mathjaxV3ScriptSrc');
-    this.codeBlockTheme = config.get<CodeBlockTheme>('codeBlockTheme');
-    this.previewTheme = config.get<PreviewTheme>('previewTheme');
-    this.revealjsTheme = config.get<RevealJsTheme>('revealjsTheme');
-    this.protocolsWhiteList = config.get<string>('protocolsWhiteList');
-    this.imageFolderPath = config.get<string>('imageFolderPath');
-    this.imageUploader = config.get<string>('imageUploader');
-    this.printBackground = config.get<boolean>('printBackground');
-    this.chromePath = config.get<string>('chromePath');
-    this.imageMagickPath = config.get<string>('imageMagickPath');
-    this.pandocPath = config.get<string>('pandocPath');
-    this.pandocMarkdownFlavor = config.get<string>('pandocMarkdownFlavor');
-    this.pandocArguments = config.get<string[]>('pandocArguments');
-    this.latexEngine = config.get<string>('latexEngine');
-    this.enableScriptExecution = config.get<boolean>('enableScriptExecution');
-
-    this.scrollSync = config.get<boolean>('scrollSync');
-    this.liveUpdate = config.get<boolean>('liveUpdate');
-    this.singlePreview = config.get<boolean>('singlePreview');
-    this.automaticallyShowPreviewOfMarkdownBeingEdited = config.get<boolean>(
-      'automaticallyShowPreviewOfMarkdownBeingEdited',
-    );
-    this.previewColorScheme = config.get<PreviewColorScheme>(
-      'previewColorScheme',
-    );
-
-    this.enableHTML5Embed = config.get<boolean>('enableHTML5Embed');
-    this.HTML5EmbedUseImageSyntax = config.get<boolean>(
-      'HTML5EmbedUseImageSyntax',
-    );
-    this.HTML5EmbedUseLinkSyntax = config.get<boolean>(
-      'HTML5EmbedUseLinkSyntax',
-    );
-    this.HTML5EmbedIsAllowedHttp = config.get<boolean>(
-      'HTML5EmbedIsAllowedHttp',
-    );
-    this.HTML5EmbedAudioAttributes = config.get<string>(
-      'HTML5EmbedAudioAttributes',
-    );
-    this.HTML5EmbedVideoAttributes = config.get<string>(
-      'HTML5EmbedVideoAttributes',
-    );
-    this.puppeteerWaitForTimeout = config.get<number>(
-      'puppeteerWaitForTimeout',
-    );
-    this.puppeteerArgs = config.get<string[]>('puppeteerArgs');
-    this.plantumlJarPath = config.get<string>('plantumlJarPath');
-    this.plantumlServer = config.get<string>('plantumlServer');
-    this.hideDefaultVSCodeMarkdownPreviewButtons = config.get<boolean>(
-      'hideDefaultVSCodeMarkdownPreviewButtons',
-    );
-    this.jsdelivrCdnHost = config.get<string>('jsdelivrCdnHost');
-    this.krokiServer = config.get<string>('krokiServer');
+    this.scrollSync = config.get<boolean>('scrollSync') ?? true;
+    this.liveUpdate = config.get<boolean>('liveUpdate') ?? true;
+    this.singlePreview = config.get<boolean>('singlePreview') ?? true;
+    this.automaticallyShowPreviewOfMarkdownBeingEdited =
+      config.get<boolean>('automaticallyShowPreviewOfMarkdownBeingEdited') ??
+      false;
+    this.previewColorScheme =
+      config.get<PreviewColorScheme>('previewColorScheme') ??
+      PreviewColorScheme.selectedPreviewTheme;
+    this.enableHTML5Embed =
+      config.get<boolean>('enableHTML5Embed') ?? defaultConfig.enableHTML5Embed;
+    this.HTML5EmbedUseImageSyntax =
+      config.get<boolean>('HTML5EmbedUseImageSyntax') ??
+      defaultConfig.HTML5EmbedUseImageSyntax;
+    this.HTML5EmbedUseLinkSyntax =
+      config.get<boolean>('HTML5EmbedUseLinkSyntax') ??
+      defaultConfig.HTML5EmbedUseLinkSyntax;
+    this.HTML5EmbedIsAllowedHttp =
+      config.get<boolean>('HTML5EmbedIsAllowedHttp') ??
+      defaultConfig.HTML5EmbedIsAllowedHttp;
+    this.HTML5EmbedAudioAttributes =
+      config.get<string>('HTML5EmbedAudioAttributes') ??
+      defaultConfig.HTML5EmbedAudioAttributes;
+    this.HTML5EmbedVideoAttributes =
+      config.get<string>('HTML5EmbedVideoAttributes') ??
+      defaultConfig.HTML5EmbedVideoAttributes;
+    this.puppeteerWaitForTimeout =
+      config.get<number>('puppeteerWaitForTimeout') ??
+      defaultConfig.puppeteerWaitForTimeout;
+    this.puppeteerArgs =
+      config.get<string[]>('puppeteerArgs') ?? defaultConfig.puppeteerArgs;
+    this.plantumlJarPath =
+      config.get<string>('plantumlJarPath') ?? defaultConfig.plantumlJarPath;
+    this.plantumlServer =
+      config.get<string>('plantumlServer') ?? defaultConfig.plantumlServer;
+    if (!this.plantumlServer && isVSCodeWebExtension()) {
+      this.plantumlServer = 'https://kroki.io/plantuml/svg/';
+    }
+    this.hideDefaultVSCodeMarkdownPreviewButtons =
+      config.get<boolean>('hideDefaultVSCodeMarkdownPreviewButtons') ?? true;
+    this.jsdelivrCdnHost =
+      config.get<string>('jsdelivrCdnHost') ?? defaultConfig.jsdelivrCdnHost;
+    this.krokiServer =
+      config.get<string>('krokiServer') ?? defaultConfig.krokiServer;
   }
+  globalCss: string;
+  mermaidConfig;
+  mathjaxConfig;
+  katexConfig;
+  parserConfig: ParserConfig;
+  isVSCode: boolean;
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
     const json1 = JSON.stringify(this);

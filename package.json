@@ -21,18 +21,20 @@
   ],
   "publisher": "shd101wyy",
   "main": "./out/native/extension.js",
+  "browser": "./out/web/extension.js",
   "scripts": {
     "build": "yarn copy:files && rm -rf ./out && node build.js",
-    "check:all": "yarn check:eslint && yarn check:prettier && yarn check:tsc",
+    "check:all": "yarn check:eslint && yarn check:prettier",
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
-    "check:tsc": "tsc --project . --noEmit",
-    "copy:files": "node copy-files.js",
+    "copy:files": "gulp copy-files",
     "fix:all": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
+    "run-in-browser": "concurrently \"vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .\" \"npx http-server ./crossnote -p 6789 --cors\"",
+    "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
-    "vscode:prepublish": "yarn build",
+    "vscode:prepublish": "yarn install && yarn build",
     "watch": "yarn copy:files && rm -rf ./out && node build.js --watch"
   },
   "contributes": {
@@ -85,7 +87,12 @@
       },
       {
         "command": "markdown-preview-enhanced.customizeCss",
-        "title": "%markdown-preview-enhanced.customizeCss.title%"
+        "title": "%markdown-preview-enhanced.customizeCss.title%",
+        "enablement": "!isWeb"
+      },
+      {
+        "command": "markdown-preview-enhanced.customizeCssInWorkspace",
+        "title": "%markdown-preview-enhanced.customizeCssInWorkspace.title%"
       },
       {
         "command": "markdown-preview-enhanced.insertNewSlide",
@@ -101,27 +108,31 @@
       },
       {
         "command": "markdown-preview-enhanced.createTOC",
-        "title": "%markdown-preview-enhanced.createTOC.title%"
+        "title": "%markdown-preview-enhanced.createTOC.title%",
+        "enablement": "!isWeb"
       },
       {
-        "command": "markdown-preview-enhanced.openMermaidConfig",
-        "title": "%markdown-preview-enhanced.openMermaidConfig.title%"
-      },
-      {
-        "command": "markdown-preview-enhanced.openMathJaxConfig",
-        "title": "%markdown-preview-enhanced.openMathJaxConfig.title%"
-      },
-      {
-        "command": "markdown-preview-enhanced.openKaTeXConfig",
-        "title": "%markdown-preview-enhanced.openKaTeXConfig.title%"
+        "command": "markdown-preview-enhanced.openConfigScript",
+        "title": "%markdown-preview-enhanced.openConfigScript.title%",
+        "enablement": "!isWeb"
       },
       {
         "command": "markdown-preview-enhanced.extendParser",
-        "title": "%markdown-preview-enhanced.extendParser.title%"
+        "title": "%markdown-preview-enhanced.extendParser.title%",
+        "enablement": "!isWeb"
+      },
+      {
+        "command": "markdown-preview-enhanced.openConfigScriptInWorkspace",
+        "title": "%markdown-preview-enhanced.openConfigScriptInWorkspace.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.extendParserInWorkspace",
+        "title": "%markdown-preview-enhanced.extendParserInWorkspace.title%"
       },
       {
         "command": "markdown-preview-enhanced.showUploadedImages",
-        "title": "%markdown-preview-enhanced.showUploadedImages.title%"
+        "title": "%markdown-preview-enhanced.showUploadedImages.title%",
+        "enablement": "!isWeb"
       }
     ],
     "configuration": {
@@ -129,7 +140,7 @@
       "title": "Markdown Preview Enhanced",
       "properties": {
         "markdown-preview-enhanced.configPath": {
-          "description": "The configuration directory path. Leave it empty to use '~/.mume' as the config path. Please reload vscode to take effect.",
+          "markdownDescription": "Restart is required after changes. The configuration directory path. Leave it empty to use `$HOME/.crossnote` for Windows or `$XDG_CONFIG_HOME/.crossnote` or `$HOME/.local/state/crossnote` as the config path.",
           "default": "",
           "type": "string"
         },
@@ -247,13 +258,8 @@
         },
         "markdown-preview-enhanced.useGitHubStylePipedLink": {
           "description": "If checked, we use GitHub style piped wiki links, i.e. [[linkText|wikiLink]]. Otherwise, we use [[wikiLink|linkText]] as the original Wikipedia style.",
-          "default": true,
+          "default": false,
           "type": "boolean"
-        },
-        "markdown-preview-enhanced.wikiLinkFileExtension": {
-          "description": "By default, the extension for wikilink is `.md`. For example: [[test]] will direct to file path `test.md`.",
-          "default": ".md",
-          "type": "string"
         },
         "markdown-preview-enhanced.enableEmojiSyntax": {
           "description": "Enable emoji & font-awesome plugin. This only works for markdown-it parser, but not pandoc parser.",
@@ -591,8 +597,8 @@
     ]
   },
   "dependencies": {
-    "@shd101wyy/mume": "0.7.9",
-    "@types/vfile": "^3.0.2"
+    "@types/vfile": "^3.0.2",
+    "crossnote": "^0.8.6"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",
@@ -601,8 +607,13 @@
     "@types/vscode": "1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
+    "@vscode/test-web": "^0.0.45",
+    "concurrently": "^8.2.1",
     "esbuild": "^0.19.2",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
     "eslint": "^8.48.0",
+    "gulp": "^4.0.2",
+    "http-server": "^14.1.1",
     "husky": "^3.0.9",
     "lint-staged": "^9.4.2",
     "mocha": "^6.1.4",

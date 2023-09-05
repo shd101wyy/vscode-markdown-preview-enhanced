@@ -1,8 +1,8 @@
-import { utility } from '@shd101wyy/mume';
+import { utility } from 'crossnote';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { isMarkdownFile } from './preview-content-provider';
+import { getWorkspaceFolderUri, isMarkdownFile } from './utils';
 
 /**
  * Copy ans paste image at imageFilePath to config.imageForlderPath.
@@ -10,16 +10,19 @@ import { isMarkdownFile } from './preview-content-provider';
  * @param uri
  * @param imageFilePath
  */
-export function pasteImageFile(sourceUri: any, imageFilePath: string) {
-  if (typeof sourceUri === 'string') {
-    sourceUri = vscode.Uri.parse(sourceUri);
+export function pasteImageFile(sourceUri: string, imageFilePath: string) {
+  const uri = vscode.Uri.parse(sourceUri);
+
+  const imageFolderPath =
+    vscode.workspace
+      .getConfiguration('markdown-preview-enhanced')
+      .get<string>('imageFolderPath') ?? '';
+  let imageFileName = path.basename(imageFilePath);
+  const projectDirectoryPath = getWorkspaceFolderUri(uri).fsPath;
+  if (!projectDirectoryPath) {
+    return vscode.window.showErrorMessage('Cannot find workspace');
   }
 
-  const imageFolderPath = vscode.workspace
-    .getConfiguration('markdown-preview-enhanced')
-    .get<string>('imageFolderPath');
-  let imageFileName = path.basename(imageFilePath);
-  const projectDirectoryPath = vscode.workspace.rootPath;
   let assetDirectoryPath;
   let description;
   if (imageFolderPath[0] === '/') {
@@ -29,7 +32,7 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
     );
   } else {
     assetDirectoryPath = path.resolve(
-      path.dirname(sourceUri.fsPath),
+      path.dirname(uri.fsPath),
       imageFolderPath,
     );
   }
@@ -43,7 +46,7 @@ export function pasteImageFile(sourceUri: any, imageFilePath: string) {
     .filter(
       editor =>
         isMarkdownFile(editor.document) &&
-        editor.document.uri.fsPath === sourceUri.fsPath,
+        editor.document.uri.fsPath === uri.fsPath,
     )
     .forEach(editor => {
       fs.mkdir(assetDirectoryPath, error => {
