@@ -1708,6 +1708,13 @@ copy-anything@^2.0.1:
   dependencies:
     is-what "^3.14.1"
 
+copy-anything@^3.0.5:
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/copy-anything/-/copy-anything-3.0.5.tgz#2d92dce8c498f790fa7ad16b01a1ae5a45b020a0"
+  integrity sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==
+  dependencies:
+    is-what "^4.1.8"
+
 copy-descriptor@^0.1.0:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/copy-descriptor/-/copy-descriptor-0.1.1.tgz#676f6eb3c39997c2ee1ac3a924fd6124748f578d"
@@ -1797,15 +1804,14 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.8.3:
-  version "0.8.3"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.3.tgz#9515d2d7cf976b048e2608ad1c892a04fa1c46af"
-  integrity sha512-QtZ/b/dcd8WSjGzes65c/LzFT7PjTbMbruKcV4XDce96UvLyO+BAVKeVe+pR0e3WWZ6x/3dRpKIopg0DnQO2cw==
+crossnote@../mume:
+  version "0.8.4"
   dependencies:
     "@viz-js/viz" "^3.1.0"
     async-mutex "^0.4.0"
     cheerio "^1.0.0-rc.12"
     chrome-paths "^1.0.1"
+    copy-anything "^3.0.5"
     cross-fetch "^4.0.0"
     crypto-js "^4.1.1"
     html-escaper "^3.0.3"
@@ -4488,6 +4494,11 @@ is-what@^3.14.1:
   version "3.14.1"
   resolved "https://registry.yarnpkg.com/is-what/-/is-what-3.14.1.tgz#e1222f46ddda85dead0fd1c9df131760e77755c1"
   integrity sha512-sNxgpk9793nzSs7bA6JQJGeIuRBQhAaNGG77kzYQgMkrID+lS6SlK07K5LaptscDlSaIgH+GPFzf+d75FVxozA==
+
+is-what@^4.1.8:
+  version "4.1.15"
+  resolved "https://registry.yarnpkg.com/is-what/-/is-what-4.1.15.tgz#de43a81090417a425942d67b1ae86e7fae2eee0e"
+  integrity sha512-uKua1wfy3Yt+YqsD6mTUEa2zSi3G1oPlqTflgaPJ7z63vUGN5pxFpnQfeSLMFnJDEsdvOtkp1rUWkYjB4YfhgA==
 
 is-windows@^1.0.1, is-windows@^1.0.2:
   version "1.0.2"

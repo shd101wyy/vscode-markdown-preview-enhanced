@@ -35,7 +35,7 @@
     "run-in-browser": "concurrently \"vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .\" \"npx http-server ./crossnote -p 6789 --cors\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
-    "vscode:prepublish": "yarn build",
+    "vscode:prepublish": "yarn install && yarn build",
     "watch": "yarn copy:files && rm -rf ./out && node build.js --watch"
   },
   "contributes": {
@@ -113,18 +113,8 @@
         "enablement": "!isWeb"
       },
       {
-        "command": "markdown-preview-enhanced.openMermaidConfig",
-        "title": "%markdown-preview-enhanced.openMermaidConfig.title%",
-        "enablement": "!isWeb"
-      },
-      {
-        "command": "markdown-preview-enhanced.openMathJaxConfig",
-        "title": "%markdown-preview-enhanced.openMathJaxConfig.title%",
-        "enablement": "!isWeb"
-      },
-      {
-        "command": "markdown-preview-enhanced.openKaTeXConfig",
-        "title": "%markdown-preview-enhanced.openKaTeXConfig.title%",
+        "command": "markdown-preview-enhanced.openConfigScript",
+        "title": "%markdown-preview-enhanced.openConfigScript.title%",
         "enablement": "!isWeb"
       },
       {
@@ -133,16 +123,8 @@
         "enablement": "!isWeb"
       },
       {
-        "command": "markdown-preview-enhanced.openMermaidConfigInWorkspace",
-        "title": "%markdown-preview-enhanced.openMermaidConfigInWorkspace.title%"
-      },
-      {
-        "command": "markdown-preview-enhanced.openMathJaxConfigInWorkspace",
-        "title": "%markdown-preview-enhanced.openMathJaxConfigInWorkspace.title%"
-      },
-      {
-        "command": "markdown-preview-enhanced.openKaTeXConfigInWorkspace",
-        "title": "%markdown-preview-enhanced.openKaTeXConfigInWorkspace.title%"
+        "command": "markdown-preview-enhanced.openConfigScriptInWorkspace",
+        "title": "%markdown-preview-enhanced.openConfigScriptInWorkspace.title%"
       },
       {
         "command": "markdown-preview-enhanced.extendParserInWorkspace",
@@ -617,7 +599,7 @@
   },
   "dependencies": {
     "@types/vfile": "^3.0.2",
-    "crossnote": "^0.8.3"
+    "crossnote": "../mume"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",

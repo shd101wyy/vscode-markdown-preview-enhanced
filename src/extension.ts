@@ -19,13 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
     fs.watch(globalConfigPath, async (eventType, fileName) => {
       if (
         eventType === 'change' &&
-        [
-          'style.less',
-          'mermaid.json',
-          'mathjax_v3.json',
-          'katex.json',
-          'parser.mjs',
-        ].includes(fileName ?? '')
+        ['style.less', 'config.mjs', 'parser.mjs'].includes(fileName ?? '')
       ) {
         const providers = getAllPreviewProviders();
         providers.forEach(async provider => {
@@ -51,33 +45,13 @@ export function activate(context: vscode.ExtensionContext) {
     );
   }
 
-  function openMermaidConfig() {
-    const mermaidConfigFilePath = utility.addFileProtocol(
-      path.resolve(globalConfigPath, './mermaid.json'),
+  function openConfigScript() {
+    const configScriptPath = utility.addFileProtocol(
+      path.resolve(globalConfigPath, './config.mjs'),
     );
     vscode.commands.executeCommand(
       'vscode.open',
-      vscode.Uri.parse(mermaidConfigFilePath),
-    );
-  }
-
-  function openMathJaxConfig() {
-    const mathjaxConfigFilePath = utility.addFileProtocol(
-      path.resolve(globalConfigPath, './mathjax_v3.json'),
-    );
-    vscode.commands.executeCommand(
-      'vscode.open',
-      vscode.Uri.parse(mathjaxConfigFilePath),
-    );
-  }
-
-  function openKaTeXConfig() {
-    const katexConfigFilePath = utility.addFileProtocol(
-      path.resolve(globalConfigPath, './katex.json'),
-    );
-    vscode.commands.executeCommand(
-      'vscode.open',
-      vscode.Uri.parse(katexConfigFilePath),
+      vscode.Uri.parse(configScriptPath),
     );
   }
 
@@ -110,22 +84,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      'markdown-preview-enhanced.openMermaidConfig',
-      openMermaidConfig,
-    ),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      'markdown-preview-enhanced.openMathJaxConfig',
-      openMathJaxConfig,
-    ),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      'markdown-preview-enhanced.openKaTeXConfig',
-      openKaTeXConfig,
+      'markdown-preview-enhanced.openConfigScript',
+      openConfigScript,
     ),
   );
 

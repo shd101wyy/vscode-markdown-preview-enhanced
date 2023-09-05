@@ -160,7 +160,7 @@ export class PreviewProvider {
     return this;
   }
 
-  public async updateCrossnoteConfig(directory: string) {
+  public async updateCrossnoteConfig(directory: string, forceUpdate = false) {
     // If directory is globalConfigDirectory && ${workspaceDir}/.crossnote directory exists
     // then return without updating.
     if (
@@ -172,7 +172,7 @@ export class PreviewProvider {
       return;
     }
 
-    if (await this.notebook.fs.exists(directory)) {
+    if ((await this.notebook.fs.exists(directory)) || forceUpdate) {
       const configs = await loadConfigsInDirectory(
         directory,
         this.notebook.fs,

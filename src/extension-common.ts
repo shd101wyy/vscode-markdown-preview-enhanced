@@ -396,6 +396,25 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     config.update('previewTheme', theme, true);
   }
 
+  function openConfigFileInWorkspace(
+    workspaceUri: vscode.Uri,
+    filePath: vscode.Uri,
+  ) {
+    vscode.workspace.fs.stat(filePath).then(
+      () => {
+        vscode.commands.executeCommand('vscode.open', filePath);
+      },
+      async () => {
+        const provider = await getPreviewContentProvider(workspaceUri);
+        await provider.updateCrossnoteConfig(
+          path.join(workspaceUri.fsPath, '.crossnote'),
+          true,
+        );
+        vscode.commands.executeCommand('vscode.open', filePath);
+      },
+    );
+  }
+
   function customizeCSSInWorkspace() {
     const currentWorkingDirectory = getCurrentWorkingDirectory();
     if (!currentWorkingDirectory) {
@@ -407,52 +426,24 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
       currentWorkingDirectory,
       './.crossnote/style.less',
     );
-    vscode.commands.executeCommand('vscode.open', styleLessFile);
+
+    openConfigFileInWorkspace(currentWorkingDirectory, styleLessFile);
   }
 
-  function openMermaidConfigInWorkspace() {
+  function openConfigScriptInWorkspace() {
     const currentWorkingDirectory = getCurrentWorkingDirectory();
     if (!currentWorkingDirectory) {
       return vscode.window.showErrorMessage(
-        'Please open a folder before customizing Mermaid config',
+        'Please open a folder before customizing config script',
       );
     }
 
-    const mermaidConfigFilePath = vscode.Uri.joinPath(
+    const configScriptPath = vscode.Uri.joinPath(
       currentWorkingDirectory,
-      './.crossnote/mermaid.json',
+      './.crossnote/config.mjs',
     );
-    vscode.commands.executeCommand('vscode.open', mermaidConfigFilePath);
-  }
 
-  function openMathJaxConfigInWorkspace() {
-    const currentWorkingDirectory = getCurrentWorkingDirectory();
-    if (!currentWorkingDirectory) {
-      return vscode.window.showErrorMessage(
-        'Please open a folder before customizing MathJax config',
-      );
-    }
-
-    const mathjaxConfigFilePath = vscode.Uri.joinPath(
-      currentWorkingDirectory,
-      './.crossnote/mathjax_v3.json',
-    );
-    vscode.commands.executeCommand('vscode.open', mathjaxConfigFilePath);
-  }
-
-  function openKaTeXConfigInWorkspace() {
-    const currentWorkingDirectory = getCurrentWorkingDirectory();
-    if (!currentWorkingDirectory) {
-      return vscode.window.showErrorMessage(
-        'Please open a folder before customizing KaTeX config',
-      );
-    }
-
-    const katexConfigFilePath = vscode.Uri.joinPath(
-      currentWorkingDirectory,
-      './.crossnote/katex.json',
-    );
-    vscode.commands.executeCommand('vscode.open', katexConfigFilePath);
+    openConfigFileInWorkspace(currentWorkingDirectory, configScriptPath);
   }
 
   function extendParserInWorkspace() {
@@ -467,7 +458,8 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
       currentWorkingDirectory,
       './.crossnote/parser.mjs',
     );
-    vscode.commands.executeCommand('vscode.open', parserConfigPath);
+
+    openConfigFileInWorkspace(currentWorkingDirectory, parserConfigPath);
   }
 
   async function clickTagA({
@@ -590,9 +582,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         // Check if there is change under `${workspaceDir}/.crossnote` directory
         // and the filename is in one of below
         // - style.less
-        // - mermaid.json
-        // - mathjax_v3.json
-        // - katex.json
+        // - config.mjs
         // - parser.mjs
         // If so, refresh the preview of the workspace.
         const workspaceUri = getWorkspaceFolderUri(document.uri);
@@ -600,13 +590,9 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         const relativePath = path.relative(workspaceDir, document.uri.fsPath);
         if (
           relativePath.startsWith('.crossnote') &&
-          [
-            'style.less',
-            'mermaid.json',
-            'mathjax_v3.json',
-            'katex.json',
-            'parser.mjs',
-          ].includes(path.basename(relativePath))
+          ['style.less', 'config.mjs', 'parser.mjs'].includes(
+            path.basename(relativePath),
+          )
         ) {
           const provider = await getPreviewContentProvider(document.uri);
           await provider.updateCrossnoteConfig(
@@ -987,22 +973,8 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      'markdown-preview-enhanced.openMermaidConfigInWorkspace',
-      openMermaidConfigInWorkspace,
-    ),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      'markdown-preview-enhanced.openMathJaxConfigInWorkspace',
-      openMathJaxConfigInWorkspace,
-    ),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      'markdown-preview-enhanced.openKaTeXConfigInWorkspace',
-      openKaTeXConfigInWorkspace,
+      'markdown-preview-enhanced.openConfigScriptInWorkspace',
+      openConfigScriptInWorkspace,
     ),
   );
 
