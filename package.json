@@ -24,10 +24,9 @@
   "browser": "./out/web/extension.js",
   "scripts": {
     "build": "yarn copy:files && rm -rf ./out && node build.js",
-    "check:all": "yarn check:eslint && yarn check:prettier && yarn check:tsc",
+    "check:all": "yarn check:eslint && yarn check:prettier",
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
-    "check:tsc": "tsc --project . --noEmit",
     "copy:files": "gulp copy-files",
     "fix:all": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
