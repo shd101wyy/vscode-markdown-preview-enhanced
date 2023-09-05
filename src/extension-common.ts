@@ -440,7 +440,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
     const configScriptPath = vscode.Uri.joinPath(
       currentWorkingDirectory,
-      './.crossnote/config.mjs',
+      './.crossnote/config.js',
     );
 
     openConfigFileInWorkspace(currentWorkingDirectory, configScriptPath);
@@ -456,7 +456,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
     const parserConfigPath = vscode.Uri.joinPath(
       currentWorkingDirectory,
-      './.crossnote/parser.mjs',
+      './.crossnote/parser.js',
     );
 
     openConfigFileInWorkspace(currentWorkingDirectory, parserConfigPath);
@@ -582,15 +582,15 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         // Check if there is change under `${workspaceDir}/.crossnote` directory
         // and the filename is in one of below
         // - style.less
-        // - config.mjs
-        // - parser.mjs
+        // - config.js
+        // - parser.js
         // If so, refresh the preview of the workspace.
         const workspaceUri = getWorkspaceFolderUri(document.uri);
         const workspaceDir = workspaceUri.fsPath;
         const relativePath = path.relative(workspaceDir, document.uri.fsPath);
         if (
           relativePath.startsWith('.crossnote') &&
-          ['style.less', 'config.mjs', 'parser.mjs'].includes(
+          ['style.less', 'config.js', 'parser.js'].includes(
             path.basename(relativePath),
           )
         ) {

@@ -19,7 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
     fs.watch(globalConfigPath, async (eventType, fileName) => {
       if (
         eventType === 'change' &&
-        ['style.less', 'config.mjs', 'parser.mjs'].includes(fileName ?? '')
+        ['style.less', 'config.js', 'parser.js'].includes(fileName ?? '')
       ) {
         const providers = getAllPreviewProviders();
         providers.forEach(async provider => {
@@ -47,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function openConfigScript() {
     const configScriptPath = utility.addFileProtocol(
-      path.resolve(globalConfigPath, './config.mjs'),
+      path.resolve(globalConfigPath, './config.js'),
     );
     vscode.commands.executeCommand(
       'vscode.open',
@@ -57,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function extendParser() {
     const parserConfigPath = utility.addFileProtocol(
-      path.resolve(globalConfigPath, './parser.mjs'),
+      path.resolve(globalConfigPath, './parser.js'),
     );
     vscode.commands.executeCommand(
       'vscode.open',

@@ -755,6 +755,11 @@ acorn-jsx@^5.3.2:
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"
   integrity sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==
 
+acorn@^6.4.1:
+  version "6.4.2"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-6.4.2.tgz#35866fd710528e92de10cf06016498e47e39e1e6"
+  integrity sha512-XtGIhXwF8YM8bJhGxG5kXgjkEuNGLTkoYqVE+KMR+aspr4KGYmKYg7yUe3KghyQ9yheNwLnjmzh/7+gfDBmHCQ==
+
 acorn@^8.7.1, acorn@^8.8.2, acorn@^8.9.0:
   version "8.10.0"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.10.0.tgz#8be5b3907a67221a81ab23c7889c4c5526b62ec5"
@@ -1804,8 +1809,10 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@../mume:
-  version "0.8.4"
+crossnote@^0.8.6:
+  version "0.8.6"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.6.tgz#b2bd05c7cc223044c5faddf9c5a6b81a1f2c3e72"
+  integrity sha512-Vl8bFmuqAq3kkfeJT46MMA3uc7Qb9tlG+9dg//sEMq2mWdF3tZVcLTma9ZaFClCRL7rN+o3/pCBSRuVr0VlMrg==
   dependencies:
     "@viz-js/viz" "^3.1.0"
     async-mutex "^0.4.0"
@@ -1840,6 +1847,7 @@ crossnote@../mume:
     request "^2.88.0"
     slash "^5.1.0"
     snake-case "^3.0.4"
+    sval "^0.4.8"
     temp "^0.9.0"
     twemoji "^13.1.0"
     type-fest "^4.3.1"
@@ -7468,6 +7476,13 @@ supports-preserve-symlinks-flag@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz#6eda4bd344a3c94aea376d4cc31bc77311039e09"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
+
+sval@^0.4.8:
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/sval/-/sval-0.4.8.tgz#e7de37bed520f5537fe9e368b871880266c99a12"
+  integrity sha512-YoJztDXNW5tho3xlR4vHVq3Caqk5aqC6Z862ICoFX1bVbWxQ6OPxD7SE1mjfj13oaek5l4whykWNUO1TX0oIhg==
+  dependencies:
+    acorn "^6.4.1"
 
 sver-compat@^1.5.0:
   version "1.5.0"
