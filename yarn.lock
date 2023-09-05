@@ -1770,7 +1770,7 @@ crc32@^0.2.2:
   resolved "https://registry.yarnpkg.com/crc32/-/crc32-0.2.2.tgz#7ad220d6ffdcd119f9fc127a7772cacea390a4ba"
   integrity sha512-PFZEGbDUeoNbL2GHIEpJRQGheXReDody/9axKTxhXtQqIL443wnNigtVZO9iuCIMPApKZRv7k2xr8euXHqNxQQ==
 
-cross-fetch@4.0.0:
+cross-fetch@4.0.0, cross-fetch@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/cross-fetch/-/cross-fetch-4.0.0.tgz#f037aef1580bb3a1a35164ea2a848ba81b445983"
   integrity sha512-e4a5N8lVvuLgAWgnCrLr2PP0YyDOTHa9H/Rj54dirp61qXnNq46m82bRhNqIA5VccJtWBvPTFRV3TtvHUKPB1g==
@@ -1797,15 +1797,16 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.8.2:
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.2.tgz#26d00ffd8be21a49cb26c5191f9085dcf7d2d633"
-  integrity sha512-wNnUjCfVxN/osgnqnOAT8yYFJo5svEndXuQLoZkCb1NOTw8hdPi0gUNTsAocQZKa6bqcdgR5YfqjWxoX0mVugQ==
+crossnote@^0.8.3:
+  version "0.8.3"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.3.tgz#9515d2d7cf976b048e2608ad1c892a04fa1c46af"
+  integrity sha512-QtZ/b/dcd8WSjGzes65c/LzFT7PjTbMbruKcV4XDce96UvLyO+BAVKeVe+pR0e3WWZ6x/3dRpKIopg0DnQO2cw==
   dependencies:
     "@viz-js/viz" "^3.1.0"
     async-mutex "^0.4.0"
     cheerio "^1.0.0-rc.12"
     chrome-paths "^1.0.1"
+    cross-fetch "^4.0.0"
     crypto-js "^4.1.1"
     html-escaper "^3.0.3"
     imagemagick-cli "^0.5.0"
@@ -1824,10 +1825,10 @@ crossnote@^0.8.2:
     mermaid "^10.4.0"
     minisearch "^6.1.0"
     mkdirp "^3.0.1"
-    node-fetch "^2.6.1"
     object-hash "^3.0.0"
     pako "^2.1.0"
     papaparse "^5.4.1"
+    plantuml-encoder "^1.4.0"
     puppeteer-core "^21.1.0"
     qiniu "^7.9.0"
     request "^2.88.0"
@@ -5719,7 +5720,7 @@ node-environment-flags@1.0.5:
     object.getownpropertydescriptors "^2.0.3"
     semver "^5.7.0"
 
-node-fetch@^2.6.1, node-fetch@^2.6.12, node-fetch@^2.6.7:
+node-fetch@^2.6.12, node-fetch@^2.6.7:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.7.0.tgz#d0f0fa6e3e2dc1d27efcd8ad99d550bda94d187d"
   integrity sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==
@@ -6346,6 +6347,11 @@ pkg-dir@^4.2.0:
   integrity sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==
   dependencies:
     find-up "^4.0.0"
+
+plantuml-encoder@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/plantuml-encoder/-/plantuml-encoder-1.4.0.tgz#7899302cf785de956bf1a167e15420feee5975f7"
+  integrity sha512-sxMwpDw/ySY1WB2CE3+IdMuEcWibJ72DDOsXLkSmEaSzwEUaYBT6DWgOfBiHGCux4q433X6+OEFWjlVqp7gL6g==
 
 playwright-core@1.37.1:
   version "1.37.1"

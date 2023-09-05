@@ -88,7 +88,8 @@
       },
       {
         "command": "markdown-preview-enhanced.customizeCss",
-        "title": "%markdown-preview-enhanced.customizeCss.title%"
+        "title": "%markdown-preview-enhanced.customizeCss.title%",
+        "enablement": "!isWeb"
       },
       {
         "command": "markdown-preview-enhanced.customizeCssInWorkspace",
@@ -108,23 +109,28 @@
       },
       {
         "command": "markdown-preview-enhanced.createTOC",
-        "title": "%markdown-preview-enhanced.createTOC.title%"
+        "title": "%markdown-preview-enhanced.createTOC.title%",
+        "enablement": "!isWeb"
       },
       {
         "command": "markdown-preview-enhanced.openMermaidConfig",
-        "title": "%markdown-preview-enhanced.openMermaidConfig.title%"
+        "title": "%markdown-preview-enhanced.openMermaidConfig.title%",
+        "enablement": "!isWeb"
       },
       {
         "command": "markdown-preview-enhanced.openMathJaxConfig",
-        "title": "%markdown-preview-enhanced.openMathJaxConfig.title%"
+        "title": "%markdown-preview-enhanced.openMathJaxConfig.title%",
+        "enablement": "!isWeb"
       },
       {
         "command": "markdown-preview-enhanced.openKaTeXConfig",
-        "title": "%markdown-preview-enhanced.openKaTeXConfig.title%"
+        "title": "%markdown-preview-enhanced.openKaTeXConfig.title%",
+        "enablement": "!isWeb"
       },
       {
         "command": "markdown-preview-enhanced.extendParser",
-        "title": "%markdown-preview-enhanced.extendParser.title%"
+        "title": "%markdown-preview-enhanced.extendParser.title%",
+        "enablement": "!isWeb"
       },
       {
         "command": "markdown-preview-enhanced.openMermaidConfigInWorkspace",
@@ -144,7 +150,8 @@
       },
       {
         "command": "markdown-preview-enhanced.showUploadedImages",
-        "title": "%markdown-preview-enhanced.showUploadedImages.title%"
+        "title": "%markdown-preview-enhanced.showUploadedImages.title%",
+        "enablement": "!isWeb"
       }
     ],
     "configuration": {
@@ -610,7 +617,7 @@
   },
   "dependencies": {
     "@types/vfile": "^3.0.2",
-    "crossnote": "^0.8.2"
+    "crossnote": "^0.8.3"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",

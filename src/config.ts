@@ -195,6 +195,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       config.get<string>('plantumlJarPath') ?? defaultConfig.plantumlJarPath;
     this.plantumlServer =
       config.get<string>('plantumlServer') ?? defaultConfig.plantumlServer;
+    if (!this.plantumlServer && isVSCodeWebExtension()) {
+      this.plantumlServer = 'https://kroki.io/plantuml/svg/';
+    }
     this.hideDefaultVSCodeMarkdownPreviewButtons =
       config.get<boolean>('hideDefaultVSCodeMarkdownPreviewButtons') ?? true;
     this.jsdelivrCdnHost =

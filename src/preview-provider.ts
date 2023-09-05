@@ -176,7 +176,7 @@ export class PreviewProvider {
       const configs = await loadConfigsInDirectory(
         directory,
         this.notebook.fs,
-        false,
+        true,
       );
       this.notebook.updateConfig(configs);
     }
