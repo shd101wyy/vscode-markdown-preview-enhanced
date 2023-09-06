@@ -599,7 +599,7 @@
   },
   "dependencies": {
     "@types/vfile": "^3.0.2",
-    "crossnote": "^0.8.6"
+    "crossnote": "^0.8.7"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",
