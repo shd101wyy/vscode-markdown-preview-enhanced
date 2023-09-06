@@ -1809,10 +1809,10 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.8.6:
-  version "0.8.6"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.6.tgz#b2bd05c7cc223044c5faddf9c5a6b81a1f2c3e72"
-  integrity sha512-Vl8bFmuqAq3kkfeJT46MMA3uc7Qb9tlG+9dg//sEMq2mWdF3tZVcLTma9ZaFClCRL7rN+o3/pCBSRuVr0VlMrg==
+crossnote@^0.8.8:
+  version "0.8.8"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.8.tgz#2f69c180177321644d43b789103d0e2ac57de4fd"
+  integrity sha512-w4z4xGTY7PFPBzPh0DLXyETY7IV9ewM18LnZmO7GIInHNvoZ9xEvrRL2qXewqgb7g6Zip9W31TNyPj4QMmpN6A==
   dependencies:
     "@viz-js/viz" "^3.1.0"
     async-mutex "^0.4.0"

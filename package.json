@@ -533,6 +533,19 @@
           "description": "The URL of the Kroki server to use.  ",
           "default": "https://kroki.io",
           "type": "string"
+        },
+        "markdown-preview-enhanced.markdownFileExtensions": {
+          "description": "Markdown file extensions. This is used to determine whether to show the preview button in the markdown file context menu.",
+          "default": [
+            ".md",
+            ".markdown",
+            ".mdown",
+            ".mkdn",
+            ".mkd",
+            ".rmd",
+            ".qmd"
+          ],
+          "type": "array"
         }
       }
     },
@@ -583,7 +596,8 @@
     }
   },
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onLanguage:quarto"
   ],
   "husky": {
     "hooks": {
@@ -598,7 +612,7 @@
   },
   "dependencies": {
     "@types/vfile": "^3.0.2",
-    "crossnote": "^0.8.6"
+    "crossnote": "^0.8.8"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",
