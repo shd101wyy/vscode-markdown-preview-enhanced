@@ -109,8 +109,8 @@ export class PreviewProvider {
     vscode.TextEditor
   > = new Map();
 
-  private singlePreviewPanel: vscode.WebviewPanel | null;
-  private singlePreviewPanelSourceUriTarget: Uri | null;
+  private static singlePreviewPanel: vscode.WebviewPanel | null;
+  private static singlePreviewPanelSourceUriTarget: Uri | null;
 
   /**
    * The key is markdown file fsPath
@@ -207,7 +207,9 @@ export class PreviewProvider {
 
     // refresh iframes
     if (useSinglePreview()) {
-      this.refreshPreviewPanel(this.singlePreviewPanelSourceUriTarget);
+      this.refreshPreviewPanel(
+        PreviewProvider.singlePreviewPanelSourceUriTarget,
+      );
     } else {
       for (const key in this.previewMaps) {
         if (this.previewMaps.hasOwnProperty(key)) {
@@ -223,7 +225,7 @@ export class PreviewProvider {
    */
   public getPreview(sourceUri: Uri): vscode.WebviewPanel | null {
     if (useSinglePreview()) {
-      return this.singlePreviewPanel;
+      return PreviewProvider.singlePreviewPanel;
     } else {
       return this.previewMaps[sourceUri.fsPath];
     }
@@ -235,7 +237,7 @@ export class PreviewProvider {
    */
   public isPreviewOn(sourceUri: Uri) {
     if (useSinglePreview()) {
-      return !!this.singlePreviewPanel;
+      return !!PreviewProvider.singlePreviewPanel;
     } else {
       return !!this.getPreview(sourceUri);
     }
@@ -243,8 +245,8 @@ export class PreviewProvider {
 
   public destroyPreview(sourceUri: Uri) {
     if (useSinglePreview()) {
-      this.singlePreviewPanel = null;
-      this.singlePreviewPanelSourceUriTarget = null;
+      PreviewProvider.singlePreviewPanel = null;
+      PreviewProvider.singlePreviewPanelSourceUriTarget = null;
       this.preview2EditorMap = new Map();
       this.previewMaps = {};
     } else {
@@ -272,17 +274,22 @@ export class PreviewProvider {
   ) {
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: vscode.WebviewPanel;
-    if (isUsingSinglePreview && this.singlePreviewPanel) {
-      const oldResourceRoot = this.singlePreviewPanelSourceUriTarget
-        ? getWorkspaceFolderUri(this.singlePreviewPanelSourceUriTarget)
+    if (isUsingSinglePreview && PreviewProvider.singlePreviewPanel) {
+      const oldResourceRoot = PreviewProvider.singlePreviewPanelSourceUriTarget
+        ? getWorkspaceFolderUri(
+            PreviewProvider.singlePreviewPanelSourceUriTarget,
+          )
         : undefined;
       const newResourceRoot = getWorkspaceFolderUri(sourceUri);
       if (oldResourceRoot?.fsPath !== newResourceRoot.fsPath) {
-        this.singlePreviewPanel.dispose();
+        const singlePreview = PreviewProvider.singlePreviewPanel;
+        PreviewProvider.singlePreviewPanel = null;
+        PreviewProvider.singlePreviewPanelSourceUriTarget = null;
+        singlePreview.dispose();
         return this.initPreview(sourceUri, editor, viewOptions);
       } else {
-        previewPanel = this.singlePreviewPanel;
-        this.singlePreviewPanelSourceUriTarget = sourceUri;
+        previewPanel = PreviewProvider.singlePreviewPanel;
+        PreviewProvider.singlePreviewPanelSourceUriTarget = sourceUri;
       }
     } else if (this.previewMaps[sourceUri.fsPath]) {
       previewPanel = this.previewMaps[sourceUri.fsPath];
@@ -335,8 +342,8 @@ export class PreviewProvider {
       );
 
       if (isUsingSinglePreview) {
-        this.singlePreviewPanel = previewPanel;
-        this.singlePreviewPanelSourceUriTarget = sourceUri;
+        PreviewProvider.singlePreviewPanel = previewPanel;
+        PreviewProvider.singlePreviewPanelSourceUriTarget = sourceUri;
       }
     }
 
@@ -382,8 +389,8 @@ export class PreviewProvider {
    */
   public closeAllPreviews(singlePreview: boolean) {
     if (singlePreview) {
-      if (this.singlePreviewPanel) {
-        this.singlePreviewPanel.dispose();
+      if (PreviewProvider.singlePreviewPanel) {
+        PreviewProvider.singlePreviewPanel.dispose();
       }
     } else {
       const previewPanels: vscode.WebviewPanel[] = [];
@@ -402,8 +409,8 @@ export class PreviewProvider {
     this.previewMaps = {};
     this.preview2EditorMap = new Map();
     // this.engineMaps = {};
-    this.singlePreviewPanel = null;
-    this.singlePreviewPanelSourceUriTarget = null;
+    PreviewProvider.singlePreviewPanel = null;
+    PreviewProvider.singlePreviewPanelSourceUriTarget = null;
   }
 
   public previewPostMessage(sourceUri: Uri, message: any) {
@@ -414,10 +421,13 @@ export class PreviewProvider {
   }
 
   public previewHasTheSameSingleSourceUri(sourceUri: Uri) {
-    if (!this.singlePreviewPanelSourceUriTarget) {
+    if (!PreviewProvider.singlePreviewPanelSourceUriTarget) {
       return false;
     } else {
-      return this.singlePreviewPanelSourceUriTarget.fsPath === sourceUri.fsPath;
+      return (
+        PreviewProvider.singlePreviewPanelSourceUriTarget.fsPath ===
+        sourceUri.fsPath
+      );
     }
   }
 

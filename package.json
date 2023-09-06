@@ -583,7 +583,8 @@
     }
   },
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onLanguage:quarto"
   ],
   "husky": {
     "hooks": {
