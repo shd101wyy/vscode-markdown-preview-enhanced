@@ -64,10 +64,23 @@ function getGlobalConfigPath(): string {
 export const globalConfigPath = getGlobalConfigPath();
 
 export function isMarkdownFile(document: vscode.TextDocument) {
-  return (
+  let flag =
     (document.languageId === 'markdown' || document.languageId === 'quarto') &&
-    document.uri.scheme !== 'markdown-preview-enhanced'
-  ); // prevent processing of own documents
+    document.uri.scheme !== 'markdown-preview-enhanced'; // prevent processing of own documents
+
+  if (!flag) {
+    // Check file extension
+    const config = vscode.workspace.getConfiguration(
+      'markdown-preview-enhanced',
+    );
+    const markdownFileExtensions =
+      config.get<string[]>('markdownFileExtensions') ?? [];
+    const fileName = document.fileName;
+    const ext = path.extname(fileName).toLowerCase();
+    flag = markdownFileExtensions.includes(ext);
+  }
+
+  return flag;
 }
 
 /**
