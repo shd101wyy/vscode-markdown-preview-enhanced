@@ -1,14 +1,9 @@
-import {
-  Notebook,
-  PreviewTheme,
-  loadConfigsInDirectory,
-  utility,
-} from 'crossnote';
+import { Notebook, loadConfigsInDirectory, utility } from 'crossnote';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
+import { notebooksManager } from './notebooks-manager';
 import {
   getCrossnoteVersion,
   getWorkspaceFolderUri,
@@ -17,7 +12,6 @@ import {
   isVSCodeWebExtension,
   isVSCodewebExtensionDevMode,
 } from './utils';
-import { wrapVSCodeFSAsApi } from './vscode-fs';
 
 if (isVSCodeWebExtension()) {
   console.debug('* Using crossnote version: ', getCrossnoteVersion());
@@ -118,45 +112,16 @@ export class PreviewProvider {
    */
   private jsAndCssFilesMaps: { [key: string]: string[] } = {};
 
-  private config: MarkdownPreviewEnhancedConfig;
-
-  private systemColorScheme: 'light' | 'dark' = 'light';
-
   public constructor() {
     // Please use `init` method to initialize this class.
   }
 
   private async init(
     context: vscode.ExtensionContext,
-    workspaceDir: vscode.Uri,
+    workspaceFolderUri: vscode.Uri,
   ) {
     this.context = context;
-    this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
-    this.notebook = await Notebook.init({
-      notebookPath: workspaceDir.fsPath,
-      config: { ...this.config },
-      fs: wrapVSCodeFSAsApi(workspaceDir.scheme),
-    });
-
-    // Check if ${workspaceDir}/.crossnote directory exists
-    // If not, then use the global config.
-    const crossnoteDir = vscode.Uri.joinPath(workspaceDir, './.crossnote');
-    if (
-      !(await this.notebook.fs.exists(crossnoteDir.fsPath)) &&
-      !isVSCodeWebExtension()
-    ) {
-      try {
-        const globalConfig = await loadConfigsInDirectory(
-          globalConfigPath,
-          this.notebook.fs,
-          true,
-        );
-        this.notebook.updateConfig(globalConfig);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
+    this.notebook = await notebooksManager.getNotebook(workspaceFolderUri);
     return this;
   }
 
@@ -452,6 +417,8 @@ export class PreviewProvider {
 
       const preview = this.getPreview(sourceUri);
 
+      console.log('startParsingMarkdown: ', sourceUri.fsPath);
+
       engine
         .parseMD(text, {
           isForPreview: true,
@@ -461,6 +428,7 @@ export class PreviewProvider {
           vscodePreviewPanel: preview,
         })
         .then(({ markdown, html, tocHTML, JSAndCssFiles, yamlConfig }) => {
+          console.log('done parsing: ', html);
           // check JSAndCssFiles
           if (
             JSON.stringify(JSAndCssFiles) !==
@@ -471,6 +439,7 @@ export class PreviewProvider {
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
+            console.log('updateHTML');
             this.previewPostMessage(sourceUri, {
               command: 'updateHTML',
               html,
@@ -482,11 +451,11 @@ export class PreviewProvider {
               class:
                 (yamlConfig.class || '') +
                 ` ${
-                  this.systemColorScheme === 'dark'
+                  notebooksManager.systemColorScheme === 'dark'
                     ? 'system-dark'
                     : 'system-ligtht'
                 } ${
-                  this.getEditorColorScheme() === 'dark'
+                  notebooksManager.getEditorColorScheme() === 'dark'
                     ? 'editor-dark'
                     : 'editor-light'
                 } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
@@ -697,7 +666,7 @@ export class PreviewProvider {
   }
 
   public update(sourceUri: Uri) {
-    if (!this.config.liveUpdate || !this.getPreview(sourceUri)) {
+    if (!notebooksManager.config.liveUpdate || !this.getPreview(sourceUri)) {
       return;
     }
 
@@ -706,98 +675,9 @@ export class PreviewProvider {
       setTimeout(() => {
         this.waiting = false;
         // this._onDidChange.fire(uri);
+        console.log('* updateMarkdown: ', sourceUri.fsPath);
         this.updateMarkdown(sourceUri);
       }, 300);
-    }
-  }
-
-  private getEditorColorScheme(): 'light' | 'dark' {
-    if (
-      [
-        vscode.ColorThemeKind.Light,
-        vscode.ColorThemeKind.HighContrastLight,
-      ].find(themeKind => {
-        return vscode.window.activeColorTheme.kind === themeKind;
-      })
-    ) {
-      return 'light';
-    } else {
-      return 'dark';
-    }
-  }
-
-  public setSystemColorScheme(colorScheme: 'light' | 'dark') {
-    if (this.systemColorScheme !== colorScheme) {
-      this.systemColorScheme = colorScheme;
-      if (
-        this.config.previewColorScheme === PreviewColorScheme.systemColorScheme
-      ) {
-        this.updateConfiguration(true);
-      }
-    }
-  }
-
-  public updateConfiguration(forceUpdate = false) {
-    const newConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
-    if (forceUpdate || !this.config.isEqualTo(newConfig)) {
-      // if `singlePreview` setting is changed, close all previews.
-      if (this.config.singlePreview !== newConfig.singlePreview) {
-        this.closeAllPreviews(this.config.singlePreview);
-        this.config = newConfig;
-      } else {
-        this.config = newConfig;
-
-        const previewTheme = this.getPreviewTheme(
-          newConfig.previewTheme,
-          newConfig.previewColorScheme,
-        );
-        this.notebook.updateConfig({ ...newConfig, previewTheme });
-        // update all generated md documents
-        this.refreshAllPreviews();
-      }
-    }
-  }
-
-  private getPreviewThemeByLightOrDark(
-    theme: PreviewTheme,
-    color: 'light' | 'dark',
-  ): PreviewTheme {
-    switch (theme) {
-      case 'atom-dark.css':
-      case 'atom-light.css': {
-        return color === 'light' ? 'atom-light.css' : 'atom-dark.css';
-      }
-      case 'github-dark.css':
-      case 'github-light.css': {
-        return color === 'light' ? 'github-light.css' : 'github-dark.css';
-      }
-      case 'one-light.css':
-      case 'one-dark.css': {
-        return color === 'light' ? 'one-light.css' : 'one-dark.css';
-      }
-      case 'solarized-light.css':
-      case 'solarized-dark.css': {
-        return color === 'light' ? 'solarized-light.css' : 'solarized-dark.css';
-      }
-      default: {
-        return theme;
-      }
-    }
-  }
-
-  private getPreviewTheme(
-    theme: PreviewTheme,
-    colorScheme: PreviewColorScheme,
-  ): PreviewTheme {
-    if (colorScheme === PreviewColorScheme.editorColorScheme) {
-      return this.getPreviewThemeByLightOrDark(
-        theme,
-        this.getEditorColorScheme(),
-      );
-    } else if (colorScheme === PreviewColorScheme.systemColorScheme) {
-      return this.getPreviewThemeByLightOrDark(theme, this.systemColorScheme);
-    } else {
-      return theme;
     }
   }
 

@@ -612,7 +612,7 @@
   },
   "dependencies": {
     "@types/vfile": "^3.0.2",
-    "crossnote": "^0.8.8"
+    "crossnote": "../mume"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",

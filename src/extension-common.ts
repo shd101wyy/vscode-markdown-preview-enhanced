@@ -3,11 +3,8 @@ import { utility } from 'crossnote';
 import * as vscode from 'vscode';
 import { PreviewColorScheme } from './config';
 import { pasteImageFile, uploadImageFile } from './image-helper';
-import {
-  PreviewProvider,
-  getAllPreviewProviders,
-  getPreviewUri,
-} from './preview-provider';
+import { notebooksManager } from './notebooks-manager';
+import { PreviewProvider, getPreviewUri } from './preview-provider';
 import {
   getBottomVisibleLine,
   getTopVisibleLine,
@@ -84,10 +81,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     );
     const scrollSync = !config.get<boolean>('scrollSync');
     config.update('scrollSync', scrollSync, true).then(() => {
-      const providers = getAllPreviewProviders();
-      providers.forEach(provider => {
-        provider.updateConfiguration();
-      });
+      notebooksManager.updateConfiguration();
       if (scrollSync) {
         vscode.window.showInformationMessage('Scroll Sync is enabled');
       } else {
@@ -102,10 +96,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     );
     const liveUpdate = !config.get<boolean>('liveUpdate');
     config.update('liveUpdate', liveUpdate, true).then(() => {
-      const providers = getAllPreviewProviders();
-      providers.forEach(provider => {
-        provider.updateConfiguration();
-      });
+      notebooksManager.updateConfiguration();
       if (liveUpdate) {
         vscode.window.showInformationMessage('Live Update is enabled');
       } else {
@@ -122,10 +113,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     config
       .update('breakOnSingleNewLine', breakOnSingleNewLine, true)
       .then(() => {
-        const providers = getAllPreviewProviders();
-        providers.forEach(provider => {
-          provider.updateConfiguration();
-        });
+        notebooksManager.updateConfiguration();
         if (breakOnSingleNewLine) {
           vscode.window.showInformationMessage(
             'Break On Single New Line is enabled',
@@ -200,9 +188,10 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     uri: string;
     systemColorScheme: 'light' | 'dark';
   }) {
+    console.log('webviewFinishLoading: ', uri, systemColorScheme);
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
-    previewProvider.setSystemColorScheme(systemColorScheme);
+    notebooksManager.setSystemColorScheme(systemColorScheme);
     previewProvider.updateMarkdown(sourceUri);
   }
 
@@ -573,6 +562,36 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     }
   }
 
+  async function openChangelog() {
+    const url =
+      'https://github.com/shd101wyy/vscode-markdown-preview-enhanced/releases';
+    return vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+  }
+
+  async function openIssues() {
+    const url =
+      'https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues';
+    vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+  }
+
+  async function openSponsors() {
+    const url = 'https://github.com/sponsors/shd101wyy/';
+    vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+  }
+
+  async function showBacklinks({ uri }: { uri: string }) {
+    console.log('showBacklinks: ', uri);
+    const sourceUri = vscode.Uri.parse(uri);
+    const backlinks = await notebooksManager.getNoteBacklinks(sourceUri);
+    const previewProvider = await getPreviewContentProvider(sourceUri);
+    console.log('backlinks: ', backlinks, !!previewProvider);
+    previewProvider.previewPostMessage(sourceUri, {
+      command: 'backlinks',
+      sourceUri: sourceUri.toString(),
+      backlinks,
+    });
+  }
+
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument(async document => {
       if (isMarkdownFile(document)) {
@@ -607,6 +626,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(async event => {
       if (isMarkdownFile(event.document)) {
+        console.log('changed text: ', event.document.uri);
         const previewProvider = await getPreviewContentProvider(
           event.document.uri,
         );
@@ -617,10 +637,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(() => {
-      const providers = getAllPreviewProviders();
-      providers.forEach(provider => {
-        provider.updateConfiguration();
-      });
+      notebooksManager.updateConfiguration();
     }),
   );
 
@@ -751,10 +768,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         config.get<PreviewColorScheme>('previewColorScheme') ===
         PreviewColorScheme.editorColorScheme
       ) {
-        const providers = getAllPreviewProviders();
-        providers.forEach(provider => {
-          provider.updateConfiguration(true);
-        });
+        notebooksManager.updateConfiguration();
       }
     }),
   );
@@ -965,6 +979,18 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand('_crossnote.openChangelog', openChangelog),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('_crossnote.openIssues', openIssues),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('_crossnote.openSponsors', openSponsors),
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       'markdown-preview-enhanced.customizeCssInWorkspace',
       customizeCSSInWorkspace,
@@ -987,6 +1013,10 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('_crossnote.clickTagA', clickTagA),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('_crossnote.showBacklinks', showBacklinks),
   );
 }
 
