@@ -385,6 +385,27 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     config.update('previewTheme', theme, true);
   }
 
+  function setCodeBlockTheme(uri, theme) {
+    const config = vscode.workspace.getConfiguration(
+      'markdown-preview-enhanced',
+    );
+    config.update('codeBlockTheme', theme, true);
+  }
+
+  function setRevealjsTheme(uri, theme) {
+    const config = vscode.workspace.getConfiguration(
+      'markdown-preview-enhanced',
+    );
+    config.update('revealjsTheme', theme, true);
+  }
+
+  function setImageUploader(imageUploader) {
+    const config = vscode.workspace.getConfiguration(
+      'markdown-preview-enhanced',
+    );
+    config.update('imageUploader', imageUploader, true);
+  }
+
   function openConfigFileInWorkspace(
     workspaceUri: vscode.Uri,
     filePath: vscode.Uri,
@@ -461,6 +482,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     scheme: string;
   }) {
     href = decodeURIComponent(href);
+    console.log('clickTagA 1: ', href, scheme);
     href = href
       .replace(/^vscode\-resource:\/\//, '')
       .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, '')
@@ -469,6 +491,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         /^https:\/\/file\+\.vscode-resource.vscode-cdn.net\//,
         `${scheme}:///`,
       )
+      .replace(/^https:\/\/.+\.vscode-cdn.net\//, `${scheme}:///`)
       .replace(
         /^https?:\/\/(.+?)\.vscode-webview-test.com\/vscode-resource\/file\/+/,
         `${scheme}:///`,
@@ -477,6 +500,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         /^https?:\/\/file(.+?)\.vscode-webview\.net\/+/,
         `${scheme}:///`,
       );
+    console.log('clickTagA 2: ', href, scheme);
     if (
       ['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(
         path.extname(href),
@@ -487,7 +511,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
       } catch (error) {
         vscode.window.showErrorMessage(error);
       }
-    } else if (href.startsWith(`${scheme}:///`)) {
+    } else if (href.startsWith(`${scheme}://`)) {
       // openFilePath = href.slice(8) # remove protocol
       const openFilePath = decodeURI(href);
       const fileUri = vscode.Uri.parse(openFilePath);
@@ -528,8 +552,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
       if (fileExists) {
         // Open fileUri
-        /*
-        vscode.workspace.openTextDocument(fileUri.path).then(doc => {
+        vscode.workspace.openTextDocument(fileUri).then(doc => {
           vscode.window.showTextDocument(doc, col).then(editor => {
             // if there was line fragment, jump to line
             if (line >= 0) {
@@ -543,13 +566,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
             }
           });
         });
-        */
-        vscode.commands.executeCommand(
-          'vscode.open',
-          fileUri,
-          col,
-          line >= 0 ? new vscode.Position(line, 0) : undefined,
-        );
       } else {
         vscode.commands.executeCommand(
           'vscode.open',
@@ -557,6 +573,8 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
           vscode.ViewColumn.One,
         );
       }
+    } else if (href.match(/^https?:\/\//)) {
+      vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(href));
     } else {
       utility.openFile(href);
     }
@@ -975,6 +993,27 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       '_crossnote.setPreviewTheme',
       setPreviewTheme,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.setCodeBlockTheme',
+      setCodeBlockTheme,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.setRevealjsTheme',
+      setRevealjsTheme,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.setImageUploader',
+      setImageUploader,
     ),
   );
 

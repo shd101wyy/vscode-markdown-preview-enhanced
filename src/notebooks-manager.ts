@@ -23,14 +23,13 @@ class NotebooksManager {
 
     // Check if workspaceUri.fsPath already exists in this.notebooks
     for (let i = 0; i < this.notebooks.length; i++) {
-      if (this.notebooks[i].notebookPath === workspaceFolderUri.fsPath) {
+      if (this.notebooks[i].notebookPath.fsPath === workspaceFolderUri.fsPath) {
         return this.notebooks[i];
       }
     }
-
     // If not, create a new Notebook instance and push it to this.notebooks
     const notebook = await Notebook.init({
-      notebookPath: workspaceFolderUri.fsPath,
+      notebookPath: workspaceFolderUri.toString(),
       fs: wrapVSCodeFSAsApi(workspaceFolderUri.scheme),
       config: { ...this.config },
     });
@@ -171,7 +170,7 @@ class NotebooksManager {
     return backlinks.map(backlink => {
       return {
         note: backlink.note,
-        references: [], // Omit this object
+        references: backlink.references,
         referenceHtmls: backlink.referenceHtmls,
       };
     });

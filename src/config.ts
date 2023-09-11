@@ -1,6 +1,7 @@
 import {
   CodeBlockTheme,
   FrontMatterRenderingOption,
+  ImageUploader,
   MathRenderingOption,
   MermaidTheme,
   NotebookConfig,
@@ -46,7 +47,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly revealjsTheme: RevealJsTheme;
   public readonly protocolsWhiteList: string;
   public readonly imageFolderPath: string;
-  public readonly imageUploader: string;
+  public readonly imageUploader: ImageUploader;
   public readonly printBackground: boolean;
   public readonly chromePath: string;
   public readonly imageMagickPath: string;
@@ -68,6 +69,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly hideDefaultVSCodeMarkdownPreviewButtons: boolean;
   public readonly jsdelivrCdnHost: string;
   public readonly krokiServer: string;
+  public readonly alwaysShowBacklinksInPreview: boolean;
 
   // preview config
   public readonly scrollSync: boolean;
@@ -144,7 +146,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       defaultConfig.protocolsWhiteList;
     this.imageFolderPath =
       config.get<string>('imageFolderPath') ?? defaultConfig.imageFolderPath;
-    this.imageUploader = config.get<string>('imageUploader') ?? 'imgur';
+    this.imageUploader = config.get<ImageUploader>('imageUploader') ?? 'imgur';
     this.printBackground =
       config.get<boolean>('printBackground') ?? defaultConfig.printBackground;
     this.chromePath =
@@ -208,7 +210,11 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       config.get<string>('jsdelivrCdnHost') ?? defaultConfig.jsdelivrCdnHost;
     this.krokiServer =
       config.get<string>('krokiServer') ?? defaultConfig.krokiServer;
+    this.alwaysShowBacklinksInPreview =
+      config.get<boolean>('alwaysShowBacklinksInPreview') ??
+      defaultConfig.alwaysShowBacklinksInPreview;
   }
+
   globalCss: string;
   mermaidConfig;
   mathjaxConfig;

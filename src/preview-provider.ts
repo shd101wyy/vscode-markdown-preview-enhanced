@@ -131,7 +131,7 @@ export class PreviewProvider {
     if (
       directory === globalConfigPath &&
       (await this.notebook.fs.exists(
-        path.join(this.notebook.notebookPath, '.crossnote'),
+        path.join(this.notebook.notebookPath.fsPath, '.crossnote'),
       ))
     ) {
       return;
@@ -270,6 +270,7 @@ export class PreviewProvider {
         localResourceRoots.push(workspaceUri);
       }
 
+      console.log('createWebviewPanel: ', sourceUri.fsPath);
       previewPanel = vscode.window.createWebviewPanel(
         'markdown-preview-enhanced',
         `Preview ${path.basename(sourceUri.fsPath)}`,
@@ -280,6 +281,8 @@ export class PreviewProvider {
           enableScripts: true, // TODO: This might be set by enableScriptExecution config. But for now we just enable it.
         },
       );
+
+      // set icon
       previewPanel.iconPath = vscode.Uri.file(
         path.join(this.context.extensionPath, 'media', 'preview.svg'),
       );
@@ -338,7 +341,9 @@ export class PreviewProvider {
         config: {
           sourceUri: sourceUri.toString(),
           initialLine: initialLine as number,
-          vscode: true,
+          isVSCode: true,
+          scrollSync: notebooksManager.config.scrollSync,
+          imageUploader: notebooksManager.config.imageUploader,
         },
         contentSecurityPolicy: '',
         vscodePreviewPanel: previewPanel,
@@ -416,9 +421,6 @@ export class PreviewProvider {
       });
 
       const preview = this.getPreview(sourceUri);
-
-      console.log('startParsingMarkdown: ', sourceUri.fsPath);
-
       engine
         .parseMD(text, {
           isForPreview: true,
@@ -428,7 +430,6 @@ export class PreviewProvider {
           vscodePreviewPanel: preview,
         })
         .then(({ markdown, html, tocHTML, JSAndCssFiles, yamlConfig }) => {
-          console.log('done parsing: ', html);
           // check JSAndCssFiles
           if (
             JSON.stringify(JSAndCssFiles) !==
@@ -439,7 +440,6 @@ export class PreviewProvider {
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
-            console.log('updateHTML');
             this.previewPostMessage(sourceUri, {
               command: 'updateHTML',
               html,
@@ -675,7 +675,6 @@ export class PreviewProvider {
       setTimeout(() => {
         this.waiting = false;
         // this._onDidChange.fire(uri);
-        console.log('* updateMarkdown: ', sourceUri.fsPath);
         this.updateMarkdown(sourceUri);
       }, 300);
     }
