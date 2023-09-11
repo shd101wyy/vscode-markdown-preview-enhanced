@@ -1,6 +1,7 @@
 import { Notebook, PreviewTheme, loadConfigsInDirectory } from 'crossnote';
 import * as vscode from 'vscode';
 import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
+import FileWatcher from './file-watcher';
 import { getAllPreviewProviders } from './preview-provider';
 import {
   getWorkspaceFolderUri,
@@ -13,9 +14,11 @@ class NotebooksManager {
   private notebooks: Notebook[] = [];
   public config: MarkdownPreviewEnhancedConfig;
   public systemColorScheme: 'light' | 'dark' = 'light';
+  private fileWatcher: FileWatcher;
 
-  constructor() {
+  constructor(private context: vscode.ExtensionContext) {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
+    this.fileWatcher = new FileWatcher(this.context, this);
   }
 
   public async getNotebook(uri: vscode.Uri): Promise<Notebook> {
@@ -160,12 +163,25 @@ class NotebooksManager {
 
   public async refreshNoteRelations(noteFilePath: string) {}
 
-  public async getNoteBacklinks(noteUri: vscode.Uri) {
+  public async getNoteBacklinks(
+    noteUri: vscode.Uri,
+    forceRefreshingNotes: boolean = false,
+  ) {
     const notebook = await this.getNotebook(noteUri);
-    await notebook.refreshNotesIfNotLoaded({
-      dir: '.',
-      includeSubdirectories: true,
-    });
+
+    if (forceRefreshingNotes) {
+      await notebook.refreshNotes({
+        dir: '.',
+        includeSubdirectories: true,
+        refreshRelations: true,
+      });
+    } else {
+      await notebook.refreshNotesIfNotLoaded({
+        dir: '.',
+        includeSubdirectories: true,
+      });
+    }
+    this.fileWatcher.startFileWatcher();
     const backlinks = await notebook.getNoteBacklinks(noteUri.fsPath);
     return backlinks.map(backlink => {
       return {
@@ -177,4 +193,4 @@ class NotebooksManager {
   }
 }
 
-export const notebooksManager = new NotebooksManager();
+export default NotebooksManager;

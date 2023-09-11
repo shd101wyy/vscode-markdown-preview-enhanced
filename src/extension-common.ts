@@ -1,9 +1,10 @@
 // For both node.js and browser environments
 import { utility } from 'crossnote';
+import { SHA256 } from 'crypto-js';
 import * as vscode from 'vscode';
 import { PreviewColorScheme } from './config';
 import { pasteImageFile, uploadImageFile } from './image-helper';
-import { notebooksManager } from './notebooks-manager';
+import NotebooksManager from './notebooks-manager';
 import { PreviewProvider, getPreviewUri } from './preview-provider';
 import {
   getBottomVisibleLine,
@@ -28,6 +29,9 @@ if (hideDefaultVSCodeMarkdownPreviewButtons) {
 }
 
 export function initExtensionCommon(context: vscode.ExtensionContext) {
+  const notebooksManager = new NotebooksManager(context);
+  PreviewProvider.notebooksManager = notebooksManager;
+
   function getCurrentWorkingDirectory() {
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor) {
@@ -188,7 +192,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     uri: string;
     systemColorScheme: 'light' | 'dark';
   }) {
-    console.log('webviewFinishLoading: ', uri, systemColorScheme);
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     notebooksManager.setSystemColorScheme(systemColorScheme);
@@ -482,7 +485,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     scheme: string;
   }) {
     href = decodeURIComponent(href);
-    console.log('clickTagA 1: ', href, scheme);
     href = href
       .replace(/^vscode\-resource:\/\//, '')
       .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, '')
@@ -500,7 +502,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         /^https?:\/\/file(.+?)\.vscode-webview\.net\/+/,
         `${scheme}:///`,
       );
-    console.log('clickTagA 2: ', href, scheme);
     if (
       ['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(
         path.extname(href),
@@ -597,16 +598,30 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
   }
 
-  async function showBacklinks({ uri }: { uri: string }) {
-    console.log('showBacklinks: ', uri);
+  async function showBacklinks({
+    uri,
+    forceRefreshingNotes,
+    backlinksSha,
+  }: {
+    uri: string;
+    forceRefreshingNotes: boolean;
+    backlinksSha: string;
+  }) {
+    console.log('showBacklinks: ', backlinksSha);
     const sourceUri = vscode.Uri.parse(uri);
-    const backlinks = await notebooksManager.getNoteBacklinks(sourceUri);
+    const backlinks = await notebooksManager.getNoteBacklinks(
+      sourceUri,
+      forceRefreshingNotes,
+    );
+    const sha = SHA256(JSON.stringify(backlinks)).toString();
+    console.log('get backlinks:', sha);
+
     const previewProvider = await getPreviewContentProvider(sourceUri);
-    console.log('backlinks: ', backlinks, !!previewProvider);
     previewProvider.previewPostMessage(sourceUri, {
       command: 'backlinks',
       sourceUri: sourceUri.toString(),
-      backlinks,
+      backlinks: sha !== backlinksSha ? backlinks : null,
+      hasUpdate: sha !== backlinksSha,
     });
   }
 
@@ -644,7 +659,6 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(async event => {
       if (isMarkdownFile(event.document)) {
-        console.log('changed text: ', event.document.uri);
         const previewProvider = await getPreviewContentProvider(
           event.document.uri,
         );
@@ -765,7 +779,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
             } else if (!isUsingSinglePreview) {
               const previewPanel = previewProvider.getPreview(sourceUri);
               if (previewPanel) {
-                previewPanel.reveal(vscode.ViewColumn.Two, true);
+                previewPanel.reveal(/*vscode.ViewColumn.Two*/ undefined, true);
               }
             }
           } else if (automaticallyShowPreviewOfMarkdownBeingEdited) {

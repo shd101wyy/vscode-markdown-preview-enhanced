@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { notebooksManager } from './notebooks-manager';
+import NotebooksManager from './notebooks-manager';
 import {
   getCrossnoteVersion,
   getWorkspaceFolderUri,
@@ -105,6 +105,7 @@ export class PreviewProvider {
 
   private static singlePreviewPanel: vscode.WebviewPanel | null;
   private static singlePreviewPanelSourceUriTarget: Uri | null;
+  public static notebooksManager: NotebooksManager | null = null;
 
   /**
    * The key is markdown file fsPath
@@ -121,8 +122,17 @@ export class PreviewProvider {
     workspaceFolderUri: vscode.Uri,
   ) {
     this.context = context;
-    this.notebook = await notebooksManager.getNotebook(workspaceFolderUri);
+    this.notebook = await this.getNotebooksManager().getNotebook(
+      workspaceFolderUri,
+    );
     return this;
+  }
+
+  private getNotebooksManager() {
+    if (!PreviewProvider.notebooksManager) {
+      PreviewProvider.notebooksManager = new NotebooksManager(this.context);
+    }
+    return PreviewProvider.notebooksManager;
   }
 
   public async updateCrossnoteConfig(directory: string, forceUpdate = false) {
@@ -342,8 +352,8 @@ export class PreviewProvider {
           sourceUri: sourceUri.toString(),
           initialLine: initialLine as number,
           isVSCode: true,
-          scrollSync: notebooksManager.config.scrollSync,
-          imageUploader: notebooksManager.config.imageUploader,
+          scrollSync: this.getNotebooksManager().config.scrollSync,
+          imageUploader: this.getNotebooksManager().config.imageUploader,
         },
         contentSecurityPolicy: '',
         vscodePreviewPanel: previewPanel,
@@ -441,7 +451,7 @@ export class PreviewProvider {
             this.refreshPreview(sourceUri);
           } else {
             this.previewPostMessage(sourceUri, {
-              command: 'updateHTML',
+              command: 'updateHtml',
               html,
               tocHTML,
               totalLineCount: document.lineCount,
@@ -451,11 +461,11 @@ export class PreviewProvider {
               class:
                 (yamlConfig.class || '') +
                 ` ${
-                  notebooksManager.systemColorScheme === 'dark'
+                  this.getNotebooksManager().systemColorScheme === 'dark'
                     ? 'system-dark'
                     : 'system-ligtht'
                 } ${
-                  notebooksManager.getEditorColorScheme() === 'dark'
+                  this.getNotebooksManager().getEditorColorScheme() === 'dark'
                     ? 'editor-dark'
                     : 'editor-light'
                 } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
@@ -666,7 +676,10 @@ export class PreviewProvider {
   }
 
   public update(sourceUri: Uri) {
-    if (!notebooksManager.config.liveUpdate || !this.getPreview(sourceUri)) {
+    if (
+      !this.getNotebooksManager().config.liveUpdate ||
+      !this.getPreview(sourceUri)
+    ) {
       return;
     }
 
