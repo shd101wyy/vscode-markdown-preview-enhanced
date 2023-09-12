@@ -2,6 +2,28 @@ const { context, build } = require('esbuild');
 const { polyfillNode } = require('esbuild-plugin-polyfill-node');
 
 /**
+ * @type {import('esbuild').Plugin}
+ */
+const esbuildProblemMatcherPlugin = {
+  name: 'esbuild-problem-matcher',
+
+  setup(build) {
+    build.onStart(() => {
+      console.log('[watch] build started');
+    });
+    build.onEnd((result) => {
+      if (result.errors.length) {
+        result.errors.forEach((error) =>
+          console.error(
+            `> ${error.location.file}:${error.location.line}:${error.location.column}: error: ${error.text}`,
+          ),
+        );
+      } else console.log('[watch] build finished');
+    });
+  },
+};
+
+/**
  * @type {import('esbuild').BuildOptions}
  */
 const nativeConfig = {
@@ -61,7 +83,7 @@ const webConfig = {
     // window: 'globalThis',
     // global: 'globalThis',
     // window: "globalThis",
-    window: JSON.stringify(defaultWindow),
+    'window': JSON.stringify(defaultWindow),
     // document: JSON.stringify(defaultDocument),
     'process.env.IS_VSCODE_WEB_EXTENSION': '"true"',
   },
@@ -76,8 +98,7 @@ async function main() {
         ...nativeConfig,
         sourcemap: true,
         minify: false,
-        // bundle: false,
-        // external: undefined,
+        plugins: [esbuildProblemMatcherPlugin, ...(nativeConfig.plugins ?? [])],
       });
 
       // Web
@@ -91,6 +112,7 @@ async function main() {
             'process.env.IS_VSCODE_WEB_EXTENSION_DEV_MODE': '"true"',
           },
         },
+        plugins: [esbuildProblemMatcherPlugin, ...(webConfig.plugins ?? [])],
       });
 
       await Promise.all([nativeContext.watch(), webContext.watch()]);
