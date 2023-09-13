@@ -620,7 +620,7 @@
   "dependencies": {
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
-    "crossnote": "^0.8.10",
+    "crossnote": "^0.8.11",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
