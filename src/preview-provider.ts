@@ -1,14 +1,9 @@
-import {
-  Notebook,
-  PreviewTheme,
-  loadConfigsInDirectory,
-  utility,
-} from 'crossnote';
+import { Notebook, loadConfigsInDirectory, utility } from 'crossnote';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
+import NotebooksManager from './notebooks-manager';
 import {
   getCrossnoteVersion,
   getWorkspaceFolderUri,
@@ -17,7 +12,6 @@ import {
   isVSCodeWebExtension,
   isVSCodewebExtensionDevMode,
 } from './utils';
-import { wrapVSCodeFSAsApi } from './vscode-fs';
 
 if (isVSCodeWebExtension()) {
   console.debug('* Using crossnote version: ', getCrossnoteVersion());
@@ -111,6 +105,7 @@ export class PreviewProvider {
 
   private static singlePreviewPanel: vscode.WebviewPanel | null;
   private static singlePreviewPanelSourceUriTarget: Uri | null;
+  public static notebooksManager: NotebooksManager | null = null;
 
   /**
    * The key is markdown file fsPath
@@ -118,46 +113,26 @@ export class PreviewProvider {
    */
   private jsAndCssFilesMaps: { [key: string]: string[] } = {};
 
-  private config: MarkdownPreviewEnhancedConfig;
-
-  private systemColorScheme: 'light' | 'dark' = 'light';
-
   public constructor() {
     // Please use `init` method to initialize this class.
   }
 
   private async init(
     context: vscode.ExtensionContext,
-    workspaceDir: vscode.Uri,
+    workspaceFolderUri: vscode.Uri,
   ) {
     this.context = context;
-    this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
-    this.notebook = await Notebook.init({
-      notebookPath: workspaceDir.fsPath,
-      config: { ...this.config },
-      fs: wrapVSCodeFSAsApi(workspaceDir.scheme),
-    });
-
-    // Check if ${workspaceDir}/.crossnote directory exists
-    // If not, then use the global config.
-    const crossnoteDir = vscode.Uri.joinPath(workspaceDir, './.crossnote');
-    if (
-      !(await this.notebook.fs.exists(crossnoteDir.fsPath)) &&
-      !isVSCodeWebExtension()
-    ) {
-      try {
-        const globalConfig = await loadConfigsInDirectory(
-          globalConfigPath,
-          this.notebook.fs,
-          true,
-        );
-        this.notebook.updateConfig(globalConfig);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
+    this.notebook = await this.getNotebooksManager().getNotebook(
+      workspaceFolderUri,
+    );
     return this;
+  }
+
+  private getNotebooksManager() {
+    if (!PreviewProvider.notebooksManager) {
+      PreviewProvider.notebooksManager = new NotebooksManager(this.context);
+    }
+    return PreviewProvider.notebooksManager;
   }
 
   public async updateCrossnoteConfig(directory: string, forceUpdate = false) {
@@ -166,7 +141,7 @@ export class PreviewProvider {
     if (
       directory === globalConfigPath &&
       (await this.notebook.fs.exists(
-        path.join(this.notebook.notebookPath, '.crossnote'),
+        path.join(this.notebook.notebookPath.fsPath, '.crossnote'),
       ))
     ) {
       return;
@@ -315,13 +290,16 @@ export class PreviewProvider {
           enableScripts: true, // TODO: This might be set by enableScriptExecution config. But for now we just enable it.
         },
       );
+
+      // set icon
       previewPanel.iconPath = vscode.Uri.file(
         path.join(this.context.extensionPath, 'media', 'preview.svg'),
       );
 
       // register previewPanel message events
       previewPanel.webview.onDidReceiveMessage(
-        message => {
+        (message) => {
+          // console.log('@ onDidReceiveMessage: ', message);
           vscode.commands.executeCommand(
             `_crossnote.${message.command}`,
             ...message.args,
@@ -373,13 +351,15 @@ export class PreviewProvider {
         config: {
           sourceUri: sourceUri.toString(),
           initialLine: initialLine as number,
-          vscode: true,
+          isVSCode: true,
+          scrollSync: this.getNotebooksManager().config.scrollSync,
+          imageUploader: this.getNotebooksManager().config.imageUploader,
         },
         contentSecurityPolicy: '',
         vscodePreviewPanel: previewPanel,
         isVSCodeWebExtension: isVSCodeWebExtension(),
       })
-      .then(html => {
+      .then((html) => {
         previewPanel.webview.html = html;
       });
   }
@@ -403,7 +383,7 @@ export class PreviewProvider {
         }
       }
 
-      previewPanels.forEach(previewPanel => previewPanel.dispose());
+      previewPanels.forEach((previewPanel) => previewPanel.dispose());
     }
 
     this.previewMaps = {};
@@ -413,9 +393,13 @@ export class PreviewProvider {
     PreviewProvider.singlePreviewPanelSourceUriTarget = null;
   }
 
-  public previewPostMessage(sourceUri: Uri, message: any) {
+  public postMessageToPreview(
+    sourceUri: Uri,
+    message: { command: string; [key: string]: any }, // TODO: Define a type for message
+  ) {
     const preview = this.getPreview(sourceUri);
     if (preview) {
+      // console.log('@ postMessageToPreview: ', preview, message);
       preview.webview.postMessage(message);
     }
   }
@@ -444,14 +428,13 @@ export class PreviewProvider {
     }
 
     // not presentation mode
-    vscode.workspace.openTextDocument(sourceUri).then(document => {
+    vscode.workspace.openTextDocument(sourceUri).then((document) => {
       const text = document.getText();
-      this.previewPostMessage(sourceUri, {
+      this.postMessageToPreview(sourceUri, {
         command: 'startParsingMarkdown',
       });
 
       const preview = this.getPreview(sourceUri);
-
       engine
         .parseMD(text, {
           isForPreview: true,
@@ -471,8 +454,8 @@ export class PreviewProvider {
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
-            this.previewPostMessage(sourceUri, {
-              command: 'updateHTML',
+            this.postMessageToPreview(sourceUri, {
+              command: 'updateHtml',
               html,
               tocHTML,
               totalLineCount: document.lineCount,
@@ -482,16 +465,19 @@ export class PreviewProvider {
               class:
                 (yamlConfig.class || '') +
                 ` ${
-                  this.systemColorScheme === 'dark'
+                  this.getNotebooksManager().systemColorScheme === 'dark'
                     ? 'system-dark'
                     : 'system-ligtht'
                 } ${
-                  this.getEditorColorScheme() === 'dark'
+                  this.getNotebooksManager().getEditorColorScheme() === 'dark'
                     ? 'editor-dark'
                     : 'editor-light'
                 } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
             });
           }
+        })
+        .catch((error) => {
+          vscode.window.showErrorMessage(error.toString());
         });
     });
   }
@@ -533,7 +519,7 @@ export class PreviewProvider {
       if (isVSCodeWebExtension()) {
         vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
       } else {
-        engine.openInBrowser({}).catch(error => {
+        engine.openInBrowser({}).catch((error) => {
           vscode.window.showErrorMessage(error.toString());
         });
       }
@@ -545,12 +531,12 @@ export class PreviewProvider {
     if (engine) {
       engine
         .htmlExport({ offline })
-        .then(dest => {
+        .then((dest) => {
           vscode.window.showInformationMessage(
             `File ${path.basename(dest)} was created at path: ${dest}`,
           );
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error.toString());
         });
     }
@@ -564,12 +550,12 @@ export class PreviewProvider {
       } else {
         engine
           .chromeExport({ fileType: type, openFileAfterGeneration: true })
-          .then(dest => {
+          .then((dest) => {
             vscode.window.showInformationMessage(
               `File ${path.basename(dest)} was created at path: ${dest}`,
             );
           })
-          .catch(error => {
+          .catch((error) => {
             vscode.window.showErrorMessage(error.toString());
           });
       }
@@ -584,7 +570,7 @@ export class PreviewProvider {
       } else {
         engine
           .princeExport({ openFileAfterGeneration: true })
-          .then(dest => {
+          .then((dest) => {
             if (dest.endsWith('?print-pdf')) {
               // presentation pdf
               vscode.window.showInformationMessage(
@@ -599,7 +585,7 @@ export class PreviewProvider {
               );
             }
           })
-          .catch(error => {
+          .catch((error) => {
             vscode.window.showErrorMessage(error.toString());
           });
       }
@@ -614,12 +600,12 @@ export class PreviewProvider {
       } else {
         engine
           .eBookExport({ fileType, runAllCodeChunks: false })
-          .then(dest => {
+          .then((dest) => {
             vscode.window.showInformationMessage(
               `eBook ${path.basename(dest)} was created as path: ${dest}`,
             );
           })
-          .catch(error => {
+          .catch((error) => {
             vscode.window.showErrorMessage(error.toString());
           });
       }
@@ -634,12 +620,12 @@ export class PreviewProvider {
       } else {
         engine
           .pandocExport({ openFileAfterGeneration: true })
-          .then(dest => {
+          .then((dest) => {
             vscode.window.showInformationMessage(
               `Document ${path.basename(dest)} was created as path: ${dest}`,
             );
           })
-          .catch(error => {
+          .catch((error) => {
             vscode.window.showErrorMessage(error.toString());
           });
       }
@@ -651,12 +637,12 @@ export class PreviewProvider {
     if (engine) {
       engine
         .markdownExport({})
-        .then(dest => {
+        .then((dest) => {
           vscode.window.showInformationMessage(
             `Document ${path.basename(dest)} was created as path: ${dest}`,
           );
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error.toString());
         });
     }
@@ -697,7 +683,10 @@ export class PreviewProvider {
   }
 
   public update(sourceUri: Uri) {
-    if (!this.config.liveUpdate || !this.getPreview(sourceUri)) {
+    if (
+      !this.getNotebooksManager().config.liveUpdate ||
+      !this.getPreview(sourceUri)
+    ) {
       return;
     }
 
@@ -711,103 +700,13 @@ export class PreviewProvider {
     }
   }
 
-  private getEditorColorScheme(): 'light' | 'dark' {
-    if (
-      [
-        vscode.ColorThemeKind.Light,
-        vscode.ColorThemeKind.HighContrastLight,
-      ].find(themeKind => {
-        return vscode.window.activeColorTheme.kind === themeKind;
-      })
-    ) {
-      return 'light';
-    } else {
-      return 'dark';
-    }
-  }
-
-  public setSystemColorScheme(colorScheme: 'light' | 'dark') {
-    if (this.systemColorScheme !== colorScheme) {
-      this.systemColorScheme = colorScheme;
-      if (
-        this.config.previewColorScheme === PreviewColorScheme.systemColorScheme
-      ) {
-        this.updateConfiguration(true);
-      }
-    }
-  }
-
-  public updateConfiguration(forceUpdate = false) {
-    const newConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
-    if (forceUpdate || !this.config.isEqualTo(newConfig)) {
-      // if `singlePreview` setting is changed, close all previews.
-      if (this.config.singlePreview !== newConfig.singlePreview) {
-        this.closeAllPreviews(this.config.singlePreview);
-        this.config = newConfig;
-      } else {
-        this.config = newConfig;
-
-        const previewTheme = this.getPreviewTheme(
-          newConfig.previewTheme,
-          newConfig.previewColorScheme,
-        );
-        this.notebook.updateConfig({ ...newConfig, previewTheme });
-        // update all generated md documents
-        this.refreshAllPreviews();
-      }
-    }
-  }
-
-  private getPreviewThemeByLightOrDark(
-    theme: PreviewTheme,
-    color: 'light' | 'dark',
-  ): PreviewTheme {
-    switch (theme) {
-      case 'atom-dark.css':
-      case 'atom-light.css': {
-        return color === 'light' ? 'atom-light.css' : 'atom-dark.css';
-      }
-      case 'github-dark.css':
-      case 'github-light.css': {
-        return color === 'light' ? 'github-light.css' : 'github-dark.css';
-      }
-      case 'one-light.css':
-      case 'one-dark.css': {
-        return color === 'light' ? 'one-light.css' : 'one-dark.css';
-      }
-      case 'solarized-light.css':
-      case 'solarized-dark.css': {
-        return color === 'light' ? 'solarized-light.css' : 'solarized-dark.css';
-      }
-      default: {
-        return theme;
-      }
-    }
-  }
-
-  private getPreviewTheme(
-    theme: PreviewTheme,
-    colorScheme: PreviewColorScheme,
-  ): PreviewTheme {
-    if (colorScheme === PreviewColorScheme.editorColorScheme) {
-      return this.getPreviewThemeByLightOrDark(
-        theme,
-        this.getEditorColorScheme(),
-      );
-    } else if (colorScheme === PreviewColorScheme.systemColorScheme) {
-      return this.getPreviewThemeByLightOrDark(theme, this.systemColorScheme);
-    } else {
-      return theme;
-    }
-  }
-
   public openImageHelper(sourceUri: Uri) {
     if (sourceUri.scheme === 'markdown-preview-enhanced') {
       return vscode.window.showWarningMessage('Please focus a markdown file.');
     } else if (!this.isPreviewOn(sourceUri)) {
       return vscode.window.showWarningMessage('Please open preview first.');
     } else {
-      return this.previewPostMessage(sourceUri, {
+      return this.postMessageToPreview(sourceUri, {
         command: 'openImageHelper',
       });
     }

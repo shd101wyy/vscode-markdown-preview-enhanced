@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
         ['style.less', 'config.js', 'parser.js'].includes(fileName ?? '')
       ) {
         const providers = getAllPreviewProviders();
-        providers.forEach(async provider => {
+        providers.forEach(async (provider) => {
           await provider.updateCrossnoteConfig(globalConfigPath);
           provider.refreshAllPreviews();
         });

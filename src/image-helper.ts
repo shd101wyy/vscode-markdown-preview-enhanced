@@ -44,12 +44,12 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
 
   vscode.window.visibleTextEditors
     .filter(
-      editor =>
+      (editor) =>
         isMarkdownFile(editor.document) &&
         editor.document.uri.fsPath === uri.fsPath,
     )
-    .forEach(editor => {
-      fs.mkdir(assetDirectoryPath, error => {
+    .forEach((editor) => {
+      fs.mkdir(assetDirectoryPath, (error) => {
         fs.stat(destPath, (err, stat) => {
           if (err == null) {
             // file existed
@@ -103,7 +103,7 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
             url = url.replace(/ /g, '%20');
           }
 
-          editor.edit(textEditorEdit => {
+          editor.edit((textEditorEdit) => {
             textEditorEdit.insert(
               editor.selection.active,
               `![${description}](${url})`,
@@ -122,7 +122,7 @@ function replaceHint(
 ): boolean {
   const textLine = editor.document.lineAt(line);
   if (textLine.text.indexOf(hint) >= 0) {
-    editor.edit(textEdit => {
+    editor.edit((textEdit) => {
       textEdit.replace(
         new vscode.Range(
           new vscode.Position(line, 0),
@@ -182,18 +182,18 @@ export function uploadImageFile(
 
   vscode.window.visibleTextEditors
     .filter(
-      editor =>
+      (editor) =>
         isMarkdownFile(editor.document) &&
         editor.document.uri.fsPath === sourceUri.fsPath,
     )
-    .forEach(editor => {
+    .forEach((editor) => {
       const uid = Math.random()
         .toString(36)
         .substr(2, 9);
       const hint = `![Uploading ${imageFileName}… (${uid})]()`;
       const curPos = editor.selection.active;
 
-      editor.edit(textEditorEdit => {
+      editor.edit((textEditorEdit) => {
         textEditorEdit.insert(curPos, hint);
       });
 
@@ -210,10 +210,10 @@ export function uploadImageFile(
           method: imageUploader,
           qiniu: { AccessKey, SecretKey, Bucket, Domain },
         })
-        .then(url => {
+        .then((url) => {
           setUploadedImageURL(imageFileName, url, editor, hint, curPos);
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error.toString());
         });
     });

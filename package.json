@@ -23,7 +23,7 @@
   "main": "./out/native/extension.js",
   "browser": "./out/web/extension.js",
   "scripts": {
-    "build": "yarn copy:files && rm -rf ./out && node build.js",
+    "build": "yarn copy:files && gulp clean-out && node build.js",
     "check:all": "yarn check:eslint && yarn check:prettier",
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
@@ -31,11 +31,12 @@
     "fix:all": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
-    "run-in-browser": "concurrently \"vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .\" \"npx http-server ./crossnote -p 6789 --cors\"",
+    "prepare": "husky install",
+    "run-in-browser": "concurrently \"vscode-test-web --browserType=chromium --extensionDevelopmentPath=. $SERVE_DIR\" \"npx http-server ./crossnote -p 6789 --cors\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "yarn install && yarn build",
-    "watch": "yarn copy:files && rm -rf ./out && node build.js --watch"
+    "watch": "yarn copy:files && gulp clean-out && node build.js --watch"
   },
   "contributes": {
     "commands": [
@@ -311,6 +312,7 @@
             "dark.css",
             "funky.css",
             "github.css",
+            "github-dark.css",
             "hopscotch.css",
             "monokai.css",
             "okaidia.css",
@@ -546,6 +548,11 @@
             ".qmd"
           ],
           "type": "array"
+        },
+        "markdown-preview-enhanced.alwaysShowBacklinksInPreview": {
+          "description": "Always show backlinks in preview.",
+          "default": false,
+          "type": "boolean"
         }
       }
     },
@@ -611,8 +618,10 @@
     ]
   },
   "dependencies": {
+    "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
-    "crossnote": "^0.8.8"
+    "crossnote": "^0.8.10",
+    "crypto-js": "^4.1.1"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",
@@ -628,7 +637,7 @@
     "eslint": "^8.48.0",
     "gulp": "^4.0.2",
     "http-server": "^14.1.1",
-    "husky": "^3.0.9",
+    "husky": "^8.0.3",
     "lint-staged": "^9.4.2",
     "mocha": "^6.1.4",
     "prettier": "^1.18.2",
