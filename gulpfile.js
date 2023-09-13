@@ -8,7 +8,7 @@
 const gulp = require('gulp');
 const fs = require('fs');
 
-gulp.task('copy-files', cb => {
+gulp.task('copy-files', (cb) => {
   // Delete ./crossnote directory
   if (fs.existsSync('./crossnote')) {
     fs.rmSync('./crossnote', { recursive: true });

@@ -80,7 +80,7 @@ class NotebooksManager {
       const previewProviders = getAllPreviewProviders();
       // if `singlePreview` setting is changed, close all previews.
       if (this.config.singlePreview !== newConfig.singlePreview) {
-        previewProviders.forEach(provider => {
+        previewProviders.forEach((provider) => {
           provider.closeAllPreviews(this.config.singlePreview);
         });
 
@@ -92,11 +92,11 @@ class NotebooksManager {
           newConfig.previewTheme,
           newConfig.previewColorScheme,
         );
-        this.notebooks.forEach(notebook => {
+        this.notebooks.forEach((notebook) => {
           notebook.updateConfig({ ...newConfig, previewTheme });
         });
         // update all generated md documents
-        previewProviders.forEach(provider => {
+        previewProviders.forEach((provider) => {
           provider.refreshAllPreviews();
         });
       }
@@ -135,7 +135,7 @@ class NotebooksManager {
       [
         vscode.ColorThemeKind.Light,
         vscode.ColorThemeKind.HighContrastLight,
-      ].find(themeKind => {
+      ].find((themeKind) => {
         return vscode.window.activeColorTheme.kind === themeKind;
       })
     ) {
@@ -183,7 +183,7 @@ class NotebooksManager {
     }
     this.fileWatcher.startFileWatcher();
     const backlinks = await notebook.getNoteBacklinks(noteUri.fsPath);
-    return backlinks.map(backlink => {
+    return backlinks.map((backlink) => {
       return {
         note: backlink.note,
         references: backlink.references,

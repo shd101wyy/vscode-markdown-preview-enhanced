@@ -21,13 +21,20 @@ export function wrapVSCodeFSAsApi(scheme: string): FileSystemApi {
         return false;
       }
     },
-    readFile: async (path: string): Promise<string> => {
+    readFile: async (
+      path: string,
+      encoding?: BufferEncoding,
+    ): Promise<string> => {
       path = path.replace(/^\//, '');
       const uri = getUri(path, scheme);
       const data = await vscode.workspace.fs.readFile(uri);
-      return new TextDecoder('utf-8').decode(data);
+      return new TextDecoder(encoding ?? 'utf-8').decode(data);
     },
-    writeFile: async (path: string, data: string): Promise<void> => {
+    writeFile: async (
+      path: string,
+      data: string,
+      encoding?: string,
+    ): Promise<void> => {
       const uri = getUri(path, scheme);
       await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(data));
     },
@@ -37,7 +44,7 @@ export function wrapVSCodeFSAsApi(scheme: string): FileSystemApi {
     readdir: async (path: string): Promise<string[]> => {
       const uri = getUri(path, scheme);
       const files = await vscode.workspace.fs.readDirectory(uri);
-      return files.map(file => file[0]);
+      return files.map((file) => file[0]);
     },
     stat: async (path: string): Promise<FileSystemStats> => {
       const uri = getUri(path, scheme);

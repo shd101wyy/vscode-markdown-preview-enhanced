@@ -280,7 +280,6 @@ export class PreviewProvider {
         localResourceRoots.push(workspaceUri);
       }
 
-      console.log('createWebviewPanel: ', sourceUri.fsPath);
       previewPanel = vscode.window.createWebviewPanel(
         'markdown-preview-enhanced',
         `Preview ${path.basename(sourceUri.fsPath)}`,
@@ -299,7 +298,7 @@ export class PreviewProvider {
 
       // register previewPanel message events
       previewPanel.webview.onDidReceiveMessage(
-        message => {
+        (message) => {
           vscode.commands.executeCommand(
             `_crossnote.${message.command}`,
             ...message.args,
@@ -359,7 +358,7 @@ export class PreviewProvider {
         vscodePreviewPanel: previewPanel,
         isVSCodeWebExtension: isVSCodeWebExtension(),
       })
-      .then(html => {
+      .then((html) => {
         previewPanel.webview.html = html;
       });
   }
@@ -383,7 +382,7 @@ export class PreviewProvider {
         }
       }
 
-      previewPanels.forEach(previewPanel => previewPanel.dispose());
+      previewPanels.forEach((previewPanel) => previewPanel.dispose());
     }
 
     this.previewMaps = {};
@@ -424,7 +423,7 @@ export class PreviewProvider {
     }
 
     // not presentation mode
-    vscode.workspace.openTextDocument(sourceUri).then(document => {
+    vscode.workspace.openTextDocument(sourceUri).then((document) => {
       const text = document.getText();
       this.previewPostMessage(sourceUri, {
         command: 'startParsingMarkdown',
@@ -471,6 +470,9 @@ export class PreviewProvider {
                 } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
             });
           }
+        })
+        .catch((error) => {
+          vscode.window.showErrorMessage(error.toString());
         });
     });
   }
@@ -512,7 +514,7 @@ export class PreviewProvider {
       if (isVSCodeWebExtension()) {
         vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
       } else {
-        engine.openInBrowser({}).catch(error => {
+        engine.openInBrowser({}).catch((error) => {
           vscode.window.showErrorMessage(error.toString());
         });
       }
@@ -524,12 +526,12 @@ export class PreviewProvider {
     if (engine) {
       engine
         .htmlExport({ offline })
-        .then(dest => {
+        .then((dest) => {
           vscode.window.showInformationMessage(
             `File ${path.basename(dest)} was created at path: ${dest}`,
           );
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error.toString());
         });
     }
@@ -543,12 +545,12 @@ export class PreviewProvider {
       } else {
         engine
           .chromeExport({ fileType: type, openFileAfterGeneration: true })
-          .then(dest => {
+          .then((dest) => {
             vscode.window.showInformationMessage(
               `File ${path.basename(dest)} was created at path: ${dest}`,
             );
           })
-          .catch(error => {
+          .catch((error) => {
             vscode.window.showErrorMessage(error.toString());
           });
       }
@@ -563,7 +565,7 @@ export class PreviewProvider {
       } else {
         engine
           .princeExport({ openFileAfterGeneration: true })
-          .then(dest => {
+          .then((dest) => {
             if (dest.endsWith('?print-pdf')) {
               // presentation pdf
               vscode.window.showInformationMessage(
@@ -578,7 +580,7 @@ export class PreviewProvider {
               );
             }
           })
-          .catch(error => {
+          .catch((error) => {
             vscode.window.showErrorMessage(error.toString());
           });
       }
@@ -593,12 +595,12 @@ export class PreviewProvider {
       } else {
         engine
           .eBookExport({ fileType, runAllCodeChunks: false })
-          .then(dest => {
+          .then((dest) => {
             vscode.window.showInformationMessage(
               `eBook ${path.basename(dest)} was created as path: ${dest}`,
             );
           })
-          .catch(error => {
+          .catch((error) => {
             vscode.window.showErrorMessage(error.toString());
           });
       }
@@ -613,12 +615,12 @@ export class PreviewProvider {
       } else {
         engine
           .pandocExport({ openFileAfterGeneration: true })
-          .then(dest => {
+          .then((dest) => {
             vscode.window.showInformationMessage(
               `Document ${path.basename(dest)} was created as path: ${dest}`,
             );
           })
-          .catch(error => {
+          .catch((error) => {
             vscode.window.showErrorMessage(error.toString());
           });
       }
@@ -630,12 +632,12 @@ export class PreviewProvider {
     if (engine) {
       engine
         .markdownExport({})
-        .then(dest => {
+        .then((dest) => {
           vscode.window.showInformationMessage(
             `Document ${path.basename(dest)} was created as path: ${dest}`,
           );
         })
-        .catch(error => {
+        .catch((error) => {
           vscode.window.showErrorMessage(error.toString());
         });
     }

@@ -20,20 +20,17 @@ export default class FileWatcher {
     const markdownFileExtensions =
       config.get<string[]>('markdownFileExtensions') ?? [];
     const glob: string = `**/*.{${markdownFileExtensions
-      .map(ext => ext.replace(/^\./, ''))
+      .map((ext) => ext.replace(/^\./, ''))
       .join(',')}}`;
-
-    console.log('File watcher glob: ', glob);
 
     this.fileWatcher = vscode.workspace.createFileSystemWatcher(glob);
 
-    this.fileWatcher.onDidChange(async uri => {
-      console.log('File changed: ', uri);
+    this.fileWatcher.onDidChange(async (uri) => {
       const notebook = await this.notebooksManager.getNotebook(uri);
       await notebook.getNote(uri.fsPath, true); // Refresh note relation
 
       const previewProviders = getAllPreviewProviders();
-      previewProviders.forEach(provider => {
+      previewProviders.forEach((provider) => {
         provider.previewPostMessage(uri, {
           command: 'updatedNote',
           sourceUri: uri.toString(),
@@ -41,13 +38,12 @@ export default class FileWatcher {
       });
     });
 
-    this.fileWatcher.onDidCreate(async uri => {
-      console.log('File created: ', uri);
+    this.fileWatcher.onDidCreate(async (uri) => {
       const notebook = await this.notebooksManager.getNotebook(uri);
       await notebook.getNote(uri.fsPath, true); // Refresh note relation
 
       const previewProviders = getAllPreviewProviders();
-      previewProviders.forEach(provider => {
+      previewProviders.forEach((provider) => {
         provider.previewPostMessage(uri, {
           command: 'createdNote',
           sourceUri: uri.toString(),
@@ -55,13 +51,12 @@ export default class FileWatcher {
       });
     });
 
-    this.fileWatcher.onDidDelete(async uri => {
-      console.log('File deleted: ', uri);
+    this.fileWatcher.onDidDelete(async (uri) => {
       const notebook = await this.notebooksManager.getNotebook(uri);
       await notebook.deleteNote(uri.fsPath, true); // Refresh note relation
 
       const previewProviders = getAllPreviewProviders();
-      previewProviders.forEach(provider => {
+      previewProviders.forEach((provider) => {
         provider.previewPostMessage(uri, {
           command: 'deletedNote',
           sourceUri: uri.toString(),
@@ -70,7 +65,5 @@ export default class FileWatcher {
     });
 
     this.context.subscriptions.push(this.fileWatcher);
-
-    console.log('File watcher started');
   }
 }

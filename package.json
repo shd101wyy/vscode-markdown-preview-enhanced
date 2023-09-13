@@ -312,6 +312,7 @@
             "dark.css",
             "funky.css",
             "github.css",
+            "github-dark.css",
             "hopscotch.css",
             "monokai.css",
             "okaidia.css",
@@ -619,7 +620,7 @@
   "dependencies": {
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
-    "crossnote": "../mume",
+    "crossnote": "^0.8.9",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {

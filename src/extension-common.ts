@@ -133,7 +133,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   function insertNewSlide() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit(textEdit => {
+      editor.edit((textEdit) => {
         textEdit.insert(editor.selection.active, '<!-- slide -->\n');
       });
     }
@@ -142,7 +142,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   function insertPagebreak() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit(textEdit => {
+      editor.edit((textEdit) => {
         textEdit.insert(editor.selection.active, '<!-- pagebreak -->\n');
       });
     }
@@ -151,7 +151,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   function createTOC() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit(textEdit => {
+      editor.edit((textEdit) => {
         textEdit.insert(
           editor.selection.active,
           '\n<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->\n',
@@ -163,7 +163,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   function insertTable() {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
-      editor.edit(textEdit => {
+      editor.edit((textEdit) => {
         textEdit.insert(
           editor.selection.active,
           `|   |   |
@@ -207,13 +207,13 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     const sourceUri = vscode.Uri.parse(uri);
     vscode.window.visibleTextEditors
       .filter(
-        editor =>
+        (editor) =>
           isMarkdownFile(editor.document) &&
           editor.document.uri.fsPath === sourceUri.fsPath,
       )
-      .forEach(editor => {
+      .forEach((editor) => {
         // const line = editor.selection.active.line
-        editor.edit(textEditorEdit => {
+        editor.edit((textEditorEdit) => {
           textEditorEdit.insert(
             editor.selection.active,
             `![enter image description here](${imageUrl})`,
@@ -361,7 +361,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
       const editor = visibleTextEditors[i];
       if (editor.document.uri.fsPath === sourceUri.fsPath) {
         dataLine = parseInt(dataLine, 10);
-        editor.edit(edit => {
+        editor.edit((edit) => {
           let line = editor.document.lineAt(dataLine).text;
           if (line.match(/\[ \]/)) {
             line = line.replace('[ ]', '[x]');
@@ -553,8 +553,8 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
       if (fileExists) {
         // Open fileUri
-        vscode.workspace.openTextDocument(fileUri).then(doc => {
-          vscode.window.showTextDocument(doc, col).then(editor => {
+        vscode.workspace.openTextDocument(fileUri).then((doc) => {
+          vscode.window.showTextDocument(doc, col).then((editor) => {
             // if there was line fragment, jump to line
             if (line >= 0) {
               let viewPos = vscode.TextEditorRevealType.InCenter;
@@ -607,15 +607,12 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     forceRefreshingNotes: boolean;
     backlinksSha: string;
   }) {
-    console.log('showBacklinks: ', backlinksSha);
     const sourceUri = vscode.Uri.parse(uri);
     const backlinks = await notebooksManager.getNoteBacklinks(
       sourceUri,
       forceRefreshingNotes,
     );
     const sha = SHA256(JSON.stringify(backlinks)).toString();
-    console.log('get backlinks:', sha);
-
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.previewPostMessage(sourceUri, {
       command: 'backlinks',
@@ -626,7 +623,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   }
 
   context.subscriptions.push(
-    vscode.workspace.onDidSaveTextDocument(async document => {
+    vscode.workspace.onDidSaveTextDocument(async (document) => {
       if (isMarkdownFile(document)) {
         const previewProvider = await getPreviewContentProvider(document.uri);
         previewProvider.updateMarkdown(document.uri, true);
@@ -657,7 +654,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument(async event => {
+    vscode.workspace.onDidChangeTextDocument(async (event) => {
       if (isMarkdownFile(event.document)) {
         const previewProvider = await getPreviewContentProvider(
           event.document.uri,
@@ -674,7 +671,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.window.onDidChangeTextEditorSelection(async event => {
+    vscode.window.onDidChangeTextEditorSelection(async (event) => {
       if (isMarkdownFile(event.textEditor.document)) {
         const firstVisibleScreenRow = getTopVisibleLine(event.textEditor);
         const lastVisibleScreenRow = getBottomVisibleLine(event.textEditor);
@@ -703,7 +700,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.window.onDidChangeTextEditorVisibleRanges(async event => {
+    vscode.window.onDidChangeTextEditorVisibleRanges(async (event) => {
       const textEditor = event.textEditor as vscode.TextEditor;
       if (Date.now() < editorScrollDelay) {
         return;
@@ -749,7 +746,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
    * @param textEditor
    */
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(async textEditor => {
+    vscode.window.onDidChangeActiveTextEditor(async (textEditor) => {
       if (textEditor && textEditor.document && textEditor.document.uri) {
         if (isMarkdownFile(textEditor.document)) {
           const config = vscode.workspace.getConfiguration(
@@ -792,7 +789,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
   // Changed editor color theme
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveColorTheme(theme => {
+    vscode.window.onDidChangeActiveColorTheme((theme) => {
       const config = vscode.workspace.getConfiguration(
         'markdown-preview-enhanced',
       );
@@ -1078,11 +1075,11 @@ function revealLine(uri, line) {
 
   vscode.window.visibleTextEditors
     .filter(
-      editor =>
+      (editor) =>
         isMarkdownFile(editor.document) &&
         editor.document.uri.fsPath === sourceUri.fsPath,
     )
-    .forEach(editor => {
+    .forEach((editor) => {
       const sourceLine = Math.min(
         Math.floor(line),
         editor.document.lineCount - 1,
