@@ -23,7 +23,7 @@
   "main": "./out/native/extension.js",
   "browser": "./out/web/extension.js",
   "scripts": {
-    "build": "yarn copy:files && rm -rf ./out && node build.js",
+    "build": "yarn copy:files && gulp clean-out && node build.js",
     "check:all": "yarn check:eslint && yarn check:prettier",
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
@@ -36,7 +36,7 @@
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "yarn install && yarn build",
-    "watch": "yarn copy:files && rm -rf ./out && node build.js --watch"
+    "watch": "yarn copy:files && gulp clean-out && node build.js --watch"
   },
   "contributes": {
     "commands": [
@@ -620,7 +620,7 @@
   "dependencies": {
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
-    "crossnote": "^0.8.9",
+    "crossnote": "^0.8.10",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {

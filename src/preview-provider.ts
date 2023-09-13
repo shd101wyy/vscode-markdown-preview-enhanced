@@ -299,6 +299,7 @@ export class PreviewProvider {
       // register previewPanel message events
       previewPanel.webview.onDidReceiveMessage(
         (message) => {
+          // console.log('@ onDidReceiveMessage: ', message);
           vscode.commands.executeCommand(
             `_crossnote.${message.command}`,
             ...message.args,
@@ -392,9 +393,13 @@ export class PreviewProvider {
     PreviewProvider.singlePreviewPanelSourceUriTarget = null;
   }
 
-  public previewPostMessage(sourceUri: Uri, message: any) {
+  public postMessageToPreview(
+    sourceUri: Uri,
+    message: { command: string; [key: string]: any }, // TODO: Define a type for message
+  ) {
     const preview = this.getPreview(sourceUri);
     if (preview) {
+      // console.log('@ postMessageToPreview: ', preview, message);
       preview.webview.postMessage(message);
     }
   }
@@ -425,7 +430,7 @@ export class PreviewProvider {
     // not presentation mode
     vscode.workspace.openTextDocument(sourceUri).then((document) => {
       const text = document.getText();
-      this.previewPostMessage(sourceUri, {
+      this.postMessageToPreview(sourceUri, {
         command: 'startParsingMarkdown',
       });
 
@@ -449,7 +454,7 @@ export class PreviewProvider {
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
-            this.previewPostMessage(sourceUri, {
+            this.postMessageToPreview(sourceUri, {
               command: 'updateHtml',
               html,
               tocHTML,
@@ -701,7 +706,7 @@ export class PreviewProvider {
     } else if (!this.isPreviewOn(sourceUri)) {
       return vscode.window.showWarningMessage('Please open preview first.');
     } else {
-      return this.previewPostMessage(sourceUri, {
+      return this.postMessageToPreview(sourceUri, {
         command: 'openImageHelper',
       });
     }

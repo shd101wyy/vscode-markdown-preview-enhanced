@@ -311,7 +311,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     }
 
     const previewProvider = await getPreviewContentProvider(sourceUri);
-    previewProvider.previewPostMessage(sourceUri, {
+    previewProvider.postMessageToPreview(sourceUri, {
       command: 'runAllCodeChunks',
     });
   }
@@ -331,7 +331,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
       return;
     }
     const previewProvider = await getPreviewContentProvider(sourceUri);
-    previewProvider.previewPostMessage(sourceUri, {
+    previewProvider.postMessageToPreview(sourceUri, {
       command: 'runCodeChunk',
     });
   }
@@ -347,7 +347,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
     const sourceUri = textEditor.document.uri;
     const previewProvider = await getPreviewContentProvider(sourceUri);
-    previewProvider.previewPostMessage(sourceUri, {
+    previewProvider.postMessageToPreview(sourceUri, {
       command: 'changeTextEditorSelection',
       line: textEditor.selections[0].active.line,
       forced: true,
@@ -587,6 +587,11 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     return vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
   }
 
+  async function openDocumentation() {
+    const url = 'https://shd101wyy.github.io/markdown-preview-enhanced/';
+    return vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+  }
+
   async function openIssues() {
     const url =
       'https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues';
@@ -614,7 +619,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     );
     const sha = SHA256(JSON.stringify(backlinks)).toString();
     const previewProvider = await getPreviewContentProvider(sourceUri);
-    previewProvider.previewPostMessage(sourceUri, {
+    previewProvider.postMessageToPreview(sourceUri, {
       command: 'backlinks',
       sourceUri: sourceUri.toString(),
       backlinks: sha !== backlinksSha ? backlinks : null,
@@ -690,7 +695,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         const previewProvider = await getPreviewContentProvider(
           event.textEditor.document.uri,
         );
-        previewProvider.previewPostMessage(event.textEditor.document.uri, {
+        previewProvider.postMessageToPreview(event.textEditor.document.uri, {
           command: 'changeTextEditorSelection',
           line: event.selections[0].active.line,
           topRatio,
@@ -732,7 +737,7 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
             midLine = Math.floor((topLine + bottomLine) / 2);
           }
           const previewProvider = await getPreviewContentProvider(sourceUri);
-          previewProvider.previewPostMessage(sourceUri, {
+          previewProvider.postMessageToPreview(sourceUri, {
             command: 'changeTextEditorSelection',
             line: midLine,
           });
@@ -1030,6 +1035,13 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('_crossnote.openChangelog', openChangelog),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.openDocumentation',
+      openDocumentation,
+    ),
   );
 
   context.subscriptions.push(

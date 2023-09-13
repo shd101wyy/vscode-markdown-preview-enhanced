@@ -31,7 +31,7 @@ export default class FileWatcher {
 
       const previewProviders = getAllPreviewProviders();
       previewProviders.forEach((provider) => {
-        provider.previewPostMessage(uri, {
+        provider.postMessageToPreview(uri, {
           command: 'updatedNote',
           sourceUri: uri.toString(),
         });
@@ -44,7 +44,7 @@ export default class FileWatcher {
 
       const previewProviders = getAllPreviewProviders();
       previewProviders.forEach((provider) => {
-        provider.previewPostMessage(uri, {
+        provider.postMessageToPreview(uri, {
           command: 'createdNote',
           sourceUri: uri.toString(),
         });
@@ -57,7 +57,7 @@ export default class FileWatcher {
 
       const previewProviders = getAllPreviewProviders();
       previewProviders.forEach((provider) => {
-        provider.previewPostMessage(uri, {
+        provider.postMessageToPreview(uri, {
           command: 'deletedNote',
           sourceUri: uri.toString(),
         });
