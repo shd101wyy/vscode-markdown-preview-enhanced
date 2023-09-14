@@ -31,6 +31,13 @@ jobs:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
           yarn: true
+      - name: Get Changelog Entry
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2.0.0
+        with:
+          validation_level: warn
+          version: ${{ steps.package_version.outputs.current-version }}
+          path: 'CHANGELOG.md'
       - name: Create a Release
         if: github.ref == 'refs/heads/master'
         id: create_release
@@ -40,7 +47,7 @@ jobs:
         with:
           tag_name : ${{ steps.package_version.outputs.current-version}}
           release_name: ${{ steps.package_version.outputs.current-version}}
-          body: Published ${{ steps.package_version.outputs.current-version}}
+          body: ${{ steps.changelog_reader.outputs.changes }}
       - name: Attach vsix to release
         if: github.ref == 'refs/heads/master'
         uses: actions/upload-release-asset@v1
