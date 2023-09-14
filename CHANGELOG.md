@@ -21,21 +21,22 @@ Fixed reading file as base64
 ### New features 🆕
 
 1. Complete rewrite of the webview, and improved the UI. 🌐💅
-2. Backlinks supported in the preview. Clicking the bottom right link icon will display the backlinks. This feature is currently in beta and might not be stable yet.    
+2. Backlinks supported in the preview. Clicking the bottom right link icon will display the backlinks. This feature is currently in beta and might not be stable yet.  
    If you want the backlinks to be always on in the preview, you can enable the setting:
 
    ```
    "markdown-preview-enhanced.alwaysShowBacklinksInPreview": true,
    ```
-3. Updated [reveal.js](https://revealjs.com/) to the latest `4.6.0`.  
-    
+
+3. Updated [reveal.js](https://revealjs.com/) to the latest `4.6.0`.
+
 ### Bug fixes 🐛
 
 1. 🐞 [Issue 1752](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1752)
 
 ### Future plan 📋
 
-We will further improve the markdown-it parser and we might remove the pandoc parser support. You can still use the pandoc export. This will not be affected. 📝✂️
+We will further improve the markdown-it parser ~~and we might remove the pandoc parser support~~. You can still use the pandoc export. This will not be affected. 📝✂️
 
 We will add in-preview editing capability in the future. 🖋️
 
@@ -45,7 +46,7 @@ We will also add the backlinks graph view. 📈
 
 ### New features 🆕
 
-- ⭐ Added `markdown-preview-enhanced.markdownFileExtensions` config that allows users to specify the file extensions for preview.  
+- ⭐ Added `markdown-preview-enhanced.markdownFileExtensions` config that allows users to specify the file extensions for preview.
 - 🌟 Supported pandoc-like code blocks, for example:
 
   ````
@@ -59,15 +60,16 @@ We will also add the backlinks graph view. 📈
   A --> B
   ```
   ````
-  The first class in the `{...}` will be regarded as the `language`.  
+
+  The first class in the `{...}` will be regarded as the `language`.
 
 ### Bug fixes 🐞
 
-- :bug: [Single preview bug](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1740)  
+- :bug: [Single preview bug](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1740)
 
 ### MISC 🛠️
 
-- Refactored some [crossnote](https://github.com/shd101wyy/crossnote) code.  
+- Refactored some [crossnote](https://github.com/shd101wyy/crossnote) code.
 
 ## [0.7.2] - 2023-09-05
 
@@ -76,11 +78,11 @@ We will also add the backlinks graph view. 📈
 ### What's new? 🚀
 
 - MPE is now available on [VSCode for the Web](https://vscode.dev) 🥇 Yes, you can now use MPE in your browser. But some features are limited, like exporting files and code chunks, which are disabled in the browser environment. I am writing this CHANGELOG right now in [vscode.dev](https://vscode.dev) using the MPE extension 😃.
-  
+
   ![image](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/assets/1908863/9222fc77-6bf2-4fd6-bc94-bd8c1953bc24)
 
 - The `mume` library, which powers MPE, is now renamed as [crossnote](https://github.com/shd101wyy/crossnote). This is a complete refactor of the project. We will support more features like backlinks and in-preview editor in the future.
-  - Now you can have a `.crossnote` directory for configuring the MPE extension for your workspace. In VSCode, running the command `Markdown Preview Enhanced: Customize CSS (Workspace)` will automatically generate several configuration files for you. There is also a global `.crossnote` directory located at `~/.crossnote` if you are using Windows, or `$XDG_CONFIG_HOME/.crossnote` or `~/.local/state/crossnote` if you are using *nix. The global configuration has lower priority than the workspace one. 🛠️
+  - Now you can have a `.crossnote` directory for configuring the MPE extension for your workspace. In VSCode, running the command `Markdown Preview Enhanced: Customize CSS (Workspace)` will automatically generate several configuration files for you. There is also a global `.crossnote` directory located at `~/.crossnote` if you are using Windows, or `$XDG_CONFIG_HOME/.crossnote` or `~/.local/state/crossnote` if you are using \*nix. The global configuration has lower priority than the workspace one. 🛠️
 
 ### Bug Fixes 🐛
 
@@ -94,21 +96,21 @@ We will also add the backlinks graph view. 📈
 
 ## [0.7.0] - 2023-09-01
 
-
 - 🆕 Added `editor-light`, `editor-dark`, `system-light`, `system-dark` class names to the preview panel.
 - ✨ Reduced the size of the bundled vscode MPE extension from 40mb to 8mb.
-- ➕ Supported to configure: `markdown-preview-enhanced.mathjaxV3ScriptSrc`, `markdown-preview-enhanced.plantumlJarPath`, and `markdown-preview-enhanced.krokiServer`.  
+- ➕ Supported to configure: `markdown-preview-enhanced.mathjaxV3ScriptSrc`, `markdown-preview-enhanced.plantumlJarPath`, and `markdown-preview-enhanced.krokiServer`.
 - 🔰 Updated [@shd101wyy/mume](https://github.com/shd101wyy/mume) to version [0.7.8](https://github.com/shd101wyy/mume/pull/297).
+
   - :robot: Completely refactored the `mume` project. It's not done yet, but it's a good start. The next release will be a major release.
-    - 🎉 Now use the esbuild to bundle the project.  
+    - 🎉 Now use the esbuild to bundle the project.
     - 🎉 Better support of both commonjs and esm.
-    - 🔧 Replaced tslint with eslint.  
-  - :newspaper: Removed the `plantuml.jar` file from the `mume` project. Now you need to download the plantuml.jar file manually from [here](https://plantuml.com/download). 
-    - If you are using `mume`, you will need to pass `plantumlJarPath` to the `mume.init({})`.  
-    - If you are using VSCode, you can set the `markdown-preview-enhanced.plantumlJarPath` option in the VSCode settings.  
-  - 🗑 Removed `ditaa.jar` file from the `mume` project. Also removed the native support of rendering ditaa diagrams. But you can now use [Kroki](https://kroki.io/) to render the `ditaa` diagrams.     
-  - 🗑 Removed rendering the `js-sequence-diagram` and `flowchart.js` charts.  
-  - 🎉 Updated `MathJax` to **V3**. `MathJax` V2 is no longer supported.    
+    - 🔧 Replaced tslint with eslint.
+  - :newspaper: Removed the `plantuml.jar` file from the `mume` project. Now you need to download the plantuml.jar file manually from [here](https://plantuml.com/download).
+    - If you are using `mume`, you will need to pass `plantumlJarPath` to the `mume.init({})`.
+    - If you are using VSCode, you can set the `markdown-preview-enhanced.plantumlJarPath` option in the VSCode settings.
+  - 🗑 Removed `ditaa.jar` file from the `mume` project. Also removed the native support of rendering ditaa diagrams. But you can now use [Kroki](https://kroki.io/) to render the `ditaa` diagrams.
+  - 🗑 Removed rendering the `js-sequence-diagram` and `flowchart.js` charts.
+  - 🎉 Updated `MathJax` to **V3**. `MathJax` V2 is no longer supported.
   - 🎉 Added [Kroki](https://kroki.io/) support to render diagrams. This is a beta feature. For example:
 
     ````
@@ -123,10 +125,11 @@ We will also add the backlinks graph view. 📈
         |       Lots of work      |
         +-------------------------+
     ```
-    ```` 
-  - 🎉 Updated `mermaid` to version `10.4.0`, and supported rendering [zenuml](https://mermaid.js.org/syntax/zenuml.html) chart using `mermaid`.  
-  - 🎉 Updated `vega` to the latest version `5.25.0`.  
-  - 🎉 Updated `vega-lite` to the latest version `5.14.1`. 
-  - 🎉 Updated `cheerio` to the latest version `1.0.0-rc.12`.  
-  - 🎉 Updated `prismjs` to the latest version `0.12.9`.  
-  - 🎉 Updated `viz.js` to the latest version `3.1.0`.  
+    ````
+
+  - 🎉 Updated `mermaid` to version `10.4.0`, and supported rendering [zenuml](https://mermaid.js.org/syntax/zenuml.html) chart using `mermaid`.
+  - 🎉 Updated `vega` to the latest version `5.25.0`.
+  - 🎉 Updated `vega-lite` to the latest version `5.14.1`.
+  - 🎉 Updated `cheerio` to the latest version `1.0.0-rc.12`.
+  - 🎉 Updated `prismjs` to the latest version `0.12.9`.
+  - 🎉 Updated `viz.js` to the latest version `3.1.0`.
