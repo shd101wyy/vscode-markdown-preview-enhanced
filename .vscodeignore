@@ -19,3 +19,5 @@ node_modules
 build.js
 prettier.config.js
 .eslintrc.js
+.husky
+gulpfile.js

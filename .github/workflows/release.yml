@@ -1,0 +1,52 @@
+name: "Publish the extension."
+on:
+  push:
+    branches:
+      - master
+      - develop
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: 'Install nodejs 18'
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn install
+      - name: Build
+        run: yarn run build
+      - name: Get current package version
+        id: package_version
+        uses: martinbeentjes/npm-get-version-action@v1.1.0
+      - name:  Publish extension to Visual Studio Marketplace
+        id: create_vsix
+        uses: HaaLeo/publish-vscode-extension@v1
+        with:
+          dryRun: ${{ github.ref != 'refs/heads/master'  }}
+          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+          registryUrl: https://marketplace.visualstudio.com
+      - name: Create a Release
+        if: github.ref == 'refs/heads/master'
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name : ${{ steps.package_version.outputs.current-version}}
+          release_name: ${{ steps.package_version.outputs.current-version}}
+          body: Published ${{ steps.package_version.outputs.current-version}}
+      - name: Attach vsix to release
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.create_vsix.outputs.vsixPath}}
+          asset_name: ${{ steps.create_vsix.outputs.vsixPath}}
+          asset_content_type: application/vsix
