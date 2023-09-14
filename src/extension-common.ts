@@ -627,6 +627,13 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
     });
   }
 
+  async function toggleAlwaysShowBacklinksInPreview(uri, flag) {
+    const config = vscode.workspace.getConfiguration(
+      'markdown-preview-enhanced',
+    );
+    config.update('alwaysShowBacklinksInPreview', flag, true);
+  }
+
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument(async (document) => {
       if (isMarkdownFile(document)) {
@@ -1079,6 +1086,13 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('_crossnote.showBacklinks', showBacklinks),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.toggleAlwaysShowBacklinksInPreview',
+      toggleAlwaysShowBacklinksInPreview,
+    ),
   );
 }
 

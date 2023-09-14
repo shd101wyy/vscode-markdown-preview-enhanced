@@ -28,15 +28,15 @@ export function wrapVSCodeFSAsApi(scheme: string): FileSystemApi {
       path = path.replace(/^\//, '');
       const uri = getUri(path, scheme);
       const data = await vscode.workspace.fs.readFile(uri);
-      return new TextDecoder(encoding ?? 'utf-8').decode(data);
+      return Buffer.from(data).toString(encoding);
     },
     writeFile: async (
       path: string,
       data: string,
-      encoding?: string,
+      encoding?: BufferEncoding,
     ): Promise<void> => {
       const uri = getUri(path, scheme);
-      await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(data));
+      await vscode.workspace.fs.writeFile(uri, Buffer.from(data, encoding));
     },
     mkdir: async (path: string): Promise<void> => {
       await vscode.workspace.fs.createDirectory(getUri(path, scheme));
