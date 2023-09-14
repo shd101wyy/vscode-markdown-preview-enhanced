@@ -1,4 +1,4 @@
-name: "Publish the extension."
+name: "Publish the extension"
 on:
   push:
     branches:
@@ -30,6 +30,7 @@ jobs:
           dryRun: ${{ github.ref != 'refs/heads/master'  }}
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
+          yarn: true
       - name: Create a Release
         if: github.ref == 'refs/heads/master'
         id: create_release
