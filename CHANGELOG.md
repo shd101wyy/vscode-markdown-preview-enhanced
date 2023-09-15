@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.8] - 2023-09-15
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.14](https://github.com/shd101wyy/crossnote/releases/tag/0.8.14)
+
+### New features
+
+- (Beta) Added the [bitfield](https://github.com/wavedrom/bitfield) diagram support. Supported both `bitfield` and `bit-field` code fences. https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1749
+  ````
+  ```bitfield {vspace=100}
+  [
+    {name: 'IPO',   bits: 8},
+    {               bits: 7},
+    {name: 'BRK',   bits: 5, type: 4},
+    {name: 'CPK',   bits: 1},
+    {name: 'Clear', bits: 3, type: 5},
+    {               bits: 8}
+  ]
+  ```
+  ````
+
+### Bug fixes
+
+- Fixed the `vue.css` theme bug that caused the missing scroll bar in the preview. Also fixed a context menu bug for selecting the `vue.css` theme.
+
 ## [0.7.7] - 2023-09-15
 
 ### Updated to crossnote 0.8.13
