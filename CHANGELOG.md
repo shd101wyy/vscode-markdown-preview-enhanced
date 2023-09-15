@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.7] - 2023-09-15
+
+### Updated to crossnote 0.8.13
+
+https://github.com/shd101wyy/crossnote/releases/tag/0.8.13
+
+#### Bug fixes
+- Fixed rendering MathJax in preview https://github.com/shd101wyy/crossnote/pull/311.
+- Fixed the preview background color https://github.com/shd101wyy/crossnote/pull/312.
+- Added error message when failed to parse the YAML front-matter. Also escaped the HTML rendered in the front-matter table in preview. https://github.com/shd101wyy/crossnote/pull/312.
+
+
 ## [0.7.6] - 2023-09-14
 
 Fixed the extension for https://vscode.dev.

@@ -23,6 +23,13 @@ jobs:
       - name: Get current package version
         id: package_version
         uses: martinbeentjes/npm-get-version-action@v1.1.0
+      - name: Get Changelog Entry
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2.0.0
+        with:
+          validation_level: warn
+          version: ${{ steps.package_version.outputs.current-version }}
+          path: 'CHANGELOG.md'
       - name:  Publish extension to Visual Studio Marketplace
         id: create_vsix
         uses: HaaLeo/publish-vscode-extension@v1
@@ -31,13 +38,6 @@ jobs:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
           yarn: true
-      - name: Get Changelog Entry
-        id: changelog_reader
-        uses: mindsers/changelog-reader-action@v2.0.0
-        with:
-          validation_level: warn
-          version: ${{ steps.package_version.outputs.current-version }}
-          path: 'CHANGELOG.md'
       - name: Create a Release
         if: github.ref == 'refs/heads/master'
         id: create_release
