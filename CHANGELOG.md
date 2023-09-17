@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.9] - 2023-09-17
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.15](https://github.com/shd101wyy/crossnote/releases/tag/0.8.15)
+
+### New features
+
+- Added the `includeInHeader` option, which allows you to include custom HTML in the `<head>` of the preview.
+  This could be useful for adding custom CSS or JavaScript to the preview.
+
+### Bug fixes
+
+- Fixed the bug of missing the backlinks on the `vue.css` theme.
+- Fixed the back to top button. https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1769
+
 ## [0.7.8] - 2023-09-15
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.14](https://github.com/shd101wyy/crossnote/releases/tag/0.8.14)
