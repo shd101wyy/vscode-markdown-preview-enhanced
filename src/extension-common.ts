@@ -645,13 +645,14 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
         // - style.less
         // - config.js
         // - parser.js
+        // - head.html
         // If so, refresh the preview of the workspace.
         const workspaceUri = getWorkspaceFolderUri(document.uri);
         const workspaceDir = workspaceUri.fsPath;
         const relativePath = path.relative(workspaceDir, document.uri.fsPath);
         if (
           relativePath.startsWith('.crossnote') &&
-          ['style.less', 'config.js', 'parser.js'].includes(
+          ['style.less', 'config.js', 'parser.js', 'head.html'].includes(
             path.basename(relativePath),
           )
         ) {

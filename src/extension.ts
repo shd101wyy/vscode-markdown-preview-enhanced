@@ -19,7 +19,9 @@ export function activate(context: vscode.ExtensionContext) {
     fs.watch(globalConfigPath, async (eventType, fileName) => {
       if (
         eventType === 'change' &&
-        ['style.less', 'config.js', 'parser.js'].includes(fileName ?? '')
+        ['style.less', 'config.js', 'parser.js', 'head.html'].includes(
+          fileName ?? '',
+        )
       ) {
         const providers = getAllPreviewProviders();
         providers.forEach(async (provider) => {
