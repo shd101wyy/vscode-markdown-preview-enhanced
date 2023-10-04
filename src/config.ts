@@ -6,6 +6,7 @@ import {
   MermaidTheme,
   NotebookConfig,
   ParserConfig,
+  PreviewMode,
   PreviewTheme,
   RevealJsTheme,
   getDefaultNotebookConfig,
@@ -70,11 +71,12 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly jsdelivrCdnHost: string;
   public readonly krokiServer: string;
   public readonly alwaysShowBacklinksInPreview: boolean;
+  public readonly includeInHeader: string;
 
   // preview config
   public readonly scrollSync: boolean;
   public readonly liveUpdate: boolean;
-  public readonly singlePreview: boolean;
+  public readonly previewMode: PreviewMode;
   public readonly automaticallyShowPreviewOfMarkdownBeingEdited: boolean;
   public readonly previewColorScheme: PreviewColorScheme;
 
@@ -168,7 +170,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
 
     this.scrollSync = config.get<boolean>('scrollSync') ?? true;
     this.liveUpdate = config.get<boolean>('liveUpdate') ?? true;
-    this.singlePreview = config.get<boolean>('singlePreview') ?? true;
+    this.previewMode =
+      config.get<PreviewMode>('previewMode') ?? PreviewMode.SinglePreview;
     this.automaticallyShowPreviewOfMarkdownBeingEdited =
       config.get<boolean>('automaticallyShowPreviewOfMarkdownBeingEdited') ??
       false;
@@ -213,6 +216,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.alwaysShowBacklinksInPreview =
       config.get<boolean>('alwaysShowBacklinksInPreview') ??
       defaultConfig.alwaysShowBacklinksInPreview;
+    this.includeInHeader = defaultConfig.includeInHeader;
   }
 
   globalCss: string;

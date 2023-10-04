@@ -1,3 +1,4 @@
+const { execSync } = require('child_process');
 const { context, build } = require('esbuild');
 const { polyfillNode } = require('esbuild-plugin-polyfill-node');
 
@@ -10,6 +11,10 @@ const esbuildProblemMatcherPlugin = {
   setup(build) {
     build.onStart(() => {
       console.log('[watch] build started');
+
+      // Run `gulp copy:files` before build
+      execSync('gulp copy-files');
+      console.log('[watch] gulp copy-files');
     });
     build.onEnd((result) => {
       if (result.errors.length) {
@@ -18,7 +23,9 @@ const esbuildProblemMatcherPlugin = {
             `> ${error.location.file}:${error.location.line}:${error.location.column}: error: ${error.text}`,
           ),
         );
-      } else console.log('[watch] build finished');
+      } else {
+        console.log('[watch] build finished');
+      }
     });
   },
 };

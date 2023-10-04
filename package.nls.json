@@ -1,6 +1,7 @@
 {
   "displayName": "Markdown Preview Enhanced",
   "description": "Markdown Preview Enhanced ported to vscode",
+  "customEditorPreviewDisplayName": "Markdown Preview Enhanced",
   "markdown-preview-enhanced.openPreviewToTheSide.title": "Markdown Preview Enhanced: Open Preview to the Side",
   "markdown-preview-enhanced.openPreview.title": "Markdown Preview Enhanced: Open Preview",
   "markdown-preview-enhanced.toggleScrollSync.title": "Markdown Preview Enhanced: Toggle Scroll Sync",

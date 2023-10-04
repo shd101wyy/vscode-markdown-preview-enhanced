@@ -1,4 +1,9 @@
-import { Notebook, PreviewTheme, loadConfigsInDirectory } from 'crossnote';
+import {
+  Notebook,
+  PreviewMode,
+  PreviewTheme,
+  loadConfigsInDirectory,
+} from 'crossnote';
 import * as vscode from 'vscode';
 import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
 import FileWatcher from './file-watcher';
@@ -74,14 +79,59 @@ class NotebooksManager {
     }
   }
 
+  public updateWorkbenchEditorAssociationsBasedOnPreviewMode() {
+    const workbenchConfig = vscode.workspace.getConfiguration('workbench');
+    const mpeConfig = vscode.workspace.getConfiguration(
+      'markdown-preview-enhanced',
+    );
+    const previewMode = mpeConfig.get<PreviewMode>('previewMode');
+    const markdownFileExtensions = mpeConfig.get<string[]>(
+      'markdownFileExtensions',
+    ) ?? ['.md'];
+    const editorAssociations =
+      workbenchConfig.get<{ [key: string]: string }>('editorAssociations') ??
+      {};
+    let newEditorAssociations = { ...editorAssociations };
+    if (previewMode === PreviewMode.PreviewsOnly) {
+      const associations: { [key: string]: string } = {};
+      markdownFileExtensions.forEach((ext) => {
+        associations[`*${ext}`] = 'markdown-preview-enhanced';
+      });
+      // Add associations to editorAssociations
+      newEditorAssociations = { ...editorAssociations, ...associations };
+    } else {
+      // delete associations from editorAssociations
+      newEditorAssociations = Object.fromEntries(
+        Object.entries(editorAssociations).filter(([key]) => {
+          return !markdownFileExtensions.find((ext) => {
+            return key.endsWith(ext);
+          });
+        }),
+      );
+    }
+
+    if (
+      JSON.stringify(newEditorAssociations) !==
+      JSON.stringify(editorAssociations)
+    ) {
+      console.log('update workbench.editorAssociations');
+      workbenchConfig.update(
+        'editorAssociations',
+        newEditorAssociations,
+        vscode.ConfigurationTarget.Global,
+      );
+    }
+  }
+
   public updateConfiguration(forceUpdate = false) {
     const newConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
     if (forceUpdate || !this.config.isEqualTo(newConfig)) {
       const previewProviders = getAllPreviewProviders();
-      // if `singlePreview` setting is changed, close all previews.
-      if (this.config.singlePreview !== newConfig.singlePreview) {
+      this.updateWorkbenchEditorAssociationsBasedOnPreviewMode();
+      // if previewMode changed, close all previews.
+      if (this.config.previewMode !== newConfig.previewMode) {
         previewProviders.forEach((provider) => {
-          provider.closeAllPreviews(this.config.singlePreview);
+          provider.closeAllPreviews(this.config.previewMode);
         });
 
         this.config = newConfig;

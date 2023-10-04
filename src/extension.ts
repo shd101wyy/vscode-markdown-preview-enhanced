@@ -8,7 +8,7 @@ import { initExtensionCommon } from './extension-common';
 import { getAllPreviewProviders } from './preview-provider';
 import { globalConfigPath } from './utils';
 
-// this method is called when your extension iopenTextDocuments activated
+// this method is called when your extension openTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   try {
@@ -106,7 +106,6 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // context.subscriptions.push(vscode.commands.registerCommand('_crossnote.cacheSVG', cacheSVG))
-
   context.subscriptions.push(
     vscode.commands.registerCommand(
       '_crossnote.showUploadedImageHistory',

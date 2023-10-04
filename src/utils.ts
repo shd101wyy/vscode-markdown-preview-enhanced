@@ -1,4 +1,5 @@
 import path = require('path');
+import { PreviewMode } from 'crossnote';
 import * as os from 'os';
 import * as vscode from 'vscode';
 import * as packageJSON from '../package.json';
@@ -136,4 +137,13 @@ export function isVSCodewebExtensionDevMode() {
 
 export function getCrossnoteVersion() {
   return packageJSON.dependencies['crossnote'];
+}
+
+export function getPreviewMode() {
+  const config = vscode.workspace.getConfiguration('markdown-preview-enhanced');
+  return config.get<PreviewMode>('previewMode');
+}
+
+export function getEditorActiveLine(editor: vscode.TextEditor) {
+  return editor.selections[0].active.line ?? 0;
 }
