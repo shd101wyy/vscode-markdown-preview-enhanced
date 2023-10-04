@@ -572,25 +572,43 @@ export function initExtensionCommon(context: vscode.ExtensionContext) {
           previewMode === PreviewMode.PreviewsOnly &&
           isMarkdownFile(document)
         ) {
+          /*
+          // NOTE: This doesn't work for the `line`
+          // so we use the `initPreview` instead.  
+          const options: vscode.TextDocumentShowOptions = {
+            selection: new vscode.Selection(line, 0, line, 0),
+            viewColumn: vscode.ViewColumn.Active,
+          };
           vscode.commands.executeCommand(
             'vscode.openWith',
             fileUri,
             'markdown-preview-enhanced',
+            options,
           );
+          */
+          const previewProvider = await getPreviewContentProvider(fileUri);
+          previewProvider.initPreview({
+            sourceUri: fileUri,
+            document,
+            activeLine: line,
+            viewOptions: {
+              viewColumn: vscode.ViewColumn.Active,
+              preserveFocus: true,
+            },
+          });
         } else {
           // Open fileUri
-          vscode.window.showTextDocument(document, col).then((editor) => {
-            // if there was line fragment, jump to line
-            if (line >= 0) {
-              let viewPos = vscode.TextEditorRevealType.InCenter;
-              if (editor.selection.active.line === line) {
-                viewPos = vscode.TextEditorRevealType.InCenterIfOutsideViewport;
-              }
-              const sel = new vscode.Selection(line, 0, line, 0);
-              editor.selection = sel;
-              editor.revealRange(sel, viewPos);
+          const editor = await vscode.window.showTextDocument(document, col);
+          // if there was line fragment, jump to line
+          if (line >= 0) {
+            let viewPos = vscode.TextEditorRevealType.InCenter;
+            if (editor.selection.active.line === line) {
+              viewPos = vscode.TextEditorRevealType.InCenterIfOutsideViewport;
             }
-          });
+            const sel = new vscode.Selection(line, 0, line, 0);
+            editor.selection = sel;
+            editor.revealRange(sel, viewPos);
+          }
         }
       } else {
         vscode.commands.executeCommand(

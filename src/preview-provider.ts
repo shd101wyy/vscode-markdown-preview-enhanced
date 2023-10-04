@@ -114,6 +114,7 @@ export class PreviewProvider {
     vscode.WebviewPanel,
     vscode.TextDocument
   > = new Map();
+  private initializedPreviews: Set<vscode.WebviewPanel> = new Set();
 
   private static singlePreviewPanel: vscode.WebviewPanel | null;
   private static singlePreviewPanelSourceUriTarget: Uri | null;
@@ -394,32 +395,39 @@ export class PreviewProvider {
       }
 
       // set icon
+      // NOTE: This doesn't work for custom editor.
       previewPanel.iconPath = vscode.Uri.file(
         path.join(this.context.extensionPath, 'media', 'preview.svg'),
       );
 
-      // register previewPanel message events
-      previewPanel.webview.onDidReceiveMessage(
-        (message) => {
-          // console.log('@ receiveMessage: ', message);
-          vscode.commands.executeCommand(
-            `_crossnote.${message.command}`,
-            ...message.args,
-          );
-        },
-        null,
-        this.context.subscriptions,
-      );
+      // NOTE: We only register for the webview event listeners once
+      if (!this.initializedPreviews.has(previewPanel)) {
+        this.initializedPreviews.add(previewPanel);
 
-      // unregister previewPanel
-      previewPanel.onDidDispose(
-        () => {
-          this.destroyPreview(sourceUri);
-          this.destroyEngine(sourceUri);
-        },
-        null,
-        this.context.subscriptions,
-      );
+        // register previewPanel message events
+        previewPanel.webview.onDidReceiveMessage(
+          (message) => {
+            // console.log('@ receiveMessage: ', message, previewPanel);
+            vscode.commands.executeCommand(
+              `_crossnote.${message.command}`,
+              ...message.args,
+            );
+          },
+          null,
+          this.context.subscriptions,
+        );
+
+        // unregister previewPanel
+        previewPanel.onDidDispose(
+          () => {
+            this.destroyPreview(sourceUri);
+            this.destroyEngine(sourceUri);
+            this.initializedPreviews.delete(previewPanel);
+          },
+          null,
+          this.context.subscriptions,
+        );
+      }
 
       if (previewMode === PreviewMode.SinglePreview) {
         PreviewProvider.singlePreviewPanel = previewPanel;
@@ -456,11 +464,6 @@ export class PreviewProvider {
         vscodePreviewPanel: previewPanel,
         isVSCodeWebExtension: isVSCodeWebExtension(),
       });
-      console.log(
-        '@ initPreview 1: ',
-        previewPanel.active,
-        previewPanel.visible,
-      );
       previewPanel.webview.html = html;
     } catch (error) {
       //
@@ -499,13 +502,20 @@ export class PreviewProvider {
   ) {
     const previews = this.getPreviews(sourceUri);
     if (previews) {
-      // console.log('@ postMessageToPreview: ', preview, message);
+      /*
+      console.log(
+        '@ postMessageToPreview: ',
+        sourceUri.fsPath,
+        message,
+        previews,
+      );
+      */
       for (let i = 0; i < previews.length; i++) {
         const preview = previews[i];
         if (preview.visible) {
           const result = await preview.webview.postMessage(message);
           if (!result) {
-            vscode.window.showErrorMessage(
+            console.error(
               `Failed to send message "${message.command}" to preview panel for ${sourceUri.fsPath}`,
             );
           }
@@ -548,57 +558,67 @@ export class PreviewProvider {
       if (!previews || !previews.length) {
         return;
       }
-      engine
-        .parseMD(text, {
-          isForPreview: true,
-          useRelativeFilePath: false,
-          hideFrontMatter: false,
-          triggeredBySave,
-          vscodePreviewPanel: previews[0], // TODO:
-        })
-        .then(
-          async ({ markdown, html, tocHTML, JSAndCssFiles, yamlConfig }) => {
-            // check JSAndCssFiles
-            if (
-              JSON.stringify(JSAndCssFiles) !==
-                JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath]) ||
-              yamlConfig['isPresentationMode']
-            ) {
-              this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles;
-              // restart iframe
-              this.refreshPreview(sourceUri);
-            } else {
-              await this.postMessageToPreview(sourceUri, {
-                command: 'updateHtml',
-                markdown: text,
-                html,
-                tocHTML,
-                totalLineCount: document.lineCount,
-                sourceUri: sourceUri.toString(),
-                sourceScheme: sourceUri.scheme,
-                id: yamlConfig.id || '',
-                class:
-                  (yamlConfig.class || '') +
-                  ` ${
-                    this.getNotebooksManager().systemColorScheme === 'dark'
-                      ? 'system-dark'
-                      : 'system-ligtht'
-                  } ${
-                    this.getNotebooksManager().getEditorColorScheme() === 'dark'
-                      ? 'editor-dark'
-                      : 'editor-light'
-                  } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
-              });
-            }
-          },
-        )
-        .catch((error) => {
-          vscode.window.showErrorMessage(error.toString());
-        });
+      for (let i = 0; i < previews.length; i++) {
+        try {
+          const preview = previews[0];
+          const {
+            html,
+            tocHTML,
+            JSAndCssFiles,
+            yamlConfig,
+          } = await engine.parseMD(text, {
+            isForPreview: true,
+            useRelativeFilePath: false,
+            hideFrontMatter: false,
+            triggeredBySave,
+            vscodePreviewPanel: preview, // TODO:
+          });
+          // check JSAndCssFiles
+          if (
+            JSON.stringify(JSAndCssFiles) !==
+              JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath] ?? []) ||
+            yamlConfig['isPresentationMode']
+          ) {
+            this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles;
+            // restart iframe
+            this.refreshPreview(sourceUri);
+          } else {
+            await this.postMessageToPreview(sourceUri, {
+              command: 'updateHtml',
+              markdown: text,
+              html,
+              tocHTML,
+              totalLineCount: document.lineCount,
+              sourceUri: sourceUri.toString(),
+              sourceScheme: sourceUri.scheme,
+              id: yamlConfig.id || '',
+              class:
+                (yamlConfig.class || '') +
+                ` ${
+                  this.getNotebooksManager().systemColorScheme === 'dark'
+                    ? 'system-dark'
+                    : 'system-ligtht'
+                } ${
+                  this.getNotebooksManager().getEditorColorScheme() === 'dark'
+                    ? 'editor-dark'
+                    : 'editor-light'
+                } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
+            });
+          }
+          break;
+        } catch (error) {
+          if (i === previews.length - 1) {
+            // This is the
+            vscode.window.showErrorMessage(error.toString());
+          } else {
+            continue;
+          }
+        }
+      }
     });
   }
 
-  public refreshPreviewPanel(sourceUri: Uri | null) {
+  private refreshPreviewPanel(sourceUri: Uri | null) {
     if (!sourceUri) {
       return;
     }
