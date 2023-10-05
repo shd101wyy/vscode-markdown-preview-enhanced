@@ -21,5 +21,7 @@
   "markdown-preview-enhanced.openConfigScriptInWorkspace.title": "Markdown Preview Enhanced: Open Config Script (Workspace)",
   "markdown-preview-enhanced.extendParser.title": "Markdown Preview Enhanced: Extend Parser (Global)",
   "markdown-preview-enhanced.extendParserInWorkspace.title": "Markdown Preview Enhanced: Extend Parser (Workspace)",
+  "markdown-preview-enhanced.customizePreviewHtmlHead.title": "Markdown Preview Enhanced: Customize Preview Html Head (Global)",
+  "markdown-preview-enhanced.customizePreviewHtmlHeadInWorkspace.title": "Markdown Preview Enhanced: Customize Preview Html Head (Workspace)",
   "markdown-preview-enhanced.showUploadedImages.title": "Markdown Preview Enhanced: Show Uploaded Images"
 }

@@ -3,11 +3,13 @@ import { PreviewMode } from 'crossnote';
 import * as os from 'os';
 import * as vscode from 'vscode';
 import * as packageJSON from '../package.json';
+import { getMPEConfig } from './config';
 
 /**
  * Format pathString if it is on Windows. Convert `c:\` like string to `C:\`
  * @param pathString
  */
+/*
 function formatPathIfNecessary(pathString: string) {
   if (process.platform === 'win32') {
     pathString = pathString.replace(
@@ -17,6 +19,7 @@ function formatPathIfNecessary(pathString: string) {
   }
   return pathString;
 }
+*/
 
 /**
  * Get the workspace folder uri of the given uri
@@ -43,9 +46,8 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
 }
 
 function getGlobalConfigPath(): string {
-  const config = vscode.workspace.getConfiguration('markdown-preview-enhanced');
-  const configPath = config.get<string>('configPath');
-  if (configPath && configPath !== '') {
+  const configPath = getMPEConfig<string>('configPath');
+  if (typeof configPath === 'string' && configPath && configPath !== '') {
     return configPath.replace(/^~/, os.homedir());
   }
 
@@ -71,11 +73,8 @@ export function isMarkdownFile(document: vscode.TextDocument) {
 
   if (!flag) {
     // Check file extension
-    const config = vscode.workspace.getConfiguration(
-      'markdown-preview-enhanced',
-    );
     const markdownFileExtensions =
-      config.get<string[]>('markdownFileExtensions') ?? [];
+      getMPEConfig<string[]>('markdownFileExtensions') ?? [];
     const fileName = document.fileName;
     const ext = path.extname(fileName).toLowerCase();
     flag = markdownFileExtensions.includes(ext);
@@ -140,8 +139,7 @@ export function getCrossnoteVersion() {
 }
 
 export function getPreviewMode() {
-  const config = vscode.workspace.getConfiguration('markdown-preview-enhanced');
-  return config.get<PreviewMode>('previewMode');
+  return getMPEConfig<PreviewMode>('previewMode');
 }
 
 export function getEditorActiveLine(editor: vscode.TextEditor) {

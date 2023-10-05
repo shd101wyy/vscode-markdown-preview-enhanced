@@ -122,12 +122,21 @@
         "enablement": "!isWeb"
       },
       {
+        "command": "markdown-preview-enhanced.customizePreviewHtmlHead",
+        "title": "%markdown-preview-enhanced.customizePreviewHtmlHead.title%",
+        "enablement": "!isWeb"
+      },
+      {
         "command": "markdown-preview-enhanced.openConfigScriptInWorkspace",
         "title": "%markdown-preview-enhanced.openConfigScriptInWorkspace.title%"
       },
       {
         "command": "markdown-preview-enhanced.extendParserInWorkspace",
         "title": "%markdown-preview-enhanced.extendParserInWorkspace.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.customizePreviewHtmlHeadInWorkspace",
+        "title": "%markdown-preview-enhanced.customizePreviewHtmlHeadInWorkspace.title%"
       },
       {
         "command": "markdown-preview-enhanced.showUploadedImages",
@@ -140,7 +149,7 @@
       "title": "Markdown Preview Enhanced",
       "properties": {
         "markdown-preview-enhanced.configPath": {
-          "markdownDescription": "Restart is required after changes. The configuration directory path. Leave it empty to use `$HOME/.crossnote` for Windows or `$XDG_CONFIG_HOME/.crossnote` or `$HOME/.local/state/crossnote` as the config path.",
+          "markdownDescription": "Restart is required after changes. The global configuration directory path. Leave it empty to use `$HOME/.crossnote` for Windows or `$XDG_CONFIG_HOME/.crossnote` or `$HOME/.local/state/crossnote` as the config path.",
           "default": "",
           "type": "string"
         },
@@ -412,22 +421,22 @@
             "qiniu"
           ]
         },
-        "markdown-preview-enhanced.AccessKey": {
+        "markdown-preview-enhanced.qiniuAccessKey": {
           "type": "string",
           "default": "",
           "description": "Qiniu AccessKey"
         },
-        "markdown-preview-enhanced.SecretKey": {
+        "markdown-preview-enhanced.qiniuSecretKey": {
           "type": "string",
           "default": "",
           "description": "Qiniu SecretKey"
         },
-        "markdown-preview-enhanced.Bucket": {
+        "markdown-preview-enhanced.qiniuBucket": {
           "type": "string",
           "default": "",
           "description": "Qiniu Bucket"
         },
-        "markdown-preview-enhanced.Domain": {
+        "markdown-preview-enhanced.qiniuDomain": {
           "type": "string",
           "default": "http://",
           "description": "Qiniu Domain"

@@ -21,5 +21,7 @@
   "markdown-preview-enhanced.openConfigScriptInWorkspace.title": "MPE:打开配置脚本（工作区）",
   "markdown-preview-enhanced.extendParser.title": "MPE:扩展 Parser（全局）",
   "markdown-preview-enhanced.extendParserInWorkspace.title": "MPE:扩展 Parser（工作区）",
+  "markdown-preview-enhanced.customizePreviewHtmlHead.title": "MPE:自定义预览 HTML 头部（全局）",
+  "markdown-preview-enhanced.customizePreviewHtmlHeadInWorkspace.title": "MPE:自定义预览 HTML 头部（工作区）",
   "markdown-preview-enhanced.showUploadedImages.title": "MPE:显示图片上传历史"
 }

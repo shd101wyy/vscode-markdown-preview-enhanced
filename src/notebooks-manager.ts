@@ -1,11 +1,16 @@
 import {
   Notebook,
+  NotebookConfig,
   PreviewMode,
   PreviewTheme,
   loadConfigsInDirectory,
 } from 'crossnote';
 import * as vscode from 'vscode';
-import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config';
+import {
+  MarkdownPreviewEnhancedConfig,
+  PreviewColorScheme,
+  getMPEConfig,
+} from './config';
 import FileWatcher from './file-watcher';
 import { getAllPreviewProviders } from './preview-provider';
 import {
@@ -17,12 +22,11 @@ import { wrapVSCodeFSAsApi } from './vscode-fs';
 
 class NotebooksManager {
   private notebooks: Notebook[] = [];
-  public config: MarkdownPreviewEnhancedConfig;
   public systemColorScheme: 'light' | 'dark' = 'light';
   private fileWatcher: FileWatcher;
+  private currentMPEConfig: MarkdownPreviewEnhancedConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
   constructor(private context: vscode.ExtensionContext) {
-    this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig();
     this.fileWatcher = new FileWatcher(this.context, this);
   }
 
@@ -39,53 +43,95 @@ class NotebooksManager {
     const notebook = await Notebook.init({
       notebookPath: workspaceFolderUri.toString(),
       fs: wrapVSCodeFSAsApi(workspaceFolderUri.scheme),
-      config: { ...this.config },
+      config: {},
     });
     this.notebooks.push(notebook);
+    notebook.updateConfig(await this.loadNotebookConfig(uri));
+    return notebook;
+  }
 
-    // Check if ${workspaceDir}/.crossnote directory exists
-    // If not, then use the global config.
-    const crossnoteDir = vscode.Uri.joinPath(
-      workspaceFolderUri,
-      './.crossnote',
+  public async updateNotebookConfig(
+    uri: vscode.Uri,
+    createWorkspaceConfigDirectoryIfNotExists: boolean = false,
+  ) {
+    const notebook = await this.getNotebook(uri);
+    const config = await this.loadNotebookConfig(
+      uri,
+      createWorkspaceConfigDirectoryIfNotExists,
     );
-    if (
-      !(await notebook.fs.exists(crossnoteDir.fsPath)) &&
-      !isVSCodeWebExtension()
-    ) {
+    notebook.updateConfig(config);
+  }
+
+  private async loadNotebookConfig(
+    uri: vscode.Uri,
+    createWorkspaceConfigDirectoryIfNotExists: boolean = false,
+  ): Promise<Partial<MarkdownPreviewEnhancedConfig>> {
+    const notebook = await this.getNotebook(uri);
+
+    // Global config
+    let globalConfig: Partial<NotebookConfig> = {};
+    if (!isVSCodeWebExtension()) {
       try {
-        const globalConfig = await loadConfigsInDirectory(
+        globalConfig = await loadConfigsInDirectory(
           globalConfigPath,
           notebook.fs,
           true,
         );
-        notebook.updateConfig(globalConfig);
       } catch (error) {
         console.error(error);
       }
     }
 
-    return notebook;
+    // Workspace config
+    let workspaceConfig: Partial<NotebookConfig> = {};
+    const workspaceConfigPath = vscode.Uri.joinPath(
+      getWorkspaceFolderUri(uri),
+      './.crossnote',
+    );
+    try {
+      workspaceConfig = await loadConfigsInDirectory(
+        workspaceConfigPath.fsPath,
+        notebook.fs,
+        createWorkspaceConfigDirectoryIfNotExists,
+      );
+    } catch (error) {
+      console.error(error);
+    }
+
+    // VSCode config
+    const vscodeMPEConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
+    this.currentMPEConfig = vscodeMPEConfig;
+
+    // Preview theme
+    const previewTheme = this.getPreviewTheme(
+      vscodeMPEConfig.previewTheme,
+      vscodeMPEConfig.previewColorScheme,
+    );
+
+    return {
+      ...vscodeMPEConfig,
+      ...globalConfig,
+      ...workspaceConfig,
+      previewTheme,
+    };
   }
 
   public setSystemColorScheme(colorScheme: 'light' | 'dark') {
     if (this.systemColorScheme !== colorScheme) {
       this.systemColorScheme = colorScheme;
       if (
-        this.config.previewColorScheme === PreviewColorScheme.systemColorScheme
+        getMPEConfig<PreviewColorScheme>('previewColorScheme') ===
+        PreviewColorScheme.systemColorScheme
       ) {
-        this.updateConfiguration(true);
+        this.updateAllNotebooksConfig();
       }
     }
   }
 
-  public updateWorkbenchEditorAssociationsBasedOnPreviewMode() {
+  public async updateWorkbenchEditorAssociationsBasedOnPreviewMode() {
     const workbenchConfig = vscode.workspace.getConfiguration('workbench');
-    const mpeConfig = vscode.workspace.getConfiguration(
-      'markdown-preview-enhanced',
-    );
-    const previewMode = mpeConfig.get<PreviewMode>('previewMode');
-    const markdownFileExtensions = mpeConfig.get<string[]>(
+    const previewMode = getMPEConfig<PreviewMode>('previewMode');
+    const markdownFileExtensions = getMPEConfig<string[]>(
       'markdownFileExtensions',
     ) ?? ['.md'];
     const editorAssociations =
@@ -114,8 +160,7 @@ class NotebooksManager {
       JSON.stringify(newEditorAssociations) !==
       JSON.stringify(editorAssociations)
     ) {
-      console.log('update workbench.editorAssociations');
-      workbenchConfig.update(
+      await workbenchConfig.update(
         'editorAssociations',
         newEditorAssociations,
         vscode.ConfigurationTarget.Global,
@@ -123,34 +168,32 @@ class NotebooksManager {
     }
   }
 
-  public updateConfiguration(forceUpdate = false) {
-    const newConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
-    if (forceUpdate || !this.config.isEqualTo(newConfig)) {
-      const previewProviders = getAllPreviewProviders();
-      this.updateWorkbenchEditorAssociationsBasedOnPreviewMode();
-      // if previewMode changed, close all previews.
-      if (this.config.previewMode !== newConfig.previewMode) {
-        previewProviders.forEach((provider) => {
-          provider.closeAllPreviews(this.config.previewMode);
-        });
+  public async updateAllNotebooksConfig() {
+    const previewProviders = getAllPreviewProviders();
+    await this.updateWorkbenchEditorAssociationsBasedOnPreviewMode();
+    const newMPEConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
-        this.config = newConfig;
-      } else {
-        this.config = newConfig;
-
-        const previewTheme = this.getPreviewTheme(
-          newConfig.previewTheme,
-          newConfig.previewColorScheme,
-        );
-        this.notebooks.forEach((notebook) => {
-          notebook.updateConfig({ ...newConfig, previewTheme });
-        });
-        // update all generated md documents
-        previewProviders.forEach((provider) => {
-          provider.refreshAllPreviews();
-        });
-      }
+    // If previewMode changed, close all previews.
+    if (this.currentMPEConfig.previewMode !== newMPEConfig.previewMode) {
+      previewProviders.forEach((provider) => {
+        provider.closeAllPreviews(this.currentMPEConfig.previewMode);
+      });
     }
+
+    // Update all notebooks config
+    await Promise.all(
+      this.notebooks.map(async (notebook) => {
+        const config = await this.loadNotebookConfig(notebook.notebookPath);
+        notebook.updateConfig(config);
+      }),
+    );
+
+    // Refresh all previews
+    previewProviders.forEach((provider) => {
+      provider.refreshAllPreviews();
+    });
+
+    this.currentMPEConfig = newMPEConfig;
   }
 
   private getPreviewThemeByLightOrDark(

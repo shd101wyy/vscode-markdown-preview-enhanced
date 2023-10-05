@@ -1,14 +1,10 @@
 import { Mutex } from 'async-mutex';
-import {
-  Notebook,
-  PreviewMode,
-  loadConfigsInDirectory,
-  utility,
-} from 'crossnote';
+import { ImageUploader, Notebook, PreviewMode, utility } from 'crossnote';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
+import { getMPEConfig } from './config';
 import NotebooksManager from './notebooks-manager';
 import {
   getCrossnoteVersion,
@@ -27,11 +23,8 @@ if (isVSCodeWebExtension()) {
     console.debug('* Loading /crossnote directory at http://localhost:6789/');
     utility.setCrossnoteBuildDirectory('http://localhost:6789/');
   } else {
-    const config = vscode.workspace.getConfiguration(
-      'markdown-preview-enhanced',
-    );
     const jsdelivrCdnHost =
-      config.get<string>('jsdelivrCdnHost') ?? 'cdn.jsdelivr.net';
+      getMPEConfig<string>('jsdelivrCdnHost') ?? 'cdn.jsdelivr.net';
     utility.setCrossnoteBuildDirectory(
       `https://${jsdelivrCdnHost}/npm/crossnote@${getCrossnoteVersion()}/out/`,
     );
@@ -146,28 +139,6 @@ export class PreviewProvider {
       PreviewProvider.notebooksManager = new NotebooksManager(this.context);
     }
     return PreviewProvider.notebooksManager;
-  }
-
-  public async updateCrossnoteConfig(directory: string, forceUpdate = false) {
-    // If directory is globalConfigDirectory && ${workspaceDir}/.crossnote directory exists
-    // then return without updating.
-    if (
-      directory === globalConfigPath &&
-      (await this.notebook.fs.exists(
-        path.join(this.notebook.notebookPath.fsPath, '.crossnote'),
-      ))
-    ) {
-      return;
-    }
-
-    if ((await this.notebook.fs.exists(directory)) || forceUpdate) {
-      const configs = await loadConfigsInDirectory(
-        directory,
-        this.notebook.fs,
-        true,
-      );
-      this.notebook.updateConfig(configs);
-    }
   }
 
   public static async getPreviewContentProvider(
@@ -319,6 +290,7 @@ export class PreviewProvider {
     activeLine?: number;
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean };
   }): Promise<void> {
+    // console.log('@initPreview: ', sourceUri.fsPath);
     const previewMode = getPreviewMode();
     let previewPanel: vscode.WebviewPanel;
     const previews = this.getPreviews(sourceUri);
@@ -400,11 +372,11 @@ export class PreviewProvider {
         path.join(this.context.extensionPath, 'media', 'preview.svg'),
       );
 
-      // NOTE: We only register for the webview event listeners once
+      // NOTE: We only register for the webview event listeners once.
       if (!this.initializedPreviews.has(previewPanel)) {
         this.initializedPreviews.add(previewPanel);
 
-        // register previewPanel message events
+        // register previewPanel message events.
         previewPanel.webview.onDidReceiveMessage(
           (message) => {
             // console.log('@ receiveMessage: ', message, previewPanel);
@@ -417,7 +389,7 @@ export class PreviewProvider {
           this.context.subscriptions,
         );
 
-        // unregister previewPanel
+        // unregister previewPanel.
         previewPanel.onDidDispose(
           () => {
             this.destroyPreview(sourceUri);
@@ -457,8 +429,8 @@ export class PreviewProvider {
           sourceUri: sourceUri.toString(),
           initialLine,
           isVSCode: true,
-          scrollSync: this.getNotebooksManager().config.scrollSync,
-          imageUploader: this.getNotebooksManager().config.imageUploader,
+          scrollSync: getMPEConfig<boolean>('scrollSync'),
+          imageUploader: getMPEConfig<ImageUploader>('imageUploader'),
         },
         contentSecurityPolicy: '',
         vscodePreviewPanel: previewPanel,
@@ -466,14 +438,13 @@ export class PreviewProvider {
       });
       previewPanel.webview.html = html;
     } catch (error) {
-      //
       vscode.window.showErrorMessage(error.toString());
       console.error(error);
     }
   }
 
   /**
-   * Close all previews
+   * Close all previews.
    */
   public closeAllPreviews(previewMode: PreviewMode) {
     if (previewMode === PreviewMode.SinglePreview) {
@@ -498,7 +469,7 @@ export class PreviewProvider {
 
   public async postMessageToPreview(
     sourceUri: Uri,
-    message: { command: string; [key: string]: any }, // TODO: Define a type for message
+    message: { command: string; [key: string]: any }, // TODO: Define a type for message.
   ) {
     const previews = this.getPreviews(sourceUri);
     if (previews) {
@@ -510,6 +481,7 @@ export class PreviewProvider {
         previews,
       );
       */
+
       for (let i = 0; i < previews.length; i++) {
         const preview = previews[i];
         if (preview.visible) {
@@ -822,11 +794,7 @@ export class PreviewProvider {
 
   public update(sourceUri: Uri) {
     const previews = this.getPreviews(sourceUri);
-    if (
-      !this.getNotebooksManager().config.liveUpdate ||
-      !previews ||
-      !previews.length
-    ) {
+    if (!getMPEConfig<boolean>('liveUpdate') || !previews || !previews.length) {
       return;
     }
 

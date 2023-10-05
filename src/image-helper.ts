@@ -2,6 +2,7 @@ import { utility } from 'crossnote';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { getMPEConfig } from './config';
 import { getWorkspaceFolderUri, isMarkdownFile } from './utils';
 
 /**
@@ -197,13 +198,10 @@ export function uploadImageFile(
         textEditorEdit.insert(curPos, hint);
       });
 
-      const config = vscode.workspace.getConfiguration(
-        'markdown-preview-enhanced',
-      );
-      const AccessKey = config.get<string>('AccessKey') || '';
-      const SecretKey = config.get<string>('SecretKey') || '';
-      const Bucket = config.get<string>('Bucket') || '';
-      const Domain = config.get<string>('Domain') || '';
+      const AccessKey = getMPEConfig<string>('qiniuAccessKey') || '';
+      const SecretKey = getMPEConfig<string>('qiniuSecretKey') || '';
+      const Bucket = getMPEConfig<string>('qiniuBucket') || '';
+      const Domain = getMPEConfig<string>('qiniuDomain') || '';
 
       utility
         .uploadImage(imageFilePath, {

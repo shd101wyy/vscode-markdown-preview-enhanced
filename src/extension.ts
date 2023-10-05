@@ -5,12 +5,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { initExtensionCommon } from './extension-common';
-import { getAllPreviewProviders } from './preview-provider';
+import { PreviewProvider } from './preview-provider';
 import { globalConfigPath } from './utils';
 
 // this method is called when your extension openTextDocuments activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   try {
     if (!fs.existsSync(globalConfigPath)) {
       fs.mkdirSync(globalConfigPath, { recursive: true });
@@ -23,11 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
           fileName ?? '',
         )
       ) {
-        const providers = getAllPreviewProviders();
-        providers.forEach(async (provider) => {
-          await provider.updateCrossnoteConfig(globalConfigPath);
-          provider.refreshAllPreviews();
-        });
+        PreviewProvider.notebooksManager?.updateAllNotebooksConfig();
       }
     });
   } catch (error) {
@@ -35,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   // Init the extension-common module
-  initExtensionCommon(context);
+  await initExtensionCommon(context);
 
   function customizeCSS() {
     const globalStyleLessFile = utility.addFileProtocol(
@@ -67,6 +63,16 @@ export function activate(context: vscode.ExtensionContext) {
     );
   }
 
+  function customizePreviewHtmlHead() {
+    const headHtmlPath = utility.addFileProtocol(
+      path.resolve(globalConfigPath, './head.html'),
+    );
+    vscode.commands.executeCommand(
+      'vscode.open',
+      vscode.Uri.parse(headHtmlPath),
+    );
+  }
+
   function showUploadedImages() {
     const imageHistoryFilePath = utility.addFileProtocol(
       path.resolve(globalConfigPath, './image_history.md'),
@@ -95,6 +101,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'markdown-preview-enhanced.extendParser',
       extendParser,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.customizePreviewHtmlHead',
+      customizePreviewHtmlHead,
     ),
   );
 
