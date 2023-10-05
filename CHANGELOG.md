@@ -28,6 +28,8 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.17](
 
     🔔 Please note that enable this option will automatically modify the `workbench.editorAssociations` setting to make sure the markdown files are opened in the custom editor for preview.
 
+- Added two new VS Code commands `Markdown Preview Enhanced: Customize Preview Html Head (Workspace)` and `Markdown Preview Enhanced: Customize Preview Html Head (Global)`, which will open the `head.html` file for you to customize the `<head>` of the preview.
+
 - Supported to set attribute to image and link, e.g.:
 
   ```markdown
