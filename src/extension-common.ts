@@ -723,6 +723,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((event) => {
+      // console.log(
+      //   'onDidChangeConfiguration: ',
+      //   event.affectsConfiguration('markdown-preview-enhanced'),
+      // );
       if (event.affectsConfiguration('markdown-preview-enhanced')) {
         notebooksManager.updateAllNotebooksConfig();
       }

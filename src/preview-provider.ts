@@ -62,14 +62,15 @@ utility.useExternalAddFileProtocolFunction((filePath, preview) => {
 });
 
 /**
- * key is `workspaceDir`
+ * key is workspaceUri.toString()
  * value is the `PreviewProvider`
  */
-const WORKSPACE_PREVIEW_PROVIDER_MAP: Map<
-  string, // workspaceDir fsPath
-  PreviewProvider
-> = new Map();
+const WORKSPACE_PREVIEW_PROVIDER_MAP: Map<string, PreviewProvider> = new Map();
 
+/**
+ * key is workspaceUri.toString()
+ * value is the `Mutex`
+ */
 const WORKSPACE_MUTEX_MAP: Map<string, Mutex> = new Map();
 
 export function getAllPreviewProviders(): PreviewProvider[] {
@@ -98,11 +99,10 @@ export class PreviewProvider {
   private context: vscode.ExtensionContext;
 
   /**
-   * The key is markdown file fspath
+   * The key is sourceUri.toString()
    * value is Preview (vscode.Webview) object
    */
-  private previewMaps: { [key: string]: Set<vscode.WebviewPanel> } = {};
-
+  private previewMaps: Map<string, Set<vscode.WebviewPanel>> = new Map();
   private previewToDocumentMap: Map<
     vscode.WebviewPanel,
     vscode.TextDocument
@@ -149,23 +149,22 @@ export class PreviewProvider {
 
     // Acquire mutex
     let mutex: Mutex;
-    if (WORKSPACE_MUTEX_MAP.has(workspaceUri.fsPath)) {
-      const mutex_ = WORKSPACE_MUTEX_MAP.get(workspaceUri.fsPath);
+    const mutexKey = workspaceUri.toString();
+    if (WORKSPACE_MUTEX_MAP.has(mutexKey)) {
+      const mutex_ = WORKSPACE_MUTEX_MAP.get(mutexKey);
       if (!mutex_) {
         throw new Error('Cannot find mutex');
       }
       mutex = mutex_;
     } else {
       mutex = new Mutex();
-      WORKSPACE_MUTEX_MAP.set(workspaceUri.fsPath, mutex);
+      WORKSPACE_MUTEX_MAP.set(mutexKey, mutex);
     }
 
     const release = await mutex.acquire();
     try {
-      if (WORKSPACE_PREVIEW_PROVIDER_MAP.has(workspaceUri.fsPath)) {
-        const provider = WORKSPACE_PREVIEW_PROVIDER_MAP.get(
-          workspaceUri.fsPath,
-        );
+      if (WORKSPACE_PREVIEW_PROVIDER_MAP.has(mutexKey)) {
+        const provider = WORKSPACE_PREVIEW_PROVIDER_MAP.get(mutexKey);
         if (!provider) {
           throw new Error('Cannot find preview provider');
         }
@@ -174,7 +173,7 @@ export class PreviewProvider {
       } else {
         const provider = new PreviewProvider();
         await provider.init(context, workspaceUri);
-        WORKSPACE_PREVIEW_PROVIDER_MAP.set(workspaceUri.fsPath, provider);
+        WORKSPACE_PREVIEW_PROVIDER_MAP.set(mutexKey, provider);
         release();
         return provider;
       }
@@ -194,28 +193,26 @@ export class PreviewProvider {
         PreviewProvider.singlePreviewPanelSourceUriTarget,
       );
     } else {
-      for (const key in this.previewMaps) {
-        if (this.previewMaps.hasOwnProperty(key)) {
-          this.refreshPreviewPanel(vscode.Uri.file(key));
-        }
+      for (const [sourceUriString] of this.previewMaps) {
+        this.refreshPreviewPanel(vscode.Uri.parse(sourceUriString));
       }
     }
   }
 
   private addPreviewToMap(sourceUri: Uri, previewPanel: vscode.WebviewPanel) {
-    if (!this.previewMaps[sourceUri.fsPath]) {
-      this.previewMaps[sourceUri.fsPath] = new Set();
+    let previews = this.previewMaps.get(sourceUri.toString());
+    if (!previews) {
+      previews = new Set();
+      this.previewMaps.set(sourceUri.toString(), previews);
     }
-    this.previewMaps[sourceUri.fsPath].add(previewPanel);
+    previews.add(previewPanel);
   }
 
   private deletePreviewFromMap(
     sourceUri: Uri,
     previewPanel: vscode.WebviewPanel,
   ) {
-    if (this.previewMaps[sourceUri.fsPath]) {
-      this.previewMaps[sourceUri.fsPath].delete(previewPanel);
-    }
+    this.previewMaps.get(sourceUri.toString())?.delete(previewPanel);
   }
 
   /**
@@ -229,8 +226,9 @@ export class PreviewProvider {
     ) {
       return [PreviewProvider.singlePreviewPanel];
     } else {
-      if (this.previewMaps[sourceUri.fsPath]) {
-        return Array.from(this.previewMaps[sourceUri.fsPath]);
+      const previews = this.previewMaps.get(sourceUri.toString());
+      if (previews) {
+        return Array.from(previews);
       } else {
         return null;
       }
@@ -256,7 +254,7 @@ export class PreviewProvider {
       PreviewProvider.singlePreviewPanel = null;
       PreviewProvider.singlePreviewPanelSourceUriTarget = null;
       this.previewToDocumentMap = new Map();
-      this.previewMaps = {};
+      this.previewMaps = new Map();
     } else {
       const previews = this.getPreviews(sourceUri);
       if (previews) {
@@ -290,7 +288,7 @@ export class PreviewProvider {
     activeLine?: number;
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean };
   }): Promise<void> {
-    // console.log('@initPreview: ', sourceUri.fsPath);
+    // console.log('@initPreview: ', sourceUri);
     const previewMode = getPreviewMode();
     let previewPanel: vscode.WebviewPanel;
     const previews = this.getPreviews(sourceUri);
@@ -452,15 +450,15 @@ export class PreviewProvider {
         PreviewProvider.singlePreviewPanel.dispose();
       }
     } else {
-      for (const key in this.previewMaps) {
-        const previews = this.previewMaps[key];
+      for (const [sourceUriString] of this.previewMaps) {
+        const previews = this.previewMaps.get(sourceUriString);
         if (previews) {
           previews.forEach((preview) => preview.dispose());
         }
       }
     }
 
-    this.previewMaps = {};
+    this.previewMaps = new Map();
     this.previewToDocumentMap = new Map();
     // this.engineMaps = {};
     PreviewProvider.singlePreviewPanel = null;
@@ -473,14 +471,12 @@ export class PreviewProvider {
   ) {
     const previews = this.getPreviews(sourceUri);
     if (previews) {
-      /*
-      console.log(
-        '@ postMessageToPreview: ',
-        sourceUri.fsPath,
-        message,
-        previews,
-      );
-      */
+      // console.log(
+      //   '@ postMessageToPreview: ',
+      //   sourceUri.fsPath,
+      //   message,
+      //   previews,
+      // );
 
       for (let i = 0; i < previews.length; i++) {
         const preview = previews[i];
@@ -510,6 +506,7 @@ export class PreviewProvider {
   public updateMarkdown(sourceUri: Uri, triggeredBySave?: boolean) {
     const engine = this.getEngine(sourceUri);
     const previews = this.getPreviews(sourceUri);
+    // console.log('updateMarkdown: ', previews?.length);
     if (!previews || !previews.length) {
       return;
     }

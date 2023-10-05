@@ -1920,8 +1920,10 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@../mume:
+crossnote@^0.8.18:
   version "0.8.18"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.18.tgz#806a37f6ff8627cada55ee645b9e8c1e2307479d"
+  integrity sha512-LvhWOU3/T6BAoDrWC/5I7XgnC/PMvKZJFyVBnrl/l5+OZtNw4QTU0jx+Q3dge2HCpER7xdApQo0ITZWER8Xm9g==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
@@ -1945,7 +1947,7 @@ crossnote@../mume:
     html-react-parser "^4.2.2"
     imagemagick-cli "^0.5.0"
     jquery "^3.7.1"
-    katex "^0.16.8"
+    katex "^0.16.9"
     less "^4.2.0"
     markdown-it "^13.0.1"
     markdown-it-abbr "^1.0.4"
@@ -4922,10 +4924,10 @@ karma-chrome-launcher@^2.2.0:
     fs-access "^1.0.0"
     which "^1.2.1"
 
-katex@^0.16.8:
-  version "0.16.8"
-  resolved "https://registry.yarnpkg.com/katex/-/katex-0.16.8.tgz#89b453f40e8557f423f31a1009e9298dd99d5ceb"
-  integrity sha512-ftuDnJbcbOckGY11OO+zg3OofESlbR5DRl2cmN8HeWeeFIV7wTXvAOx8kEjZjobhA+9wh2fbKeO6cdcA9Mnovg==
+katex@^0.16.9:
+  version "0.16.9"
+  resolved "https://registry.yarnpkg.com/katex/-/katex-0.16.9.tgz#bc62d8f7abfea6e181250f85a56e4ef292dcb1fa"
+  integrity sha512-fsSYjWS0EEOwvy81j3vRA8TEAhQhKiqO+FQaKWp0m39qwOzHVBgAUBIXWj1pB+O2W3fIpNa6Y9KSKCVbfPhyAQ==
   dependencies:
     commander "^8.3.0"
 
