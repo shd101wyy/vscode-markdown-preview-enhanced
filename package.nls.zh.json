@@ -1,6 +1,7 @@
 {
   "displayName": "Markdown 增强预览",
   "description": " 这款插件意在让你拥有飘逸的 Markdown 写作体验",
+  "customEditorPreviewDisplayName": "Markdown 增强预览",
   "markdown-preview-enhanced.openPreviewToTheSide.title": "MPE:打开侧边预览",
   "markdown-preview-enhanced.openPreview.title": "MPE:打开预览",
   "markdown-preview-enhanced.toggleScrollSync.title": "MPE:开关预览滑动同步",
@@ -20,5 +21,7 @@
   "markdown-preview-enhanced.openConfigScriptInWorkspace.title": "MPE:打开配置脚本（工作区）",
   "markdown-preview-enhanced.extendParser.title": "MPE:扩展 Parser（全局）",
   "markdown-preview-enhanced.extendParserInWorkspace.title": "MPE:扩展 Parser（工作区）",
+  "markdown-preview-enhanced.customizePreviewHtmlHead.title": "MPE:自定义预览 HTML 头部（全局）",
+  "markdown-preview-enhanced.customizePreviewHtmlHeadInWorkspace.title": "MPE:自定义预览 HTML 头部（工作区）",
   "markdown-preview-enhanced.showUploadedImages.title": "MPE:显示图片上传历史"
 }

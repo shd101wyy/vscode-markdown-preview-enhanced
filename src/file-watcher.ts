@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { getMPEConfig } from './config';
 import NotebooksManager from './notebooks-manager';
 import { getAllPreviewProviders } from './preview-provider';
 
@@ -14,11 +15,8 @@ export default class FileWatcher {
       return;
     }
 
-    const config = vscode.workspace.getConfiguration(
-      'markdown-preview-enhanced',
-    );
     const markdownFileExtensions =
-      config.get<string[]>('markdownFileExtensions') ?? [];
+      getMPEConfig<string[]>('markdownFileExtensions') ?? [];
     const glob: string = `**/*.{${markdownFileExtensions
       .map((ext) => ext.replace(/^\./, ''))
       .join(',')}}`;

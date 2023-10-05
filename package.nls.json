@@ -1,6 +1,7 @@
 {
   "displayName": "Markdown Preview Enhanced",
   "description": "Markdown Preview Enhanced ported to vscode",
+  "customEditorPreviewDisplayName": "Markdown Preview Enhanced",
   "markdown-preview-enhanced.openPreviewToTheSide.title": "Markdown Preview Enhanced: Open Preview to the Side",
   "markdown-preview-enhanced.openPreview.title": "Markdown Preview Enhanced: Open Preview",
   "markdown-preview-enhanced.toggleScrollSync.title": "Markdown Preview Enhanced: Toggle Scroll Sync",
@@ -20,5 +21,7 @@
   "markdown-preview-enhanced.openConfigScriptInWorkspace.title": "Markdown Preview Enhanced: Open Config Script (Workspace)",
   "markdown-preview-enhanced.extendParser.title": "Markdown Preview Enhanced: Extend Parser (Global)",
   "markdown-preview-enhanced.extendParserInWorkspace.title": "Markdown Preview Enhanced: Extend Parser (Workspace)",
+  "markdown-preview-enhanced.customizePreviewHtmlHead.title": "Markdown Preview Enhanced: Customize Preview Html Head (Global)",
+  "markdown-preview-enhanced.customizePreviewHtmlHeadInWorkspace.title": "Markdown Preview Enhanced: Customize Preview Html Head (Workspace)",
   "markdown-preview-enhanced.showUploadedImages.title": "Markdown Preview Enhanced: Show Uploaded Images"
 }
