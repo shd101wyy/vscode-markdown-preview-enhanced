@@ -3,6 +3,7 @@
   "displayName": "%displayName%",
   "version": "0.8.0",
   "description": "%description%",
+  "icon": "media/mpe.png",
   "categories": [
     "Other"
   ],
