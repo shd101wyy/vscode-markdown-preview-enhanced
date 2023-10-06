@@ -26,6 +26,7 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.19](
 
 - Reverted the markdown transformer and deleted the logic of inserting anchor elements as it's causing a lot of problems.  
   The in-preview editor is not working as expected. So we now hide its highlight lines and elements feature if the markdown file failed to generate the correct source map.
+- Fixed the bug that global custom CSS is not working.
 
 ## [0.8.0] - 2023-10-05
 
