@@ -1920,10 +1920,10 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.8.18:
-  version "0.8.18"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.18.tgz#806a37f6ff8627cada55ee645b9e8c1e2307479d"
-  integrity sha512-LvhWOU3/T6BAoDrWC/5I7XgnC/PMvKZJFyVBnrl/l5+OZtNw4QTU0jx+Q3dge2HCpER7xdApQo0ITZWER8Xm9g==
+crossnote@^0.8.19:
+  version "0.8.19"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.19.tgz#a92f176d665ad0fc89b3744de566ec35f4a89dce"
+  integrity sha512-D/QaUBJ1ApBmq1DJOHvJ3/+g/Y8kBXhvXcbnjX6zKbzEEJ1GDQYUKIYTli8sx+3fY7nJn3BMU67DiOv4Q3mh+Q==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
@@ -1943,6 +1943,7 @@ crossnote@^0.8.18:
     crypto-js "^4.1.1"
     daisyui "^3.7.3"
     esbuild-plugin-tailwindcss "^1.1.1"
+    escape-string-regexp "^5.0.0"
     html-escaper "^3.0.3"
     html-react-parser "^4.2.2"
     imagemagick-cli "^0.5.0"
@@ -2968,6 +2969,11 @@ escape-string-regexp@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz#14ba83a5d373e3d311e5afca29cf5bfad965bf34"
   integrity sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==
+
+escape-string-regexp@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-5.0.0.tgz#4683126b500b61762f2dbebace1806e8be31b1c8"
+  integrity sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==
 
 escodegen@^2.1.0:
   version "2.1.0"
