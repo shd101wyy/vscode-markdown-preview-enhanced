@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2023-10-06
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.19](https://github.com/shd101wyy/crossnote/releases/tag/0.8.19).
+
+### Changes
+
+- Deprecated the `processWikiLink` in `parser.js`. Now `crossnote` handles how we process the wiki link.  
+  We also added two more options:
+  - `wikiLinkTargetFileExtension`: The file extension of the target file. Default is `md`. For example:
+    - `[[test]]` will be transformed to `[test](test.md)`
+    - `[[test.md]]` will be transformed to `[test](test.md)`
+    - `[[test.pdf]]` will be transformed to `[test](test.pdf)` because it has a file extension.
+  - `wikiLinkTargetFileNameChangeCase`: How we transform the file name. Default is `none` so we won't change the file name.  
+    A list of available options can be found at: https://shd101wyy.github.io/crossnote/types/WikiLinkTargetFileNameChangeCase.html
+
+### Bug fixes
+
+- Reverted the markdown transformer and deleted the logic of inserting anchor elements as it's causing a lot of problems.  
+  The in-preview editor is not working as expected. So we now hide its highlight lines and elements feature if the markdown file failed to generate the correct source map.
+- Fixed the bug that global custom CSS is not working.
+
 ## [0.8.0] - 2023-10-05
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.17](https://github.com/shd101wyy/crossnote/releases/tag/0.8.17) then version [0.8.18](https://github.com/shd101wyy/crossnote/releases/tag/0.8.18).

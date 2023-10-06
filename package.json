@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "%description%",
   "icon": "media/mpe.png",
   "categories": [
@@ -291,6 +291,33 @@
           "description": "Enable CriticMarkup syntax. Only works with markdown-it parser. Please check http://criticmarkup.com/users-guide.php for more information.",
           "default": false,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.wikiLinkTargetFileExtension": {
+          "markdownDescription": "The file extension for the link in wikilink if the link does not have an extension.",
+          "default": ".md",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.wikiLinkTargetFileNameChangeCase": {
+          "markdownDescription": "The case for the file name in wikilink. If the value is `none`, then the file name will not be changed. Otherwise, the file name will be transformed to the specified case. You can read https://www.npmjs.com/package/case-anything for more details.",
+          "default": "none",
+          "type": "string",
+          "enum": [
+            "none",
+            "camelCase",
+            "pascalCase",
+            "kebabCase",
+            "snakeCase",
+            "constantCase",
+            "trainCase",
+            "adaCase",
+            "cobolCase",
+            "dotNotation",
+            "pathCase",
+            "spaceCase",
+            "capitalCase",
+            "lowerCase",
+            "upperCase"
+          ]
         },
         "markdown-preview-enhanced.frontMatterRenderingOption": {
           "description": "Front matter rendering option",
@@ -648,7 +675,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.8.18",
+    "crossnote": "^0.8.19",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {

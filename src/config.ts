@@ -11,6 +11,7 @@ import {
   PreviewMode,
   PreviewTheme,
   RevealJsTheme,
+  WikiLinkTargetFileNameChangeCase,
   getDefaultNotebookConfig,
 } from 'crossnote';
 import { JsonObject } from 'type-fest';
@@ -88,6 +89,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly jsdelivrCdnHost: string;
   public readonly krokiServer: string;
   public readonly alwaysShowBacklinksInPreview: boolean;
+  public readonly wikiLinkTargetFileExtension: string;
+  public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
   // Don't set values for these properties in constructor:
   public readonly includeInHeader: string;
   public readonly globalCss: string;
@@ -244,6 +247,13 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.alwaysShowBacklinksInPreview =
       getMPEConfig<boolean>('alwaysShowBacklinksInPreview') ??
       defaultConfig.alwaysShowBacklinksInPreview;
+    this.wikiLinkTargetFileExtension =
+      getMPEConfig<string>('wikiLinkTargetFileExtension') ??
+      defaultConfig.wikiLinkTargetFileExtension;
+    this.wikiLinkTargetFileNameChangeCase =
+      getMPEConfig<WikiLinkTargetFileNameChangeCase>(
+        'wikiLinkTargetFileNameChangeCase',
+      ) ?? defaultConfig.wikiLinkTargetFileNameChangeCase;
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

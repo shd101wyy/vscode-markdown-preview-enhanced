@@ -88,14 +88,19 @@ class NotebooksManager {
       getWorkspaceFolderUri(uri),
       './.crossnote',
     );
-    try {
-      workspaceConfig = await loadConfigsInDirectory(
-        workspaceConfigPath.fsPath,
-        notebook.fs,
-        createWorkspaceConfigDirectoryIfNotExists,
-      );
-    } catch (error) {
-      console.error(error);
+    if (
+      (await notebook.fs.exists(workspaceConfigPath.fsPath)) ||
+      createWorkspaceConfigDirectoryIfNotExists
+    ) {
+      try {
+        workspaceConfig = await loadConfigsInDirectory(
+          workspaceConfigPath.fsPath,
+          notebook.fs,
+          createWorkspaceConfigDirectoryIfNotExists,
+        );
+      } catch (error) {
+        console.error(error);
+      }
     }
 
     // VSCode config
