@@ -540,7 +540,7 @@ export class PreviewProvider {
             useRelativeFilePath: false,
             hideFrontMatter: false,
             triggeredBySave,
-            vscodePreviewPanel: preview, // TODO:
+            vscodePreviewPanel: preview,
           });
           // check JSAndCssFiles
           if (
