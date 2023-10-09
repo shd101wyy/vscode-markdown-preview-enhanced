@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2023-10-09
+
+Special Thanks to [@mavaddat](https://github.com/mavaddat) for creating the awesome extension logo for MPE in this [pull request](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/1808) 🎉 We finally have a beautiful logo for MPE.
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.20](https://github.com/shd101wyy/crossnote/releases/tag/0.8.20).
+
+### New features
+
+- Supported prefix in front of Kroki diagram types https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1785.  
+  So now all diagrams below will get rendered using Kroki:
+
+  ````markdown
+  ```kroki-plantuml
+  @startuml
+  A -> B
+  @enduml
+  ```
+
+  ```plantuml {kroki=true}
+  @startuml
+  A -> B
+  @enduml
+  ```
+  ````
+
+- Improved the source map handling for `@import "..."` syntax.
+
+### Bug fixes
+
+- Exporting files no longer includes the source map.
+- Fixed some Reveal.js presentation related bugs:
+  - https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1815
+  - https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1814
+- Both the `style.less` from `Markdown Preview Enhanced: Customize Css (Global)` and the `style.less` from `Markdown Preview Enhanced: Customize Css (Workspace)` will now be loaded. The `style.less` from `Markdown Preview Enhanced: Customize Css (Workspace)` will have higher priority.
+- Fixed the bug where deleting config files from workspace did not update the preview.
+
 ## [0.8.1] - 2023-10-06
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.19](https://github.com/shd101wyy/crossnote/releases/tag/0.8.19).

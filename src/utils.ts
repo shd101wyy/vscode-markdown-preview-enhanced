@@ -142,6 +142,6 @@ export function getPreviewMode() {
   return getMPEConfig<PreviewMode>('previewMode');
 }
 
-export function getEditorActiveLine(editor: vscode.TextEditor) {
+export function getEditorActiveCursorLine(editor: vscode.TextEditor) {
   return editor.selections[0].active.line ?? 0;
 }

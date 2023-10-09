@@ -117,6 +117,8 @@ class NotebooksManager {
       ...vscodeMPEConfig,
       ...globalConfig,
       ...workspaceConfig,
+      globalCss:
+        (globalConfig.globalCss ?? '') + (workspaceConfig.globalCss ?? ''),
       previewTheme,
     };
   }
