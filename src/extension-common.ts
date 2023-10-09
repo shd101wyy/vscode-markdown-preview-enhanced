@@ -9,7 +9,7 @@ import { PreviewCustomEditorProvider } from './preview-custom-editor-provider';
 import { PreviewProvider, getPreviewUri } from './preview-provider';
 import {
   getBottomVisibleLine,
-  getEditorActiveLine,
+  getEditorActiveCursorLine,
   getPreviewMode,
   getTopVisibleLine,
   getWorkspaceFolderUri,
@@ -64,7 +64,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     previewProvider.initPreview({
       sourceUri: uri,
       document: editor.document,
-      activeLine: getEditorActiveLine(editor),
+      cursorLine: getEditorActiveCursorLine(editor),
       viewOptions: {
         viewColumn: vscode.ViewColumn.Two,
         preserveFocus: true,
@@ -85,7 +85,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     previewProvider.initPreview({
       sourceUri: uri,
       document: editor.document,
-      activeLine: getEditorActiveLine(editor),
+      cursorLine: getEditorActiveCursorLine(editor),
       viewOptions: {
         viewColumn: vscode.ViewColumn.One,
         preserveFocus: false,
@@ -573,7 +573,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
           previewProvider.initPreview({
             sourceUri: fileUri,
             document,
-            activeLine: line,
+            cursorLine: line,
             viewOptions: {
               viewColumn: vscode.ViewColumn.Active,
               preserveFocus: true,
@@ -711,6 +711,33 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.workspace.onDidDeleteFiles(async ({ files }) => {
+      for (const file of files) {
+        // Check if there is change under `${workspaceDir}/.crossnote` directory
+        // and filename is in one of below
+        // - style.less
+        // - config.js
+        // - parser.js
+        // - head.html
+        // If so, refresh the preview of the workspace.
+        const workspaceUri = getWorkspaceFolderUri(file);
+        const workspaceDir = workspaceUri.fsPath;
+        const relativePath = path.relative(workspaceDir, file.fsPath);
+        if (
+          relativePath.startsWith('.crossnote') &&
+          ['style.less', 'config.js', 'parser.js', 'head.html'].includes(
+            path.basename(relativePath),
+          )
+        ) {
+          const provider = await getPreviewContentProvider(file);
+          await notebooksManager.updateNotebookConfig(workspaceUri);
+          provider.refreshAllPreviews();
+        }
+      }
+    }),
+  );
+
+  context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(async (event) => {
       if (isMarkdownFile(event.document)) {
         const previewProvider = await getPreviewContentProvider(
@@ -834,7 +861,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
               previewProvider.initPreview({
                 sourceUri,
                 document: editor.document,
-                activeLine: getEditorActiveLine(editor),
+                cursorLine: getEditorActiveCursorLine(editor),
                 viewOptions: {
                   viewColumn:
                     previewProvider.getPreviews(sourceUri)?.at(0)?.viewColumn ??

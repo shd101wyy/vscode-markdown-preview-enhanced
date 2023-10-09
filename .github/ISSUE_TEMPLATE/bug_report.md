@@ -12,8 +12,8 @@ A clear and concise description of what the bug is.
 
 **Environment**
 - OS: Windows 11
-- VSCode: 1.81.0
-- Markdown Preview Enhanced: 0.7.0
+- VSCode: 1.82.0
+- Markdown Preview Enhanced: 0.8.0
 
 **To Reproduce**
 Steps to reproduce the behavior:
@@ -24,6 +24,9 @@ Steps to reproduce the behavior:
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
+
+**Markdown file**
+Please attach the markdown file that can reproduce the bug.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.

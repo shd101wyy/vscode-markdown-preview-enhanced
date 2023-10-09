@@ -279,13 +279,13 @@ export class PreviewProvider {
     sourceUri,
     document,
     webviewPanel,
-    activeLine,
+    cursorLine,
     viewOptions,
   }: {
     sourceUri: vscode.Uri;
     document: vscode.TextDocument;
     webviewPanel?: vscode.WebviewPanel;
-    activeLine?: number;
+    cursorLine?: number;
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean };
   }): Promise<void> {
     // console.log('@initPreview: ', sourceUri);
@@ -311,7 +311,7 @@ export class PreviewProvider {
           sourceUri,
           document,
           viewOptions,
-          activeLine,
+          cursorLine,
         });
       } else {
         previewPanel = PreviewProvider.singlePreviewPanel;
@@ -325,7 +325,7 @@ export class PreviewProvider {
             document,
             webviewPanel: preview,
             viewOptions,
-            activeLine,
+            cursorLine,
           }),
         ),
       );
@@ -412,10 +412,10 @@ export class PreviewProvider {
     // set title
     previewPanel.title = `Preview ${path.basename(sourceUri.fsPath)}`;
 
-    // init markdown engine
+    // init markdown engine.
     let initialLine: number | undefined;
     if (document.uri.fsPath === sourceUri.fsPath) {
-      initialLine = activeLine;
+      initialLine = cursorLine;
     }
 
     const inputString = document.getText() ?? '';
@@ -425,7 +425,7 @@ export class PreviewProvider {
         inputString,
         config: {
           sourceUri: sourceUri.toString(),
-          initialLine,
+          cursorLine: initialLine,
           isVSCode: true,
           scrollSync: getMPEConfig<boolean>('scrollSync'),
           imageUploader: getMPEConfig<ImageUploader>('imageUploader'),

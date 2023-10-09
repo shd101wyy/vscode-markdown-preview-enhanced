@@ -1,9 +1,8 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "%description%",
-  "icon": "media/mpe.png",
   "categories": [
     "Other"
   ],
@@ -675,7 +674,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.8.19",
+    "crossnote": "^0.8.20",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
@@ -704,5 +703,6 @@
   },
   "engines": {
     "vscode": "^1.80.0"
-  }
+  },
+  "icon": "media/mpe.png"
 }
