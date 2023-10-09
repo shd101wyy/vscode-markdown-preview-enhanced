@@ -3,6 +3,7 @@
   "displayName": "%displayName%",
   "version": "0.8.1",
   "description": "%description%",
+  "icon": "media/mpe.png",
   "categories": [
     "Other"
   ],
@@ -17,7 +18,8 @@
   "contributors": [
     "shd101wyy",
     "kachkaev",
-    "gabyx"
+    "gabyx",
+    "mavaddat"
   ],
   "publisher": "shd101wyy",
   "main": "./out/native/extension.js",
