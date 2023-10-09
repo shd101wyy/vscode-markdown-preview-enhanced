@@ -1920,10 +1920,10 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.8.20:
-  version "0.8.20"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.20.tgz#be5ed32d64dc1bc82a18dcada10e98d709305f4b"
-  integrity sha512-MdL6tost+X7hDhIYA68b/rMqnfQgSXSQZjLZ1nHriv2zVqkPSs6LGQzdLb0lrT9SjpSmDjwz3dXYQknq6IphQg==
+crossnote@^0.8.21:
+  version "0.8.21"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.21.tgz#b0ea13ea78a1c96238882b0536de51fe6632df32"
+  integrity sha512-+6FFV7Ie0lZABIuJduf5Fav6LyfKvgep7FS1I0nUBc1wO2dyhKD0lU814QgGzsQMf13bUZ96OAmUZDGx+HlzDw==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
