@@ -131,7 +131,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
       editor.edit((textEdit) => {
-        textEdit.insert(editor.selection.active, '<!-- slide -->\n');
+        textEdit.insert(editor.selection.active, '<!-- slide -->\n\n');
       });
     }
   }
@@ -140,7 +140,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document && editor.edit) {
       editor.edit((textEdit) => {
-        textEdit.insert(editor.selection.active, '<!-- pagebreak -->\n');
+        textEdit.insert(editor.selection.active, '<!-- pagebreak -->\n\n');
       });
     }
   }
