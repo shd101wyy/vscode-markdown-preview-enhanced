@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.4] - 2023-10-10
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.23](https://github.com/shd101wyy/crossnote/releases/tag/0.8.23).
+
+### Bug fixes
+
+- Fixed exporting reveal.js presentation.
+
 ## [0.8.3] - 2023-10-10
 
-Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.22](https://github.com/shd101wyy/crossnote/releases/tag/0.8.22) and [0.8.22](https://github.com/shd101wyy/crossnote/releases/tag/0.8.22).
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.22](https://github.com/shd101wyy/crossnote/releases/tag/0.8.22).
 
 ### Bug fixes
 
