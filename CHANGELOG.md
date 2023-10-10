@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.5] - 2023-10-10
 
+Please note this version requires VS Code 1.82.0 or above.  
+
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.24](https://github.com/shd101wyy/crossnote/releases/tag/0.8.24).
 
 ### Bug fixes
