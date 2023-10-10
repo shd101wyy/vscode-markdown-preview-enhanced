@@ -491,10 +491,10 @@
     "@types/unist" "*"
     "@types/vfile-message" "*"
 
-"@types/vscode@1.78.0":
-  version "1.78.0"
-  resolved "https://registry.yarnpkg.com/@types/vscode/-/vscode-1.78.0.tgz#b5600abce8855cf21fb32d0857bcd084b1f83069"
-  integrity sha512-LJZIJpPvKJ0HVQDqfOy6W4sNKUBBwyDu1Bs8chHBZOe9MNuKTJtidgZ2bqjhmmWpUb0TIIqv47BFUcVmAsgaVA==
+"@types/vscode@1.60.0":
+  version "1.60.0"
+  resolved "https://registry.yarnpkg.com/@types/vscode/-/vscode-1.60.0.tgz#9330c317691b4f53441a18b598768faeeb71618a"
+  integrity sha512-wZt3VTmzYrgZ0l/3QmEbCq4KAJ71K3/hmMQ/nfpv84oH8e81KKwPEoQ5v8dNCxfHFVJ1JabHKmCvqdYOoVm1Ow==
 
 "@types/yauzl@^2.9.1":
   version "2.10.1"
@@ -1920,10 +1920,10 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.8.22:
-  version "0.8.22"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.22.tgz#8f618c6506d804d7ce224a8d55e51bdc2b106d2b"
-  integrity sha512-sVc2fmC+c1hJaBOcWwm4YUikBlSF8ia3Cu+3Fqkrn6SnLuVdN06NrwcfvriDDPaWp7FehO76SzhVSBShssKDDw==
+crossnote@^0.8.23:
+  version "0.8.23"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.23.tgz#4227fa890080c39357e4edbc7f2e085c4eacf131"
+  integrity sha512-209E1lGOzEa+Tas2WhjxiHma1Udk8CioNxhDmGmGuA2V3UQ9cWn2SwZk8qf08Jw7hss6+gEF99N6fnf+OtfE/w==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
