@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "%description%",
   "categories": [
     "Other"
@@ -674,14 +674,14 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.8.23",
+    "crossnote": "^0.8.24",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
     "@types/cheerio": "0.22.11",
     "@types/mocha": "^5.2.5",
-    "@types/node": "16",
-    "@types/vscode": "1.60.0",
+    "@types/node": "18",
+    "@types/vscode": "1.82.0",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
     "@vscode/test-web": "^0.0.45",
@@ -702,7 +702,7 @@
     "webpack-cli": "^5.1.4"
   },
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.82.0"
   },
   "icon": "media/mpe.png"
 }

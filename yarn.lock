@@ -455,10 +455,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.5.7.tgz#4b8ecac87fbefbc92f431d09c30e176fc0a7c377"
   integrity sha512-dP7f3LdZIysZnmvP3ANJYTSwg+wLLl8p7RqniVlV7j+oXSXAbt9h0WIBFmJy5inWZoX9wZN6eXx+YXd9Rh3RBA==
 
-"@types/node@16":
-  version "16.18.46"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.18.46.tgz#9f2102d0ba74a318fcbe170cbff5463f119eab59"
-  integrity sha512-Mnq3O9Xz52exs3mlxMcQuA7/9VFe/dXcrgAyfjLkABIqxXKOgBRjyazTxUbjsxDa4BP7hhPliyjVTP9RDP14xg==
+"@types/node@18":
+  version "18.18.4"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.18.4.tgz#519fef47a13cf869be290c20fc6ae9b7fe887aa7"
+  integrity sha512-t3rNFBgJRugIhackit2mVcLfF6IRc0JE4oeizPQL8Zrm8n2WY/0wOdpOPhdtG0V9Q2TlW/axbF1MJ6z+Yj/kKQ==
 
 "@types/semver@^7.5.0":
   version "7.5.1"
@@ -491,10 +491,10 @@
     "@types/unist" "*"
     "@types/vfile-message" "*"
 
-"@types/vscode@1.60.0":
-  version "1.60.0"
-  resolved "https://registry.yarnpkg.com/@types/vscode/-/vscode-1.60.0.tgz#9330c317691b4f53441a18b598768faeeb71618a"
-  integrity sha512-wZt3VTmzYrgZ0l/3QmEbCq4KAJ71K3/hmMQ/nfpv84oH8e81KKwPEoQ5v8dNCxfHFVJ1JabHKmCvqdYOoVm1Ow==
+"@types/vscode@1.82.0":
+  version "1.82.0"
+  resolved "https://registry.yarnpkg.com/@types/vscode/-/vscode-1.82.0.tgz#89b0b21179dcf5e8cee1664a9a05c5f6c60d38d0"
+  integrity sha512-VSHV+VnpF8DEm8LNrn8OJ8VuUNcBzN3tMvKrNpbhhfuVjFm82+6v44AbDhLvVFgCzn6vs94EJNTp7w8S6+Q1Rw==
 
 "@types/yauzl@^2.9.1":
   version "2.10.1"
@@ -1920,10 +1920,10 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.8.23:
-  version "0.8.23"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.23.tgz#4227fa890080c39357e4edbc7f2e085c4eacf131"
-  integrity sha512-209E1lGOzEa+Tas2WhjxiHma1Udk8CioNxhDmGmGuA2V3UQ9cWn2SwZk8qf08Jw7hss6+gEF99N6fnf+OtfE/w==
+crossnote@^0.8.24:
+  version "0.8.24"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.8.24.tgz#6d74a67d187ab7ffc4562399cf5c08e81fa97eb4"
+  integrity sha512-MIlpF1QGc4FwfBM8ubx0BY/d97ytMxlxtTMNU6fzLUBzNSHVDMpe0u34ZW/TFGP18HhzE9lim5/ifVfXP2WEFg==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
