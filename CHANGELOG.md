@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.6] - 2023-10-13
+
+This MPE version reduced the VS Code version requirement to 1.70.0 or above.
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.0](https://github.com/shd101wyy/crossnote/releases/tag/0.9.0).
+
+### New features
+
+- Added two more syntaxes to import files in addition to the `@import` syntax. Please note that these syntaxes only work on new lines. For example, they won't work within list items.
+  - Use the image syntax but with other file extensions:
+    ```markdown
+    ![](path/to/file.md)
+    ![](path/to/test.py){.line-numbers}
+    ![](path/to/test.js){code_block=true}
+    ```
+  - Use the wikilink syntax but with other file extensions:
+    ```markdown
+    ![[file]]
+    ![[path/to/test.py]]{.line-numbers}
+    ![[path/to/test.js]]{code_block=true}
+    ```
+
+### Bug fixes
+
+- Fixed a header id generation bug https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1833
+- Fixed parsing block attributes from curly bracket when `enableTypographer` is enabled https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1823
+- Fixed the bug of not rendering the `@import` file:
+  - https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1832
+  - https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1834
+- Fixed rendering the vega and vega-lite diagrams.
+
 ## [0.8.5] - 2023-10-10
 
 Please note this version requires VS Code 1.82.0 or above.
