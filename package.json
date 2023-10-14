@@ -674,7 +674,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.9.0",
+    "crossnote": "^0.9.1",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {

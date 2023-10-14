@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.8.6] - 2023-10-13
+## [0.8.6] - 2023-10-14
 
 This MPE version reduced the VS Code version requirement to 1.70.0 or above.
 
-Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.0](https://github.com/shd101wyy/crossnote/releases/tag/0.9.0).
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.0](https://github.com/shd101wyy/crossnote/releases/tag/0.9.0) and [0.9.1](https://github.com/shd101wyy/crossnote/releases/tag/0.9.1).
 
 ### New features
 
@@ -36,7 +36,7 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.0](h
 - Fixed the bug of not rendering the `@import` file:
   - https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1832
   - https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1834
-- Fixed rendering the vega and vega-lite diagrams.
+- Fixed rendering `vega` and `vega-lite`. Also fixed `interactive=true` attribute for `vega`.
 
 ## [0.8.5] - 2023-10-10
 
