@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.7] - 2023-10-15
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.2](https://github.com/shd101wyy/crossnote/releases/tag/0.9.2) and version [0.9.3](https://github.com/shd101wyy/crossnote/releases/tag/0.9.3).
+
+### New features
+
+- Added `ID` button to copy the element id to clipboard:
+
+  ![Screenshot from 2023-10-15 15-34-27](https://github.com/shd101wyy/crossnote/assets/1908863/ede91390-3cca-4b83-8e30-33027bf0a363)
+
+- Supported to import section of markdown by header id:
+
+  ```markdown
+  @import "test.md#header-id"
+
+  or
+
+  ![](test.md#header-id)
+
+  or
+
+  ![[test#header-id]]
+  ```
+
+### Bug fixes
+
+- URL fragments on image links do not load: https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1837
+- Supported matplotlib-type preview for other Python tools like `pipenv`: https://github.com/shd101wyy/crossnote/issues/332
+- Fixed jump to header from link like `[link](test.md#header-id)`.
+- Better handling of source map for importing files.
+
 ## [0.8.6] - 2023-10-14
 
 This MPE version reduced the VS Code version requirement to 1.70.0 or above.
