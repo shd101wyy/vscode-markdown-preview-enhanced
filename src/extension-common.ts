@@ -1,5 +1,5 @@
 // For both node.js and browser environments
-import { PreviewMode, utility } from 'crossnote';
+import { HeadingIdGenerator, PreviewMode, utility } from 'crossnote';
 import { SHA256 } from 'crypto-js';
 import * as vscode from 'vscode';
 import { PreviewColorScheme, getMPEConfig, updateMPEConfig } from './config';
@@ -581,7 +581,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
           });
         } else {
           // Open fileUri
-          const editor = await vscode.window.showTextDocument(document, col);
+          const editor = await vscode.window.showTextDocument(document, {
+            viewColumn: col,
+          });
           // if there was line fragment, jump to line
           if (line >= 0) {
             let viewPos = vscode.TextEditorRevealType.InCenter;
@@ -591,6 +593,32 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
             const sel = new vscode.Selection(line, 0, line, 0);
             editor.selection = sel;
             editor.revealRange(sel, viewPos);
+          } else if (fileUri.fragment) {
+            // Normal fragment
+            // Find heading with this id
+            const headingIdGenerator = new HeadingIdGenerator();
+            const text = editor.document.getText();
+            const lines = text.split('\n');
+            let i = 0;
+            for (i = 0; i < lines.length; i++) {
+              const line = lines[i];
+              if (line.match(/^#+\s+/)) {
+                const heading = line.replace(/^#+\s+/, '');
+                const headingId = headingIdGenerator.generateId(heading);
+                if (headingId === fileUri.fragment) {
+                  // Reveal editor line
+                  let viewPos = vscode.TextEditorRevealType.InCenter;
+                  if (editor.selection.active.line === i) {
+                    viewPos =
+                      vscode.TextEditorRevealType.InCenterIfOutsideViewport;
+                  }
+                  const sel = new vscode.Selection(i, 0, i, 0);
+                  editor.selection = sel;
+                  editor.revealRange(sel, viewPos);
+                  break;
+                }
+              }
+            }
           }
         }
       } else {
