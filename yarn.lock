@@ -1920,10 +1920,10 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.9.3:
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.3.tgz#b8bb76eea4042839520ed764bd28155023b2b2b3"
-  integrity sha512-j1JIoswsKPYmEpqQ3iZoA/EnCaWNRmzhgnRIJR+2xfvqAvLif4beYHGwktJo9kDIqxQhCrK+QjSvDoAgk3cTOQ==
+crossnote@^0.9.4:
+  version "0.9.4"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.4.tgz#fe335443eb7bf3de39aa0d4acf374923592e0e24"
+  integrity sha512-jCzFtg0S4w5u+9NMrMa/+Jq7LdzRtyMtEsDHYGaCbK5gvJpTC2xYjntRZQdLK6d+7EZTcsUZPb/ZFI8LGUXECg==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
@@ -1945,8 +1945,10 @@ crossnote@^0.9.3:
     daisyui "^3.7.3"
     esbuild-plugin-tailwindcss "^1.1.1"
     escape-string-regexp "^5.0.0"
+    file-saver "^2.0.5"
     html-escaper "^3.0.3"
     html-react-parser "^4.2.2"
+    html-to-image "^1.11.11"
     imagemagick-cli "^0.5.0"
     jquery "^3.7.1"
     katex "^0.16.9"
@@ -3305,6 +3307,11 @@ file-entry-cache@^6.0.1:
   dependencies:
     flat-cache "^3.0.4"
 
+file-saver@^2.0.5:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/file-saver/-/file-saver-2.0.5.tgz#d61cfe2ce059f414d899e9dd6d4107ee25670c38"
+  integrity sha512-P9bmyZ3h/PRG+Nzga+rbdI4OEpNDzAVyy74uVO9ATgzLK6VtAsYybF/+TOCvrc0MO793d6+42lLyZTw7/ArVzA==
+
 file-uri-to-path@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz#553a7b8446ff6f684359c445f1e37a05dacc33dd"
@@ -4035,6 +4042,11 @@ html-react-parser@^4.2.2:
     html-dom-parser "4.0.0"
     react-property "2.0.0"
     style-to-js "1.1.4"
+
+html-to-image@^1.11.11:
+  version "1.11.11"
+  resolved "https://registry.yarnpkg.com/html-to-image/-/html-to-image-1.11.11.tgz#c0f8a34dc9e4b97b93ff7ea286eb8562642ebbea"
+  integrity sha512-9gux8QhvjRO/erSnDPv28noDZcPZmYE7e1vFsBLKLlRlKDSqNJYebj6Qz1TGd5lsRV+X+xYyjCKjuZdABinWjA==
 
 htmlparser2@9.0.0:
   version "9.0.0"
