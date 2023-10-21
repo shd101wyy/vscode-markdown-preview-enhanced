@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.8] - 2023-10-22
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.4](https://github.com/shd101wyy/crossnote/releases/tag/0.9.4).
+
+### New features
+
+- Updated [fontawesome](https://fontawesome.com/) from version 4.7 to version 6.4.2 (Free).  
+  A list of available icons can be found at: https://kapeli.com/cheat_sheets/Font_Awesome.docset/Contents/Resources/Documents/index
+- Updated WaveDrom to the latest version 3.3.0.
+
+### Changes
+
+- Changed the markdown parser process to be like below. We removed the `onWillTransformMarkdown` and `onDidTransformMarkdown` hooks as these two caused the confusion.
+
+  ```markdown
+  markdown
+  ↓
+  `onWillParseMarkdown(markdown)`
+  ↓
+  markdown
+  ↓
+  **crossnote markdown transformer**
+  ↓
+  markdown
+  ↓
+  **markdown-it or pandoc renderer**
+  ↓
+  html
+  ↓
+  `onDidParseMarkdown(html)`
+  ↓
+  html, and then rendered in the preview
+  ```
+
+- (Beta) Supported to export the selected element in preview to .png file and copy the blob to the clipboard:
+
+  ![image](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/assets/1908863/046759d8-6d89-4f41-8420-b863d2094fe7)
+
+### Bug fixes
+
+- Fixed a bug of importing files that contains empty heading: https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1840
+- Fixed a bug of rendering inline math in image name: https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1846
+- Fixed a bug of parsing inline code: https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1848
+
 ## [0.8.7] - 2023-10-15
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.2](https://github.com/shd101wyy/crossnote/releases/tag/0.9.2) and version [0.9.3](https://github.com/shd101wyy/crossnote/releases/tag/0.9.3).
