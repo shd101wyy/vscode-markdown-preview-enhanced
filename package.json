@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.8",
+  "version": "0.8.9",
   "description": "%description%",
   "categories": [
     "Other"
@@ -674,7 +674,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.9.4",
+    "crossnote": "^0.9.5",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {

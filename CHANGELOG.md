@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.9] - 2023-10-23
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.5](https://github.com/shd101wyy/crossnote/releases/tag/0.9.5).
+
+### Bug fixes
+
+- Fixed of bug of rendering the KaTeX math expression: https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1853
+
 ## [0.8.8] - 2023-10-22
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.4](https://github.com/shd101wyy/crossnote/releases/tag/0.9.4).
