@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.10] - 2023-10-26
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.6](https://github.com/shd101wyy/crossnote/releases/tag/0.9.6).
+
+### Changes
+
+- Updated mermaid.js to the latest version 10.6.0.
+
+### Bug fixes
+
+- Fixed importing file with spaces in the path: https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1857
+- Fixed a bug of updating the vscode `workbench.editorAssociations`: https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1860
+
 ## [0.8.9] - 2023-10-23
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.5](https://github.com/shd101wyy/crossnote/releases/tag/0.9.5).

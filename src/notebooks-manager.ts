@@ -153,14 +153,12 @@ class NotebooksManager {
       // Add associations to editorAssociations
       newEditorAssociations = { ...editorAssociations, ...associations };
     } else {
-      // delete associations from editorAssociations
-      newEditorAssociations = Object.fromEntries(
-        Object.entries(editorAssociations).filter(([key]) => {
-          return !markdownFileExtensions.find((ext) => {
-            return key.endsWith(ext);
-          });
-        }),
-      );
+      // delete associations from editorAssociations if exists and value is 'markdown-preview-enhanced'
+      markdownFileExtensions.forEach((ext) => {
+        if (editorAssociations[`*${ext}`] === 'markdown-preview-enhanced') {
+          delete newEditorAssociations[`*${ext}`];
+        }
+      });
     }
 
     if (
