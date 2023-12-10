@@ -477,4 +477,3 @@ We will also add the backlinks graph view. 📈
   - 🎉 Updated `cheerio` to the latest version `1.0.0-rc.12`.
   - 🎉 Updated `prismjs` to the latest version `0.12.9`.
   - 🎉 Updated `viz.js` to the latest version `3.1.0`.
-
