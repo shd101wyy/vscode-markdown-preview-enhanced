@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.11] - 2023-12-10
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.7](https://github.com/shd101wyy/crossnote/releases/tag/0.9.7).
+
+### New features
+
+- Added `enablePreviewZenMode` option and reorganized the right-click context menu.
+
+  ![image](https://github.com/shd101wyy/crossnote/assets/1908863/26e2237e-c6e2-433e-a063-6de2c01a64bb)
+
+### Bug fixes
+
+- Fixed rendering `vega-lite` in `Reveal.js` slide: https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1880
+- Removed one github-dark background css attribute: https://github.com/shd101wyy/crossnote/issues/344
+
 ## [0.8.10] - 2023-10-26
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.6](https://github.com/shd101wyy/crossnote/releases/tag/0.9.6).
@@ -221,7 +236,7 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.19](
 
 - Reverted the markdown transformer and deleted the logic of inserting anchor elements as it's causing a lot of problems.  
   The in-preview editor is not working as expected. So we now hide its highlight lines and elements feature if the markdown file failed to generate the correct source map.
-- Fixed the bug that global custom CSS is not working.
+- Fixed the bug that global custom CSS is not working. [^1]
 
 ## [0.8.0] - 2023-10-05
 
@@ -462,3 +477,5 @@ We will also add the backlinks graph view. 📈
   - 🎉 Updated `cheerio` to the latest version `1.0.0-rc.12`.
   - 🎉 Updated `prismjs` to the latest version `0.12.9`.
   - 🎉 Updated `viz.js` to the latest version `3.1.0`.
+
+[^1]: Haha
