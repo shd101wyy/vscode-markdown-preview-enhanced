@@ -89,6 +89,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly jsdelivrCdnHost: string;
   public readonly krokiServer: string;
   public readonly alwaysShowBacklinksInPreview: boolean;
+  public readonly enablePreviewZenMode: boolean;
   public readonly wikiLinkTargetFileExtension: string;
   public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
   // Don't set values for these properties in constructor:
@@ -247,6 +248,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.alwaysShowBacklinksInPreview =
       getMPEConfig<boolean>('alwaysShowBacklinksInPreview') ??
       defaultConfig.alwaysShowBacklinksInPreview;
+    this.enablePreviewZenMode =
+      getMPEConfig<boolean>('enablePreviewZenMode') ??
+      defaultConfig.enablePreviewZenMode;
     this.wikiLinkTargetFileExtension =
       getMPEConfig<string>('wikiLinkTargetFileExtension') ??
       defaultConfig.wikiLinkTargetFileExtension;

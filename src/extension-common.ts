@@ -382,6 +382,14 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     updateMPEConfig('previewTheme', theme, true);
   }
 
+  function togglePreviewZenMode(uri) {
+    updateMPEConfig(
+      'enablePreviewZenMode',
+      !getMPEConfig<boolean>('enablePreviewZenMode'),
+      true,
+    );
+  }
+
   function setCodeBlockTheme(uri, theme) {
     updateMPEConfig('codeBlockTheme', theme, true);
   }
@@ -1128,6 +1136,13 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       '_crossnote.setPreviewTheme',
       setPreviewTheme,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.togglePreviewZenMode',
+      togglePreviewZenMode,
     ),
   );
 

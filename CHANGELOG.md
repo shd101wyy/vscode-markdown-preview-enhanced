@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.11] - 2023-12-10
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.7](https://github.com/shd101wyy/crossnote/releases/tag/0.9.7).
+
+### New features
+
+- Added `enablePreviewZenMode` option and reorganized the right-click context menu.
+
+  ![image](https://github.com/shd101wyy/crossnote/assets/1908863/26e2237e-c6e2-433e-a063-6de2c01a64bb)
+
+### Bug fixes
+
+- Fixed rendering `vega-lite` in `Reveal.js` slide: https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1880
+- Removed one github-dark background css attribute: https://github.com/shd101wyy/crossnote/issues/344
+
 ## [0.8.10] - 2023-10-26
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.6](https://github.com/shd101wyy/crossnote/releases/tag/0.9.6).
