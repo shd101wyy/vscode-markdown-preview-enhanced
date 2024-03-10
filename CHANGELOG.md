@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.12] - 2024-03-10
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.8](https://github.com/shd101wyy/crossnote/releases/tag/0.9.8).
+
+### New features
+
+- @moonlitusun sidebarToc supports local caching
+
+### Updates
+
+- @oneWaveAdrian updated the `mermaid` version to the latest `10.9.0`.
+
+### Bug fixes
+
+- Fixed [[BUG] #tag is treated as Header 1](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1937)
+- Fixed [[BUG] toml code block support is not very good](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1920)
+- Fixed [[BUG] If URL encoding is used, the preview cannot be displayed.](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1934)
+
 ## [0.8.11] - 2023-12-10
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.7](https://github.com/shd101wyy/crossnote/releases/tag/0.9.7).
