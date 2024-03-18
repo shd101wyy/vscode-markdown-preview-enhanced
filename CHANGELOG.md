@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.13] - 2024-03-18
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.8](https://github.com/shd101wyy/crossnote/releases/tag/0.9.9).
+
+### Bug fixes
+
+- Fixed [a bug of link redirection in preview](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/1951) by @byte-clown
+- Fixed [Long sidebarToc does not display completely](https://github.com/shd101wyy/crossnote/pull/354) by @moonlitusun
+- Removed the `text` as the default language selector for code block.
+
+### Chore
+
+- Updated [flake.nix](./flake.nix) and node.js to 20.
+
 ## [0.8.12] - 2024-03-10
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.8](https://github.com/shd101wyy/crossnote/releases/tag/0.9.8).

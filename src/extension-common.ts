@@ -557,7 +557,14 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
       if (fileExists) {
         const previewMode = getPreviewMode();
-        const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(openFilePath.split('#').slice(0, -1).join('#')||openFilePath));
+        const document = await vscode.workspace.openTextDocument(
+          vscode.Uri.parse(
+            openFilePath
+              .split('#')
+              .slice(0, -1)
+              .join('#') || openFilePath,
+          ),
+        );
         // Open custom editor
         if (
           previewMode === PreviewMode.PreviewsOnly &&
