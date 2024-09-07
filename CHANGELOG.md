@@ -7,9 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.14] - 2024-09-07
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.10](https://github.com/shd101wyy/crossnote/releases/tag/0.9.10).
+
+### Changes
+
+- Added `.mdx` to the default `markdownFileExtensions`.
+
+### Updates
+
+- Updated `mermaid` version to the latest `11.1.1`.
+- Updated `katex` version to the latest `v0.16.11`.
+
+### Bug fixes
+
+- Fixed a scroll sync bug.
+
 ## [0.8.13] - 2024-03-18
 
-Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.8](https://github.com/shd101wyy/crossnote/releases/tag/0.9.9).
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.9](https://github.com/shd101wyy/crossnote/releases/tag/0.9.9).
 
 ### Bug fixes
 
