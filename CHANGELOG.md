@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.15] - 2024-09-07
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.11](https://github.com/shd101wyy/crossnote/releases/tag/0.9.11).
+
+### Changes
+
+- Enabled the preview zen mode by default.
+
+### Updates
+
+- Updated `mermaid` version to the latest `11.4.0`.
+
 ## [0.8.14] - 2024-09-07
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.10](https://github.com/shd101wyy/crossnote/releases/tag/0.9.10).
