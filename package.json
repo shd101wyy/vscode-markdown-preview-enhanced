@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.17",
+  "version": "0.8.18",
   "description": "%description%",
   "categories": [
     "Other"
@@ -680,7 +680,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.9.13",
+    "crossnote": "^0.9.14",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {
@@ -690,7 +690,7 @@
     "@types/vscode": "1.70.0",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
-    "@vscode/test-web": "^0.0.45",
+    "@vscode/test-web": "^0.0.67",
     "concurrently": "^8.2.1",
     "esbuild": "^0.25.0",
     "esbuild-plugin-polyfill-node": "^0.3.0",
