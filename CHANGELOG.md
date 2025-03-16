@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.17] - 2025-03-16
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.13](https://github.com/shd101wyy/crossnote/releases/tag/0.9.13).
+
+### Bug fixes
+
+- Fixed a bug of bundling caused by importing the [sharp](https://www.npmjs.com/package/sharp) package.
+
 ## [0.8.16] - 2025-03-16
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.12](https://github.com/shd101wyy/crossnote/releases/tag/0.9.12).
