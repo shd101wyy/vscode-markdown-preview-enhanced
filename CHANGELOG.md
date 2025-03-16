@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.16] - 2025-03-16
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.12](https://github.com/shd101wyy/crossnote/releases/tag/0.9.12).
+
+### Changes
+
+- Use [sharp](https://www.npmjs.com/package/sharp) to convert svg element to png file if `imageMagickPath` is empty. [crossnote#366](https://github.com/shd101wyy/crossnote/issues/366)
+
+### Updates
+
+- Updated `mermaid` version to the latest `11.5.0`.
+- Updated `katex` version to the latest `0.16.21`.
+- Updated `prismjs` version to the latest `1.30.0`.
+- Updated `bit-field` version to the latest `1.9.0`.
+
+### Bug fixes
+
+- Fixed the import the crossnote as nodejs esm module. [crossnote#357](https://github.com/shd101wyy/crossnote/issues/357)
+- Fixed a bug of using `enableExtendedTableSyntax`. [crossnote#369](https://github.com/shd101wyy/crossnote/issues/369)
+
 ## [0.8.15] - 2024-09-07
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.11](https://github.com/shd101wyy/crossnote/releases/tag/0.9.11).
