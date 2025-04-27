@@ -189,6 +189,16 @@
           "default": false,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.disableAutoPreviewForUriSchemes": {
+          "markdownDescription": "A list of URI schemes (e.g., `vscode-notebook-cell`) to exclude from the `automaticallyShowPreviewOfMarkdownBeingEdited` feature. Files matching these schemes won't trigger the automatic preview.",
+          "default": [
+            "vscode-notebook-cell"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "markdown-preview-enhanced.previewColorScheme": {
           "type": "string",
           "enum": [

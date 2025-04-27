@@ -268,11 +268,11 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   }
 
   /*
-	function cacheSVG(uri, code, svg) {
-		const sourceUri = vscode.Uri.parse(uri);
-		contentProvider.cacheSVG(sourceUri, code, svg)
-	}
-	*/
+  function cacheSVG(uri, code, svg) {
+    const sourceUri = vscode.Uri.parse(uri);
+    contentProvider.cacheSVG(sourceUri, code, svg)
+  }
+  */
 
   async function cacheCodeChunkResult(uri, id, result) {
     const sourceUri = vscode.Uri.parse(uri);
@@ -884,7 +884,20 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
    */
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+      // Check if editor and document exist
       if (editor && editor.document && editor.document.uri) {
+        // Get the list of schemes to exclude from the configuration
+        const exclusionSchemes =
+          getMPEConfig<string[]>('disableAutoPreviewForUriSchemes') ?? [];
+
+        // Check if the current document's scheme should be excluded
+        for (const scheme of exclusionSchemes) {
+          if (editor.document.uri.scheme.startsWith(scheme)) {
+            return; // Don't trigger preview if scheme matches exclusion list
+          }
+        }
+
+        // Original check: Proceed only if it's considered a Markdown file
         if (isMarkdownFile(editor.document)) {
           const sourceUri = editor.document.uri;
           const automaticallyShowPreviewOfMarkdownBeingEdited = getMPEConfig<
@@ -948,10 +961,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   */
 
   /*
-	context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(textEditors=> {
-		// console.log('onDidChangeonDidChangeVisibleTextEditors ', textEditors)
-	}))
-	*/
+  context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(textEditors=> {
+    // console.log('onDidChangeonDidChangeVisibleTextEditors ', textEditors)
+  }))
+  */
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
