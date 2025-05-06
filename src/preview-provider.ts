@@ -418,7 +418,10 @@ export class PreviewProvider {
       initialLine = cursorLine;
     }
 
-    const inputString = document.getText() ?? '';
+    const inputString = document.getText()
+      .replace(/^:::mermaid\s*$/gm, '```mermaid')
+      .replace(/^:::\s*$/gm, '```') ?? '';
+
     const engine = this.getEngine(sourceUri);
     try {
       const html = await engine.generateHTMLTemplateForPreview({
@@ -518,7 +521,10 @@ export class PreviewProvider {
 
     // not presentation mode
     vscode.workspace.openTextDocument(sourceUri).then(async (document) => {
-      const text = document.getText();
+      const text = document.getText()
+        .replace(/^:::mermaid\s*$/gm, '```mermaid')
+        .replace(/^:::\s*$/gm, '```');
+
       await this.postMessageToPreview(sourceUri, {
         command: 'startParsingMarkdown',
       });
