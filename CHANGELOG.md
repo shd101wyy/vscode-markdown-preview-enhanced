@@ -14,6 +14,7 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.15](
 ### Changes
 
 - Add `markdown-preview-enhanced.liveUpdateDebounceMs` setting to control the live update debounce time in milliseconds. Default is `300ms`.
+- Allow to disable auto-preview config for specific URI schemes. Fixed the issue [#604](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/604) by @alonsorobots.
 
 ### Bug fixes
 
