@@ -14,7 +14,6 @@ import {
   WikiLinkTargetFileNameChangeCase,
   getDefaultNotebookConfig,
 } from 'crossnote';
-import { JsonObject } from 'type-fest';
 import * as vscode from 'vscode';
 import { isVSCodeWebExtension } from './utils';
 
@@ -30,6 +29,7 @@ type VSCodeMPEConfigKey =
   | 'imageUploader'
   | 'hideDefaultVSCodeMarkdownPreviewButtons'
   | 'liveUpdate'
+  | 'liveUpdateDebounceMs'
   | 'previewColorScheme'
   | 'previewMode'
   | 'qiniuAccessKey'
@@ -96,7 +96,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly includeInHeader: string;
   public readonly globalCss: string;
   public readonly mermaidConfig: MermaidConfig;
-  public readonly mathjaxConfig: JsonObject;
+  public readonly mathjaxConfig: any;
   public readonly katexConfig: KatexOptions;
   public readonly parserConfig: ParserConfig;
   public readonly isVSCode: boolean = true;
@@ -106,6 +106,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly hideDefaultVSCodeMarkdownPreviewButtons: boolean;
   public readonly imageUploader: ImageUploader;
   public readonly liveUpdate: boolean;
+  public readonly liveUpdateDebounceMs: number;
   public readonly previewColorScheme: PreviewColorScheme;
   public readonly previewMode: PreviewMode;
   public readonly scrollSync: boolean;
@@ -201,6 +202,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
 
     this.scrollSync = getMPEConfig<boolean>('scrollSync') ?? true;
     this.liveUpdate = getMPEConfig<boolean>('liveUpdate') ?? true;
+    this.liveUpdateDebounceMs =
+      getMPEConfig<number>('liveUpdateDebounceMs') ?? 300;
     this.previewMode =
       getMPEConfig<PreviewMode>('previewMode') ?? PreviewMode.SinglePreview;
     this.automaticallyShowPreviewOfMarkdownBeingEdited =

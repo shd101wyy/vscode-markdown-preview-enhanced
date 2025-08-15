@@ -86,7 +86,7 @@ export function getAllPreviewProviders(): PreviewProvider[] {
  * One workspace folder has one PreviewProvider
  */
 export class PreviewProvider {
-  private waiting: boolean = false;
+  private updateTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
   /**
    * Each PreviewProvider has a one notebook.
@@ -460,6 +460,9 @@ export class PreviewProvider {
 
     this.previewMaps = new Map();
     this.previewToDocumentMap = new Map();
+    // Clear all pending update timeouts
+    this.updateTimeouts.forEach((timeout) => clearTimeout(timeout));
+    this.updateTimeouts.clear();
     // this.engineMaps = {};
     PreviewProvider.singlePreviewPanel = null;
     PreviewProvider.singlePreviewPanelSourceUriTarget = null;
@@ -795,14 +798,29 @@ export class PreviewProvider {
       return;
     }
 
-    if (!this.waiting) {
-      this.waiting = true;
-      setTimeout(() => {
-        this.waiting = false;
-        // this._onDidChange.fire(uri);
-        this.updateMarkdown(sourceUri);
-      }, 300);
+    const sourceUriString = sourceUri.toString();
+    const debounceMs = getMPEConfig<number>('liveUpdateDebounceMs') ?? 300;
+
+    // Clear existing timeout for this sourceUri (proper debounce behavior)
+    const existingTimeout = this.updateTimeouts.get(sourceUriString);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+      this.updateTimeouts.delete(sourceUriString);
     }
+
+    // If debounce is 0, update immediately without timeout
+    if (debounceMs === 0) {
+      this.updateMarkdown(sourceUri);
+      return;
+    }
+
+    // Set new timeout
+    const timeout = setTimeout(() => {
+      this.updateTimeouts.delete(sourceUriString);
+      this.updateMarkdown(sourceUri);
+    }, debounceMs);
+
+    this.updateTimeouts.set(sourceUriString, timeout);
   }
 
   public async openImageHelper(sourceUri: Uri) {

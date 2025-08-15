@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.18",
+  "version": "0.8.19",
   "description": "%description%",
   "categories": [
     "Other"
@@ -173,6 +173,13 @@
           "description": "Re-render the preview as the contents of the source changes, without requiring the source buffer to be saved. If disabled, the preview is re-rendered only when the buffer is saved to disk.",
           "default": true,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.liveUpdateDebounceMs": {
+          "description": "Debounce time in milliseconds for live updates. Higher values reduce CPU usage but may feel less responsive. Lower values provide more immediate feedback but may impact performance.",
+          "default": 300,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5000
         },
         "markdown-preview-enhanced.previewMode": {
           "markdownDescription": "- **Single Preview**: Only one preview will be shown for all editors.\n- **Multiple Previews**: Multiple previews will be shown. Each editor has its own preview.\n- **Previews Only**: No editor will be shown. Only previews will be shown. You can use the in-preview editor to edit the markdown.\n\nRestart is required after changes.",

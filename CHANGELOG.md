@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.19] - 2025-08-15
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.15](https://github.com/shd101wyy/crossnote/releases/tag/0.9.15).
+
+### Changes
+
+- Add `markdown-preview-enhanced.liveUpdateDebounceMs` setting to control the live update debounce time in milliseconds. Default is `300ms`.
+
+### Bug fixes
+
+- Fixed splitting logic to handle diagrams starting with `<svg>` correctly [crossnote#376](https://github.com/shd101wyy/crossnote/issues/376) by @shiftdownet.
+
+### Updates
+
+- Updated `katex` version to the latest `0.16.22`.
+- Updated `mermaid` version to the latest `11.9.0`.
+
 ## [0.8.18] - 2025-03-16
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.13](https://github.com/shd101wyy/crossnote/releases/tag/0.9.14).
