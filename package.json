@@ -575,7 +575,7 @@
           "type": "string"
         },
         "markdown-preview-enhanced.plantumlJarPath": {
-          "description": "Absolute path to the plantuml.jar file (`java` is required in system path).",
+          "description": "Absolute path to the plantuml.jar file (`java` is required in system path). You can download it from https://plantuml.com/download.",
           "default": "",
           "type": "string"
         },
