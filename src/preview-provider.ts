@@ -532,7 +532,7 @@ export class PreviewProvider {
       }
       for (let i = 0; i < previews.length; i++) {
         try {
-          const preview = previews[0];
+          const preview = previews[i];
           const {
             html,
             tocHTML,
