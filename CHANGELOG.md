@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.20] - 2025-11-01
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.16](https://github.com/shd101wyy/crossnote/releases/tag/0.9.16).
+
+### Updates
+
+- Update `mermaid` version to the latest `11.12.1`.
+- Update `katex` version to the latest `0.16.25`.
+
+### Bug fixes
+
+- Fix preview selection in loop iteration [PR#2182](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2182).
+
 ## [0.8.19] - 2025-08-15
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.15](https://github.com/shd101wyy/crossnote/releases/tag/0.9.15).
