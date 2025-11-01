@@ -6,7 +6,7 @@ with pkgs;
 mkShell {
   buildInputs = [
     nodejs_22
-    yarn
+    pnpm
   ];
   nativeBuildInputs = [
     unstablePkgs.playwright.browsers # 1.50.1
