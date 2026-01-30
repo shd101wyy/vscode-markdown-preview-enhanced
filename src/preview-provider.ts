@@ -87,6 +87,19 @@ export function getAllPreviewProviders(): PreviewProvider[] {
  */
 export class PreviewProvider {
   private updateTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private initRequestSeq = 0;
+  private latestInitRequestByPreview: WeakMap<
+    vscode.WebviewPanel,
+    number
+  > = new WeakMap();
+  private renderRequestSeq = 0;
+  private latestRenderRequestBySourceUri: Map<string, number> = new Map();
+
+  /**
+   * Tracks the latest init request ID for each sourceUri.
+   * Used to validate webviewFinishLoading callbacks.
+   */
+  private latestInitRequestBySourceUri: Map<string, number> = new Map();
 
   /**
    * Each PreviewProvider has a one notebook.
@@ -121,6 +134,21 @@ export class PreviewProvider {
 
   public constructor() {
     // Please use `init` method to initialize this class.
+  }
+
+  private isSinglePreviewTarget(sourceUri: Uri) {
+    if (getPreviewMode() !== PreviewMode.SinglePreview) {
+      return true;
+    }
+    const target = PreviewProvider.singlePreviewPanelSourceUriTarget;
+    return !!target && target.fsPath === sourceUri.fsPath;
+  }
+
+  private normalizeResourceList(resources: string[] | undefined): string[] {
+    if (!resources?.length) {
+      return [];
+    }
+    return Array.from(new Set(resources)).sort();
   }
 
   private async init(
@@ -255,6 +283,9 @@ export class PreviewProvider {
       PreviewProvider.singlePreviewPanelSourceUriTarget = null;
       this.previewToDocumentMap = new Map();
       this.previewMaps = new Map();
+      // Clear all tracking maps in single preview mode
+      this.latestInitRequestBySourceUri.clear();
+      this.latestRenderRequestBySourceUri.clear();
     } else {
       const previews = this.getPreviews(sourceUri);
       if (previews) {
@@ -263,6 +294,10 @@ export class PreviewProvider {
           this.deletePreviewFromMap(sourceUri, preview);
         });
       }
+      // Clean up tracking for this specific sourceUri
+      const sourceUriString = sourceUri.toString();
+      this.latestInitRequestBySourceUri.delete(sourceUriString);
+      this.latestRenderRequestBySourceUri.delete(sourceUriString);
     }
   }
 
@@ -421,6 +456,11 @@ export class PreviewProvider {
     const inputString = document.getText() ?? '';
     const engine = this.getEngine(sourceUri);
     try {
+      const initRequestId = ++this.initRequestSeq;
+      this.latestInitRequestByPreview.set(previewPanel, initRequestId);
+      // Track init request by sourceUri for webviewFinishLoading validation
+      this.latestInitRequestBySourceUri.set(sourceUri.toString(), initRequestId);
+
       const html = await engine.generateHTMLTemplateForPreview({
         inputString,
         config: {
@@ -434,6 +474,14 @@ export class PreviewProvider {
         vscodePreviewPanel: previewPanel,
         isVSCodeWebExtension: isVSCodeWebExtension(),
       });
+
+      if (
+        this.latestInitRequestByPreview.get(previewPanel) !== initRequestId ||
+        !this.initializedPreviews.has(previewPanel) ||
+        !this.isSinglePreviewTarget(sourceUri)
+      ) {
+        return;
+      }
       previewPanel.webview.html = html;
     } catch (error) {
       vscode.window.showErrorMessage(error.toString());
@@ -463,6 +511,9 @@ export class PreviewProvider {
     // Clear all pending update timeouts
     this.updateTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.updateTimeouts.clear();
+    // Clear all tracking maps
+    this.latestInitRequestBySourceUri.clear();
+    this.latestRenderRequestBySourceUri.clear();
     // this.engineMaps = {};
     PreviewProvider.singlePreviewPanel = null;
     PreviewProvider.singlePreviewPanelSourceUriTarget = null;
@@ -472,6 +523,9 @@ export class PreviewProvider {
     sourceUri: Uri,
     message: { command: string; [key: string]: any }, // TODO: Define a type for message.
   ) {
+    if (!this.isSinglePreviewTarget(sourceUri)) {
+      return;
+    }
     const previews = this.getPreviews(sourceUri);
     if (previews) {
       // console.log(
@@ -483,13 +537,15 @@ export class PreviewProvider {
 
       for (let i = 0; i < previews.length; i++) {
         const preview = previews[i];
-        if (preview.visible) {
+        try {
           const result = await preview.webview.postMessage(message);
           if (!result) {
             console.error(
               `Failed to send message "${message.command}" to preview panel for ${sourceUri.fsPath}`,
             );
           }
+        } catch (error) {
+          console.error(error);
         }
       }
     }
@@ -506,7 +562,24 @@ export class PreviewProvider {
     }
   }
 
+  /**
+   * Check if updateMarkdown should proceed for the given sourceUri.
+   * Returns false if:
+   * - In SinglePreview mode and sourceUri is not the current target
+   * - Preview is not initialized or has been disposed
+   */
+  public shouldUpdateMarkdown(sourceUri: Uri): boolean {
+    if (!this.isSinglePreviewTarget(sourceUri)) {
+      return false;
+    }
+    const previews = this.getPreviews(sourceUri);
+    return !!(previews && previews.length > 0);
+  }
+
   public updateMarkdown(sourceUri: Uri, triggeredBySave?: boolean) {
+    if (!this.isSinglePreviewTarget(sourceUri)) {
+      return;
+    }
     const engine = this.getEngine(sourceUri);
     const previews = this.getPreviews(sourceUri);
     // console.log('updateMarkdown: ', previews?.length);
@@ -520,8 +593,26 @@ export class PreviewProvider {
     }
 
     // not presentation mode
-    vscode.workspace.openTextDocument(sourceUri).then(async (document) => {
-      const text = document.getText();
+    (async () => {
+      let document: vscode.TextDocument;
+      try {
+        document = await vscode.workspace.openTextDocument(sourceUri);
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+
+      if (!this.isSinglePreviewTarget(sourceUri)) {
+        return;
+      }
+
+      const renderRequestId = ++this.renderRequestSeq;
+      this.latestRenderRequestBySourceUri.set(
+        sourceUri.toString(),
+        renderRequestId,
+      );
+
+      const text = document.getText() ?? '';
       await this.postMessageToPreview(sourceUri, {
         command: 'startParsingMarkdown',
       });
@@ -530,6 +621,8 @@ export class PreviewProvider {
       if (!previews || !previews.length) {
         return;
       }
+
+      let lastError: unknown = undefined;
       for (let i = 0; i < previews.length; i++) {
         try {
           const preview = previews[i];
@@ -545,13 +638,28 @@ export class PreviewProvider {
             triggeredBySave,
             vscodePreviewPanel: preview,
           });
-          // check JSAndCssFiles
+
+          if (!this.isSinglePreviewTarget(sourceUri)) {
+            return;
+          }
           if (
-            JSON.stringify(JSAndCssFiles) !==
-              JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath] ?? []) ||
+            this.latestRenderRequestBySourceUri.get(sourceUri.toString()) !==
+            renderRequestId
+          ) {
+            return;
+          }
+
+          // check JSAndCssFiles
+          const normalizedResources = this.normalizeResourceList(JSAndCssFiles);
+          const previousResources = this.normalizeResourceList(
+            this.jsAndCssFilesMaps[sourceUri.fsPath],
+          );
+          if (
+            JSON.stringify(normalizedResources) !==
+              JSON.stringify(previousResources) ||
             yamlConfig['isPresentationMode']
           ) {
-            this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles;
+            this.jsAndCssFilesMaps[sourceUri.fsPath] = normalizedResources;
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
@@ -577,17 +685,18 @@ export class PreviewProvider {
                 } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
             });
           }
-          break;
+          return;
         } catch (error) {
-          if (i === previews.length - 1) {
-            // This is the
-            vscode.window.showErrorMessage(error.toString());
-          } else {
-            continue;
-          }
+          lastError = error;
+          continue;
         }
       }
-    });
+
+      if (lastError) {
+        vscode.window.showErrorMessage(lastError.toString());
+        console.error(lastError);
+      }
+    })();
   }
 
   private refreshPreviewPanel(sourceUri: Uri | null) {

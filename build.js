@@ -1,6 +1,37 @@
-const { execSync } = require('child_process');
+const { cpSync, existsSync, rmSync } = require('fs');
+const path = require('path');
 const { context, build } = require('esbuild');
 const { polyfillNode } = require('esbuild-plugin-polyfill-node');
+
+/**
+ * Copy crossnote assets
+ */
+function copyCrossnoteAssets() {
+  const crossnoteDir = path.resolve(__dirname, 'crossnote');
+  const sourceDir = path.resolve(__dirname, 'node_modules/crossnote/out');
+
+  if (existsSync(crossnoteDir)) {
+    rmSync(crossnoteDir, { recursive: true });
+  }
+
+  for (const subdir of ['dependencies', 'styles', 'webview']) {
+    cpSync(path.resolve(sourceDir, subdir), path.resolve(crossnoteDir, subdir), {
+      recursive: true,
+    });
+  }
+  console.log('[build] Copied crossnote assets');
+}
+
+/**
+ * Clean output directory
+ */
+function cleanOutput() {
+  const outDir = path.resolve(__dirname, 'out');
+  if (existsSync(outDir)) {
+    rmSync(outDir, { recursive: true });
+  }
+  console.log('[build] Cleaned output directory');
+}
 
 /**
  * @type {import('esbuild').Plugin}
@@ -11,10 +42,6 @@ const esbuildProblemMatcherPlugin = {
   setup(build) {
     build.onStart(() => {
       console.log('[watch] build started');
-
-      // Run `gulp copy:files` before build
-      execSync('gulp copy-files');
-      console.log('[watch] gulp copy-files');
     });
     build.onEnd((result) => {
       if (result.errors.length) {
@@ -37,17 +64,14 @@ const nativeConfig = {
   entryPoints: ['./src/extension.ts'],
   bundle: true,
   minify: true,
-  platform: 'node', // For CJS
+  platform: 'node',
   outfile: './out/native/extension.js',
   target: 'node16',
   format: 'cjs',
   external: ['vscode'],
+  sourcemap: true,
 };
 
-// FIX:
-const defaultDocument = {
-  readyState: 'ready',
-};
 const defaultWindow = {
   document: {
     currentScript: {
@@ -70,65 +94,60 @@ const webConfig = {
   entryPoints: ['./src/extension-web.ts'],
   bundle: true,
   minify: true,
-  platform: 'browser', // For ESM
+  platform: 'browser',
   outfile: './out/web/extension.js',
   target: 'es2020',
   format: 'cjs',
   external: ['vscode'],
+  sourcemap: true,
   plugins: [
     polyfillNode({
       polyfills: {
         fs: true,
       },
-      globals: {
-        // global: true,
-      },
     }),
   ],
   define: {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    // window: 'globalThis',
-    // global: 'globalThis',
-    // window: "globalThis",
     'window': JSON.stringify(defaultWindow),
-    // document: JSON.stringify(defaultDocument),
     'process.env.IS_VSCODE_WEB_EXTENSION': '"true"',
   },
 };
 
 async function main() {
+  // Copy assets and clean output
+  cleanOutput();
+  copyCrossnoteAssets();
+
   try {
     // Watch mode
     if (process.argv.includes('--watch')) {
       // Native
       const nativeContext = await context({
         ...nativeConfig,
-        sourcemap: true,
         minify: false,
-        plugins: [esbuildProblemMatcherPlugin, ...(nativeConfig.plugins ?? [])],
+        plugins: [esbuildProblemMatcherPlugin],
       });
 
       // Web
       const webContext = await context({
         ...webConfig,
-        sourcemap: true,
         minify: false,
         define: {
-          ...(webConfig.define ?? {}),
-          ...{
-            'process.env.IS_VSCODE_WEB_EXTENSION_DEV_MODE': '"true"',
-          },
+          ...webConfig.define,
+          'process.env.IS_VSCODE_WEB_EXTENSION_DEV_MODE': '"true"',
         },
-        plugins: [esbuildProblemMatcherPlugin, ...(webConfig.plugins ?? [])],
+        plugins: [esbuildProblemMatcherPlugin, ...webConfig.plugins],
       });
 
       await Promise.all([nativeContext.watch(), webContext.watch()]);
     } else {
       // Build mode
       await Promise.all([build(nativeConfig), build(webConfig)]);
+      console.log('[build] Build completed');
     }
   } catch (error) {
     console.error(error);
+    process.exit(1);
   }
 }
 

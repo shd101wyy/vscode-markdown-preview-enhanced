@@ -68,7 +68,9 @@ export const globalConfigPath = getGlobalConfigPath();
 
 export function isMarkdownFile(document: vscode.TextDocument) {
   let flag =
-    (document.languageId === 'markdown' || document.languageId === 'quarto') &&
+    (document.languageId === 'markdown' ||
+      document.languageId === 'quarto' ||
+      document.languageId === 'mdx') &&
     document.uri.scheme !== 'markdown-preview-enhanced'; // prevent processing of own documents
 
   if (!flag) {

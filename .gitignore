@@ -7,3 +7,4 @@ mume
 crossnote
 .vscode-test-web
 yarn-error.log
+.claude/settings.local.json

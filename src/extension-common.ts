@@ -52,19 +52,35 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   }
 
   async function openPreviewToTheSide(uri?: vscode.Uri) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      return;
-    }
-    if (!uri) {
+    let editor = vscode.window.activeTextEditor;
+    let document: vscode.TextDocument;
+    let cursorLine = 0;
+
+    if (uri) {
+      // Called from explorer context menu or with explicit URI
+      document = await vscode.workspace.openTextDocument(uri);
+      // Check if this document is already open in an editor
+      const existingEditor = vscode.window.visibleTextEditors.find(
+        (e) => e.document.uri.fsPath === uri.fsPath,
+      );
+      if (existingEditor) {
+        editor = existingEditor;
+        cursorLine = getEditorActiveCursorLine(editor);
+      }
+    } else if (editor) {
+      // Called from editor context or command palette
       uri = editor.document.uri;
+      document = editor.document;
+      cursorLine = getEditorActiveCursorLine(editor);
+    } else {
+      return;
     }
 
     const previewProvider = await getPreviewContentProvider(uri);
-    previewProvider.initPreview({
+    await previewProvider.initPreview({
       sourceUri: uri,
-      document: editor.document,
-      cursorLine: getEditorActiveCursorLine(editor),
+      document,
+      cursorLine,
       viewOptions: {
         viewColumn: vscode.ViewColumn.Two,
         preserveFocus: true,
@@ -73,19 +89,35 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   }
 
   async function openPreview(uri?: vscode.Uri) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      return;
-    }
-    if (!uri) {
+    let editor = vscode.window.activeTextEditor;
+    let document: vscode.TextDocument;
+    let cursorLine = 0;
+
+    if (uri) {
+      // Called from explorer context menu or with explicit URI
+      document = await vscode.workspace.openTextDocument(uri);
+      // Check if this document is already open in an editor
+      const existingEditor = vscode.window.visibleTextEditors.find(
+        (e) => e.document.uri.fsPath === uri.fsPath,
+      );
+      if (existingEditor) {
+        editor = existingEditor;
+        cursorLine = getEditorActiveCursorLine(editor);
+      }
+    } else if (editor) {
+      // Called from editor context or command palette
       uri = editor.document.uri;
+      document = editor.document;
+      cursorLine = getEditorActiveCursorLine(editor);
+    } else {
+      return;
     }
 
     const previewProvider = await getPreviewContentProvider(uri);
-    previewProvider.initPreview({
+    await previewProvider.initPreview({
       sourceUri: uri,
-      document: editor.document,
-      cursorLine: getEditorActiveCursorLine(editor),
+      document,
+      cursorLine,
       viewOptions: {
         viewColumn: vscode.ViewColumn.One,
         preserveFocus: false,
@@ -192,6 +224,16 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     notebooksManager.setSystemColorScheme(systemColorScheme);
+
+    // Validate that this sourceUri is still the active preview target
+    // This prevents stale webviewFinishLoading callbacks from updating wrong content
+    if (!previewProvider.shouldUpdateMarkdown(sourceUri)) {
+      console.debug(
+        `[MPE] Skipping webviewFinishLoading for stale sourceUri: ${sourceUri.fsPath}`,
+      );
+      return;
+    }
+
     previewProvider.updateMarkdown(sourceUri);
   }
 
@@ -585,7 +627,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
           );
           */
           const previewProvider = await getPreviewContentProvider(fileUri);
-          previewProvider.initPreview({
+          await previewProvider.initPreview({
             sourceUri: fileUri,
             document,
             cursorLine: line,
@@ -914,7 +956,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
               previewMode === PreviewMode.SinglePreview &&
               !previewProvider.previewHasTheSameSingleSourceUri(sourceUri)
             ) {
-              previewProvider.initPreview({
+              await previewProvider.initPreview({
                 sourceUri,
                 document: editor.document,
                 cursorLine: getEditorActiveCursorLine(editor),

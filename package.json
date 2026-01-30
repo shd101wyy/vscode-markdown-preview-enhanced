@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.20",
+  "version": "0.8.21",
   "description": "%description%",
   "categories": [
     "Other"
@@ -24,7 +24,10 @@
   "main": "./out/native/extension.js",
   "browser": "./out/web/extension.js",
   "scripts": {
-    "build": "gulp copy-files && gulp clean-out && node build.js",
+    "build": "node build.js",
+    "watch": "node build.js --watch",
+    "package": "vsce package --no-dependencies",
+    "package:pre": "yarn build && vsce package --no-dependencies --pre-release",
     "check:all": "yarn check:eslint && yarn check:prettier",
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
@@ -35,8 +38,7 @@
     "run-in-browser": "concurrently \"vscode-test-web --browserType=chromium --extensionDevelopmentPath=. $SERVE_DIR\" \"npx http-server ./crossnote -p 6789 --cors\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
-    "vscode:prepublish": "yarn install && yarn build",
-    "watch": "gulp copy-files && gulp clean-out && node build.js --watch"
+    "vscode:prepublish": "yarn install && yarn build"
   },
   "contributes": {
     "commands": [
@@ -626,7 +628,7 @@
         "displayName": "%customEditorPreviewDisplayName%",
         "selector": [
           {
-            "filenamePattern": "*.{md,markdown,mdown,mkdn,mkd,rmd,qmd}"
+            "filenamePattern": "*.{md,markdown,mdown,mkdn,mkd,rmd,qmd,mdx}"
           }
         ],
         "priority": "option"
@@ -637,42 +639,49 @@
         "command": "markdown-preview-enhanced.openPreviewToTheSide",
         "key": "ctrl+k v",
         "mac": "cmd+k v",
-        "when": "editorLangId == markdown"
+        "when": "editorLangId == markdown || editorLangId == quarto || resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i"
       },
       {
         "command": "markdown-preview-enhanced.openPreview",
         "key": "ctrl+shift+v",
         "mac": "cmd+shift+v",
-        "when": "editorLangId == markdown"
+        "when": "editorLangId == markdown || editorLangId == quarto || resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i"
       },
       {
         "command": "markdown-preview-enhanced.runAllCodeChunks",
         "key": "ctrl+shift+enter",
-        "when": "editorLangId == markdown"
+        "when": "editorLangId == markdown || editorLangId == quarto || resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i"
       },
       {
         "command": "markdown-preview-enhanced.runCodeChunk",
         "key": "shift+enter",
-        "when": "editorLangId == markdown"
+        "when": "editorLangId == markdown || editorLangId == quarto || resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i"
       },
       {
         "command": "markdown-preview-enhanced.syncPreview",
         "key": "ctrl+shift+s",
-        "when": "editorLangId == markdown"
+        "when": "editorLangId == markdown || editorLangId == quarto || resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i"
       }
     ],
     "menus": {
+      "explorer/context": [
+        {
+          "command": "markdown-preview-enhanced.openPreviewToTheSide",
+          "when": "resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i",
+          "group": "navigation"
+        }
+      ],
       "editor/context": [
         {
           "command": "markdown-preview-enhanced.openPreviewToTheSide",
-          "when": "editorLangId == markdown",
+          "when": "editorLangId == markdown || editorLangId == quarto || resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i",
           "group": "markdown-preview-enhanced"
         }
       ],
       "editor/title": [
         {
           "command": "markdown-preview-enhanced.openPreviewToTheSide",
-          "when": "editorLangId == markdown",
+          "when": "editorLangId == markdown || editorLangId == quarto || resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i",
           "group": "navigation"
         }
       ]
@@ -680,7 +689,8 @@
   },
   "activationEvents": [
     "onLanguage:markdown",
-    "onLanguage:quarto"
+    "onLanguage:quarto",
+    "onLanguage:mdx"
   ],
   "husky": {
     "hooks": {
@@ -712,7 +722,6 @@
     "esbuild": "^0.25.0",
     "esbuild-plugin-polyfill-node": "^0.3.0",
     "eslint": "^8.48.0",
-    "gulp": "^4.0.2",
     "http-server": "^14.1.1",
     "husky": "^8.0.3",
     "lint-staged": "^9.4.2",
