@@ -15,6 +15,7 @@ import {
   isVSCodeWebExtension,
   isVSCodewebExtensionDevMode,
 } from './utils';
+import { processWsdBlocks } from './wsd';
 
 if (isVSCodeWebExtension()) {
   console.debug('* Using crossnote version: ', getCrossnoteVersion());
@@ -139,6 +140,18 @@ export class PreviewProvider {
       PreviewProvider.notebooksManager = new NotebooksManager(this.context);
     }
     return PreviewProvider.notebooksManager;
+  }
+
+  /**
+   * Replace ```wsd code blocks in the rendered HTML with
+   * <img> tags pointing to the WebSequenceDiagrams server.
+   */
+  private applyWsdProcessing(html: string): string {
+    const server =
+      getMPEConfig<string>('webSequenceDiagramsServer') ||
+      'https://www.websequencediagrams.com';
+    const apiKey = getMPEConfig<string>('webSequenceDiagramsApiKey') || '';
+    return processWsdBlocks(html, server, apiKey || undefined);
   }
 
   public static async getPreviewContentProvider(
@@ -434,7 +447,7 @@ export class PreviewProvider {
         vscodePreviewPanel: previewPanel,
         isVSCodeWebExtension: isVSCodeWebExtension(),
       });
-      previewPanel.webview.html = html;
+      previewPanel.webview.html = this.applyWsdProcessing(html);
     } catch (error) {
       vscode.window.showErrorMessage(error.toString());
       console.error(error);
@@ -558,7 +571,7 @@ export class PreviewProvider {
             await this.postMessageToPreview(sourceUri, {
               command: 'updateHtml',
               markdown: text,
-              html,
+              html: this.applyWsdProcessing(html),
               tocHTML,
               totalLineCount: document.lineCount,
               sourceUri: sourceUri.toString(),

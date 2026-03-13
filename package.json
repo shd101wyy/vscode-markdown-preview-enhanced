@@ -594,6 +594,16 @@
           "default": "https://kroki.io",
           "type": "string"
         },
+        "markdown-preview-enhanced.webSequenceDiagramsServer": {
+          "description": "The URL of the WebSequenceDiagrams server to use for rendering wsd code blocks.",
+          "default": "https://www.websequencediagrams.com",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.webSequenceDiagramsApiKey": {
+          "description": "API key for WebSequenceDiagrams. Required for wider diagram sizes.",
+          "default": "",
+          "type": "string"
+        },
         "markdown-preview-enhanced.markdownFileExtensions": {
           "description": "Markdown file extensions. This is used to determine whether to show the preview button in the markdown file context menu.",
           "default": [
