@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.21] - 2026-03-15
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.17](https://github.com/shd101wyy/crossnote/releases/tag/0.9.17).
+
+### New features
+
+- Add markdown-it callout feature with styling https://github.com/shd101wyy/crossnote/pull/387 by [@EmmetZ](https://github.com/EmmetZ).
+- Add WebSequenceDiagrams support in `wsd` code blocks https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2228 by [@smhanov](https://github.com/smhanov).
+
+### Bug fixes
+
+- Remove the wrapper of custom head in HTML page https://github.com/shd101wyy/crossnote/pull/386 by [@TanShun](https://github.com/TanShun).
+
+### Security
+
+- Fix CVE-2025-65716: Sanitize rendered HTML to prevent arbitrary JavaScript execution via malicious markdown files. Added two-layer defense: server-side sanitization using cheerio (strips `<script>`, `<object>`, `<embed>`, `<applet>` tags, `on*` event handlers, dangerous URL schemes, and sandboxes all `<iframe>` elements) and client-side sanitization using DOMPurify as defense-in-depth at all `innerHTML` injection points https://github.com/shd101wyy/crossnote/pull/394
+
+### Updates
+
+- Update `mermaid` version to the latest `11.13.0`.
+- Update `katex` version to the latest `0.16.38`.
+
 ## [0.8.20] - 2025-11-01
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.16](https://github.com/shd101wyy/crossnote/releases/tag/0.9.16).
