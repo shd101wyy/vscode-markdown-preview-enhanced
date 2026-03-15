@@ -89,6 +89,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly plantumlJarPath: string;
   public readonly jsdelivrCdnHost: string;
   public readonly krokiServer: string;
+  public readonly webSequenceDiagramsServer: string;
+  public readonly webSequenceDiagramsApiKey: string;
   public readonly alwaysShowBacklinksInPreview: boolean;
   public readonly enablePreviewZenMode: boolean;
   public readonly wikiLinkTargetFileExtension: string;
@@ -249,6 +251,11 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       getMPEConfig<string>('jsdelivrCdnHost') ?? defaultConfig.jsdelivrCdnHost;
     this.krokiServer =
       getMPEConfig<string>('krokiServer') ?? defaultConfig.krokiServer;
+    this.webSequenceDiagramsServer =
+      getMPEConfig<string>('webSequenceDiagramsServer') ||
+      'https://www.websequencediagrams.com';
+    this.webSequenceDiagramsApiKey =
+      getMPEConfig<string>('webSequenceDiagramsApiKey') || '';
     this.alwaysShowBacklinksInPreview =
       getMPEConfig<boolean>('alwaysShowBacklinksInPreview') ??
       defaultConfig.alwaysShowBacklinksInPreview;
