@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.21] - 2026-03-15
 
-Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.17](https://github.com/shd101wyy/crossnote/releases/tag/0.9.17).
+Update [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.17](https://github.com/shd101wyy/crossnote/releases/tag/0.9.17) and [0.9.18](https://github.com/shd101wyy/crossnote/releases/tag/0.9.18).
 
 ### New features
 
