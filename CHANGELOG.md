@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.21] - 2026-03-15
 
-Update [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.17](https://github.com/shd101wyy/crossnote/releases/tag/0.9.17) and [0.9.18](https://github.com/shd101wyy/crossnote/releases/tag/0.9.18).
+Update [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.17](https://github.com/shd101wyy/crossnote/releases/tag/0.9.17), [0.9.18](https://github.com/shd101wyy/crossnote/releases/tag/0.9.18), and [0.9.19](https://github.com/shd101wyy/crossnote/releases/tag/0.9.19).
 
 ### New features
 
@@ -19,6 +19,9 @@ Update [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.17](h
 ### Bug fixes
 
 - Remove the wrapper of custom head in HTML page https://github.com/shd101wyy/crossnote/pull/386 by [@TanShun](https://github.com/TanShun).
+- Fix sanitizer for mermaid and wavedrom diagrams.
+- Fix `code_block=true` not preventing mermaid diagram rendering.
+- Fix "Open in Browser" file paths on WSL.
 
 ### Security
 
