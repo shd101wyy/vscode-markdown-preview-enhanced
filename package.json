@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.20",
+  "version": "0.8.21",
   "description": "%description%",
   "categories": [
     "Other"
@@ -594,6 +594,16 @@
           "default": "https://kroki.io",
           "type": "string"
         },
+        "markdown-preview-enhanced.webSequenceDiagramsServer": {
+          "description": "The URL of the WebSequenceDiagrams server to use for rendering wsd code blocks.",
+          "default": "https://www.websequencediagrams.com",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.webSequenceDiagramsApiKey": {
+          "description": "API key for WebSequenceDiagrams. Required for wider diagram sizes.",
+          "default": "",
+          "type": "string"
+        },
         "markdown-preview-enhanced.markdownFileExtensions": {
           "description": "Markdown file extensions. This is used to determine whether to show the preview button in the markdown file context menu.",
           "default": [
@@ -697,7 +707,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.9.16",
+    "crossnote": "^0.9.19",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {
