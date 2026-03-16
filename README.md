@@ -2,34 +2,23 @@
 
 ![intro](https://user-images.githubusercontent.com/1908863/28495106-30b3b15e-6f09-11e7-8eb6-ca4ca001ab15.png)
 
-<p align="center">
-<a href="https://shd101wyy.github.io/markdown-preview-enhanced/#/"> English &nbsp;&nbsp; </a>  
-<a href="https://shd101wyy.github.io/markdown-preview-enhanced/#/zh-cn/"> 简体中文 &nbsp;&nbsp; </a>  
-<a href="https://shd101wyy.github.io/markdown-preview-enhanced/#/zh-tw/"> 繁體中文 &nbsp;&nbsp; </a>
-<a href="https://shd101wyy.github.io/markdown-preview-enhanced/#/ja-jp/"> 日本語 &nbsp;&nbsp; </a> <br>
-</p>
+<div align="center">
 
-<p align="center">
-<a href="https://atom.io/packages/markdown-preview-enhanced">Atom</a>
-&
-<a href="https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced">VSCode</a> 
-&
-<a href="https://vscode.dev">VSCode for the Web</a>
-<br>
-<br>
-  <a href="https://a.paddle.com/v2/click/16413/111548?link=1227"><img src="https://img.shields.io/badge/LEARN-VSCODE%20POWER%20USER%20COURSE%20%E2%86%92-gray.svg?colorB=4D2AFF" alt="Become VSCode Power User"></a>
-</p>
+[English](https://shd101wyy.github.io/markdown-preview-enhanced/#/) · [简体中文](https://shd101wyy.github.io/markdown-preview-enhanced/#/zh-cn/) · [繁體中文](https://shd101wyy.github.io/markdown-preview-enhanced/#/zh-tw/) · [日本語](https://shd101wyy.github.io/markdown-preview-enhanced/#/ja-jp/) · [한국어](https://shd101wyy.github.io/markdown-preview-enhanced/#/ko-kr/) · [Français](https://shd101wyy.github.io/markdown-preview-enhanced/#/fr-fr/) · [Español](https://shd101wyy.github.io/markdown-preview-enhanced/#/es-es/) · [Português](https://shd101wyy.github.io/markdown-preview-enhanced/#/pt-br/) · [Nederlands](https://shd101wyy.github.io/markdown-preview-enhanced/#/nl-nl/) · [Türkçe](https://shd101wyy.github.io/markdown-preview-enhanced/#/tr-tr/)
+
+</div>
+
+<div align="center">
+
+[VS Code](https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced) · [VS Code for the Web](https://vscode.dev)
+
+</div>
 
 ## Supporting this project
 
 Markdown Preview Enhanced is an open source project released under the [University of Illinois/NCSA Open Source License](LICENSE.md). Its ongoing development is made possible thanks to the support by these awesome [backers](https://shd101wyy.github.io/markdown-preview-enhanced/#/backers). You can help make this project better by [supporting us on GitHub Sponsors](https://github.com/sponsors/shd101wyy), [PayPal](https://shd101wyy.github.io/markdown-preview-enhanced/#/paypal), or [微信支付 Wechat Pay](https://shd101wyy.github.io/markdown-preview-enhanced/#/wechat). Thank you!
 
 ## Sponsors
-
-<p><a title="Try CodeStream" href="https://sponsorlink.codestream.com/?utm_source=vscmarket&amp;utm_campaign=shd101wyy-markdown&amp;utm_medium=banner"><img src="https://alt-images.codestream.com/codestream_logo_shd101wyy-markdown.png"></a></br>
-Manage pull requests and conduct code reviews in your IDE with full source-tree context. Comment on any line, not just the diffs. Use jump-to-definition, your favorite keybindings, and code intelligence with more of your workflow.<br> <a title="Try CodeStream" href="https://sponsorlink.codestream.com/?utm_source=vscmarket&amp;utm_campaign=shd101wyy-markdown&amp;utm_medium=banner">Learn More</a></p>
-
-<br>
 
 <a href="https://github.com/sponsors/shd101wyy">
   <img src="https://github.blog/wp-content/uploads/2019/05/mona-heart-featured.png?" width="200"></a><br>
@@ -52,6 +41,12 @@ To check out the documentation, visit
 - [简体中文](https://shd101wyy.github.io/markdown-preview-enhanced/#/zh-cn/)
 - [繁體中文](https://shd101wyy.github.io/markdown-preview-enhanced/#/zh-tw/)
 - [日本語](https://shd101wyy.github.io/markdown-preview-enhanced/#/ja-jp/)
+- [한국어](https://shd101wyy.github.io/markdown-preview-enhanced/#/ko-kr/)
+- [Français](https://shd101wyy.github.io/markdown-preview-enhanced/#/fr-fr/)
+- [Español](https://shd101wyy.github.io/markdown-preview-enhanced/#/es-es/)
+- [Português](https://shd101wyy.github.io/markdown-preview-enhanced/#/pt-br/)
+- [Nederlands](https://shd101wyy.github.io/markdown-preview-enhanced/#/nl-nl/)
+- [Türkçe](https://shd101wyy.github.io/markdown-preview-enhanced/#/tr-tr/)
 
 Contact me if you are willing to help translate the documentation :)
 
