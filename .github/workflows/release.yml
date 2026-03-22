@@ -30,13 +30,21 @@ jobs:
           validation_level: warn
           version: ${{ steps.package_version.outputs.current-version }}
           path: 'CHANGELOG.md'
-      - name:  Publish extension to Visual Studio Marketplace
+      - name: Publish extension to Visual Studio Marketplace
         id: create_vsix
         uses: HaaLeo/publish-vscode-extension@v1
         with:
-          dryRun: ${{ github.ref != 'refs/heads/master'  }}
+          dryRun: ${{ github.ref != 'refs/heads/master' }}
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
+          yarn: true
+      - name: Publish extension to Open VSX
+        uses: HaaLeo/publish-vscode-extension@v1
+        with:
+          dryRun: ${{ github.ref != 'refs/heads/master' }}
+          pat: ${{ secrets.OPEN_VSX_TOKEN }}
+          registryUrl: https://open-vsx.org
+          extensionFile: ${{ steps.create_vsix.outputs.vsixPath }}
           yarn: true
       - name: Create a Release
         if: github.ref == 'refs/heads/master'

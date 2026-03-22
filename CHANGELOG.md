@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.22] - 2026-03-22
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.20](https://github.com/shd101wyy/crossnote/releases/tag/0.9.20).
+
+### Added
+
+- Support publishing the extension to [Open VSX](https://open-vsx.org) Registry.
+
+### Security
+
+- Fix RCE vulnerability in `.crossnote/parser.js` hooks, by @0079522-Z461.
+
+### Updates
+
+- Update `sval` javascript interpreter to the latest `0.6.9`.
+
 ## [0.8.21] - 2026-03-15
 
 Update [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.17](https://github.com/shd101wyy/crossnote/releases/tag/0.9.17), [0.9.18](https://github.com/shd101wyy/crossnote/releases/tag/0.9.18), and [0.9.19](https://github.com/shd101wyy/crossnote/releases/tag/0.9.19).
