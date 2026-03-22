@@ -32,3 +32,19 @@ jobs:
           # yarn test
           vsce package
           ls -lah *.vsix
+      - name: Dry run publish to Visual Studio Marketplace
+        id: dry_run_vsix
+        uses: HaaLeo/publish-vscode-extension@v1
+        with:
+          dryRun: true
+          pat: stub
+          registryUrl: https://marketplace.visualstudio.com
+          yarn: true
+      - name: Dry run publish to Open VSX
+        uses: HaaLeo/publish-vscode-extension@v1
+        with:
+          dryRun: true
+          pat: stub
+          registryUrl: https://open-vsx.org
+          extensionFile: ${{ steps.dry_run_vsix.outputs.vsixPath }}
+          yarn: true

@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.20](https://github.com/shd101wyy/crossnote/releases/tag/0.9.20).
 
+### Added
+
+- Support publishing the extension to [Open VSX](https://open-vsx.org) Registry.
+
 ### Security
 
 - Fix RCE vulnerability in `.crossnote/parser.js` hooks, by @0079522-Z461.
