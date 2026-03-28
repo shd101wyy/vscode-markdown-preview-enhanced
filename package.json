@@ -206,6 +206,14 @@
             "type": "string"
           }
         },
+        "markdown-preview-enhanced.disableAutoPreviewForFilePatterns": {
+          "markdownDescription": "A list of file name patterns (e.g., `*.note.md`) to exclude from the `automaticallyShowPreviewOfMarkdownBeingEdited` feature. Files whose names match any of these patterns won't trigger the automatic preview. Supports `*` as a wildcard.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "markdown-preview-enhanced.previewColorScheme": {
           "type": "string",
           "enum": [

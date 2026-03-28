@@ -37,7 +37,8 @@ type VSCodeMPEConfigKey =
   | 'qiniuDomain'
   | 'qiniuSecretKey'
   | 'scrollSync'
-  | 'disableAutoPreviewForUriSchemes';
+  | 'disableAutoPreviewForUriSchemes'
+  | 'disableAutoPreviewForFilePatterns';
 
 type ConfigKey = keyof NotebookConfig | VSCodeMPEConfigKey;
 
