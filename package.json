@@ -604,6 +604,32 @@
           "default": "",
           "type": "string"
         },
+        "markdown-preview-enhanced.d2Path": {
+          "description": "Path to the D2 executable. Defaults to `d2` (i.e. found on PATH). Not supported in the web extension.",
+          "default": "d2",
+          "type": "string",
+          "scope": "machine"
+        },
+        "markdown-preview-enhanced.d2Layout": {
+          "description": "Default D2 layout engine for rendering d2 diagrams.",
+          "default": "dagre",
+          "type": "string",
+          "enum": [
+            "dagre",
+            "elk",
+            "tala"
+          ]
+        },
+        "markdown-preview-enhanced.d2Theme": {
+          "description": "Default D2 theme ID for rendering d2 diagrams. See https://d2lang.com/tour/themes for available theme IDs.",
+          "default": 0,
+          "type": "number"
+        },
+        "markdown-preview-enhanced.d2Sketch": {
+          "description": "Render D2 diagrams in sketch (hand-drawn) style.",
+          "default": false,
+          "type": "boolean"
+        },
         "markdown-preview-enhanced.markdownFileExtensions": {
           "description": "Markdown file extensions. This is used to determine whether to show the preview button in the markdown file context menu.",
           "default": [
