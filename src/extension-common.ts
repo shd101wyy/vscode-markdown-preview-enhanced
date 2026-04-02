@@ -906,7 +906,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
           const excluded = exclusionPatterns.some((pattern) => {
             // Simple wildcard matching: convert "*.note.md" to a regex
             const escaped = pattern
-              .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+              .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
               .replace(/\*/g, '.*');
             return new RegExp(`^${escaped}$`, 'i').test(fileName);
           });

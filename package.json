@@ -207,7 +207,7 @@
           }
         },
         "markdown-preview-enhanced.disableAutoPreviewForFilePatterns": {
-          "markdownDescription": "A list of file name patterns (e.g., `*.note.md`) to exclude from the `automaticallyShowPreviewOfMarkdownBeingEdited` feature. Files whose names match any of these patterns won't trigger the automatic preview. Supports `*` as a wildcard.",
+          "markdownDescription": "A list of file name patterns (e.g., `*.note.md`) to exclude from the `automaticallyShowPreviewOfMarkdownBeingEdited` feature. Files whose names match any of these patterns won't trigger the automatic preview. Supports `*` as a wildcard. Matching is performed against the file's basename (not full path) and is case-insensitive.",
           "default": [],
           "type": "array",
           "items": {
