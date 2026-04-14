@@ -900,8 +900,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         // Original check: Proceed only if it's considered a Markdown file
         if (isMarkdownFile(editor.document)) {
           // Check if the file matches any exclusion pattern
-          const exclusionPatterns =
-            getMPEConfig<string[]>('disableAutoPreviewForFilePatterns') ?? [];
+          const exclusionPatterns = (
+            getMPEConfig<string[]>('disableAutoPreviewForFilePatterns') ?? []
+          ).filter((p): p is string => typeof p === 'string');
           const fileName = path.basename(editor.document.fileName);
           const excluded = exclusionPatterns.some((pattern) => {
             // Simple wildcard matching: convert "*.note.md" to a regex
