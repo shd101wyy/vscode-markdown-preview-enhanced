@@ -899,6 +899,19 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
         // Original check: Proceed only if it's considered a Markdown file
         if (isMarkdownFile(editor.document)) {
+          // Check if the file matches any exclusion pattern
+          const exclusionPatterns = (
+            getMPEConfig<string[]>('disableAutoPreviewForFilePatterns') ?? []
+          ).filter((p): p is string => typeof p === 'string');
+          const fileName = path.basename(editor.document.fileName);
+          const excluded = exclusionPatterns.some((pattern) => {
+            // Simple wildcard matching: convert "*.note.md" to a regex
+            const escaped = pattern
+              .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+              .replace(/\*/g, '.*');
+            return new RegExp(`^${escaped}$`, 'i').test(fileName);
+          });
+
           const sourceUri = editor.document.uri;
           const automaticallyShowPreviewOfMarkdownBeingEdited = getMPEConfig<
             boolean
@@ -914,17 +927,20 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
               previewMode === PreviewMode.SinglePreview &&
               !previewProvider.previewHasTheSameSingleSourceUri(sourceUri)
             ) {
-              previewProvider.initPreview({
-                sourceUri,
-                document: editor.document,
-                cursorLine: getEditorActiveCursorLine(editor),
-                viewOptions: {
-                  viewColumn:
-                    previewProvider.getPreviews(sourceUri)?.at(0)?.viewColumn ??
-                    vscode.ViewColumn.One,
-                  preserveFocus: true,
-                },
-              });
+              // Skip auto-switching single preview to an excluded file
+              if (!excluded) {
+                previewProvider.initPreview({
+                  sourceUri,
+                  document: editor.document,
+                  cursorLine: getEditorActiveCursorLine(editor),
+                  viewOptions: {
+                    viewColumn:
+                      previewProvider.getPreviews(sourceUri)?.at(0)
+                        ?.viewColumn ?? vscode.ViewColumn.One,
+                    preserveFocus: true,
+                  },
+                });
+              }
             } else if (previewMode === PreviewMode.MultiplePreviews) {
               const previews = previewProvider.getPreviews(sourceUri);
               if (previews && previews.length > 0) {
@@ -933,7 +949,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
             }
             // NOTE: For PreviewMode.PreviewsOnly, we don't need to do anything.
           } else if (automaticallyShowPreviewOfMarkdownBeingEdited) {
-            openPreviewToTheSide(sourceUri);
+            // Skip auto-opening preview for an excluded file
+            if (!excluded) {
+              openPreviewToTheSide(sourceUri);
+            }
           }
         }
       }
