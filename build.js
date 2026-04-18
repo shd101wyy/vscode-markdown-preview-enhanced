@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-const { cpSync, mkdirSync } = require('fs');
+const { cpSync, mkdirSync, readdirSync } = require('fs');
 const { join } = require('path');
 const { context, build } = require('esbuild');
 const { polyfillNode } = require('esbuild-plugin-polyfill-node');
@@ -27,6 +27,7 @@ const esbuildProblemMatcherPlugin = {
         );
       } else {
         copyTikzjaxTexFiles();
+        copyXhrSyncWorker();
         console.log('[watch] build finished');
       }
     });
@@ -121,6 +122,49 @@ function copyTikzjaxTexFiles() {
   console.log('Copied node-tikzjax tex files to out/tex/');
 }
 
+/**
+ * Copy jsdom's xhr-sync-worker.js to out/native/ so that the bundled
+ * extension's require.resolve('./xhr-sync-worker.js') call succeeds.
+ *
+ * jsdom resolves this path at module load time to set up sync XHR support.
+ * node-tikzjax only uses jsdom for DOM manipulation and never triggers sync
+ * XHR, so the worker is never actually spawned — we just need the file to
+ * exist at the resolved path.
+ */
+function copyXhrSyncWorker() {
+  const jsdomPnpmDir = join(
+    __dirname,
+    'node_modules',
+    'crossnote',
+    'node_modules',
+    '.pnpm',
+  );
+  const jsdomDirs = readdirSync(jsdomPnpmDir).filter((d) =>
+    d.startsWith('jsdom@'),
+  );
+  if (jsdomDirs.length === 0) {
+    console.warn(
+      'Could not find jsdom in pnpm store, skipping xhr-sync-worker copy',
+    );
+    return;
+  }
+  const workerSrc = join(
+    jsdomPnpmDir,
+    jsdomDirs[0],
+    'node_modules',
+    'jsdom',
+    'lib',
+    'jsdom',
+    'living',
+    'xhr',
+    'xhr-sync-worker.js',
+  );
+  const outNativeDir = join(__dirname, 'out', 'native');
+  mkdirSync(outNativeDir, { recursive: true });
+  cpSync(workerSrc, join(outNativeDir, 'xhr-sync-worker.js'));
+  console.log('Copied jsdom xhr-sync-worker.js to out/native/');
+}
+
 async function main() {
   try {
     // Watch mode
@@ -152,6 +196,7 @@ async function main() {
       // Build mode
       await Promise.all([build(nativeConfig), build(webConfig)]);
       copyTikzjaxTexFiles();
+      copyXhrSyncWorker();
     }
   } catch (error) {
     console.error(error);
