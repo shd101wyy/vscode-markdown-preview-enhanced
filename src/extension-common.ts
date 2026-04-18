@@ -192,6 +192,11 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     notebooksManager.setSystemColorScheme(systemColorScheme);
+    // Guard against stale webviewFinishLoading callbacks from a previous file
+    // (can happen when the user switches files before the webview finishes loading)
+    if (!previewProvider.shouldUpdateMarkdown(sourceUri)) {
+      return;
+    }
     previewProvider.updateMarkdown(sourceUri);
   }
 
@@ -928,7 +933,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
             ) {
               // Skip auto-switching single preview to an excluded file
               if (!excluded) {
-                previewProvider.initPreview({
+                await previewProvider.initPreview({
                   sourceUri,
                   document: editor.document,
                   cursorLine: getEditorActiveCursorLine(editor),
