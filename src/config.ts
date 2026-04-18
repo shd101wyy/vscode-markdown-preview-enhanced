@@ -3,6 +3,7 @@ import {
   FrontMatterRenderingOption,
   ImageUploader,
   KatexOptions,
+  MarkdownParser,
   MathRenderingOption,
   MermaidConfig,
   MermaidTheme,
@@ -53,7 +54,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
 
   public readonly markdownFileExtensions: string[];
   public readonly configPath: string;
-  public readonly usePandocParser: boolean;
+  public readonly markdownParser: MarkdownParser;
   public readonly breakOnSingleNewLine: boolean;
   public readonly enableTypographer: boolean;
   public readonly enableWikiLinkSyntax: boolean;
@@ -105,7 +106,6 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly enablePreviewZenMode: boolean;
   public readonly wikiLinkTargetFileExtension: string;
   public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
-  public readonly useMarkdownYoParser: boolean;
   // D2 diagram settings
   public readonly d2Path: string;
   public readonly d2Layout: string;
@@ -137,10 +137,10 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       getMPEConfig<string[]>('markdownFileExtensions') ??
       defaultConfig.markdownFileExtensions;
     this.configPath = getMPEConfig<string>('configPath') ?? '';
-    this.usePandocParser = isVSCodeWebExtension()
-      ? false // pandoc is not supported in web extension
-      : (getMPEConfig<boolean>('usePandocParser') ??
-        defaultConfig.usePandocParser);
+    this.markdownParser = isVSCodeWebExtension()
+      ? 'markdown-it' // pandoc is not supported in web extension
+      : (getMPEConfig<MarkdownParser>('markdownParser') ??
+        defaultConfig.markdownParser);
     this.breakOnSingleNewLine =
       getMPEConfig<boolean>('breakOnSingleNewLine') ??
       defaultConfig.breakOnSingleNewLine;
@@ -289,9 +289,6 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.d2Layout = getMPEConfig<string>('d2Layout') ?? 'dagre';
     this.d2Theme = getMPEConfig<number>('d2Theme') ?? 0;
     this.d2Sketch = getMPEConfig<boolean>('d2Sketch') ?? false;
-    this.useMarkdownYoParser =
-      getMPEConfig<boolean>('useMarkdownYoParser') ??
-      defaultConfig.useMarkdownYoParser;
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

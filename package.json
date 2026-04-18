@@ -154,10 +154,16 @@
           "default": "",
           "type": "string"
         },
-        "markdown-preview-enhanced.usePandocParser": {
-          "description": "Enable this option will render markdown by pandoc instead of markdown-it.",
-          "default": false,
-          "type": "boolean"
+        "markdown-preview-enhanced.markdownParser": {
+          "description": "Markdown parser/renderer to use. 'markdown-it' (default) is the built-in renderer. 'pandoc' uses Pandoc (requires Pandoc installed; not available in VS Code web). 'markdown_yo' uses a high-performance WASM renderer (experimental).",
+          "default": "markdown-it",
+          "type": "string",
+          "enum": ["markdown-it", "pandoc", "markdown_yo"],
+          "enumDescriptions": [
+            "Built-in markdown-it renderer (default).",
+            "Render via Pandoc. Requires Pandoc to be installed. Not available in VS Code web.",
+            "High-performance WASM renderer (experimental). markdown-it is still used for token-based operations."
+          ]
         },
         "markdown-preview-enhanced.breakOnSingleNewLine": {
           "description": "In Markdown, a single newline character doesn't cause a line break in the generated HTML. In GitHub Flavored Markdown, that is not true. Enable this config option to insert line breaks in rendered HTML for single newlines in Markdown source.",
@@ -696,12 +702,7 @@
           ],
           "type": "array"
         },
-        "markdown-preview-enhanced.useMarkdownYoParser": {
-          "description": "Use markdown_yo (WASM) as the markdown renderer instead of markdown-it. Restart required.",
-          "default": false,
-          "type": "boolean",
-          "scope": "resource"
-        },
+        
         "markdown-preview-enhanced.alwaysShowBacklinksInPreview": {
           "description": "Always show backlinks in preview.",
           "default": false,
