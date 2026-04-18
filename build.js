@@ -14,9 +14,6 @@ const esbuildProblemMatcherPlugin = {
     build.onStart(() => {
       console.log('[watch] build started');
 
-      // Sync local crossnote build output before re-bundling
-      syncCrossnoteOutput();
-
       // Run `gulp copy:files` before build
       execSync('gulp copy-files');
       console.log('[watch] gulp copy-files');
@@ -168,29 +165,6 @@ function copyXhrSyncWorker() {
   console.log('Copied jsdom xhr-sync-worker.js to out/native/');
 }
 
-/**
- * Sync crossnote's built output (out/cjs, out/esm) from the local workspace
- * into node_modules/crossnote/out/.
- *
- * yarn install copies the local crossnote package rather than symlinking it,
- * so changes to crossnote's source are not picked up automatically.
- * This sync step ensures the bundle always uses the latest crossnote build.
- */
-function syncCrossnoteOutput() {
-  const crossnoteSrc = join(__dirname, '..', 'crossnote', 'out');
-  const crossnoteDest = join(__dirname, 'node_modules', 'crossnote', 'out');
-  for (const dir of ['cjs', 'esm', 'types']) {
-    const src = join(crossnoteSrc, dir);
-    const dest = join(crossnoteDest, dir);
-    try {
-      cpSync(src, dest, { recursive: true });
-    } catch {
-      // Skip if source doesn't exist (e.g., types not built yet)
-    }
-  }
-  console.log('Synced crossnote output to node_modules/crossnote/out/');
-}
-
 async function main() {
   try {
     // Watch mode
@@ -220,7 +194,6 @@ async function main() {
       await Promise.all([nativeContext.watch(), webContext.watch()]);
     } else {
       // Build mode
-      syncCrossnoteOutput();
       await Promise.all([build(nativeConfig), build(webConfig)]);
       copyTikzjaxTexFiles();
       copyXhrSyncWorker();
