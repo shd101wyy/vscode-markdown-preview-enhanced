@@ -31,7 +31,7 @@
     "fix:all": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
-    "prepare": "husky install",
+    "prepare": "husky",
     "run-in-browser": "concurrently \"vscode-test-web --browserType=chromium --extensionDevelopmentPath=. $SERVE_DIR\" \"npx http-server ./crossnote -p 6789 --cors\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
@@ -533,7 +533,7 @@
           "type": "string"
         },
         "markdown-preview-enhanced.enableScriptExecution": {
-          "description": "Enables executing code chunks and importing javascript files.\n⚠️ Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled.",
+          "description": "Enables executing code chunks and importing javascript files.\n\u26a0\ufe0f Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled.",
           "default": false,
           "type": "boolean"
         },
