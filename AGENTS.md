@@ -48,6 +48,7 @@ The extension depends on `crossnote` as a local path dependency. When making cha
 The native extension (`out/native/extension.js`) is bundled by esbuild with `platform: 'node'`. Some packages require special handling:
 
 - **`node-tikzjax`**: WASM data files (`tex.wasm.gz`, `core.dump.gz`, `tex_files.tar.gz`) are copied to `out/tex/` by `build.js` at build time, because `node-tikzjax` uses `__dirname`-relative paths to locate them.
+- **`markdown_yo`**: `markdown_yo_wasm_api.wasm` is copied to `out/native/` by `build.js` because the Emscripten module resolves it relative to `__dirname` at runtime.
 - **`jsdom`** (used by node-tikzjax): `xhr-sync-worker.js` is copied to `out/native/` because `jsdom` calls `require.resolve('./xhr-sync-worker.js')` at load time.
 - **`vscode`**: always marked as external (provided by the VS Code runtime).
 
