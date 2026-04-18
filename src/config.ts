@@ -79,6 +79,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly chromePath: string;
   public readonly imageMagickPath: string;
   public readonly pandocPath: string;
+  public readonly markdownYoBinaryPath: string;
   public readonly pandocMarkdownFlavor: string;
   public readonly pandocArguments: string[];
   public readonly latexEngine: string;
@@ -207,6 +208,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       getMPEConfig<string>('imageMagickPath') ?? defaultConfig.imageMagickPath;
     this.pandocPath =
       getMPEConfig<string>('pandocPath') ?? defaultConfig.pandocPath;
+    this.markdownYoBinaryPath =
+      getMPEConfig<string>('markdownYoBinaryPath') ??
+      defaultConfig.markdownYoBinaryPath;
     this.pandocMarkdownFlavor =
       getMPEConfig<string>('pandocMarkdownFlavor') ??
       defaultConfig.pandocMarkdownFlavor;

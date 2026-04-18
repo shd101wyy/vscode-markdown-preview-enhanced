@@ -155,14 +155,18 @@
           "type": "string"
         },
         "markdown-preview-enhanced.markdownParser": {
-          "description": "Markdown parser/renderer to use. 'markdown-it' (default) is the built-in renderer. 'pandoc' uses Pandoc (requires Pandoc installed; not available in VS Code web). 'markdown_yo' uses a high-performance WASM renderer (experimental).",
+          "description": "Markdown parser/renderer to use. 'markdown-it' (default) is the built-in renderer. 'pandoc' uses Pandoc (requires Pandoc installed; not available in VS Code web). 'markdown_yo' uses a high-performance WASM renderer (or native binary when markdownYoBinaryPath is set; experimental).",
           "default": "markdown-it",
           "type": "string",
-          "enum": ["markdown-it", "pandoc", "markdown_yo"],
+          "enum": [
+            "markdown-it",
+            "pandoc",
+            "markdown_yo"
+          ],
           "enumDescriptions": [
             "Built-in markdown-it renderer (default).",
             "Render via Pandoc. Requires Pandoc to be installed. Not available in VS Code web.",
-            "High-performance WASM renderer (experimental). markdown-it is still used for token-based operations."
+            "High-performance renderer (experimental). Uses WASM by default, or a native binary when markdownYoBinaryPath is set. markdown-it is still used for token-based operations."
           ]
         },
         "markdown-preview-enhanced.breakOnSingleNewLine": {
@@ -523,6 +527,12 @@
           "type": "string",
           "scope": "machine"
         },
+        "markdown-preview-enhanced.markdownYoBinaryPath": {
+          "description": "Path to the markdown_yo native binary. When set and markdownParser is 'markdown_yo', crossnote will use this binary (via stdin/stdout) instead of the bundled WASM module. The native binary is faster for files under ~300 KB; WASM is faster for very large files. Supports $HOME and ~ variable substitution. Leave empty to use WASM (default).",
+          "default": "",
+          "type": "string",
+          "scope": "machine"
+        },
         "markdown-preview-enhanced.pandocMarkdownFlavor": {
           "description": "The pandoc markdown flavor you want",
           "default": "markdown-raw_tex+tex_math_single_backslash",
@@ -702,7 +712,6 @@
           ],
           "type": "array"
         },
-        
         "markdown-preview-enhanced.alwaysShowBacklinksInPreview": {
           "description": "Always show backlinks in preview.",
           "default": false,
