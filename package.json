@@ -41,6 +41,12 @@
   "contributes": {
     "commands": [
       {
+        "command": "markdown-preview-enhanced.openGraphView",
+        "title": "Open Graph View",
+        "category": "Markdown",
+        "icon": "$(type-hierarchy)"
+      },
+      {
         "command": "markdown-preview-enhanced.openPreviewToTheSide",
         "title": "%markdown-preview-enhanced.openPreviewToTheSide.title%",
         "category": "Markdown",

@@ -7,6 +7,7 @@ import { pasteImageFile, uploadImageFile } from './image-helper';
 import NotebooksManager from './notebooks-manager';
 import { PreviewCustomEditorProvider } from './preview-custom-editor-provider';
 import { PreviewProvider, getPreviewUri } from './preview-provider';
+import { GraphViewProvider } from './graph-view-provider';
 import {
   getBottomVisibleLine,
   getEditorActiveCursorLine,
@@ -1291,6 +1292,47 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       'markdown-preview-enhanced',
       new PreviewCustomEditorProvider(context),
     ),
+  );
+
+  // Graph view
+  GraphViewProvider.notebooksManager = notebooksManager;
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.openGraphView',
+      async () => {
+        const activeUri = vscode.window.activeTextEditor?.document.uri;
+        await GraphViewProvider.openGraphView(context, activeUri);
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.openGraphView',
+      async (sourceUri: string) => {
+        const uri = vscode.Uri.parse(sourceUri);
+        await GraphViewProvider.openGraphView(context, uri);
+      },
+    ),
+  );
+
+  // Refresh graph view when any document is saved
+  context.subscriptions.push(
+    vscode.workspace.onDidSaveTextDocument(async (doc) => {
+      if (doc.languageId === 'markdown') {
+        await GraphViewProvider.refreshGraphData(doc.uri);
+      }
+    }),
+  );
+
+  // Update active file highlight in graph view when editor changes
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+      if (editor && editor.document.languageId === 'markdown') {
+        await GraphViewProvider.sendActiveFile(editor.document.uri);
+      }
+    }),
   );
 }
 
