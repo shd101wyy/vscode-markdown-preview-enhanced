@@ -42,8 +42,7 @@
     "commands": [
       {
         "command": "markdown-preview-enhanced.openGraphView",
-        "title": "Open Graph View",
-        "category": "Markdown Preview Enhanced",
+        "title": "Markdown Preview Enhanced: Open Graph View",
         "icon": "$(type-hierarchy)"
       },
       {
