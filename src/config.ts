@@ -38,7 +38,11 @@ type VSCodeMPEConfigKey =
   | 'qiniuSecretKey'
   | 'scrollSync'
   | 'disableAutoPreviewForUriSchemes'
-  | 'disableAutoPreviewForFilePatterns';
+  | 'disableAutoPreviewForFilePatterns'
+  | 'd2Path'
+  | 'd2Layout'
+  | 'd2Theme'
+  | 'd2Sketch';
 
 type ConfigKey = keyof NotebookConfig | VSCodeMPEConfigKey;
 
@@ -96,6 +100,11 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly enablePreviewZenMode: boolean;
   public readonly wikiLinkTargetFileExtension: string;
   public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
+  // D2 diagram settings
+  public readonly d2Path: string;
+  public readonly d2Layout: string;
+  public readonly d2Theme: number;
+  public readonly d2Sketch: boolean;
   // Don't set values for these properties in constructor:
   public readonly includeInHeader: string;
   public readonly globalCss: string;
@@ -270,6 +279,10 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       getMPEConfig<WikiLinkTargetFileNameChangeCase>(
         'wikiLinkTargetFileNameChangeCase',
       ) ?? defaultConfig.wikiLinkTargetFileNameChangeCase;
+    this.d2Path = getMPEConfig<string>('d2Path') ?? 'd2';
+    this.d2Layout = getMPEConfig<string>('d2Layout') ?? 'dagre';
+    this.d2Theme = getMPEConfig<number>('d2Theme') ?? 0;
+    this.d2Sketch = getMPEConfig<boolean>('d2Sketch') ?? false;
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {
