@@ -1,4 +1,6 @@
 const { execSync } = require('child_process');
+const { cpSync, mkdirSync } = require('fs');
+const { join } = require('path');
 const { context, build } = require('esbuild');
 const { polyfillNode } = require('esbuild-plugin-polyfill-node');
 
@@ -24,6 +26,7 @@ const esbuildProblemMatcherPlugin = {
           ),
         );
       } else {
+        copyTikzjaxTexFiles();
         console.log('[watch] build finished');
       }
     });
@@ -74,7 +77,9 @@ const webConfig = {
   outfile: './out/web/extension.js',
   target: 'es2020',
   format: 'cjs',
-  external: ['vscode'],
+  // node-tikzjax and Node.js built-ins used in server-side code paths are not
+  // available/needed in the web extension build.
+  external: ['vscode', 'node-tikzjax', 'stream/promises', 'stream'],
   plugins: [
     polyfillNode({
       polyfills: {
@@ -95,6 +100,26 @@ const webConfig = {
     'process.env.IS_VSCODE_WEB_EXTENSION': '"true"',
   },
 };
+
+/**
+ * Copy node-tikzjax WASM/tex data files to out/tex/ so the bundled native
+ * extension (at out/native/extension.js) can find them via
+ * path.join(__dirname, '../tex') at runtime.
+ */
+function copyTikzjaxTexFiles() {
+  const tikzjaxTexDir = join(
+    __dirname,
+    'node_modules',
+    'crossnote',
+    'node_modules',
+    'node-tikzjax',
+    'tex',
+  );
+  const outTexDir = join(__dirname, 'out', 'tex');
+  mkdirSync(outTexDir, { recursive: true });
+  cpSync(tikzjaxTexDir, outTexDir, { recursive: true });
+  console.log('Copied node-tikzjax tex files to out/tex/');
+}
 
 async function main() {
   try {
@@ -126,6 +151,7 @@ async function main() {
     } else {
       // Build mode
       await Promise.all([build(nativeConfig), build(webConfig)]);
+      copyTikzjaxTexFiles();
     }
   } catch (error) {
     console.error(error);
