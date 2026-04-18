@@ -105,6 +105,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly enablePreviewZenMode: boolean;
   public readonly wikiLinkTargetFileExtension: string;
   public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
+  public readonly useMarkdownYoParser: boolean;
   // D2 diagram settings
   public readonly d2Path: string;
   public readonly d2Layout: string;
@@ -288,6 +289,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.d2Layout = getMPEConfig<string>('d2Layout') ?? 'dagre';
     this.d2Theme = getMPEConfig<number>('d2Theme') ?? 0;
     this.d2Sketch = getMPEConfig<boolean>('d2Sketch') ?? false;
+    this.useMarkdownYoParser =
+      getMPEConfig<boolean>('useMarkdownYoParser') ??
+      defaultConfig.useMarkdownYoParser;
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

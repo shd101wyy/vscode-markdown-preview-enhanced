@@ -533,7 +533,7 @@
           "type": "string"
         },
         "markdown-preview-enhanced.enableScriptExecution": {
-          "description": "Enables executing code chunks and importing javascript files.\n\u26a0\ufe0f Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled.",
+          "description": "Enables executing code chunks and importing javascript files.\n⚠️ Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled.",
           "default": false,
           "type": "boolean"
         },
@@ -696,6 +696,12 @@
           ],
           "type": "array"
         },
+        "markdown-preview-enhanced.useMarkdownYoParser": {
+          "description": "Use markdown_yo (WASM) as the markdown renderer instead of markdown-it. Restart required.",
+          "default": false,
+          "type": "boolean",
+          "scope": "resource"
+        },
         "markdown-preview-enhanced.alwaysShowBacklinksInPreview": {
           "description": "Always show backlinks in preview.",
           "default": false,
@@ -785,7 +791,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.9.20",
+    "crossnote": "../crossnote",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {
