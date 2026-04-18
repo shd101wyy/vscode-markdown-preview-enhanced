@@ -28,6 +28,7 @@ const esbuildProblemMatcherPlugin = {
       } else {
         copyTikzjaxTexFiles();
         copyXhrSyncWorker();
+        copyMarkdownYoWasm();
         console.log('[watch] build finished');
       }
     });
@@ -165,6 +166,36 @@ function copyXhrSyncWorker() {
   console.log('Copied jsdom xhr-sync-worker.js to out/native/');
 }
 
+function copyMarkdownYoWasm() {
+  const pnpmDir = join(
+    __dirname,
+    'node_modules',
+    'crossnote',
+    'node_modules',
+    '.pnpm',
+  );
+  const markdownYoDirs = readdirSync(pnpmDir).filter((d) =>
+    d.startsWith('markdown_yo@'),
+  );
+  if (markdownYoDirs.length === 0) {
+    console.warn(
+      'Could not find markdown_yo in pnpm store, skipping WASM copy',
+    );
+    return;
+  }
+  const wasmSrc = join(
+    pnpmDir,
+    markdownYoDirs[0],
+    'node_modules',
+    'markdown_yo',
+    'markdown_yo_wasm_api.wasm',
+  );
+  const outNativeDir = join(__dirname, 'out', 'native');
+  mkdirSync(outNativeDir, { recursive: true });
+  cpSync(wasmSrc, join(outNativeDir, 'markdown_yo_wasm_api.wasm'));
+  console.log('Copied markdown_yo WASM to out/native/');
+}
+
 async function main() {
   try {
     // Watch mode
@@ -197,6 +228,7 @@ async function main() {
       await Promise.all([build(nativeConfig), build(webConfig)]);
       copyTikzjaxTexFiles();
       copyXhrSyncWorker();
+      copyMarkdownYoWasm();
     }
   } catch (error) {
     console.error(error);
