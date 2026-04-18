@@ -36,6 +36,24 @@ const esbuildProblemMatcherPlugin = {
 };
 
 /**
+ * esbuild plugin to mark jsdom's xhr-sync-worker.js as external.
+ * jsdom uses require.resolve('./xhr-sync-worker.js') to locate the sync XHR
+ * worker. We copy the file to out/native/ so it resolves correctly at runtime
+ * via __dirname. Without this plugin, esbuild warns about the require.resolve
+ * call and may inline the wrong absolute path from node_modules.
+ */
+const xhrSyncWorkerExternalPlugin = {
+  name: 'xhr-sync-worker-external',
+  /** @param {import('esbuild').PluginBuild} build */
+  setup(build) {
+    build.onResolve({ filter: /xhr-sync-worker/ }, (args) => ({
+      path: args.path,
+      external: true,
+    }));
+  },
+};
+
+/**
  * @type {import('esbuild').BuildOptions}
  */
 const nativeConfig = {
@@ -47,6 +65,7 @@ const nativeConfig = {
   target: 'node16',
   format: 'cjs',
   external: ['vscode'],
+  plugins: [xhrSyncWorkerExternalPlugin],
 };
 
 // FIX:
