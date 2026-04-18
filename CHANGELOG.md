@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support rendering [D2](https://d2lang.com) diagrams via the `d2` CLI. D2 fenced code blocks are rendered as SVG diagrams in the preview. If the `d2` executable is not installed, blocks are silently rendered as plain code blocks.
   - New settings: `markdown-preview-enhanced.d2Path`, `d2Layout`, `d2Theme`, `d2Sketch`
-  - Per-block overrides supported in the fence info string: `` ```d2 layout=elk theme=200 sketch ``
+  - Per-block overrides supported in the fence info string: ` ```d2 layout=elk theme=200 sketch `
 
 ## [0.8.22] - 2026-03-22
 
