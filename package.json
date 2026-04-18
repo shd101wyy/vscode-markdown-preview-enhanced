@@ -43,7 +43,7 @@
       {
         "command": "markdown-preview-enhanced.openGraphView",
         "title": "Open Graph View",
-        "category": "Markdown",
+        "category": "Markdown Preview Enhanced",
         "icon": "$(type-hierarchy)"
       },
       {
@@ -775,6 +775,11 @@
       "editor/context": [
         {
           "command": "markdown-preview-enhanced.openPreviewToTheSide",
+          "when": "editorLangId == markdown",
+          "group": "markdown-preview-enhanced"
+        },
+        {
+          "command": "markdown-preview-enhanced.openGraphView",
           "when": "editorLangId == markdown",
           "group": "markdown-preview-enhanced"
         }

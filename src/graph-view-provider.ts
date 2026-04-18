@@ -1,4 +1,5 @@
 import { constructGraphView, GraphViewData } from 'crossnote';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import NotebooksManager from './notebooks-manager';
 
@@ -47,10 +48,13 @@ export class GraphViewProvider {
 
     const uri = sourceUri ?? vscode.window.activeTextEditor?.document.uri;
 
+    let notebookRootPath: string | undefined;
+
     if (uri) {
       try {
         const notebook =
           await GraphViewProvider.notebooksManager.getNotebook(uri);
+        notebookRootPath = notebook.notebookPath.fsPath;
         const engine = notebook.getNoteMarkdownEngine(uri.fsPath);
         panel.webview.html = engine.generateHTMLTemplateForGraphView({
           vscodePreviewPanel: panel,
@@ -68,16 +72,22 @@ export class GraphViewProvider {
     panel.webview.onDidReceiveMessage(
       async (message: { command: string; args: unknown[] }) => {
         if (message.command === 'openFile') {
-          const filePath = message.args[0] as string;
+          // node IDs are relative paths — resolve against notebook root
+          const relFilePath = message.args[0] as string;
+          const absFilePath = notebookRootPath
+            ? path.resolve(notebookRootPath, relFilePath)
+            : relFilePath;
           try {
-            const fileUri = vscode.Uri.file(filePath);
+            const fileUri = vscode.Uri.file(absFilePath);
             const doc = await vscode.workspace.openTextDocument(fileUri);
             await vscode.window.showTextDocument(doc, {
               preview: false,
               viewColumn: vscode.ViewColumn.One,
             });
           } catch {
-            vscode.window.showErrorMessage(`Could not open file: ${filePath}`);
+            vscode.window.showErrorMessage(
+              `Could not open file: ${absFilePath}`,
+            );
           }
         } else if (message.command === 'graphViewReady') {
           // Webview finished loading — send graph data
@@ -137,10 +147,15 @@ export class GraphViewProvider {
       if (graphData.hash === GraphViewProvider.currentHash) return;
       GraphViewProvider.currentHash = graphData.hash;
 
+      // Node IDs in graphData are relative paths; send activeFilePath as relative too
+      const relativeActiveFilePath = uri
+        ? path.relative(notebook.notebookPath.fsPath, uri.fsPath)
+        : undefined;
+
       await panel.webview.postMessage({
         command: 'graphData',
         data: graphData,
-        activeFilePath: uri.fsPath,
+        activeFilePath: relativeActiveFilePath,
       });
     } catch (error) {
       console.error('GraphViewProvider: failed to build graph data', error);
@@ -154,9 +169,19 @@ export class GraphViewProvider {
   public static async sendActiveFile(uri: vscode.Uri) {
     const panel = GraphViewProvider.graphViewPanel;
     if (!panel) return;
-    await panel.webview.postMessage({
-      command: 'setActiveFile',
-      filePath: uri.fsPath,
-    });
+    try {
+      const notebook =
+        await GraphViewProvider.notebooksManager.getNotebook(uri);
+      const relativeFilePath = path.relative(
+        notebook.notebookPath.fsPath,
+        uri.fsPath,
+      );
+      await panel.webview.postMessage({
+        command: 'setActiveFile',
+        filePath: relativeFilePath,
+      });
+    } catch {
+      // Ignore errors when notebook is not available
+    }
   }
 }
