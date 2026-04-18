@@ -24,7 +24,8 @@ class NotebooksManager {
   private notebooks: Notebook[] = [];
   public systemColorScheme: 'light' | 'dark' = 'light';
   private fileWatcher: FileWatcher;
-  private currentMPEConfig: MarkdownPreviewEnhancedConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
+  private currentMPEConfig: MarkdownPreviewEnhancedConfig =
+    MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
   constructor(private context: vscode.ExtensionContext) {
     this.fileWatcher = new FileWatcher(this.context, this);
@@ -259,7 +260,7 @@ class NotebooksManager {
     }
   }
 
-  public async refreshNoteRelations(noteFilePath: string) {}
+  public async refreshNoteRelations(_noteFilePath: string) {}
 
   public async getNoteBacklinks(
     noteUri: vscode.Uri,

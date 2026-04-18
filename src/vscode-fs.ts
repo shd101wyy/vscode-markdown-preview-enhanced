@@ -17,7 +17,7 @@ export function wrapVSCodeFSAsApi(scheme: string): FileSystemApi {
       try {
         await vscode.workspace.fs.stat(uri);
         return true;
-      } catch (error) {
+      } catch {
         return false;
       }
     },
@@ -33,10 +33,13 @@ export function wrapVSCodeFSAsApi(scheme: string): FileSystemApi {
     writeFile: async (
       path: string,
       data: string,
-      encoding?: BufferEncoding,
+      encoding?: string,
     ): Promise<void> => {
       const uri = getUri(path, scheme);
-      await vscode.workspace.fs.writeFile(uri, Buffer.from(data, encoding));
+      await vscode.workspace.fs.writeFile(
+        uri,
+        Buffer.from(data, encoding as BufferEncoding),
+      );
     },
     mkdir: async (path: string): Promise<void> => {
       await vscode.workspace.fs.createDirectory(getUri(path, scheme));

@@ -79,10 +79,15 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly latexEngine: string;
   public readonly enableScriptExecution: boolean;
   public readonly enableHTML5Embed: boolean;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedUseImageSyntax: boolean;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedUseLinkSyntax: boolean;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedIsAllowedHttp: boolean;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedAudioAttributes: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedVideoAttributes: string;
   public readonly puppeteerWaitForTimeout: number;
   public readonly puppeteerArgs: string[];
@@ -97,12 +102,12 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly wikiLinkTargetFileExtension: string;
   public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
   // Don't set values for these properties in constructor:
-  public readonly includeInHeader: string;
-  public readonly globalCss: string;
-  public readonly mermaidConfig: MermaidConfig;
+  public readonly includeInHeader!: string;
+  public readonly globalCss!: string;
+  public readonly mermaidConfig!: MermaidConfig;
   public readonly mathjaxConfig: any;
-  public readonly katexConfig: KatexOptions;
-  public readonly parserConfig: ParserConfig;
+  public readonly katexConfig!: KatexOptions;
+  public readonly parserConfig!: ParserConfig;
   public readonly isVSCode: boolean = true;
 
   // preview config
@@ -124,8 +129,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.configPath = getMPEConfig<string>('configPath') ?? '';
     this.usePandocParser = isVSCodeWebExtension()
       ? false // pandoc is not supported in web extension
-      : getMPEConfig<boolean>('usePandocParser') ??
-        defaultConfig.usePandocParser;
+      : (getMPEConfig<boolean>('usePandocParser') ??
+        defaultConfig.usePandocParser);
     this.breakOnSingleNewLine =
       getMPEConfig<boolean>('breakOnSingleNewLine') ??
       defaultConfig.breakOnSingleNewLine;

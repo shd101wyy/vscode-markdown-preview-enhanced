@@ -24,8 +24,8 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
     return vscode.window.showErrorMessage('Cannot find workspace');
   }
 
-  let assetDirectoryPath;
-  let description;
+  let assetDirectoryPath: string;
+  let description: string;
   if (imageFolderPath[0] === '/') {
     assetDirectoryPath = path.resolve(
       projectDirectoryPath,
@@ -50,16 +50,12 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
         editor.document.uri.fsPath === uri.fsPath,
     )
     .forEach((editor) => {
-      fs.mkdir(assetDirectoryPath, (error) => {
-        fs.stat(destPath, (err, stat) => {
-          if (err == null) {
+      fs.mkdir(assetDirectoryPath, (_error) => {
+        fs.stat(destPath, (err, _stat) => {
+          if (err === null) {
             // file existed
             const lastDotOffset = imageFileName.lastIndexOf('.');
-            const uid =
-              '_' +
-              Math.random()
-                .toString(36)
-                .substr(2, 9);
+            const uid = '_' + Math.random().toString(36).substr(2, 9);
 
             if (lastDotOffset > 0) {
               description = imageFileName.slice(0, lastDotOffset);
@@ -188,9 +184,7 @@ export function uploadImageFile(
         editor.document.uri.fsPath === sourceUri.fsPath,
     )
     .forEach((editor) => {
-      const uid = Math.random()
-        .toString(36)
-        .substr(2, 9);
+      const uid = Math.random().toString(36).substr(2, 9);
       const hint = `![Uploading ${imageFileName}… (${uid})]()`;
       const curPos = editor.selection.active;
 
@@ -198,14 +192,19 @@ export function uploadImageFile(
         textEditorEdit.insert(curPos, hint);
       });
 
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       const AccessKey = getMPEConfig<string>('qiniuAccessKey') || '';
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       const SecretKey = getMPEConfig<string>('qiniuSecretKey') || '';
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       const Bucket = getMPEConfig<string>('qiniuBucket') || '';
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       const Domain = getMPEConfig<string>('qiniuDomain') || '';
 
       utility
         .uploadImage(imageFilePath, {
           method: imageUploader,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
           qiniu: { AccessKey, SecretKey, Bucket, Domain },
         })
         .then((url) => {

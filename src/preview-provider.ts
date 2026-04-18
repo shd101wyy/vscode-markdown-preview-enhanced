@@ -56,7 +56,7 @@ utility.useExternalAddFileProtocolFunction((filePath, preview) => {
     if (!filePath.startsWith('file://')) {
       filePath = 'file:///' + filePath;
     }
-    filePath = filePath.replace(/^file\:\/+/, 'file:///');
+    filePath = filePath.replace(/^file:\/+/, 'file:///');
     return filePath;
   }
 });
@@ -91,22 +91,20 @@ export class PreviewProvider {
   /**
    * Each PreviewProvider has a one notebook.
    */
-  private notebook: Notebook;
+  private notebook!: Notebook;
 
   /**
    * VSCode extension context
    */
-  private context: vscode.ExtensionContext;
+  private context!: vscode.ExtensionContext;
 
   /**
    * The key is sourceUri.toString()
    * value is Preview (vscode.Webview) object
    */
   private previewMaps: Map<string, Set<vscode.WebviewPanel>> = new Map();
-  private previewToDocumentMap: Map<
-    vscode.WebviewPanel,
-    vscode.TextDocument
-  > = new Map();
+  private previewToDocumentMap: Map<vscode.WebviewPanel, vscode.TextDocument> =
+    new Map();
   private initializedPreviews: Set<vscode.WebviewPanel> = new Set();
 
   private static singlePreviewPanel: vscode.WebviewPanel | null;
@@ -128,9 +126,8 @@ export class PreviewProvider {
     workspaceFolderUri: vscode.Uri,
   ) {
     this.context = context;
-    this.notebook = await this.getNotebooksManager().getNotebook(
-      workspaceFolderUri,
-    );
+    this.notebook =
+      await this.getNotebooksManager().getNotebook(workspaceFolderUri);
     return this;
   }
 
@@ -269,7 +266,7 @@ export class PreviewProvider {
   /**
    * TODO: Free memory
    */
-  public destroyEngine(sourceUri: vscode.Uri) {}
+  public destroyEngine(_sourceUri: vscode.Uri) {}
 
   private getEngine(sourceUri: Uri) {
     return this.notebook.getNoteMarkdownEngine(sourceUri.fsPath);
@@ -348,7 +345,7 @@ export class PreviewProvider {
           enableScripts: true,
           localResourceRoots,
         };
-        // @ts-ignore
+        // @ts-expect-error retainContextWhenHidden is not in type definitions
         previewPanel.options.retainContextWhenHidden = true;
       } else {
         previewPanel = vscode.window.createWebviewPanel(
@@ -436,7 +433,7 @@ export class PreviewProvider {
       });
       previewPanel.webview.html = html;
     } catch (error) {
-      vscode.window.showErrorMessage(error.toString());
+      vscode.window.showErrorMessage(String(error));
       console.error(error);
     }
   }
@@ -536,7 +533,7 @@ export class PreviewProvider {
           const {
             html,
             tocHTML,
-            JSAndCssFiles,
+            JSAndCssFiles: jsAndCssFiles,
             yamlConfig,
           } = await engine.parseMD(text, {
             isForPreview: true,
@@ -545,13 +542,13 @@ export class PreviewProvider {
             triggeredBySave,
             vscodePreviewPanel: preview,
           });
-          // check JSAndCssFiles
+          // check jsAndCssFiles
           if (
-            JSON.stringify(JSAndCssFiles) !==
+            JSON.stringify(jsAndCssFiles) !==
               JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath] ?? []) ||
             yamlConfig['isPresentationMode']
           ) {
-            this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles;
+            this.jsAndCssFilesMaps[sourceUri.fsPath] = jsAndCssFiles;
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
@@ -581,7 +578,7 @@ export class PreviewProvider {
         } catch (error) {
           if (i === previews.length - 1) {
             // This is the
-            vscode.window.showErrorMessage(error.toString());
+            vscode.window.showErrorMessage(String(error));
           } else {
             continue;
           }
@@ -630,7 +627,7 @@ export class PreviewProvider {
         vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
       } else {
         engine.openInBrowser({}).catch((error) => {
-          vscode.window.showErrorMessage(error.toString());
+          vscode.window.showErrorMessage(String(error));
         });
       }
     }
@@ -647,7 +644,7 @@ export class PreviewProvider {
           );
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error.toString());
+          vscode.window.showErrorMessage(String(error));
         });
     }
   }
@@ -666,7 +663,7 @@ export class PreviewProvider {
             );
           })
           .catch((error) => {
-            vscode.window.showErrorMessage(error.toString());
+            vscode.window.showErrorMessage(String(error));
           });
       }
     }
@@ -685,7 +682,7 @@ export class PreviewProvider {
               // presentation pdf
               vscode.window.showInformationMessage(
                 `Please copy and open the link: { ${dest.replace(
-                  /\_/g,
+                  /_/g,
                   '\\_',
                 )} } in Chrome then Print as Pdf.`,
               );
@@ -696,7 +693,7 @@ export class PreviewProvider {
             }
           })
           .catch((error) => {
-            vscode.window.showErrorMessage(error.toString());
+            vscode.window.showErrorMessage(String(error));
           });
       }
     }
@@ -716,13 +713,13 @@ export class PreviewProvider {
             );
           })
           .catch((error) => {
-            vscode.window.showErrorMessage(error.toString());
+            vscode.window.showErrorMessage(String(error));
           });
       }
     }
   }
 
-  public pandocExport(sourceUri) {
+  public pandocExport(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       if (isVSCodeWebExtension()) {
@@ -736,13 +733,13 @@ export class PreviewProvider {
             );
           })
           .catch((error) => {
-            vscode.window.showErrorMessage(error.toString());
+            vscode.window.showErrorMessage(String(error));
           });
       }
     }
   }
 
-  public markdownExport(sourceUri) {
+  public markdownExport(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       engine
@@ -753,7 +750,7 @@ export class PreviewProvider {
           );
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error.toString());
+          vscode.window.showErrorMessage(String(error));
         });
     }
   }
@@ -783,7 +780,7 @@ export class PreviewProvider {
     }
   }
 
-  public runAllCodeChunks(sourceUri) {
+  public runAllCodeChunks(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       engine.runCodeChunks().then(() => {

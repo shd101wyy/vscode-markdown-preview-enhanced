@@ -418,7 +418,6 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.8.17](
   When the editor is open, you can press `ctrl+s` or `cmd+s` to save the markdown file. You can also press `esc` to close the editor.
 - Deprecated the VS Code setting `markdown-preview-enhanced.singlePreview`.  
   Now replaced by `markdown-preview-enhanced.previewMode`:
-
   - **Single Preview** (_default_)  
     Only one preview will be shown for all editors.
   - **Multiple Previews**  
@@ -613,7 +612,6 @@ We will also add the backlinks graph view. 📈
 - ✨ Reduced the size of the bundled vscode MPE extension from 40mb to 8mb.
 - ➕ Supported to configure: `markdown-preview-enhanced.mathjaxV3ScriptSrc`, `markdown-preview-enhanced.plantumlJarPath`, and `markdown-preview-enhanced.krokiServer`.
 - 🔰 Updated [@shd101wyy/mume](https://github.com/shd101wyy/mume) to version [0.7.8](https://github.com/shd101wyy/mume/pull/297).
-
   - :robot: Completely refactored the `mume` project. It's not done yet, but it's a good start. The next release will be a major release.
     - 🎉 Now use the esbuild to bundle the project.
     - 🎉 Better support of both commonjs and esm.
