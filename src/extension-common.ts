@@ -1317,11 +1317,11 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     ),
   );
 
-  // Refresh graph view when any document is saved
+  // Refresh graph view when any markdown document is saved (force-rebuild relations)
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument(async (doc) => {
       if (doc.languageId === 'markdown') {
-        await GraphViewProvider.refreshGraphData(doc.uri);
+        await GraphViewProvider.refreshGraphData(doc.uri, true);
       }
     }),
   );

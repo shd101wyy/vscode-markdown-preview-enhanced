@@ -101,8 +101,13 @@ export class GraphViewProvider {
   /**
    * Refresh the graph data in the open panel.
    * Skips the refresh if the graph content has not changed (hash comparison).
+   * @param forceRefresh - When true, rebuilds all note relations (e.g. after a save).
+   *                       When false (default), only loads notes if not yet loaded.
    */
-  public static async refreshGraphData(sourceUri?: vscode.Uri) {
+  public static async refreshGraphData(
+    sourceUri?: vscode.Uri,
+    forceRefresh = false,
+  ) {
     const panel = GraphViewProvider.graphViewPanel;
     if (!panel) return;
 
@@ -112,6 +117,21 @@ export class GraphViewProvider {
     try {
       const notebook =
         await GraphViewProvider.notebooksManager.getNotebook(uri);
+
+      // Ensure the reference map is populated before building the graph
+      if (forceRefresh) {
+        await notebook.refreshNotes({
+          dir: '.',
+          includeSubdirectories: true,
+          refreshRelations: true,
+        });
+      } else {
+        await notebook.refreshNotesIfNotLoaded({
+          dir: '.',
+          includeSubdirectories: true,
+        });
+      }
+
       const graphData: GraphViewData = constructGraphView(notebook);
 
       if (graphData.hash === GraphViewProvider.currentHash) return;
