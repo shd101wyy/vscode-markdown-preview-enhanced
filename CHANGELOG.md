@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Graph view** — Obsidian-style interactive note graph, accessible via "Markdown Preview Enhanced: Open Graph View" in the command palette, the editor right-click context menu, or the button in the preview bottom bar.
+  - Force-directed D3 canvas layout; supports pan and zoom.
+  - **Global / Local** toggle: Global shows all notes; Local shows only the current file and its connected neighbors (configurable depth 1–5 via a slider).
+  - Node sizing by connection count (more links → larger node).
+  - **By Folder** toggle: color nodes by their parent directory using stable HSL hues.
+  - Search/filter input to highlight matching nodes.
+  - Click a node to open the corresponding file in the editor.
+  - Hover highlights direct neighbors and dims the rest.
+  - Directional arrowheads on edges (scales with zoom).
+  - Adapts to the VS Code light/dark/high-contrast theme.
+  - Last-used Global/Local mode and By Folder preference are persisted across sessions.
+  - Refreshes automatically when any markdown file in the workspace is saved.
+
 - Support rendering [D2](https://d2lang.com) diagrams via the `d2` CLI. D2 fenced code blocks are rendered as SVG diagrams in the preview. If the `d2` executable is not installed, blocks are silently rendered as plain code blocks.
   - New settings: `markdown-preview-enhanced.d2Path`, `d2Layout`, `d2Theme`, `d2Sketch`
   - Per-block overrides supported in the fence info string: ` ```d2 layout=elk theme=200 sketch `
