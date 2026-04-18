@@ -1296,6 +1296,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
   // Graph view
   GraphViewProvider.notebooksManager = notebooksManager;
+  GraphViewProvider.init(context);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(

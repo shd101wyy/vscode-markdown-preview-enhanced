@@ -5,9 +5,30 @@ import NotebooksManager from './notebooks-manager';
 
 export class GraphViewProvider {
   static notebooksManager: NotebooksManager;
+  private static extensionContext: vscode.ExtensionContext;
 
   private static graphViewPanel: vscode.WebviewPanel | undefined;
   private static currentHash: string | undefined;
+
+  public static init(context: vscode.ExtensionContext) {
+    GraphViewProvider.extensionContext = context;
+  }
+
+  private static getViewMode(): 'global' | 'local' {
+    return (
+      (GraphViewProvider.extensionContext?.globalState.get<string>(
+        'graphViewMode',
+      ) as 'global' | 'local') ?? 'global'
+    );
+  }
+
+  private static getColorByFolder(): boolean {
+    return (
+      GraphViewProvider.extensionContext?.globalState.get<boolean>(
+        'graphViewColorByFolder',
+      ) ?? false
+    );
+  }
 
   /**
    * Open (or reveal) the graph view panel.
@@ -89,6 +110,15 @@ export class GraphViewProvider {
               `Could not open file: ${absFilePath}`,
             );
           }
+        } else if (message.command === 'saveSetting') {
+          const { key, value } = message.args[0] as {
+            key: string;
+            value: unknown;
+          };
+          await GraphViewProvider.extensionContext.globalState.update(
+            `graphView${key.charAt(0).toUpperCase()}${key.slice(1)}`,
+            value,
+          );
         } else if (message.command === 'graphViewReady') {
           // Webview finished loading — send graph data
           await GraphViewProvider.refreshGraphData(uri);
@@ -156,6 +186,8 @@ export class GraphViewProvider {
         command: 'graphData',
         data: graphData,
         activeFilePath: relativeActiveFilePath,
+        viewMode: GraphViewProvider.getViewMode(),
+        colorByFolder: GraphViewProvider.getColorByFolder(),
       });
     } catch (error) {
       console.error('GraphViewProvider: failed to build graph data', error);
