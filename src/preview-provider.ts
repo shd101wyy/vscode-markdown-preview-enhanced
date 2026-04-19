@@ -487,9 +487,12 @@ export class PreviewProvider {
         contentSecurityPolicy: '',
         vscodePreviewPanel: previewPanel,
         isVSCodeWebExtension: isVSCodeWebExtension(),
-        // The React webview app always appends the correct <base> tag using
-        // the sourceUri. Don't emit the default engine-path-based <base> tag
-        // which is wrong for virtual filesystems (e.g., vscode-test-web://).
+        // In the web extension, this.filePath is just the path component of a
+        // virtual URI (e.g. '/LICENSE.md'), so the default <base> tag would be
+        // malformed. The React webview already appends the correct <base> tag at
+        // runtime using the full sourceUri, so we can safely omit it here.
+        // For the native extension the default base tag is harmless, but we keep
+        // consistent behaviour and let React own it in both cases.
         head: '',
       });
 
