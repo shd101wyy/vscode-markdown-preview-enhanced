@@ -7,7 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+## [0.8.23] - 2026-04-19
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.21](https://github.com/shd101wyy/crossnote/releases/tag/0.9.21).
+
+### Breaking changes
+
+- **`usePandocParser` and `useMarkdownYoParser` config fields have been removed.** Use the new unified `markdownParser` field instead:
+  - `usePandocParser: true` → `markdownParser: 'pandoc'`
+  - `useMarkdownYoParser: true` → `markdownParser: 'markdown_yo'`
+  - Default (markdown-it) → `markdownParser: 'markdown-it'` (or omit the field)
+
+### New features
+
+- Add experimental support for [markdown_yo](https://github.com/shd101wyy/markdown_yo), a high-performance Markdown-to-HTML renderer written in the [Yo programming language](https://github.com/shd101wyy/Yo) and compiled to WebAssembly.
+  - Enable with `markdownParser: 'markdown_yo'` in notebook config (previously `useMarkdownYoParser: true`).
+  - Replaces markdown-it for HTML rendering; markdown-it is still used for token-based operations (backlink extraction, note mention processing, etc.).
+  - Supports CommonMark, GFM tables, strikethrough, subscript, superscript, mark/highlight, math, emoji, wikilinks, CriticMarkup, abbreviations, definition lists, admonitions, callouts, footnotes, source maps, and line breaks.
+  - KaTeX and MathJax math rendering are both supported via post-processing.
+  - Wikilink href post-processing applies the same file extension rules as markdown-it.
+  - Performance comparison (median of 10 runs, Apple M4):
+
+    | Input Size | markdown-it (JS) | Native  | Speedup | WASM     | Speedup |
+    | ---------- | ---------------- | ------- | ------- | -------- | ------- |
+    | 64 KB      | 1.6 ms           | 0.4 ms  | 4.5×    | 12.9 ms  | 0.1×    |
+    | 256 KB     | 6.7 ms           | 1.2 ms  | 5.3×    | 13.1 ms  | 0.5×    |
+    | 1 MB       | 28.8 ms          | 4.8 ms  | 6.0×    | 13.5 ms  | 2.1×    |
+    | 5 MB       | 158.9 ms         | 23.3 ms | 6.8×    | 32.6 ms  | 4.9×    |
+    | 20 MB      | 722.8 ms         | 95.4 ms | 7.6×    | 121.5 ms | 6.0×    |
+
+    _Native: clang -O3 -flto. WASM: Emscripten, Node.js, -O3 -flto. WASM overhead at small sizes is dominated by one-time WASM compilation startup (~12ms). Crossnote uses the WASM version for cross-platform compatibility._
+
+  - Pre-built binaries for Linux, macOS, and Windows are available at [github.com/shd101wyy/markdown_yo/releases](https://github.com/shd101wyy/markdown_yo/releases). To use them, set `markdownYoBinaryPath` in your notebook config.
+
+- Support rendering [D2](https://d2lang.com) diagrams via the `d2` CLI. D2 fenced code blocks are rendered as SVG diagrams in the preview. If the `d2` executable is not installed, blocks are silently rendered as plain code blocks. https://github.com/shd101wyy/crossnote/pull/405 by @kvdogan
+  - New settings: `markdown-preview-enhanced.d2Path`, `d2Layout`, `d2Theme`, `d2Sketch`
+  - Per-block overrides supported in the fence info string: ` ```d2 layout=elk theme=200 sketch `
+
+- Support colon-fenced code blocks. https://github.com/shd101wyy/crossnote/pull/409 by @hryktrd
+
+  Exampe:
+
+  ```
+  :::mermaid
+  graph TD
+  A --> B
+  :::
+  ```
+
+- Support rendering [TikZ](https://tikz.dev/) diagrams via ` ```tikz ` fenced code blocks. https://github.com/shd101wyy/crossnote/issues/380
+  - In Node.js (desktop VS Code): renders TikZ to SVG server-side using [node-tikzjax](https://github.com/prinsss/node-tikzjax), with caching.
+  - In web (VS Code web extension) and HTML export: falls back to client-side rendering via [tikzjax.com](https://tikzjax.com).
+  - Per-block options supported in the fence info string: `texPackages` / `tex_packages`, `tikzLibraries` / `tikz_libraries`, `addToPreamble` / `add_to_preamble`, `showConsole` / `show_console`, `embedFontCss` / `embed_font_css`, `fontCssUrl` / `font_css_url` (both camelCase and snake_case accepted).
+  - Automatically wraps code in `\begin{document}...\end{document}` if not present.
+  - Automatically loads base TeX packages for every render: `amsmath`, `amssymb`, `amsfonts`, `amstext`, `array`.
+  - Auto-detects and loads specialized packages from the code: `tikz-cd` (for `\begin{tikzcd}`), `pgfplots` (for `\begin{axis}`), `circuitikz` (for `\begin{circuitikz}`), `chemfig` (for `\chemfig`), `tikz-3dplot` (for `\tdplotsetmaincoords`). Additional packages can be specified via `texPackages`.
 
 - **Graph view** — Obsidian-style interactive note graph, accessible via "Markdown Preview Enhanced: Open Graph View" in the command palette, the editor right-click context menu, or the button in the preview bottom bar.
   - Force-directed D3 canvas layout; supports pan and zoom.
@@ -22,9 +76,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Last-used Global/Local mode and By Folder preference are persisted across sessions.
   - Refreshes automatically when any markdown file in the workspace is saved.
 
-- Support rendering [D2](https://d2lang.com) diagrams via the `d2` CLI. D2 fenced code blocks are rendered as SVG diagrams in the preview. If the `d2` executable is not installed, blocks are silently rendered as plain code blocks.
-  - New settings: `markdown-preview-enhanced.d2Path`, `d2Layout`, `d2Theme`, `d2Sketch`
-  - Per-block overrides supported in the fence info string: ` ```d2 layout=elk theme=200 sketch `
+- Add `disableAutoPreviewForFilePatterns config option`. https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2245 by @xxjapp
+
+### Fixes
+
+- Fix preview scroll fighting the user: when a file opened with the cursor at line 0, the scroll-to-cursor animation kept overriding the user's manual scrolling for ~620ms. User scroll now cancels any in-progress programmatic scroll animation immediately. https://github.com/shd101wyy/crossnote/pull/412 by @giftcharles
+- Fix SVG file path by removing random parameter. https://github.com/shd101wyy/crossnote/pull/404 by @fs570714
+- Fix a bug exporting files in WSL on Windows. https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2246
+- Fix `gulp-less` failing to compile during `pnpm build` when Google Fonts URLs in theme `.less` files were unreachable (e.g., in offline/CI environments). Remote `@import url(...)` directives are now passed through as plain CSS without being fetched at compile time.
+- Fix some markdown preview loading hang bugs.
+
+### Updates
+
+- Update `mermaid` version to the latest `11.14.0`.
+- Update `katex` version to the latest `0.16.45`.
 
 ## [0.8.22] - 2026-03-22
 
