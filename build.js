@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-const { cpSync, mkdirSync, readdirSync } = require('fs');
+const { cpSync, existsSync, mkdirSync, readdirSync } = require('fs');
 const { join } = require('path');
 const { context, build } = require('esbuild');
 const { polyfillNode } = require('esbuild-plugin-polyfill-node');
@@ -128,14 +128,26 @@ const webConfig = {
  * path.join(__dirname, '../tex') at runtime.
  */
 function copyTikzjaxTexFiles() {
-  const tikzjaxTexDir = join(
-    __dirname,
-    'node_modules',
-    'crossnote',
-    'node_modules',
-    'node-tikzjax',
-    'tex',
-  );
+  // node-tikzjax may be hoisted to the top-level node_modules (e.g. when
+  // crossnote is installed from npm) or nested under crossnote's own
+  // node_modules (e.g. when installed via `yarn add ../crossnote`).
+  const candidates = [
+    join(__dirname, 'node_modules', 'node-tikzjax', 'tex'),
+    join(
+      __dirname,
+      'node_modules',
+      'crossnote',
+      'node_modules',
+      'node-tikzjax',
+      'tex',
+    ),
+  ];
+  const tikzjaxTexDir = candidates.find(existsSync);
+  if (!tikzjaxTexDir) {
+    throw new Error(
+      `node-tikzjax tex directory not found. Tried:\n${candidates.join('\n')}`,
+    );
+  }
   const outTexDir = join(__dirname, 'out', 'tex');
   mkdirSync(outTexDir, { recursive: true });
   cpSync(tikzjaxTexDir, outTexDir, { recursive: true });
@@ -152,33 +164,55 @@ function copyTikzjaxTexFiles() {
  * exist at the resolved path.
  */
 function copyXhrSyncWorker() {
-  const jsdomPnpmDir = join(
+  // jsdom may be hoisted to the top-level node_modules (npm/yarn install) or
+  // nested under crossnote's pnpm store (local path install via yarn add ../crossnote).
+  const candidates = [
+    join(
+      __dirname,
+      'node_modules',
+      'jsdom',
+      'lib',
+      'jsdom',
+      'living',
+      'xhr',
+      'xhr-sync-worker.js',
+    ),
+  ];
+
+  // Also search the pnpm store nested under crossnote if present.
+  const crossnotePnpmDir = join(
     __dirname,
     'node_modules',
     'crossnote',
     'node_modules',
     '.pnpm',
   );
-  const jsdomDirs = readdirSync(jsdomPnpmDir).filter((d) =>
-    d.startsWith('jsdom@'),
-  );
-  if (jsdomDirs.length === 0) {
-    console.warn(
-      'Could not find jsdom in pnpm store, skipping xhr-sync-worker copy',
+  if (existsSync(crossnotePnpmDir)) {
+    const jsdomDirs = readdirSync(crossnotePnpmDir).filter((d) =>
+      d.startsWith('jsdom@'),
     );
+    for (const d of jsdomDirs) {
+      candidates.push(
+        join(
+          crossnotePnpmDir,
+          d,
+          'node_modules',
+          'jsdom',
+          'lib',
+          'jsdom',
+          'living',
+          'xhr',
+          'xhr-sync-worker.js',
+        ),
+      );
+    }
+  }
+
+  const workerSrc = candidates.find(existsSync);
+  if (!workerSrc) {
+    console.warn('Could not find jsdom xhr-sync-worker.js, skipping copy');
     return;
   }
-  const workerSrc = join(
-    jsdomPnpmDir,
-    jsdomDirs[0],
-    'node_modules',
-    'jsdom',
-    'lib',
-    'jsdom',
-    'living',
-    'xhr',
-    'xhr-sync-worker.js',
-  );
   const outNativeDir = join(__dirname, 'out', 'native');
   mkdirSync(outNativeDir, { recursive: true });
   cpSync(workerSrc, join(outNativeDir, 'xhr-sync-worker.js'));
@@ -186,29 +220,41 @@ function copyXhrSyncWorker() {
 }
 
 function copyMarkdownYoWasm() {
-  const pnpmDir = join(
+  // markdown_yo may be hoisted to the top-level node_modules (npm/yarn install)
+  // or nested under crossnote's pnpm store (local path install).
+  const candidates = [
+    join(__dirname, 'node_modules', 'markdown_yo', 'markdown_yo_wasm_api.wasm'),
+  ];
+
+  const crossnotePnpmDir = join(
     __dirname,
     'node_modules',
     'crossnote',
     'node_modules',
     '.pnpm',
   );
-  const markdownYoDirs = readdirSync(pnpmDir).filter((d) =>
-    d.startsWith('markdown_yo@'),
-  );
-  if (markdownYoDirs.length === 0) {
-    console.warn(
-      'Could not find markdown_yo in pnpm store, skipping WASM copy',
+  if (existsSync(crossnotePnpmDir)) {
+    const markdownYoDirs = readdirSync(crossnotePnpmDir).filter((d) =>
+      d.startsWith('markdown_yo@'),
     );
+    for (const d of markdownYoDirs) {
+      candidates.push(
+        join(
+          crossnotePnpmDir,
+          d,
+          'node_modules',
+          'markdown_yo',
+          'markdown_yo_wasm_api.wasm',
+        ),
+      );
+    }
+  }
+
+  const wasmSrc = candidates.find(existsSync);
+  if (!wasmSrc) {
+    console.warn('Could not find markdown_yo WASM, skipping copy');
     return;
   }
-  const wasmSrc = join(
-    pnpmDir,
-    markdownYoDirs[0],
-    'node_modules',
-    'markdown_yo',
-    'markdown_yo_wasm_api.wasm',
-  );
   const outNativeDir = join(__dirname, 'out', 'native');
   mkdirSync(outNativeDir, { recursive: true });
   cpSync(wasmSrc, join(outNativeDir, 'markdown_yo_wasm_api.wasm'));
