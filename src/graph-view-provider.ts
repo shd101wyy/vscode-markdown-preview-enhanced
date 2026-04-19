@@ -2,6 +2,7 @@ import { constructGraphView, GraphViewData } from 'crossnote';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import NotebooksManager from './notebooks-manager';
+import { getWorkspaceFolderUri } from './utils';
 
 export class GraphViewProvider {
   static notebooksManager: NotebooksManager;
@@ -69,14 +70,20 @@ export class GraphViewProvider {
 
     const uri = sourceUri ?? vscode.window.activeTextEditor?.document.uri;
 
-    let notebookRootPath: string | undefined;
+    // Store the workspace folder URI (not just fsPath) so we can construct
+    // correct virtual-filesystem URIs (e.g. vscode-test-web://mount/) when
+    // opening files from the graph.
+    let workspaceFolderUri: vscode.Uri | undefined;
 
     if (uri) {
       try {
+        workspaceFolderUri = getWorkspaceFolderUri(uri);
         const notebook =
           await GraphViewProvider.notebooksManager.getNotebook(uri);
-        notebookRootPath = notebook.notebookPath.fsPath;
-        const engine = notebook.getNoteMarkdownEngine(uri.fsPath);
+        // Use the URI path component (not fsPath) as the relative note path
+        // so it works correctly on virtual filesystems too.
+        const relFilePath = path.relative(workspaceFolderUri.path, uri.path);
+        const engine = notebook.getNoteMarkdownEngine(relFilePath);
         panel.webview.html = engine.generateHTMLTemplateForGraphView({
           vscodePreviewPanel: panel,
         });
@@ -93,13 +100,13 @@ export class GraphViewProvider {
     panel.webview.onDidReceiveMessage(
       async (message: { command: string; args: unknown[] }) => {
         if (message.command === 'openFile') {
-          // node IDs are relative paths — resolve against notebook root
+          // node IDs are relative paths — reconstruct the URI using the
+          // workspace folder's scheme and authority so virtual filesystems work.
           const relFilePath = message.args[0] as string;
-          const absFilePath = notebookRootPath
-            ? path.resolve(notebookRootPath, relFilePath)
-            : relFilePath;
           try {
-            const fileUri = vscode.Uri.file(absFilePath);
+            const fileUri = workspaceFolderUri
+              ? vscode.Uri.joinPath(workspaceFolderUri, relFilePath)
+              : vscode.Uri.file(relFilePath);
             const doc = await vscode.workspace.openTextDocument(fileUri);
             await vscode.window.showTextDocument(doc, {
               preview: false,
@@ -107,7 +114,7 @@ export class GraphViewProvider {
             });
           } catch {
             vscode.window.showErrorMessage(
-              `Could not open file: ${absFilePath}`,
+              `Could not open file: ${relFilePath}`,
             );
           }
         } else if (message.command === 'saveSetting') {
@@ -177,10 +184,13 @@ export class GraphViewProvider {
       if (graphData.hash === GraphViewProvider.currentHash) return;
       GraphViewProvider.currentHash = graphData.hash;
 
-      // Node IDs in graphData are relative paths; send activeFilePath as relative too
-      const relativeActiveFilePath = uri
-        ? path.relative(notebook.notebookPath.fsPath, uri.fsPath)
-        : undefined;
+      // Node IDs in graphData are relative paths; compute activeFilePath
+      // using URI path components (not fsPath) so virtual filesystems work.
+      const workspaceFolderUri = getWorkspaceFolderUri(uri);
+      const relativeActiveFilePath = path.relative(
+        workspaceFolderUri.path,
+        uri.path,
+      );
 
       await panel.webview.postMessage({
         command: 'graphData',
@@ -202,12 +212,8 @@ export class GraphViewProvider {
     const panel = GraphViewProvider.graphViewPanel;
     if (!panel) return;
     try {
-      const notebook =
-        await GraphViewProvider.notebooksManager.getNotebook(uri);
-      const relativeFilePath = path.relative(
-        notebook.notebookPath.fsPath,
-        uri.fsPath,
-      );
+      const workspaceFolderUri = getWorkspaceFolderUri(uri);
+      const relativeFilePath = path.relative(workspaceFolderUri.path, uri.path);
       await panel.webview.postMessage({
         command: 'setActiveFile',
         filePath: relativeFilePath,
