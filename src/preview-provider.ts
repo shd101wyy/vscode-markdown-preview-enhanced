@@ -487,6 +487,10 @@ export class PreviewProvider {
         contentSecurityPolicy: '',
         vscodePreviewPanel: previewPanel,
         isVSCodeWebExtension: isVSCodeWebExtension(),
+        // The React webview app always appends the correct <base> tag using
+        // the sourceUri. Don't emit the default engine-path-based <base> tag
+        // which is wrong for virtual filesystems (e.g., vscode-test-web://).
+        head: '',
       });
 
       // If a newer initPreview call has taken over this panel, or the panel was
