@@ -7,6 +7,7 @@ import { pasteImageFile, uploadImageFile } from './image-helper';
 import NotebooksManager from './notebooks-manager';
 import { PreviewCustomEditorProvider } from './preview-custom-editor-provider';
 import { PreviewProvider, getPreviewUri } from './preview-provider';
+import { GraphViewProvider } from './graph-view-provider';
 import {
   getBottomVisibleLine,
   getEditorActiveCursorLine,
@@ -15,7 +16,7 @@ import {
   getWorkspaceFolderUri,
   isMarkdownFile,
 } from './utils';
-import path = require('path');
+import * as path from 'path';
 
 let editorScrollDelay = Date.now();
 
@@ -33,7 +34,14 @@ if (hideDefaultVSCodeMarkdownPreviewButtons) {
 
 export async function initExtensionCommon(context: vscode.ExtensionContext) {
   const notebooksManager = new NotebooksManager(context);
-  await notebooksManager.updateWorkbenchEditorAssociationsBasedOnPreviewMode();
+  try {
+    await notebooksManager.updateWorkbenchEditorAssociationsBasedOnPreviewMode();
+  } catch (error) {
+    console.warn(
+      '[Markdown Preview Enhanced] Could not update editor associations (may be expected in web context):',
+      error,
+    );
+  }
   PreviewProvider.notebooksManager = notebooksManager;
 
   function getCurrentWorkingDirectory() {
@@ -60,16 +68,23 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       uri = editor.document.uri;
     }
 
-    const previewProvider = await getPreviewContentProvider(uri);
-    previewProvider.initPreview({
-      sourceUri: uri,
-      document: editor.document,
-      cursorLine: getEditorActiveCursorLine(editor),
-      viewOptions: {
-        viewColumn: vscode.ViewColumn.Two,
-        preserveFocus: true,
-      },
-    });
+    try {
+      const previewProvider = await getPreviewContentProvider(uri);
+      await previewProvider.initPreview({
+        sourceUri: uri,
+        document: editor.document,
+        cursorLine: getEditorActiveCursorLine(editor),
+        viewOptions: {
+          viewColumn: vscode.ViewColumn.Two,
+          preserveFocus: true,
+        },
+      });
+    } catch (error) {
+      console.error('[MPE] openPreviewToTheSide failed:', error);
+      vscode.window.showErrorMessage(
+        `MPE Preview failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   async function openPreview(uri?: vscode.Uri) {
@@ -192,6 +207,11 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     notebooksManager.setSystemColorScheme(systemColorScheme);
+    // Guard against stale webviewFinishLoading callbacks from a previous file
+    // (can happen when the user switches files before the webview finishes loading)
+    if (!previewProvider.shouldUpdateMarkdown(sourceUri)) {
+      return;
+    }
     previewProvider.updateMarkdown(sourceUri);
   }
 
@@ -225,43 +245,43 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     previewProvider.refreshPreview(sourceUri);
   }
 
-  async function openInBrowser(uri) {
+  async function openInBrowser(uri: string) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.openInBrowser(sourceUri);
   }
 
-  async function htmlExport(uri, offline) {
+  async function htmlExport(uri: string, offline: boolean) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.htmlExport(sourceUri, offline);
   }
 
-  async function chromeExport(uri, type) {
+  async function chromeExport(uri: string, type: string) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.chromeExport(sourceUri, type);
   }
 
-  async function princeExport(uri) {
+  async function princeExport(uri: string) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.princeExport(sourceUri);
   }
 
-  async function eBookExport(uri, fileType) {
+  async function eBookExport(uri: string, fileType: string) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.eBookExport(sourceUri, fileType);
   }
 
-  async function pandocExport(uri) {
+  async function pandocExport(uri: string) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.pandocExport(sourceUri);
   }
 
-  async function markdownExport(uri) {
+  async function markdownExport(uri: string) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.markdownExport(sourceUri);
@@ -274,19 +294,19 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   }
   */
 
-  async function cacheCodeChunkResult(uri, id, result) {
+  async function cacheCodeChunkResult(uri: string, id: string, result: string) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.cacheCodeChunkResult(sourceUri, id, result);
   }
 
-  async function runCodeChunk(uri, codeChunkId) {
+  async function runCodeChunk(uri: string, codeChunkId: string) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.runCodeChunk(sourceUri, codeChunkId);
   }
 
-  async function runAllCodeChunks(uri) {
+  async function runAllCodeChunks(uri: string) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.runAllCodeChunks(sourceUri);
@@ -351,13 +371,12 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     });
   }
 
-  function clickTaskListCheckbox(uri, dataLine) {
+  function clickTaskListCheckbox(uri: string, dataLine: number) {
     const sourceUri = vscode.Uri.parse(uri);
     const visibleTextEditors = vscode.window.visibleTextEditors;
     for (let i = 0; i < visibleTextEditors.length; i++) {
       const editor = visibleTextEditors[i];
       if (editor.document.uri.fsPath === sourceUri.fsPath) {
-        dataLine = parseInt(dataLine, 10);
         editor.edit((edit) => {
           let line = editor.document.lineAt(dataLine).text;
           if (line.match(/\[ \]/)) {
@@ -378,11 +397,11 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     }
   }
 
-  function setPreviewTheme(uri, theme) {
+  function setPreviewTheme(_uri: string, theme: string) {
     updateMPEConfig('previewTheme', theme, true);
   }
 
-  function togglePreviewZenMode(uri) {
+  function togglePreviewZenMode(_uri: string) {
     updateMPEConfig(
       'enablePreviewZenMode',
       !getMPEConfig<boolean>('enablePreviewZenMode'),
@@ -390,15 +409,15 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     );
   }
 
-  function setCodeBlockTheme(uri, theme) {
+  function setCodeBlockTheme(_uri: string, theme: string) {
     updateMPEConfig('codeBlockTheme', theme, true);
   }
 
-  function setRevealjsTheme(uri, theme) {
+  function setRevealjsTheme(_uri: string, theme: string) {
     updateMPEConfig('revealjsTheme', theme, true);
   }
 
-  function setImageUploader(imageUploader) {
+  function setImageUploader(imageUploader: string) {
     updateMPEConfig('imageUploader', imageUploader, true);
   }
 
@@ -481,7 +500,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   }
 
   async function clickTagA({
-    uri,
+    uri: _uri,
     href,
     scheme,
   }: {
@@ -491,8 +510,8 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   }) {
     href = decodeURIComponent(href);
     href = href
-      .replace(/^vscode\-resource:\/\//, '')
-      .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, '')
+      .replace(/^vscode-resource:\/\//, '')
+      .replace(/^vscode-webview-resource:\/\/(.+?)\//, '')
       .replace(/^file\/\/\//, '${scheme}:///')
       .replace(
         /^https:\/\/file\+\.vscode-resource.vscode-cdn.net\//,
@@ -515,7 +534,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       try {
         utility.openFile(href);
       } catch (error) {
-        vscode.window.showErrorMessage(error);
+        vscode.window.showErrorMessage(String(error));
       }
     } else if (href.startsWith(`${scheme}://`)) {
       // openFilePath = href.slice(8) # remove protocol
@@ -548,10 +567,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
       //  open file if needed, if not we will use already opened editor
       // (by specifying view column in which it is already shown)
-      let fileExists = false;
+      let fileExists: boolean;
       try {
         fileExists = !!(await vscode.workspace.fs.stat(fileUri));
-      } catch (error) {
+      } catch {
         fileExists = false;
       }
 
@@ -559,10 +578,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         const previewMode = getPreviewMode();
         const document = await vscode.workspace.openTextDocument(
           vscode.Uri.parse(
-            openFilePath
-              .split('#')
-              .slice(0, -1)
-              .join('#') || openFilePath,
+            openFilePath.split('#').slice(0, -1).join('#') || openFilePath,
           ),
         );
         // Open custom editor
@@ -614,8 +630,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
             const headingIdGenerator = new HeadingIdGenerator();
             const text = editor.document.getText();
             const lines = text.split('\n');
-            let i = 0;
-            for (i = 0; i < lines.length; i++) {
+            for (let i = 0; i < lines.length; i++) {
               const line = lines[i];
               if (line.match(/^#+\s+/)) {
                 const heading = line.replace(/^#+\s+/, '');
@@ -714,12 +729,15 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       const previewProvider = await getPreviewContentProvider(sourceUri);
       previewProvider.updateMarkdown(sourceUri);
     } catch (error) {
-      vscode.window.showErrorMessage(error);
+      vscode.window.showErrorMessage(String(error));
       console.error(error);
     }
   }
 
-  async function toggleAlwaysShowBacklinksInPreview(uri, flag) {
+  async function toggleAlwaysShowBacklinksInPreview(
+    _uri: string,
+    flag: boolean,
+  ) {
     updateMPEConfig('alwaysShowBacklinksInPreview', flag, true);
   }
 
@@ -913,9 +931,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
           });
 
           const sourceUri = editor.document.uri;
-          const automaticallyShowPreviewOfMarkdownBeingEdited = getMPEConfig<
-            boolean
-          >('automaticallyShowPreviewOfMarkdownBeingEdited');
+          const automaticallyShowPreviewOfMarkdownBeingEdited =
+            getMPEConfig<boolean>(
+              'automaticallyShowPreviewOfMarkdownBeingEdited',
+            );
           const previewMode = getPreviewMode();
           /**
            * Is using single preview and the preview is on.
@@ -929,14 +948,14 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
             ) {
               // Skip auto-switching single preview to an excluded file
               if (!excluded) {
-                previewProvider.initPreview({
+                await previewProvider.initPreview({
                   sourceUri,
                   document: editor.document,
                   cursorLine: getEditorActiveCursorLine(editor),
                   viewOptions: {
                     viewColumn:
-                      previewProvider.getPreviews(sourceUri)?.at(0)
-                        ?.viewColumn ?? vscode.ViewColumn.One,
+                      previewProvider.getPreviews(sourceUri)?.[0]?.viewColumn ??
+                      vscode.ViewColumn.One,
                     preserveFocus: true,
                   },
                 });
@@ -961,7 +980,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
   // Changed editor color theme
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveColorTheme((theme) => {
+    vscode.window.onDidChangeActiveColorTheme((_theme) => {
       if (
         getMPEConfig<PreviewColorScheme>('previewColorScheme') ===
         PreviewColorScheme.editorColorScheme
@@ -1288,9 +1307,51 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       new PreviewCustomEditorProvider(context),
     ),
   );
+
+  // Graph view
+  GraphViewProvider.notebooksManager = notebooksManager;
+  GraphViewProvider.init(context);
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.openGraphView',
+      async () => {
+        const activeUri = vscode.window.activeTextEditor?.document.uri;
+        await GraphViewProvider.openGraphView(context, activeUri);
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.openGraphView',
+      async (sourceUri: string) => {
+        const uri = vscode.Uri.parse(sourceUri);
+        await GraphViewProvider.openGraphView(context, uri);
+      },
+    ),
+  );
+
+  // Refresh graph view when any markdown document is saved (force-rebuild relations)
+  context.subscriptions.push(
+    vscode.workspace.onDidSaveTextDocument(async (doc) => {
+      if (doc.languageId === 'markdown') {
+        await GraphViewProvider.refreshGraphData(doc.uri, true);
+      }
+    }),
+  );
+
+  // Update active file highlight in graph view when editor changes
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+      if (editor && editor.document.languageId === 'markdown') {
+        await GraphViewProvider.sendActiveFile(editor.document.uri);
+      }
+    }),
+  );
 }
 
-function revealLine(uri, line) {
+function revealLine(uri: string, line: number) {
   const sourceUri = vscode.Uri.parse(uri);
 
   vscode.window.visibleTextEditors

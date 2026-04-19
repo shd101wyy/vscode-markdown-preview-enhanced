@@ -3,6 +3,7 @@ import {
   FrontMatterRenderingOption,
   ImageUploader,
   KatexOptions,
+  MarkdownParser,
   MathRenderingOption,
   MermaidConfig,
   MermaidTheme,
@@ -53,7 +54,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
 
   public readonly markdownFileExtensions: string[];
   public readonly configPath: string;
-  public readonly usePandocParser: boolean;
+  public readonly markdownParser: MarkdownParser;
   public readonly breakOnSingleNewLine: boolean;
   public readonly enableTypographer: boolean;
   public readonly enableWikiLinkSyntax: boolean;
@@ -78,15 +79,21 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly chromePath: string;
   public readonly imageMagickPath: string;
   public readonly pandocPath: string;
+  public readonly markdownYoBinaryPath: string;
   public readonly pandocMarkdownFlavor: string;
   public readonly pandocArguments: string[];
   public readonly latexEngine: string;
   public readonly enableScriptExecution: boolean;
   public readonly enableHTML5Embed: boolean;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedUseImageSyntax: boolean;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedUseLinkSyntax: boolean;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedIsAllowedHttp: boolean;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedAudioAttributes: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedVideoAttributes: string;
   public readonly puppeteerWaitForTimeout: number;
   public readonly puppeteerArgs: string[];
@@ -106,12 +113,12 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly d2Theme: number;
   public readonly d2Sketch: boolean;
   // Don't set values for these properties in constructor:
-  public readonly includeInHeader: string;
-  public readonly globalCss: string;
-  public readonly mermaidConfig: MermaidConfig;
+  public readonly includeInHeader!: string;
+  public readonly globalCss!: string;
+  public readonly mermaidConfig!: MermaidConfig;
   public readonly mathjaxConfig: any;
-  public readonly katexConfig: KatexOptions;
-  public readonly parserConfig: ParserConfig;
+  public readonly katexConfig!: KatexOptions;
+  public readonly parserConfig!: ParserConfig;
   public readonly isVSCode: boolean = true;
 
   // preview config
@@ -131,10 +138,10 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       getMPEConfig<string[]>('markdownFileExtensions') ??
       defaultConfig.markdownFileExtensions;
     this.configPath = getMPEConfig<string>('configPath') ?? '';
-    this.usePandocParser = isVSCodeWebExtension()
-      ? false // pandoc is not supported in web extension
-      : getMPEConfig<boolean>('usePandocParser') ??
-        defaultConfig.usePandocParser;
+    this.markdownParser = isVSCodeWebExtension()
+      ? 'markdown-it' // pandoc is not supported in web extension
+      : (getMPEConfig<MarkdownParser>('markdownParser') ??
+        defaultConfig.markdownParser);
     this.breakOnSingleNewLine =
       getMPEConfig<boolean>('breakOnSingleNewLine') ??
       defaultConfig.breakOnSingleNewLine;
@@ -201,6 +208,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       getMPEConfig<string>('imageMagickPath') ?? defaultConfig.imageMagickPath;
     this.pandocPath =
       getMPEConfig<string>('pandocPath') ?? defaultConfig.pandocPath;
+    this.markdownYoBinaryPath =
+      getMPEConfig<string>('markdownYoBinaryPath') ??
+      defaultConfig.markdownYoBinaryPath;
     this.pandocMarkdownFlavor =
       getMPEConfig<string>('pandocMarkdownFlavor') ??
       defaultConfig.pandocMarkdownFlavor;

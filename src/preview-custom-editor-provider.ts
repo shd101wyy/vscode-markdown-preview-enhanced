@@ -2,13 +2,14 @@ import * as vscode from 'vscode';
 import { PreviewProvider } from './preview-provider';
 
 export class PreviewCustomEditorProvider
-  implements vscode.CustomTextEditorProvider {
+  implements vscode.CustomTextEditorProvider
+{
   constructor(private context: vscode.ExtensionContext) {}
 
   async resolveCustomTextEditor(
     document: vscode.TextDocument,
     webviewPanel: vscode.WebviewPanel,
-    token: vscode.CancellationToken,
+    _token: vscode.CancellationToken,
   ): Promise<void> {
     try {
       const provider = await PreviewProvider.getPreviewContentProvider(
@@ -27,7 +28,7 @@ export class PreviewCustomEditorProvider
       });
     } catch (error) {
       console.error(error);
-      vscode.window.showErrorMessage(error.message);
+      vscode.window.showErrorMessage(String(error));
     }
   }
 }

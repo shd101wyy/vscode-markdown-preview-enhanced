@@ -1,4 +1,4 @@
-import path = require('path');
+import * as path from 'path';
 import { PreviewMode } from 'crossnote';
 import * as os from 'os';
 import * as vscode from 'vscode';

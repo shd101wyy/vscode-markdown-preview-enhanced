@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.22",
+  "version": "0.8.23",
   "description": "%description%",
   "categories": [
     "Other"
@@ -31,8 +31,9 @@
     "fix:all": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
-    "prepare": "husky install",
-    "run-in-browser": "concurrently \"vscode-test-web --browserType=chromium --extensionDevelopmentPath=. $SERVE_DIR\" \"npx http-server ./crossnote -p 6789 --cors\"",
+    "prepare": "husky",
+    "run-in-browser": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\"",
+    "run-in-browser:watch": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "yarn install && yarn build",
@@ -40,6 +41,11 @@
   },
   "contributes": {
     "commands": [
+      {
+        "command": "markdown-preview-enhanced.openGraphView",
+        "title": "Markdown Preview Enhanced: Open Graph View",
+        "icon": "$(type-hierarchy)"
+      },
       {
         "command": "markdown-preview-enhanced.openPreviewToTheSide",
         "title": "%markdown-preview-enhanced.openPreviewToTheSide.title%",
@@ -154,10 +160,20 @@
           "default": "",
           "type": "string"
         },
-        "markdown-preview-enhanced.usePandocParser": {
-          "description": "Enable this option will render markdown by pandoc instead of markdown-it.",
-          "default": false,
-          "type": "boolean"
+        "markdown-preview-enhanced.markdownParser": {
+          "description": "Markdown parser/renderer to use. 'markdown-it' (default) is the built-in renderer. 'pandoc' uses Pandoc (requires Pandoc installed; not available in VS Code web). 'markdown_yo' uses a high-performance WASM renderer (or native binary when markdownYoBinaryPath is set; experimental).",
+          "default": "markdown-it",
+          "type": "string",
+          "enum": [
+            "markdown-it",
+            "pandoc",
+            "markdown_yo"
+          ],
+          "enumDescriptions": [
+            "Built-in markdown-it renderer (default).",
+            "Render via Pandoc. Requires Pandoc to be installed. Not available in VS Code web.",
+            "High-performance renderer (experimental). Uses WASM by default, or a native binary when markdownYoBinaryPath is set. markdown-it is still used for token-based operations."
+          ]
         },
         "markdown-preview-enhanced.breakOnSingleNewLine": {
           "description": "In Markdown, a single newline character doesn't cause a line break in the generated HTML. In GitHub Flavored Markdown, that is not true. Enable this config option to insert line breaks in rendered HTML for single newlines in Markdown source.",
@@ -517,6 +533,12 @@
           "type": "string",
           "scope": "machine"
         },
+        "markdown-preview-enhanced.markdownYoBinaryPath": {
+          "description": "Path to the markdown_yo native binary. When set and markdownParser is 'markdown_yo', crossnote will use this binary (via stdin/stdout) instead of the bundled WASM module. The native binary is faster for files under ~300 KB; WASM is faster for very large files. Supports $HOME and ~ variable substitution. Leave empty to use WASM (default).",
+          "default": "",
+          "type": "string",
+          "scope": "machine"
+        },
         "markdown-preview-enhanced.pandocMarkdownFlavor": {
           "description": "The pandoc markdown flavor you want",
           "default": "markdown-raw_tex+tex_math_single_backslash",
@@ -755,6 +777,11 @@
           "command": "markdown-preview-enhanced.openPreviewToTheSide",
           "when": "editorLangId == markdown",
           "group": "markdown-preview-enhanced"
+        },
+        {
+          "command": "markdown-preview-enhanced.openGraphView",
+          "when": "editorLangId == markdown",
+          "group": "markdown-preview-enhanced"
         }
       ],
       "editor/title": [
@@ -767,6 +794,7 @@
     }
   },
   "activationEvents": [
+    "onStartupFinished",
     "onLanguage:markdown",
     "onLanguage:quarto"
   ],
@@ -785,30 +813,31 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.9.20",
+    "crossnote": "^0.9.21",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {
-    "@types/cheerio": "0.22.11",
+    "@eslint/js": "^10",
     "@types/mocha": "^5.2.5",
-    "@types/node": "16",
+    "@types/node": "^25.6.0",
     "@types/vscode": "1.70.0",
-    "@typescript-eslint/eslint-plugin": "^6.5.0",
-    "@typescript-eslint/parser": "^6.5.0",
-    "@vscode/test-web": "^0.0.67",
+    "@typescript-eslint/eslint-plugin": "^8",
+    "@typescript-eslint/parser": "^8",
+    "@vscode/test-web": "^0.0.80",
     "concurrently": "^8.2.1",
     "esbuild": "^0.25.0",
     "esbuild-plugin-polyfill-node": "^0.3.0",
-    "eslint": "^8.48.0",
+    "eslint": "^10",
     "gulp": "^4.0.2",
     "http-server": "^14.1.1",
-    "husky": "^8.0.3",
-    "lint-staged": "^9.4.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "mocha": "^6.1.4",
-    "prettier": "^1.18.2",
-    "prettier-plugin-packagejson": "^2.0.1",
+    "prettier": "^3",
+    "prettier-plugin-packagejson": "^3.0.2",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
+    "typescript-eslint": "^8",
     "webpack": "^5.104.1",
     "webpack-cli": "^5.1.4"
   },

@@ -12,7 +12,10 @@
     "rootDir": ".",
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "strict": true
   },
   "include": [
     "src/**/*",

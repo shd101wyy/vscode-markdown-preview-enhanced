@@ -38,25 +38,23 @@ if (isVSCodeWebExtension()) {
 
 utility.useExternalAddFileProtocolFunction((filePath, preview) => {
   if (preview) {
-    if (filePath.startsWith('/http:/localhost:6789/')) {
-      return filePath.replace(
-        '/http:/localhost:6789/',
-        'http://localhost:6789/',
-      );
-    } else if (filePath.startsWith('/https:/')) {
-      return filePath.replace('/https:/', 'https://');
-    } else {
-      return preview.webview
-        .asWebviewUri(vscode.Uri.file(filePath))
-        .toString(true)
-        .replace(/%3F/gi, '?')
-        .replace(/%23/g, '#');
+    // path.join('https://host/', './rel') → 'https:/host/rel' (single slash)
+    // path.resolve('https://host/', './rel') → '/cwd/https:/host/rel' (abs path with embedded URL)
+    // Both are detected by finding 'http(s):/' followed by a non-slash character anywhere in the path.
+    const urlMatch = filePath.match(/(https?):\/([^/].*)/);
+    if (urlMatch) {
+      return `${urlMatch[1]}://${urlMatch[2]}`;
     }
+    return preview.webview
+      .asWebviewUri(vscode.Uri.file(filePath))
+      .toString(true)
+      .replace(/%3F/gi, '?')
+      .replace(/%23/g, '#');
   } else {
     if (!filePath.startsWith('file://')) {
       filePath = 'file:///' + filePath;
     }
-    filePath = filePath.replace(/^file\:\/+/, 'file:///');
+    filePath = filePath.replace(/^file:\/+/, 'file:///');
     return filePath;
   }
 });
@@ -89,24 +87,40 @@ export class PreviewProvider {
   private updateTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
   /**
+   * Sequence counter for initPreview requests.
+   * Each call to initPreview increments this and tags the panel with the latest ID.
+   * When the HTML generation finishes, we discard the result if a newer request has
+   * already taken over (e.g. user switched files before rendering completed).
+   */
+  private initRequestSeq = 0;
+  private latestInitRequestByPreview: WeakMap<vscode.WebviewPanel, number> =
+    new WeakMap();
+
+  /**
+   * Sequence counter for updateMarkdown render requests (per sourceUri).
+   * Prevents a slow parseMD from overwriting content that a newer request
+   * already pushed to the webview.
+   */
+  private renderRequestSeq = 0;
+  private latestRenderRequestBySourceUri: Map<string, number> = new Map();
+
+  /**
    * Each PreviewProvider has a one notebook.
    */
-  private notebook: Notebook;
+  private notebook!: Notebook;
 
   /**
    * VSCode extension context
    */
-  private context: vscode.ExtensionContext;
+  private context!: vscode.ExtensionContext;
 
   /**
    * The key is sourceUri.toString()
    * value is Preview (vscode.Webview) object
    */
   private previewMaps: Map<string, Set<vscode.WebviewPanel>> = new Map();
-  private previewToDocumentMap: Map<
-    vscode.WebviewPanel,
-    vscode.TextDocument
-  > = new Map();
+  private previewToDocumentMap: Map<vscode.WebviewPanel, vscode.TextDocument> =
+    new Map();
   private initializedPreviews: Set<vscode.WebviewPanel> = new Set();
 
   private static singlePreviewPanel: vscode.WebviewPanel | null;
@@ -123,14 +137,44 @@ export class PreviewProvider {
     // Please use `init` method to initialize this class.
   }
 
+  /**
+   * Returns true if sourceUri is the current target for the single preview panel,
+   * or if we are NOT in single-preview mode (multiple-previews always allowed).
+   */
+  private isSinglePreviewTarget(sourceUri: Uri): boolean {
+    if (getPreviewMode() !== PreviewMode.SinglePreview) {
+      return true;
+    }
+    const target = PreviewProvider.singlePreviewPanelSourceUriTarget;
+    return !!target && target.fsPath === sourceUri.fsPath;
+  }
+
+  /**
+   * Check whether updateMarkdown should proceed for the given sourceUri.
+   * Returns false when in single-preview mode and sourceUri is no longer the target.
+   */
+  public shouldUpdateMarkdown(sourceUri: Uri): boolean {
+    if (!this.isSinglePreviewTarget(sourceUri)) {
+      return false;
+    }
+    const previews = this.getPreviews(sourceUri);
+    return !!(previews && previews.length > 0);
+  }
+
+  private normalizeResourceList(resources: string[] | undefined): string[] {
+    if (!resources?.length) {
+      return [];
+    }
+    return Array.from(new Set(resources)).sort();
+  }
+
   private async init(
     context: vscode.ExtensionContext,
     workspaceFolderUri: vscode.Uri,
   ) {
     this.context = context;
-    this.notebook = await this.getNotebooksManager().getNotebook(
-      workspaceFolderUri,
-    );
+    this.notebook =
+      await this.getNotebooksManager().getNotebook(workspaceFolderUri);
     return this;
   }
 
@@ -255,6 +299,7 @@ export class PreviewProvider {
       PreviewProvider.singlePreviewPanelSourceUriTarget = null;
       this.previewToDocumentMap = new Map();
       this.previewMaps = new Map();
+      this.latestRenderRequestBySourceUri.clear();
     } else {
       const previews = this.getPreviews(sourceUri);
       if (previews) {
@@ -263,13 +308,14 @@ export class PreviewProvider {
           this.deletePreviewFromMap(sourceUri, preview);
         });
       }
+      this.latestRenderRequestBySourceUri.delete(sourceUri.toString());
     }
   }
 
   /**
    * TODO: Free memory
    */
-  public destroyEngine(sourceUri: vscode.Uri) {}
+  public destroyEngine(_sourceUri: vscode.Uri) {}
 
   private getEngine(sourceUri: Uri) {
     return this.notebook.getNoteMarkdownEngine(sourceUri.fsPath);
@@ -288,7 +334,6 @@ export class PreviewProvider {
     cursorLine?: number;
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean };
   }): Promise<void> {
-    // console.log('@initPreview: ', sourceUri);
     const previewMode = getPreviewMode();
     let previewPanel: vscode.WebviewPanel;
     const previews = this.getPreviews(sourceUri);
@@ -331,9 +376,11 @@ export class PreviewProvider {
       );
       return;
     } else {
+      const buildDir = utility.getCrossnoteBuildDirectory();
       const localResourceRoots = [
         vscode.Uri.file(this.context.extensionPath),
-        vscode.Uri.file(utility.getCrossnoteBuildDirectory()),
+        // Skip CDN/HTTP URLs — only add file-system paths to localResourceRoots
+        ...(buildDir.startsWith('http') ? [] : [vscode.Uri.file(buildDir)]),
         vscode.Uri.file(globalConfigPath),
         vscode.Uri.file(tmpdir()),
       ];
@@ -348,7 +395,7 @@ export class PreviewProvider {
           enableScripts: true,
           localResourceRoots,
         };
-        // @ts-ignore
+        // @ts-expect-error retainContextWhenHidden is not in type definitions
         previewPanel.options.retainContextWhenHidden = true;
       } else {
         previewPanel = vscode.window.createWebviewPanel(
@@ -366,8 +413,10 @@ export class PreviewProvider {
 
       // set icon
       // NOTE: This doesn't work for custom editor.
-      previewPanel.iconPath = vscode.Uri.file(
-        path.join(this.context.extensionPath, 'media', 'preview.svg'),
+      previewPanel.iconPath = vscode.Uri.joinPath(
+        this.context.extensionUri,
+        'media',
+        'preview.svg',
       );
 
       // NOTE: We only register for the webview event listeners once.
@@ -421,6 +470,11 @@ export class PreviewProvider {
     const inputString = document.getText() ?? '';
     const engine = this.getEngine(sourceUri);
     try {
+      // Tag this request so we can detect if a newer initPreview overtook us
+      // before the (potentially slow) HTML generation finishes.
+      const initRequestId = ++this.initRequestSeq;
+      this.latestInitRequestByPreview.set(previewPanel, initRequestId);
+
       const html = await engine.generateHTMLTemplateForPreview({
         inputString,
         config: {
@@ -433,10 +487,29 @@ export class PreviewProvider {
         contentSecurityPolicy: '',
         vscodePreviewPanel: previewPanel,
         isVSCodeWebExtension: isVSCodeWebExtension(),
+        // In the web extension, this.filePath is just the path component of a
+        // virtual URI (e.g. '/LICENSE.md'), so the default <base> tag would be
+        // malformed. The React webview already appends the correct <base> tag at
+        // runtime using the full sourceUri, so we can safely omit it here.
+        // For the native extension the default base tag is harmless, but we keep
+        // consistent behaviour and let React own it in both cases.
+        head: '',
       });
+
+      // If a newer initPreview call has taken over this panel, or the panel was
+      // disposed, or (in single-preview mode) this URI is no longer the target,
+      // discard this stale result.
+      if (
+        this.latestInitRequestByPreview.get(previewPanel) !== initRequestId ||
+        !this.initializedPreviews.has(previewPanel) ||
+        !this.isSinglePreviewTarget(sourceUri)
+      ) {
+        return;
+      }
+
       previewPanel.webview.html = html;
     } catch (error) {
-      vscode.window.showErrorMessage(error.toString());
+      vscode.window.showErrorMessage(String(error));
       console.error(error);
     }
   }
@@ -463,6 +536,7 @@ export class PreviewProvider {
     // Clear all pending update timeouts
     this.updateTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.updateTimeouts.clear();
+    this.latestRenderRequestBySourceUri.clear();
     // this.engineMaps = {};
     PreviewProvider.singlePreviewPanel = null;
     PreviewProvider.singlePreviewPanelSourceUriTarget = null;
@@ -474,22 +548,17 @@ export class PreviewProvider {
   ) {
     const previews = this.getPreviews(sourceUri);
     if (previews) {
-      // console.log(
-      //   '@ postMessageToPreview: ',
-      //   sourceUri.fsPath,
-      //   message,
-      //   previews,
-      // );
-
       for (let i = 0; i < previews.length; i++) {
         const preview = previews[i];
-        if (preview.visible) {
+        try {
           const result = await preview.webview.postMessage(message);
           if (!result) {
             console.error(
               `Failed to send message "${message.command}" to preview panel for ${sourceUri.fsPath}`,
             );
           }
+        } catch (error) {
+          console.error(error);
         }
       }
     }
@@ -507,6 +576,11 @@ export class PreviewProvider {
   }
 
   public updateMarkdown(sourceUri: Uri, triggeredBySave?: boolean) {
+    // Don't update if single-preview is pointing at a different file
+    if (!this.isSinglePreviewTarget(sourceUri)) {
+      return;
+    }
+
     const engine = this.getEngine(sourceUri);
     const previews = this.getPreviews(sourceUri);
     // console.log('updateMarkdown: ', previews?.length);
@@ -519,24 +593,46 @@ export class PreviewProvider {
       return this.refreshPreview(sourceUri);
     }
 
-    // not presentation mode
-    vscode.workspace.openTextDocument(sourceUri).then(async (document) => {
+    // not presentation mode — run async but guard against stale renders
+    (async () => {
+      let document: vscode.TextDocument;
+      try {
+        document = await vscode.workspace.openTextDocument(sourceUri);
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+
+      // Check again after the await in case the user switched files
+      if (!this.isSinglePreviewTarget(sourceUri)) {
+        return;
+      }
+
+      // Stamp this render so we can discard overtaken results
+      const renderRequestId = ++this.renderRequestSeq;
+      this.latestRenderRequestBySourceUri.set(
+        sourceUri.toString(),
+        renderRequestId,
+      );
+
       const text = document.getText();
       await this.postMessageToPreview(sourceUri, {
         command: 'startParsingMarkdown',
       });
 
-      const previews = this.getPreviews(sourceUri);
-      if (!previews || !previews.length) {
+      const currentPreviews = this.getPreviews(sourceUri);
+      if (!currentPreviews || !currentPreviews.length) {
         return;
       }
-      for (let i = 0; i < previews.length; i++) {
+
+      let lastError: unknown = undefined;
+      for (let i = 0; i < currentPreviews.length; i++) {
         try {
-          const preview = previews[i];
+          const preview = currentPreviews[i];
           const {
             html,
             tocHTML,
-            JSAndCssFiles,
+            JSAndCssFiles: jsAndCssFiles,
             yamlConfig,
           } = await engine.parseMD(text, {
             isForPreview: true,
@@ -545,13 +641,30 @@ export class PreviewProvider {
             triggeredBySave,
             vscodePreviewPanel: preview,
           });
-          // check JSAndCssFiles
+
+          // Discard if a newer render has taken over for this sourceUri or the
+          // single-preview target changed while parseMD was running
+          if (!this.isSinglePreviewTarget(sourceUri)) {
+            return;
+          }
           if (
-            JSON.stringify(JSAndCssFiles) !==
-              JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath] ?? []) ||
+            this.latestRenderRequestBySourceUri.get(sourceUri.toString()) !==
+            renderRequestId
+          ) {
+            return;
+          }
+
+          // check jsAndCssFiles
+          const normalizedResources = this.normalizeResourceList(jsAndCssFiles);
+          const previousResources = this.normalizeResourceList(
+            this.jsAndCssFilesMaps[sourceUri.fsPath],
+          );
+          if (
+            JSON.stringify(normalizedResources) !==
+              JSON.stringify(previousResources) ||
             yamlConfig['isPresentationMode']
           ) {
-            this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles;
+            this.jsAndCssFilesMaps[sourceUri.fsPath] = normalizedResources;
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
@@ -577,17 +690,18 @@ export class PreviewProvider {
                 } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
             });
           }
-          break;
+          return;
         } catch (error) {
-          if (i === previews.length - 1) {
-            // This is the
-            vscode.window.showErrorMessage(error.toString());
-          } else {
-            continue;
-          }
+          lastError = error;
+          continue;
         }
       }
-    });
+
+      if (lastError) {
+        vscode.window.showErrorMessage(String(lastError));
+        console.error(lastError);
+      }
+    })();
   }
 
   private refreshPreviewPanel(sourceUri: Uri | null) {
@@ -630,7 +744,7 @@ export class PreviewProvider {
         vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
       } else {
         engine.openInBrowser({}).catch((error) => {
-          vscode.window.showErrorMessage(error.toString());
+          vscode.window.showErrorMessage(String(error));
         });
       }
     }
@@ -647,7 +761,7 @@ export class PreviewProvider {
           );
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error.toString());
+          vscode.window.showErrorMessage(String(error));
         });
     }
   }
@@ -666,7 +780,7 @@ export class PreviewProvider {
             );
           })
           .catch((error) => {
-            vscode.window.showErrorMessage(error.toString());
+            vscode.window.showErrorMessage(String(error));
           });
       }
     }
@@ -685,7 +799,7 @@ export class PreviewProvider {
               // presentation pdf
               vscode.window.showInformationMessage(
                 `Please copy and open the link: { ${dest.replace(
-                  /\_/g,
+                  /_/g,
                   '\\_',
                 )} } in Chrome then Print as Pdf.`,
               );
@@ -696,7 +810,7 @@ export class PreviewProvider {
             }
           })
           .catch((error) => {
-            vscode.window.showErrorMessage(error.toString());
+            vscode.window.showErrorMessage(String(error));
           });
       }
     }
@@ -716,13 +830,13 @@ export class PreviewProvider {
             );
           })
           .catch((error) => {
-            vscode.window.showErrorMessage(error.toString());
+            vscode.window.showErrorMessage(String(error));
           });
       }
     }
   }
 
-  public pandocExport(sourceUri) {
+  public pandocExport(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       if (isVSCodeWebExtension()) {
@@ -736,13 +850,13 @@ export class PreviewProvider {
             );
           })
           .catch((error) => {
-            vscode.window.showErrorMessage(error.toString());
+            vscode.window.showErrorMessage(String(error));
           });
       }
     }
   }
 
-  public markdownExport(sourceUri) {
+  public markdownExport(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       engine
@@ -753,7 +867,7 @@ export class PreviewProvider {
           );
         })
         .catch((error) => {
-          vscode.window.showErrorMessage(error.toString());
+          vscode.window.showErrorMessage(String(error));
         });
     }
   }
@@ -783,7 +897,7 @@ export class PreviewProvider {
     }
   }
 
-  public runAllCodeChunks(sourceUri) {
+  public runAllCodeChunks(sourceUri: Uri) {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       engine.runCodeChunks().then(() => {

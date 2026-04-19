@@ -24,7 +24,8 @@ class NotebooksManager {
   private notebooks: Notebook[] = [];
   public systemColorScheme: 'light' | 'dark' = 'light';
   private fileWatcher: FileWatcher;
-  private currentMPEConfig: MarkdownPreviewEnhancedConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig();
+  private currentMPEConfig: MarkdownPreviewEnhancedConfig =
+    MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
   constructor(private context: vscode.ExtensionContext) {
     this.fileWatcher = new FileWatcher(this.context, this);
@@ -33,16 +34,22 @@ class NotebooksManager {
   public async getNotebook(uri: vscode.Uri): Promise<Notebook> {
     const workspaceFolderUri = getWorkspaceFolderUri(uri);
 
-    // Check if workspaceUri.fsPath already exists in this.notebooks
+    // Check if workspaceUri already exists in this.notebooks
     for (let i = 0; i < this.notebooks.length; i++) {
-      if (this.notebooks[i].notebookPath.fsPath === workspaceFolderUri.fsPath) {
+      if (
+        this.notebooks[i].notebookPath.toString() ===
+        workspaceFolderUri.toString()
+      ) {
         return this.notebooks[i];
       }
     }
     // If not, create a new Notebook instance and push it to this.notebooks
     const notebook = await Notebook.init({
       notebookPath: workspaceFolderUri.toString(),
-      fs: wrapVSCodeFSAsApi(workspaceFolderUri.scheme),
+      fs: wrapVSCodeFSAsApi(
+        workspaceFolderUri.scheme,
+        workspaceFolderUri.authority,
+      ),
       config: {},
     });
     this.notebooks.push(notebook);
@@ -259,7 +266,7 @@ class NotebooksManager {
     }
   }
 
-  public async refreshNoteRelations(noteFilePath: string) {}
+  public async refreshNoteRelations(_noteFilePath: string) {}
 
   public async getNoteBacklinks(
     noteUri: vscode.Uri,
