@@ -2580,8 +2580,10 @@ cross-spawn@^7.0.3, cross-spawn@^7.0.6:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@../crossnote:
-  version "0.9.20"
+crossnote@^0.9.21:
+  version "0.9.21"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.21.tgz#75f17e717443d4ebabd2d95c50561723bd456abc"
+  integrity sha512-jnFeJ/8yywzewCJB7SabUdiQcn82i2/W0jFFh8B5fxzVLPMoIGa5+CVrs6YlG1x7Gth9jEr5qDRo08p3W4H5Ng==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
@@ -2618,6 +2620,7 @@ crossnote@../crossnote:
     html-escaper "^3.0.3"
     html-react-parser "^4.2.2"
     html-to-image "^1.11.11"
+    ignore "^7.0.5"
     imagemagick-cli "^0.5.0"
     jquery "^3.7.1"
     katex "^0.16.45"
