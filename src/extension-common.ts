@@ -34,7 +34,14 @@ if (hideDefaultVSCodeMarkdownPreviewButtons) {
 
 export async function initExtensionCommon(context: vscode.ExtensionContext) {
   const notebooksManager = new NotebooksManager(context);
-  await notebooksManager.updateWorkbenchEditorAssociationsBasedOnPreviewMode();
+  try {
+    await notebooksManager.updateWorkbenchEditorAssociationsBasedOnPreviewMode();
+  } catch (error) {
+    console.warn(
+      '[Markdown Preview Enhanced] Could not update editor associations (may be expected in web context):',
+      error,
+    );
+  }
   PreviewProvider.notebooksManager = notebooksManager;
 
   function getCurrentWorkingDirectory() {
@@ -61,16 +68,23 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       uri = editor.document.uri;
     }
 
-    const previewProvider = await getPreviewContentProvider(uri);
-    previewProvider.initPreview({
-      sourceUri: uri,
-      document: editor.document,
-      cursorLine: getEditorActiveCursorLine(editor),
-      viewOptions: {
-        viewColumn: vscode.ViewColumn.Two,
-        preserveFocus: true,
-      },
-    });
+    try {
+      const previewProvider = await getPreviewContentProvider(uri);
+      await previewProvider.initPreview({
+        sourceUri: uri,
+        document: editor.document,
+        cursorLine: getEditorActiveCursorLine(editor),
+        viewOptions: {
+          viewColumn: vscode.ViewColumn.Two,
+          preserveFocus: true,
+        },
+      });
+    } catch (error) {
+      console.error('[MPE] openPreviewToTheSide failed:', error);
+      vscode.window.showErrorMessage(
+        `MPE Preview failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   async function openPreview(uri?: vscode.Uri) {

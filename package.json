@@ -32,7 +32,8 @@
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
     "prepare": "husky",
-    "run-in-browser": "concurrently \"vscode-test-web --browserType=chromium --extensionDevelopmentPath=. $SERVE_DIR\" \"npx http-server ./crossnote -p 6789 --cors\"",
+    "run-in-browser": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\"",
+    "run-in-browser:watch": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "yarn install && yarn build",
@@ -793,6 +794,7 @@
     }
   },
   "activationEvents": [
+    "onStartupFinished",
     "onLanguage:markdown",
     "onLanguage:quarto"
   ],
@@ -821,7 +823,7 @@
     "@types/vscode": "^1.116.0",
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
-    "@vscode/test-web": "^0.0.67",
+    "@vscode/test-web": "^0.0.80",
     "concurrently": "^8.2.1",
     "esbuild": "^0.25.0",
     "esbuild-plugin-polyfill-node": "^0.3.0",

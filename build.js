@@ -242,6 +242,18 @@ async function main() {
       });
 
       await Promise.all([nativeContext.watch(), webContext.watch()]);
+    } else if (process.argv.includes('--web-dev')) {
+      // Single web-only dev build (IS_VSCODE_WEB_EXTENSION_DEV_MODE=true, no watch)
+      await build({
+        ...webConfig,
+        sourcemap: true,
+        minify: false,
+        define: {
+          ...(webConfig.define ?? {}),
+          'process.env.IS_VSCODE_WEB_EXTENSION_DEV_MODE': '"true"',
+        },
+      });
+      console.log('[web-dev] Web extension built in dev mode');
     } else {
       // Build mode
       await Promise.all([build(nativeConfig), build(webConfig)]);

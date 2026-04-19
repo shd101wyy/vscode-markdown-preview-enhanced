@@ -34,16 +34,22 @@ class NotebooksManager {
   public async getNotebook(uri: vscode.Uri): Promise<Notebook> {
     const workspaceFolderUri = getWorkspaceFolderUri(uri);
 
-    // Check if workspaceUri.fsPath already exists in this.notebooks
+    // Check if workspaceUri already exists in this.notebooks
     for (let i = 0; i < this.notebooks.length; i++) {
-      if (this.notebooks[i].notebookPath.fsPath === workspaceFolderUri.fsPath) {
+      if (
+        this.notebooks[i].notebookPath.toString() ===
+        workspaceFolderUri.toString()
+      ) {
         return this.notebooks[i];
       }
     }
     // If not, create a new Notebook instance and push it to this.notebooks
     const notebook = await Notebook.init({
       notebookPath: workspaceFolderUri.toString(),
-      fs: wrapVSCodeFSAsApi(workspaceFolderUri.scheme),
+      fs: wrapVSCodeFSAsApi(
+        workspaceFolderUri.scheme,
+        workspaceFolderUri.authority,
+      ),
       config: {},
     });
     this.notebooks.push(notebook);

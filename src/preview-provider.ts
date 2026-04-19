@@ -38,20 +38,18 @@ if (isVSCodeWebExtension()) {
 
 utility.useExternalAddFileProtocolFunction((filePath, preview) => {
   if (preview) {
-    if (filePath.startsWith('/http:/localhost:6789/')) {
-      return filePath.replace(
-        '/http:/localhost:6789/',
-        'http://localhost:6789/',
-      );
-    } else if (filePath.startsWith('/https:/')) {
-      return filePath.replace('/https:/', 'https://');
-    } else {
-      return preview.webview
-        .asWebviewUri(vscode.Uri.file(filePath))
-        .toString(true)
-        .replace(/%3F/gi, '?')
-        .replace(/%23/g, '#');
+    // path.join('https://host/', './rel') → 'https:/host/rel' (single slash)
+    // path.resolve('https://host/', './rel') → '/cwd/https:/host/rel' (abs path with embedded URL)
+    // Both are detected by finding 'http(s):/' followed by a non-slash character anywhere in the path.
+    const urlMatch = filePath.match(/(https?):\/([^/].*)/);
+    if (urlMatch) {
+      return `${urlMatch[1]}://${urlMatch[2]}`;
     }
+    return preview.webview
+      .asWebviewUri(vscode.Uri.file(filePath))
+      .toString(true)
+      .replace(/%3F/gi, '?')
+      .replace(/%23/g, '#');
   } else {
     if (!filePath.startsWith('file://')) {
       filePath = 'file:///' + filePath;
@@ -336,7 +334,6 @@ export class PreviewProvider {
     cursorLine?: number;
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean };
   }): Promise<void> {
-    // console.log('@initPreview: ', sourceUri);
     const previewMode = getPreviewMode();
     let previewPanel: vscode.WebviewPanel;
     const previews = this.getPreviews(sourceUri);
@@ -379,9 +376,11 @@ export class PreviewProvider {
       );
       return;
     } else {
+      const buildDir = utility.getCrossnoteBuildDirectory();
       const localResourceRoots = [
         vscode.Uri.file(this.context.extensionPath),
-        vscode.Uri.file(utility.getCrossnoteBuildDirectory()),
+        // Skip CDN/HTTP URLs — only add file-system paths to localResourceRoots
+        ...(buildDir.startsWith('http') ? [] : [vscode.Uri.file(buildDir)]),
         vscode.Uri.file(globalConfigPath),
         vscode.Uri.file(tmpdir()),
       ];
@@ -414,8 +413,10 @@ export class PreviewProvider {
 
       // set icon
       // NOTE: This doesn't work for custom editor.
-      previewPanel.iconPath = vscode.Uri.file(
-        path.join(this.context.extensionPath, 'media', 'preview.svg'),
+      previewPanel.iconPath = vscode.Uri.joinPath(
+        this.context.extensionUri,
+        'media',
+        'preview.svg',
       );
 
       // NOTE: We only register for the webview event listeners once.
