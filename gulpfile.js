@@ -22,15 +22,15 @@ gulp.task('copy-files', (cb) => {
     fs.rmSync('./crossnote', { recursive: true });
   }
 
-  // Copy files
+  // Copy files (encoding: false prevents Gulp 5 from corrupting binary files like fonts)
   gulp
-    .src('./node_modules/crossnote/out/dependencies/**/*')
+    .src('./node_modules/crossnote/out/dependencies/**/*', { encoding: false })
     .pipe(gulp.dest('./crossnote/dependencies/'));
   gulp
-    .src('./node_modules/crossnote/out/styles/**/*')
+    .src('./node_modules/crossnote/out/styles/**/*', { encoding: false })
     .pipe(gulp.dest('./crossnote/styles/'));
   gulp
-    .src('./node_modules/crossnote/out/webview/**/*')
+    .src('./node_modules/crossnote/out/webview/**/*', { encoding: false })
     .pipe(gulp.dest('./crossnote/webview/'));
 
   console.log('Copy files done.');
