@@ -18,7 +18,8 @@
     "shd101wyy",
     "kachkaev",
     "gabyx",
-    "mavaddat"
+    "mavaddat",
+    "nielsvdc"
   ],
   "publisher": "shd101wyy",
   "main": "./out/native/extension.js",

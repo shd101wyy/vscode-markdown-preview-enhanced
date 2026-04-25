@@ -426,6 +426,18 @@ export class PreviewProvider {
         // register previewPanel message events.
         previewPanel.webview.onDidReceiveMessage(
           (message) => {
+            // Relay zoom commands back to
+            // the webview so crossnote's React handler stays in sync.
+            // Part of the Ctrl+wheel zoom customization.
+            if (
+              message.command === 'zommIn' ||
+              message.command === 'zoomOut' ||
+              message.command === 'resetZoom'
+            ) {
+              previewPanel.webview.postMessage(message);
+              return;
+            }
+
             // console.log('@ receiveMessage: ', message, previewPanel);
             vscode.commands.executeCommand(
               `_crossnote.${message.command}`,
@@ -507,7 +519,114 @@ export class PreviewProvider {
         return;
       }
 
-      previewPanel.webview.html = html;
+      // ──────────────────────────────────────────────────────────────
+      // VS Code-style context menu customization:
+      // Reskins the react-contexify right-click menu to look and feel
+      // like a native VS Code menu:
+      //  - Compact sizing (smaller min-width, tighter padding/margins)
+      //  - VS Code theme colors (background, foreground, selection,
+      //    separator, border) via --vscode-menu-* CSS variables
+      //  - VS Code UI font family and size
+      // Works by overriding contexify CSS custom properties on :root
+      // via inline styles, which beat the <style> tags that
+      // react-contexify injects at runtime.
+      // ──────────────────────────────────────────────────────────────
+      const compactMenuScript = `<script>
+(function() {
+  var root = document.documentElement;
+  root.style.setProperty('--contexify-menu-minWidth', '160px');
+  root.style.setProperty('--contexify-itemContent-padding', '4px 8px');
+  root.style.setProperty('--contexify-separator-margin', '3px');
+
+  // Theme: map VS Code menu colors to contexify variables so the
+  // context menu always matches the VS Code theme, not the preview theme.
+  root.style.setProperty('--contexify-menu-bgColor', 'var(--vscode-menu-background)');
+  root.style.setProperty('--contexify-separator-color', 'var(--vscode-menu-separatorBackground)');
+  root.style.setProperty('--contexify-item-color', 'var(--vscode-menu-foreground)');
+  root.style.setProperty('--contexify-activeItem-color', 'var(--vscode-menu-selectionForeground)');
+  root.style.setProperty('--contexify-activeItem-bgColor', 'var(--vscode-menu-selectionBackground)');
+  root.style.setProperty('--contexify-rightSlot-color', 'var(--vscode-menu-foreground)');
+  root.style.setProperty('--contexify-arrow-color', 'var(--vscode-menu-foreground)');
+
+  // Font: match VS Code's UI font size and family.
+  var style = document.createElement('style');
+  style.textContent = '.contexify { font-size: var(--vscode-font-size); font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif; border: 1px solid var(--vscode-menu-border, transparent); border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.16); }';
+  document.head.appendChild(style);
+})();
+</script>`;
+
+      // ──────────────────────────────────────────────────────────────
+      // Ctrl+wheel zoom customization:
+      // Adds Ctrl+mouse-wheel zoom to the preview webview using the
+      // CSS `zoom` property (doesn't break position:fixed or cause
+      // scrollbars). Fixed UI elements (.fixed) and context menus
+      // (.contexify, top-level only) get a counter-zoom so they stay
+      // at their original size; nested submenus are skipped to avoid
+      // double counter-zooming. A MutationObserver reapplies the
+      // counter-zoom when new elements are added to the DOM.
+      // NOTE: crossnote checks for "zommIn" (typo in upstream).
+      // ──────────────────────────────────────────────────────────────
+      const wheelZoomScript = `<script>
+(function() {
+  var _origAcquire = window.acquireVsCodeApi;
+  var _cachedApi;
+  if (_origAcquire) {
+    window.acquireVsCodeApi = function() {
+      if (!_cachedApi) _cachedApi = _origAcquire();
+      return _cachedApi;
+    };
+  }
+
+  var zoomLevel = 1;
+
+  function applyCounterZoom() {
+    var counterZoom = 1 / zoomLevel;
+    var els = document.querySelectorAll('.fixed, .contexify');
+    for (var i = 0; i < els.length; i++) {
+      // Skip nested .contexify (submenus inside a parent menu) —
+      // they inherit the parent's counter-zoom automatically.
+      if (els[i].classList.contains('contexify') &&
+          els[i].parentElement &&
+          els[i].parentElement.closest('.contexify')) {
+        els[i].style.zoom = '';
+        continue;
+      }
+      els[i].style.zoom = counterZoom;
+    }
+  }
+
+  new MutationObserver(function() {
+    if (zoomLevel !== 1) applyCounterZoom();
+  }).observe(document.body, { childList: true, subtree: true });
+
+  document.addEventListener('wheel', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.deltaY < 0) {
+        zoomLevel = Math.min(zoomLevel * 1.1, 5);
+      } else {
+        zoomLevel = Math.max(zoomLevel / 1.1, 0.2);
+      }
+      document.body.style.zoom = zoomLevel;
+      applyCounterZoom();
+      try {
+        var api = window.acquireVsCodeApi ? window.acquireVsCodeApi() : null;
+        if (api) {
+          var cmd = e.deltaY < 0 ? 'zommIn' : 'zoomOut';
+          api.postMessage({ command: cmd, args: [] });
+        }
+      } catch (_) {}
+    }
+  }, { passive: false, capture: true });
+})();
+</script>`;
+
+      // Inject customizations into the webview HTML.
+      previewPanel.webview.html = html.replace(
+        '</body>',
+        compactMenuScript + wheelZoomScript + '</body>',
+      );
     } catch (error) {
       vscode.window.showErrorMessage(String(error));
       console.error(error);
