@@ -475,6 +475,26 @@ export class PreviewProvider {
       const initRequestId = ++this.initRequestSeq;
       this.latestInitRequestByPreview.set(previewPanel, initRequestId);
 
+      // Build lightbox head injection when enabled
+      let head = '';
+      if (getMPEConfig<boolean>('enableImageLightbox') ?? true) {
+        const lightboxCssUri = previewPanel.webview.asWebviewUri(
+          vscode.Uri.joinPath(
+            this.context.extensionUri,
+            'media',
+            'lightbox.css',
+          ),
+        );
+        const lightboxJsUri = previewPanel.webview.asWebviewUri(
+          vscode.Uri.joinPath(
+            this.context.extensionUri,
+            'media',
+            'lightbox.js',
+          ),
+        );
+        head = `<link rel="stylesheet" href="${lightboxCssUri}"><script defer src="${lightboxJsUri}"></script>`;
+      }
+
       const html = await engine.generateHTMLTemplateForPreview({
         inputString,
         config: {
@@ -493,7 +513,7 @@ export class PreviewProvider {
         // runtime using the full sourceUri, so we can safely omit it here.
         // For the native extension the default base tag is harmless, but we keep
         // consistent behaviour and let React own it in both cases.
-        head: '',
+        head,
       });
 
       // If a newer initPreview call has taken over this panel, or the panel was
