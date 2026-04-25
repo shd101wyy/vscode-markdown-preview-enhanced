@@ -588,7 +588,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         ) {
           /*
           // NOTE: This doesn't work for the `line`
-          // so we use the `initPreview` instead.  
+          // so we use the `initPreview` instead.
           const options: vscode.TextDocumentShowOptions = {
             selection: new vscode.Selection(line, 0, line, 0),
             viewColumn: vscode.ViewColumn.Active,

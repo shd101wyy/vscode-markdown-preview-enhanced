@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### New features
+
+- Add Ctrl+mouse-wheel zoom in the preview pane — zoom in/out with Ctrl+scroll (or Cmd+scroll on macOS). Fixed-position UI elements (buttons, menus) stay at their original size at any zoom level. Requires the VS Code setting `editor.mouseWheelZoom` to be enabled (`Settings > Editor: Mouse Wheel Zoom`).
+
+### Improvements
+
+- Restyle context menu to match VS Code — the right-click menu now uses the VS Code theme colors, font family, and font size instead of the preview theme, so it looks native at any zoom level or theme setting.
+- Make context menu more compact — smaller minimum width, tighter item padding, and reduced separator margins for a cleaner, VS Code-like appearance.
+
 ## [0.8.24] - 2026-04-21
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to version [0.9.22](https://github.com/shd101wyy/crossnote/releases/tag/0.9.22).
