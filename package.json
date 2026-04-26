@@ -731,6 +731,11 @@
           "description": "Enable this option will hide unnecessary UI elements in preview unless your mouse is over it.",
           "default": true,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.useVSCodeThemeForContextMenu": {
+          "description": "When enabled, the context menu in preview inherits VS Code's theme colors and font instead of the default styling.",
+          "default": false,
+          "type": "boolean"
         }
       }
     },
@@ -817,7 +822,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.9.22",
+    "crossnote": "^0.9.23",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {
