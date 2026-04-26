@@ -105,6 +105,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly webSequenceDiagramsApiKey: string;
   public readonly alwaysShowBacklinksInPreview: boolean;
   public readonly enablePreviewZenMode: boolean;
+  public readonly useVSCodeThemeForContextMenu: boolean;
   public readonly wikiLinkTargetFileExtension: string;
   public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
   // D2 diagram settings
@@ -282,6 +283,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.enablePreviewZenMode =
       getMPEConfig<boolean>('enablePreviewZenMode') ??
       defaultConfig.enablePreviewZenMode;
+    this.useVSCodeThemeForContextMenu =
+      getMPEConfig<boolean>('useVSCodeThemeForContextMenu') ??
+      defaultConfig.useVSCodeThemeForContextMenu;
     this.wikiLinkTargetFileExtension =
       getMPEConfig<string>('wikiLinkTargetFileExtension') ??
       defaultConfig.wikiLinkTargetFileExtension;
