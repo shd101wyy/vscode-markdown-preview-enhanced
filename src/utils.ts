@@ -41,6 +41,16 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
     }
   }
 
+  // Detect cross-platform URI mismatch (e.g., Windows-style URI on a Linux
+  // remote connected via Remote SSH). The fsPath will contain a Windows drive
+  // letter that is not a valid local path, so fall back to the first workspace
+  // folder instead of producing an invalid URI.
+  if (process.platform !== 'win32' && /^[a-zA-Z]:/.test(uri.fsPath)) {
+    if (workspaces && workspaces.length > 0) {
+      return workspaces[0].uri;
+    }
+  }
+
   // Return the folder of uri
   return vscode.Uri.file(path.dirname(uri.fsPath));
 }
