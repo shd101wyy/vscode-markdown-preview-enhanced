@@ -342,6 +342,33 @@ class NotebooksManager {
     this.fileWatcher.startFileWatcher();
     return notebook.getAllTags();
   }
+
+  /**
+   * Every Markdown file in the notebook, returned as `{ uri, relativePath }`.
+   * Sourced from the notebook's already-loaded `notes` map (which the
+   * file watcher keeps current), so we avoid the per-keystroke
+   * `vscode.workspace.findFiles('**\/*.md', …)` workspace scan that
+   * note-name autocomplete used to do.
+   *
+   * Cold call: pays for `refreshNotesIfNotLoaded` (workspace scan +
+   * full markdown-it parse for each note) on first hit, but only
+   * once.  Warm calls are O(notes) iteration over an in-memory map.
+   */
+  public async getMarkdownFiles(
+    contextUri: vscode.Uri,
+  ): Promise<Array<{ uri: vscode.Uri; relativePath: string }>> {
+    const notebook = await this.getNotebook(contextUri);
+    await notebook.refreshNotesIfNotLoaded({
+      dir: '.',
+      includeSubdirectories: true,
+    });
+    this.fileWatcher.startFileWatcher();
+    const root = vscode.Uri.parse(notebook.notebookPath.toString());
+    return Object.keys(notebook.notes).map((relativePath) => ({
+      uri: vscode.Uri.joinPath(root, relativePath),
+      relativePath,
+    }));
+  }
 }
 
 export default NotebooksManager;

@@ -122,14 +122,14 @@ export class WikilinkCompletionProvider
     partial: string,
     isEmbed: boolean,
   ): Promise<vscode.CompletionItem[] | undefined> {
-    // Cap at a sensible upper bound so very large workspaces don't make
-    // the popup feel sluggish.  vscode's quick-pick in practice scrolls
-    // beyond ~200 items poorly anyway.
-    const mdFiles = await vscode.workspace.findFiles(
-      '**/*.md',
-      '**/node_modules/**',
-      500,
-    );
+    // Markdown files: read from the notebook's already-loaded notes
+    // map (kept current by the file watcher) instead of re-scanning
+    // the workspace on every keystroke.  This is the difference
+    // between O(notes) and a fresh `vscode.workspace.findFiles` call
+    // each time, which matters on large notebooks.
+    const mdFiles = await this.listMarkdownFiles(document);
+    // Images aren't tracked by the notebook, so we still go through
+    // findFiles — but only when the user is in `![[…` embed context.
     const imageFiles = isEmbed
       ? await vscode.workspace.findFiles(
           '**/*.{png,jpg,jpeg,gif,svg,webp,bmp,avif}',
@@ -191,6 +191,29 @@ export class WikilinkCompletionProvider
     }
 
     return items;
+  }
+
+  /**
+   * Markdown files in the active document's notebook, fetched from
+   * the cached `notes` map.  Falls back to a workspace-wide
+   * `findFiles` if no NotebooksManager is available or if notebook
+   * init fails (e.g. no workspace folder), so completion still works
+   * in edge cases.
+   */
+  private async listMarkdownFiles(
+    document: vscode.TextDocument,
+  ): Promise<vscode.Uri[]> {
+    if (this.notebooksManager) {
+      try {
+        const entries = await this.notebooksManager.getMarkdownFiles(
+          document.uri,
+        );
+        return entries.map((e) => e.uri);
+      } catch {
+        // fall through to findFiles
+      }
+    }
+    return vscode.workspace.findFiles('**/*.md', '**/node_modules/**', 500);
   }
 
   private async completeBlocks(
