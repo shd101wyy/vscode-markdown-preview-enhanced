@@ -128,6 +128,7 @@ export class WikilinkCompletionProvider
     // between O(notes) and a fresh `vscode.workspace.findFiles` call
     // each time, which matters on large notebooks.
     const mdFiles = await this.listMarkdownFiles(document);
+    const markdownExts = await this.getMarkdownExtensions(document);
     // Images aren't tracked by the notebook, so we still go through
     // findFiles — but only when the user is in `![[…` embed context.
     const imageFiles = isEmbed
@@ -148,9 +149,10 @@ export class WikilinkCompletionProvider
       if (fileUri.fsPath === currentPath) return;
       const baseName = path.basename(fileUri.fsPath);
       const ext = path.extname(baseName).toLowerCase();
-      const isMarkdown = ext === '.md';
-      // Drop the .md extension in the inserted text — it's the
-      // crossnote default and matches what users typically write.
+      const isMarkdown = markdownExts.includes(ext);
+      // Drop the markdown extension in the inserted text — matches
+      // what users typically write (and what crossnote's
+      // wikiLinkTargetFileExtension auto-applies on the way back in).
       // For images and other types, keep the full filename.
       const insertText = isMarkdown ? path.basename(baseName, ext) : baseName;
       const label = insertText;
@@ -213,7 +215,53 @@ export class WikilinkCompletionProvider
         // fall through to findFiles
       }
     }
-    return vscode.workspace.findFiles('**/*.md', '**/node_modules/**', 500);
+    // Glob across every extension the user has configured (default
+    // includes `.md`, `.markdown`, `.mdown`, `.rmd`, `.qmd`, `.mdx`,
+    // …).  Fallback to `.md` if we have no notebook config to read.
+    const exts = await this.getMarkdownExtensions(document);
+    const extsNoDot = exts
+      .map((e) => e.replace(/^\./, ''))
+      .filter((e) => e.length > 0);
+    const glob =
+      extsNoDot.length === 1
+        ? `**/*.${extsNoDot[0]}`
+        : `**/*.{${extsNoDot.join(',')}}`;
+    return vscode.workspace.findFiles(glob, '**/node_modules/**', 500);
+  }
+
+  /**
+   * Configured markdown file extensions for the active document's
+   * notebook (e.g. `['.md', '.markdown', '.mdx']`).  Falls back to
+   * `['.md']` when no NotebooksManager is available.
+   */
+  private async getMarkdownExtensions(
+    document: vscode.TextDocument,
+  ): Promise<string[]> {
+    if (!this.notebooksManager) return ['.md'];
+    try {
+      const notebook = await this.notebooksManager.getNotebook(document.uri);
+      const exts = notebook.config.markdownFileExtensions;
+      return exts && exts.length > 0 ? exts : ['.md'];
+    } catch {
+      return ['.md'];
+    }
+  }
+
+  /**
+   * The wikilink-target extension to append when a `[[Note]]` doesn't
+   * already specify one.  Falls back to `.md` when no NotebooksManager
+   * is available.
+   */
+  private async getDefaultWikilinkExtension(
+    document: vscode.TextDocument,
+  ): Promise<string> {
+    if (!this.notebooksManager) return '.md';
+    try {
+      const notebook = await this.notebooksManager.getNotebook(document.uri);
+      return notebook.config.wikiLinkTargetFileExtension || '.md';
+    } catch {
+      return '.md';
+    }
   }
 
   private async completeBlocks(
@@ -304,7 +352,8 @@ export class WikilinkCompletionProvider
     noteName: string,
   ): Promise<vscode.Uri | undefined> {
     const ext = path.extname(noteName);
-    const fileName = ext ? noteName : `${noteName}.md`;
+    const defaultExt = await this.getDefaultWikilinkExtension(document);
+    const fileName = ext ? noteName : `${noteName}${defaultExt}`;
 
     // Same directory as the current document
     if (document.uri.scheme === 'file') {

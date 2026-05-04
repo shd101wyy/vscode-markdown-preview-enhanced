@@ -1,6 +1,7 @@
 import { extractBlockIds, findFragmentTargetLine, matter } from 'crossnote';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import NotebooksManager from './notebooks-manager';
 
 /**
  * Editor-side hover preview for `[[Note]]`, `[[Note#Heading]]`,
@@ -15,6 +16,8 @@ import * as vscode from 'vscode';
  * drive the hover.
  */
 export class WikilinkHoverProvider implements vscode.HoverProvider {
+  constructor(private readonly notebooksManager?: NotebooksManager) {}
+
   // Match a wikilink `[[…]]` or `![[…]]` whose body has no closing
   // brackets — we use this to find the wikilink containing the
   // cursor position.  Group 1 captures the body (everything between
@@ -213,7 +216,8 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
     noteName: string,
   ): Promise<vscode.Uri | undefined> {
     const ext = path.extname(noteName);
-    const fileName = ext ? noteName : `${noteName}.md`;
+    const defaultExt = await this.getDefaultWikilinkExtension(document);
+    const fileName = ext ? noteName : `${noteName}${defaultExt}`;
     if (document.uri.scheme === 'file') {
       const sameDir = vscode.Uri.file(
         path.join(path.dirname(document.uri.fsPath), fileName),
@@ -228,10 +232,29 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
     const baseName = path.basename(fileName);
     const matches = await vscode.workspace.findFiles(
       `**/${baseName}`,
-      undefined,
+      '**/node_modules/**',
       1,
     );
     return matches[0];
+  }
+
+  /**
+   * Read the configured `wikiLinkTargetFileExtension` from the
+   * notebook for the active document, falling back to `.md`.  Uses
+   * the same plumbing as the autocomplete provider so a notebook
+   * configured with `.markdown` / `.qmd` / etc. resolves wikilinks
+   * consistently across hover, autocomplete, and click.
+   */
+  private async getDefaultWikilinkExtension(
+    document: vscode.TextDocument,
+  ): Promise<string> {
+    if (!this.notebooksManager) return '.md';
+    try {
+      const notebook = await this.notebooksManager.getNotebook(document.uri);
+      return notebook.config.wikiLinkTargetFileExtension || '.md';
+    } catch {
+      return '.md';
+    }
   }
 }
 

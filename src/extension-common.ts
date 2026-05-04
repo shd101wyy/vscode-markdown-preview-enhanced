@@ -1290,7 +1290,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         { language: 'markdown', scheme: 'file' },
         { language: 'markdown', scheme: 'untitled' },
       ],
-      new WikilinkHoverProvider(),
+      new WikilinkHoverProvider(notebooksManager),
     ),
   );
 
