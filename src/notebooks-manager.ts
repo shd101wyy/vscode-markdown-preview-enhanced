@@ -290,10 +290,15 @@ class NotebooksManager {
     const notebook = await this.getNotebook(noteUri);
 
     if (forceRefreshingNotes) {
-      await notebook.refreshNotes({
+      // User clicked "refresh backlinks": walk the workspace and
+      // re-tokenize only files whose on-disk mtime has advanced past
+      // the recorded value (or that we've never seen).  Same end
+      // state as `refreshNotes` on a cold cache, dramatically cheaper
+      // on a warm one because the file watcher has been keeping the
+      // indices in sync.
+      await notebook.refreshNotesIncremental({
         dir: '.',
         includeSubdirectories: true,
-        refreshRelations: true,
       });
     } else {
       await notebook.refreshNotesIfNotLoaded({

@@ -167,10 +167,14 @@ export class GraphViewProvider {
 
       // Ensure the reference map is populated before building the graph
       if (forceRefresh) {
-        await notebook.refreshNotes({
+        // Incremental refresh: walk + stat, only re-process files
+        // whose on-disk mtime is newer than the stamped value.  On a
+        // warm cache (watcher kept us in sync) this is mostly the
+        // walk cost; on a cold cache it does the same work as the
+        // full `refreshNotes`.
+        await notebook.refreshNotesIncremental({
           dir: '.',
           includeSubdirectories: true,
-          refreshRelations: true,
         });
       } else {
         await notebook.refreshNotesIfNotLoaded({
