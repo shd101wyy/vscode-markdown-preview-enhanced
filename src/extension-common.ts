@@ -20,6 +20,47 @@ import * as path from 'path';
 
 let editorScrollDelay = Date.now();
 
+/**
+ * Resolve a wikilink-style URL fragment to a 0-based line number in the
+ * given markdown source.  Tries, in order:
+ *   1. ^block-id reference (the LAST `^id` in the fragment, so that
+ *      combined `Heading^id` falls through here first).  Matched against
+ *      ` ^id` markers at end of line — i.e. the form crossnote's
+ *      transformer produces.
+ *   2. Heading slug — generated with the same HeadingIdGenerator as
+ *      crossnote so anchors like `#Setup` line up.
+ *
+ * Returns -1 if no match.
+ */
+function findFragmentTargetLine(text: string, fragment: string): number {
+  if (!fragment) return -1;
+  const lines = text.split('\n');
+
+  const blockMatch = fragment.match(/\^([a-zA-Z0-9_-]+)$/);
+  if (blockMatch) {
+    const blockId = blockMatch[1];
+    const re = new RegExp(`\\s\\^${blockId}\\s*$`);
+    for (let i = 0; i < lines.length; i++) {
+      if (re.test(lines[i])) {
+        return i;
+      }
+    }
+  }
+
+  const headingIdGenerator = new HeadingIdGenerator();
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.match(/^#+\s+/)) {
+      const heading = line.replace(/^#+\s+/, '');
+      const headingId = headingIdGenerator.generateId(heading);
+      if (headingId === fragment) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+
 // hide default vscode markdown preview buttons if necessary
 const hideDefaultVSCodeMarkdownPreviewButtons = vscode.workspace
   .getConfiguration('markdown-preview-enhanced')
@@ -779,29 +820,22 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
             editor.selection = sel;
             editor.revealRange(sel, viewPos);
           } else if (fileUri.fragment) {
-            // Normal fragment
-            // Find heading with this id
-            const headingIdGenerator = new HeadingIdGenerator();
-            const text = editor.document.getText();
-            const lines = text.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-              const line = lines[i];
-              if (line.match(/^#+\s+/)) {
-                const heading = line.replace(/^#+\s+/, '');
-                const headingId = headingIdGenerator.generateId(heading);
-                if (headingId === fileUri.fragment) {
-                  // Reveal editor line
-                  let viewPos = vscode.TextEditorRevealType.InCenter;
-                  if (editor.selection.active.line === i) {
-                    viewPos =
-                      vscode.TextEditorRevealType.InCenterIfOutsideViewport;
-                  }
-                  const sel = new vscode.Selection(i, 0, i, 0);
-                  editor.selection = sel;
-                  editor.revealRange(sel, viewPos);
-                  break;
-                }
+            // Normal fragment.  Try, in order:
+            //   1. Block-id reference (^abc) — match the LAST `^id` in
+            //      the fragment so combined `Heading^abc` works too.
+            //   2. Heading-id reference — match by HeadingIdGenerator.
+            const targetLine = findFragmentTargetLine(
+              editor.document.getText(),
+              fileUri.fragment,
+            );
+            if (targetLine >= 0) {
+              let viewPos = vscode.TextEditorRevealType.InCenter;
+              if (editor.selection.active.line === targetLine) {
+                viewPos = vscode.TextEditorRevealType.InCenterIfOutsideViewport;
               }
+              const sel = new vscode.Selection(targetLine, 0, targetLine, 0);
+              editor.selection = sel;
+              editor.revealRange(sel, viewPos);
             }
           }
         }
