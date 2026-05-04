@@ -342,6 +342,11 @@
           "default": false,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.enableTagSyntax": {
+          "description": "Enable Obsidian-style #tag syntax. Renders `#tag-name` (and nested `#parent/child`) as clickable pill-shaped anchors. Click a tag to open VS Code's \"Search in Files\" pre-filled with the tag.",
+          "default": true,
+          "type": "boolean"
+        },
         "markdown-preview-enhanced.wikiLinkTargetFileExtension": {
           "markdownDescription": "The file extension for the link in wikilink if the link does not have an extension.",
           "default": ".md",

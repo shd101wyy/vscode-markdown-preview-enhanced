@@ -710,6 +710,39 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     }
   }
 
+  async function clickTag({
+    uri: _uri,
+    tag,
+    scheme: _scheme,
+  }: {
+    uri: string;
+    tag: string;
+    scheme: string;
+  }) {
+    if (!tag) {
+      return;
+    }
+    // Open VS Code's "Search in Files" panel pre-filled with `#tag`.
+    //
+    // Use a regex with negative lookbehind / lookahead so the search
+    // matches inline tags the way Obsidian does, but skips:
+    //   - heading markers   (## Heading)
+    //   - URL fragments     (/path/#tag)
+    //   - longer tag names  (#tag matches but #tag-extended does not)
+    //   - parent of a nested tag (#parent should not match #parent/child)
+    //
+    // VS Code Search runs on ripgrep with PCRE2 enabled, which supports
+    // lookarounds.
+    const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    await vscode.commands.executeCommand('workbench.action.findInFiles', {
+      query: `(?<![\\w/#])#${escaped}(?![\\w/-])`,
+      triggerSearch: true,
+      isRegex: true,
+      isCaseSensitive: true,
+      matchWholeWord: false,
+    });
+  }
+
   async function openChangelog() {
     const url =
       'https://github.com/shd101wyy/vscode-markdown-preview-enhanced/releases';
@@ -1344,6 +1377,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('_crossnote.clickTagA', clickTagA),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('_crossnote.clickTag', clickTag),
   );
 
   context.subscriptions.push(

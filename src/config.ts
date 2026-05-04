@@ -27,6 +27,7 @@ export enum PreviewColorScheme {
 type VSCodeMPEConfigKey =
   | 'automaticallyShowPreviewOfMarkdownBeingEdited'
   | 'configPath'
+  | 'enableImageLightbox'
   | 'imageUploader'
   | 'hideDefaultVSCodeMarkdownPreviewButtons'
   | 'liveUpdate'
@@ -63,6 +64,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly enableEmojiSyntax: boolean;
   public readonly enableExtendedTableSyntax: boolean;
   public readonly enableCriticMarkupSyntax: boolean;
+  public readonly enableTagSyntax: boolean;
   public readonly frontMatterRenderingOption: FrontMatterRenderingOption;
   public readonly mathRenderingOption: MathRenderingOption;
   public readonly mathInlineDelimiters: string[][];
@@ -166,6 +168,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.enableCriticMarkupSyntax =
       getMPEConfig<boolean>('enableCriticMarkupSyntax') ??
       defaultConfig.enableCriticMarkupSyntax;
+    this.enableTagSyntax =
+      getMPEConfig<boolean>('enableTagSyntax') ?? defaultConfig.enableTagSyntax;
     this.frontMatterRenderingOption =
       getMPEConfig<FrontMatterRenderingOption>('frontMatterRenderingOption') ??
       defaultConfig.frontMatterRenderingOption;
