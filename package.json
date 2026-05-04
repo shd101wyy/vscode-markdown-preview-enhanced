@@ -353,6 +353,12 @@
           "default": true,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.maxNoteFileSize": {
+          "markdownDescription": "Maximum size (in bytes) of a Markdown file that crossnote will load into the in-memory note index. Files larger than the cap are skipped during workspace refresh — they won't appear in autocomplete, backlinks, or the tag panel, but you can still open them via wikilink click. Prevents pathological cases where a checked-in log/data dump with a `.md` extension would otherwise pin its full content (plus a parsed token tree) in memory. Set to `0` to disable the cap.",
+          "default": 5242880,
+          "type": "number",
+          "minimum": 0
+        },
         "markdown-preview-enhanced.wikiLinkTargetFileExtension": {
           "markdownDescription": "The file extension for the link in wikilink if the link does not have an extension.",
           "default": ".md",

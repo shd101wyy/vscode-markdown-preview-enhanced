@@ -65,6 +65,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly enableExtendedTableSyntax: boolean;
   public readonly enableCriticMarkupSyntax: boolean;
   public readonly enableTagSyntax: boolean;
+  public readonly maxNoteFileSize: number;
   public readonly frontMatterRenderingOption: FrontMatterRenderingOption;
   public readonly mathRenderingOption: MathRenderingOption;
   public readonly mathInlineDelimiters: string[][];
@@ -170,6 +171,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       defaultConfig.enableCriticMarkupSyntax;
     this.enableTagSyntax =
       getMPEConfig<boolean>('enableTagSyntax') ?? defaultConfig.enableTagSyntax;
+    this.maxNoteFileSize =
+      getMPEConfig<number>('maxNoteFileSize') ?? defaultConfig.maxNoteFileSize;
     this.frontMatterRenderingOption =
       getMPEConfig<FrontMatterRenderingOption>('frontMatterRenderingOption') ??
       defaultConfig.frontMatterRenderingOption;
