@@ -741,6 +741,11 @@
           "description": "Enable this option will hide unnecessary UI elements in preview unless your mouse is over it.",
           "default": true,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.enableImageLightbox": {
+          "description": "Click an image in the preview to view it in a full-screen lightbox overlay. Press Escape or click the backdrop to close.",
+          "default": true,
+          "type": "boolean"
         }
       }
     },
