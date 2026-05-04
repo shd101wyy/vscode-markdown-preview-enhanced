@@ -14,6 +14,8 @@ const esbuild = require('esbuild');
 
 let parseBlockIdTriggerContext;
 let extractBlockIds;
+let parseHeadingTriggerContext;
+let extractHeadings;
 let tmpFile;
 
 suite('block-id-helpers', function () {
@@ -34,6 +36,8 @@ suite('block-id-helpers', function () {
     const mod = require(tmpFile);
     parseBlockIdTriggerContext = mod.parseBlockIdTriggerContext;
     extractBlockIds = mod.extractBlockIds;
+    parseHeadingTriggerContext = mod.parseHeadingTriggerContext;
+    extractHeadings = mod.extractHeadings;
   });
 
   suiteTeardown(function () {
@@ -139,6 +143,111 @@ suite('block-id-helpers', function () {
       const text = 'Block. ^my-block_123';
       const out = extractBlockIds(text);
       assert.deepStrictEqual(out, [{ id: 'my-block_123', body: 'Block.' }]);
+    });
+  });
+
+  suite('parseHeadingTriggerContext', function () {
+    test('returns null when not in a wikilink', function () {
+      assert.strictEqual(parseHeadingTriggerContext('# Heading'), null);
+      assert.strictEqual(parseHeadingTriggerContext(''), null);
+    });
+
+    test('returns null when there is no #', function () {
+      assert.strictEqual(parseHeadingTriggerContext('[[README'), null);
+      assert.strictEqual(parseHeadingTriggerContext('[[README^abc'), null);
+    });
+
+    test('captures empty partial right after [[Note#', function () {
+      assert.deepStrictEqual(parseHeadingTriggerContext('[[README#'), {
+        noteName: 'README',
+        partial: '',
+      });
+    });
+
+    test('captures partial heading slug while typing', function () {
+      assert.deepStrictEqual(parseHeadingTriggerContext('[[README#se'), {
+        noteName: 'README',
+        partial: 'se',
+      });
+    });
+
+    test('does NOT match when the fragment already contains ^ (block context wins)', function () {
+      // [[Note#Heading^abc] should be handled by parseBlockIdTriggerContext,
+      // not parseHeadingTriggerContext.
+      assert.strictEqual(
+        parseHeadingTriggerContext('[[README#Setup^abc'),
+        null,
+      );
+    });
+
+    test('only looks at the cursor position', function () {
+      assert.deepStrictEqual(
+        parseHeadingTriggerContext('Already [[Other#X]] then [[README#'),
+        { noteName: 'README', partial: '' },
+      );
+    });
+  });
+
+  suite('extractHeadings', function () {
+    test('returns [] when there are no headings', function () {
+      assert.deepStrictEqual(extractHeadings('Just prose, no #.'), []);
+    });
+
+    test('extracts ATX headings with text + slug', function () {
+      const text = ['# Setup Guide', '', 'Body.', '', '## Configuration'].join(
+        '\n',
+      );
+      const out = extractHeadings(text);
+      assert.deepStrictEqual(out, [
+        { level: 1, text: 'Setup Guide', slug: 'setup-guide' },
+        { level: 2, text: 'Configuration', slug: 'configuration' },
+      ]);
+    });
+
+    test('strips trailing {#id} attribute spans before slugifying', function () {
+      const text = '# Custom ID heading {#my-id}';
+      const out = extractHeadings(text);
+      assert.strictEqual(out.length, 1);
+      assert.strictEqual(out[0].text, 'Custom ID heading');
+    });
+
+    test('disambiguates duplicate headings the same way crossnote does', function () {
+      // HeadingIdGenerator suffixes duplicates with -1, -2, …
+      const text = '# Setup\n\n# Setup\n\n# Setup';
+      const slugs = extractHeadings(text).map((h) => h.slug);
+      assert.deepStrictEqual(slugs, ['setup', 'setup-1', 'setup-2']);
+    });
+
+    test('skips lines inside fenced code blocks', function () {
+      const text = [
+        '# Real heading',
+        '',
+        '```js',
+        '# not a heading',
+        '## also not',
+        '```',
+        '',
+        '## Another real heading',
+      ].join('\n');
+      const out = extractHeadings(text);
+      assert.deepStrictEqual(
+        out.map((h) => h.text),
+        ['Real heading', 'Another real heading'],
+      );
+    });
+
+    test('handles all 6 heading levels', function () {
+      const text = '# h1\n## h2\n### h3\n#### h4\n##### h5\n###### h6';
+      const out = extractHeadings(text);
+      assert.deepStrictEqual(
+        out.map((h) => h.level),
+        [1, 2, 3, 4, 5, 6],
+      );
+    });
+
+    test('does not treat 7+ leading hashes as a heading', function () {
+      const out = extractHeadings('####### too many');
+      assert.deepStrictEqual(out, []);
     });
   });
 });

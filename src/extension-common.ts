@@ -2,7 +2,7 @@
 import { PreviewMode, utility } from 'crossnote';
 import { SHA256 } from 'crypto-js';
 import * as vscode from 'vscode';
-import { BlockIdCompletionProvider } from './block-id-completion-provider';
+import { WikilinkCompletionProvider } from './block-id-completion-provider';
 import { PreviewColorScheme, getMPEConfig, updateMPEConfig } from './config';
 import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
@@ -1225,17 +1225,18 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     ),
   );
 
-  // Block-id autocomplete inside [[Note^…]] / [[Note#Heading^…]] wikilinks.
-  // Triggers on `^` so the suggestion list pops as soon as the user types
-  // the caret; the partial id text after the caret further filters it.
+  // Wikilink fragment autocomplete: `[[Note^…]]` for block IDs and
+  // `[[Note#…]]` for headings.  Both trigger characters open the
+  // suggestion list; the partial text after `^`/`#` further filters it.
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
       [
         { language: 'markdown', scheme: 'file' },
         { language: 'markdown', scheme: 'untitled' },
       ],
-      new BlockIdCompletionProvider(),
+      new WikilinkCompletionProvider(),
       '^',
+      '#',
     ),
   );
 
