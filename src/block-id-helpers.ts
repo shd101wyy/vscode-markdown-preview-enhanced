@@ -81,6 +81,28 @@ export function parseHeadingTriggerContext(
 }
 
 /**
+ * Parse the text on the current line up to the cursor and decide
+ * whether we're inside a freshly-opened `[[…` (wikilink) or `![[…`
+ * (wikilink embed) — i.e. the user has typed `[[` or `![[` and is
+ * about to write a note name.
+ *
+ * Returns `{ partial, isEmbed }` or `null`.  `partial` is whatever
+ * the user has typed for the note name so far; `isEmbed` is true for
+ * `![[` so the caller can prefer image/PDF suggestions if it wants.
+ *
+ * Bails out as soon as the partial would contain `]`, `|`, `#`, or
+ * `^` — those signal a different completion context (closing,
+ * alias, heading, or block-id).
+ */
+export function parseNoteTriggerContext(
+  textBeforeCursor: string,
+): { partial: string; isEmbed: boolean } | null {
+  const match = textBeforeCursor.match(/(!?)\[\[([^\]|#^]*)$/);
+  if (!match) return null;
+  return { partial: match[2], isEmbed: match[1] === '!' };
+}
+
+/**
  * Extract every ATX heading (`# Title`, `## Subtitle`, …) from a
  * markdown source and return `{ level, text, slug }` triples in source
  * order.  `slug` is what crossnote's HeadingIdGenerator produces — i.e.

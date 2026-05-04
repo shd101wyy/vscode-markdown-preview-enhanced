@@ -16,6 +16,7 @@ let parseBlockIdTriggerContext;
 let extractBlockIds;
 let parseHeadingTriggerContext;
 let extractHeadings;
+let parseNoteTriggerContext;
 let tmpFile;
 
 suite('block-id-helpers', function () {
@@ -38,6 +39,7 @@ suite('block-id-helpers', function () {
     extractBlockIds = mod.extractBlockIds;
     parseHeadingTriggerContext = mod.parseHeadingTriggerContext;
     extractHeadings = mod.extractHeadings;
+    parseNoteTriggerContext = mod.parseNoteTriggerContext;
   });
 
   suiteTeardown(function () {
@@ -248,6 +250,62 @@ suite('block-id-helpers', function () {
     test('does not treat 7+ leading hashes as a heading', function () {
       const out = extractHeadings('####### too many');
       assert.deepStrictEqual(out, []);
+    });
+  });
+
+  suite('parseNoteTriggerContext', function () {
+    test('returns null for plain text and empty input', function () {
+      assert.strictEqual(parseNoteTriggerContext(''), null);
+      assert.strictEqual(parseNoteTriggerContext('No brackets'), null);
+      assert.strictEqual(parseNoteTriggerContext('Just one ['), null);
+    });
+
+    test('matches `[[` with empty partial', function () {
+      assert.deepStrictEqual(parseNoteTriggerContext('See [['), {
+        partial: '',
+        isEmbed: false,
+      });
+    });
+
+    test('matches `![[` and flags as embed', function () {
+      assert.deepStrictEqual(parseNoteTriggerContext('Look at ![['), {
+        partial: '',
+        isEmbed: true,
+      });
+    });
+
+    test('captures partial note name', function () {
+      assert.deepStrictEqual(parseNoteTriggerContext('[[Read'), {
+        partial: 'Read',
+        isEmbed: false,
+      });
+      assert.deepStrictEqual(parseNoteTriggerContext('![[image'), {
+        partial: 'image',
+        isEmbed: true,
+      });
+    });
+
+    test('does NOT match once # is typed (heading context takes over)', function () {
+      assert.strictEqual(parseNoteTriggerContext('[[Note#Setup'), null);
+    });
+
+    test('does NOT match once ^ is typed (block context takes over)', function () {
+      assert.strictEqual(parseNoteTriggerContext('[[Note^abc'), null);
+    });
+
+    test('does NOT match once | is typed (alias context — out of scope)', function () {
+      assert.strictEqual(parseNoteTriggerContext('[[Note|al'), null);
+    });
+
+    test('does NOT match a single bracket', function () {
+      assert.strictEqual(parseNoteTriggerContext('Plain [link'), null);
+    });
+
+    test('only looks at the cursor position (closed wikilinks earlier on the line)', function () {
+      assert.deepStrictEqual(
+        parseNoteTriggerContext('Already [[A]] but now [['),
+        { partial: '', isEmbed: false },
+      );
     });
   });
 });

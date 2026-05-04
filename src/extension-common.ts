@@ -1225,9 +1225,12 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     ),
   );
 
-  // Wikilink fragment autocomplete: `[[Note^…]]` for block IDs and
-  // `[[Note#…]]` for headings.  Both trigger characters open the
-  // suggestion list; the partial text after `^`/`#` further filters it.
+  // Wikilink autocomplete:
+  //   - `[[…` / `![[…`  → list workspace notes (and images for `![[`)
+  //   - `[[Note#…`       → list headings in Note
+  //   - `[[Note^…`       → list ^block-id markers in Note
+  // The trigger characters open the suggestion list; the partial text
+  // after each further filters it.  Provider routes by context.
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
       [
@@ -1235,8 +1238,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         { language: 'markdown', scheme: 'untitled' },
       ],
       new WikilinkCompletionProvider(),
-      '^',
+      '[',
       '#',
+      '^',
     ),
   );
 
