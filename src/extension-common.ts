@@ -3,6 +3,7 @@ import { PreviewMode, utility } from 'crossnote';
 import { SHA256 } from 'crypto-js';
 import * as vscode from 'vscode';
 import { WikilinkCompletionProvider } from './block-id-completion-provider';
+import { WikilinkHoverProvider } from './wikilink-hover-provider';
 import { PreviewColorScheme, getMPEConfig, updateMPEConfig } from './config';
 import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
@@ -815,9 +816,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   }
 
   async function clickTag({
-    uri: _uri,
+    uri,
     tag,
-    scheme: _scheme,
+    scheme,
   }: {
     uri: string;
     tag: string;
@@ -826,24 +827,59 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     if (!tag) {
       return;
     }
-    // Open VS Code's "Search in Files" panel pre-filled with `#tag`.
-    //
-    // Use a regex with negative lookbehind / lookahead so the search
-    // matches inline tags the way Obsidian does, but skips:
-    //   - heading markers   (## Heading)
-    //   - URL fragments     (/path/#tag)
-    //   - longer tag names  (#tag matches but #tag-extended does not)
-    //   - parent of a nested tag (#parent should not match #parent/child)
-    //
-    // VS Code Search runs on ripgrep with PCRE2 enabled, which supports
-    // lookarounds.
-    const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    await vscode.commands.executeCommand('workbench.action.findInFiles', {
-      query: `(?<![\\w/#])#${escaped}(?![\\w/-])`,
-      triggerSearch: true,
-      isRegex: true,
-      isCaseSensitive: true,
-      matchWholeWord: false,
+    // Use crossnote's global tag index (TagReferenceMap) to find every
+    // note that mentions `#tag`.  This is exactly the data the
+    // Obsidian "Tags" pane works off — backlinks for files, separate
+    // tag index for tags.
+    const contextUri = uri ? vscode.Uri.parse(uri) : undefined;
+    if (!contextUri) {
+      return;
+    }
+    let notes: import('crossnote').Notes;
+    try {
+      notes = await notebooksManager.getNotesReferringToTag(contextUri, tag);
+    } catch (error) {
+      console.error('[MPE] clickTag lookup failed:', error);
+      vscode.window.showErrorMessage(
+        `MPE: failed to look up tag #${tag}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return;
+    }
+
+    const filePaths = Object.keys(notes);
+    if (filePaths.length === 0) {
+      vscode.window.showInformationMessage(`No notes mention #${tag}.`);
+      return;
+    }
+
+    type Item = vscode.QuickPickItem & { fsPath: string };
+    const items: Item[] = filePaths.sort().map((relPath) => {
+      const note = notes[relPath];
+      const fsPath = vscode.Uri.joinPath(
+        note.notebookPath,
+        note.filePath,
+      ).fsPath;
+      return {
+        label: note.title || relPath,
+        description: relPath,
+        fsPath,
+      };
+    });
+
+    const picked = await vscode.window.showQuickPick(items, {
+      placeHolder: `Notes mentioning #${tag} (${items.length})`,
+      matchOnDescription: true,
+    });
+    if (!picked) {
+      return;
+    }
+    // Open the picked note via the existing clickTagA pipeline so the
+    // file gets revealed in the right column and the previewMode is
+    // honoured (custom preview editor vs text editor).
+    await clickTagA({
+      uri,
+      href: encodeURIComponent(`${scheme}://${picked.fsPath}`),
+      scheme,
     });
   }
 
@@ -1241,6 +1277,20 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       '[',
       '#',
       '^',
+    ),
+  );
+
+  // Hover preview for `[[Note]]`, `[[Note#Heading]]`, `[[Note^block]]`,
+  // and the `![[…]]` embed forms.  The provider reads the target
+  // file and returns a MarkdownString with the relevant fragment
+  // (full file head, heading section, or block content).
+  context.subscriptions.push(
+    vscode.languages.registerHoverProvider(
+      [
+        { language: 'markdown', scheme: 'file' },
+        { language: 'markdown', scheme: 'untitled' },
+      ],
+      new WikilinkHoverProvider(),
     ),
   );
 

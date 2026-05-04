@@ -311,6 +311,22 @@ class NotebooksManager {
       };
     });
   }
+
+  /**
+   * Resolve the notebook for a context URI (active editor / preview),
+   * make sure its notes are loaded, and return notes that mention the
+   * given `#tag`.  Backed by crossnote's TagReferenceMap so the
+   * lookup is O(notes-using-tag), not a full workspace scan.
+   */
+  public async getNotesReferringToTag(contextUri: vscode.Uri, tag: string) {
+    const notebook = await this.getNotebook(contextUri);
+    await notebook.refreshNotesIfNotLoaded({
+      dir: '.',
+      includeSubdirectories: true,
+    });
+    this.fileWatcher.startFileWatcher();
+    return notebook.getNotesReferringToTag(tag);
+  }
 }
 
 export default NotebooksManager;
