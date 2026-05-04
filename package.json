@@ -36,6 +36,7 @@
     "run-in-browser:watch": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
+    "test:unit": "mocha --ui tdd --reporter spec test/find-fragment-target-line.test.js",
     "vscode:prepublish": "yarn install && yarn build",
     "watch": "gulp copy-files && gulp clean-out && node build.js --watch"
   },
