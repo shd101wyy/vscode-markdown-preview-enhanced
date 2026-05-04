@@ -27,6 +27,8 @@ class NotebooksManager {
   private currentMPEConfig: MarkdownPreviewEnhancedConfig =
     MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
+  private failedNotebookPaths: Set<string> = new Set();
+
   constructor(private context: vscode.ExtensionContext) {
     this.fileWatcher = new FileWatcher(this.context, this);
   }
@@ -44,14 +46,27 @@ class NotebooksManager {
       }
     }
     // If not, create a new Notebook instance and push it to this.notebooks
-    const notebook = await Notebook.init({
-      notebookPath: workspaceFolderUri.toString(),
-      fs: wrapVSCodeFSAsApi(
-        workspaceFolderUri.scheme,
-        workspaceFolderUri.authority,
-      ),
-      config: {},
-    });
+    const notebookPathStr = workspaceFolderUri.toString();
+    if (this.failedNotebookPaths.has(notebookPathStr)) {
+      throw new Error(
+        `Notebook initialization previously failed for: ${notebookPathStr}`,
+      );
+    }
+
+    let notebook: Notebook;
+    try {
+      notebook = await Notebook.init({
+        notebookPath: notebookPathStr,
+        fs: wrapVSCodeFSAsApi(
+          workspaceFolderUri.scheme,
+          workspaceFolderUri.authority,
+        ),
+        config: {},
+      });
+    } catch (error) {
+      this.failedNotebookPaths.add(notebookPathStr);
+      throw error;
+    }
     this.notebooks.push(notebook);
     notebook.updateConfig(await this.loadNotebookConfig(uri));
     return notebook;

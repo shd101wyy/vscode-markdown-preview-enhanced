@@ -108,6 +108,51 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     });
   }
 
+  async function openLockedPreviewToTheSide(uri?: vscode.Uri) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return;
+    }
+    if (!uri) {
+      uri = editor.document.uri;
+    }
+
+    try {
+      const previewProvider = await getPreviewContentProvider(uri);
+      await previewProvider.initPreview({
+        sourceUri: uri,
+        document: editor.document,
+        cursorLine: getEditorActiveCursorLine(editor),
+        viewOptions: {
+          viewColumn: vscode.ViewColumn.Two,
+          preserveFocus: true,
+        },
+      });
+      previewProvider.lockSinglePreview();
+    } catch (error) {
+      console.error('[MPE] openLockedPreviewToTheSide failed:', error);
+      vscode.window.showErrorMessage(
+        `MPE Preview failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  async function togglePreviewLock(uri?: vscode.Uri) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return;
+    }
+    const previewProvider = await getPreviewContentProvider(
+      uri ?? editor.document.uri,
+    );
+    const locked = previewProvider.toggleSinglePreviewLock();
+    vscode.window.showInformationMessage(
+      locked
+        ? 'Preview is locked to the current file.'
+        : 'Preview is unlocked and will follow the active editor.',
+    );
+  }
+
   async function toggleScrollSync() {
     const scrollSync = !getMPEConfig<boolean>('scrollSync');
     await updateMPEConfig('scrollSync', scrollSync, true);
@@ -588,7 +633,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         ) {
           /*
           // NOTE: This doesn't work for the `line`
-          // so we use the `initPreview` instead.  
+          // so we use the `initPreview` instead.
           const options: vscode.TextDocumentShowOptions = {
             selection: new vscode.Selection(line, 0, line, 0),
             viewColumn: vscode.ViewColumn.Active,
@@ -946,6 +991,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
               previewMode === PreviewMode.SinglePreview &&
               !previewProvider.previewHasTheSameSingleSourceUri(sourceUri)
             ) {
+              // Don't switch a locked preview to a different file
+              if (previewProvider.isSinglePreviewLocked()) {
+                return;
+              }
               // Skip auto-switching single preview to an excluded file
               if (!excluded) {
                 await previewProvider.initPreview({
@@ -1015,6 +1064,20 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'markdown-preview-enhanced.openPreview',
       openPreview,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.openLockedPreviewToTheSide',
+      openLockedPreviewToTheSide,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.togglePreviewLock',
+      togglePreviewLock,
     ),
   );
 

@@ -65,6 +65,16 @@
         }
       },
       {
+        "command": "markdown-preview-enhanced.openLockedPreviewToTheSide",
+        "title": "%markdown-preview-enhanced.openLockedPreviewToTheSide.title%",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.togglePreviewLock",
+        "title": "%markdown-preview-enhanced.togglePreviewLock.title%",
+        "category": "Markdown"
+      },
+      {
         "command": "markdown-preview-enhanced.toggleScrollSync",
         "title": "%markdown-preview-enhanced.toggleScrollSync.title%"
       },
@@ -762,6 +772,18 @@
         "command": "markdown-preview-enhanced.openPreview",
         "key": "ctrl+shift+v",
         "mac": "cmd+shift+v",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.openLockedPreviewToTheSide",
+        "key": "ctrl+k shift+l",
+        "mac": "cmd+k shift+l",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.togglePreviewLock",
+        "key": "ctrl+k ctrl+shift+l",
+        "mac": "cmd+k cmd+shift+l",
         "when": "editorLangId == markdown"
       },
       {

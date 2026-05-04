@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New features
 
 - Add click-to-enlarge image lightbox in the preview — click any image to view it full-screen in an overlay; press Escape or click the backdrop to close. Controlled by the `enableImageLightbox` setting (default: `true`). ([vscode-mpe#2267](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2267))
+- Preview locking: "Open Locked Preview to the Side" (`Ctrl+K Shift+L`) and "Toggle Preview Lock" (`Ctrl+K Ctrl+Shift+L`) commands to lock a preview to a specific file, preventing it from switching when the active editor changes ([#2225](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2225))
+
+### Bug fixes
+
+- Fix crash when using Remote SSH with a Windows client and Linux host — a Windows-style URI was passed to the Linux remote, producing an invalid notebook path that caused continuous `"notebookPath is not valid"` errors in the Extension Host log ([#2224](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2224))
 
 ## [0.8.24] - 2026-04-21
 
