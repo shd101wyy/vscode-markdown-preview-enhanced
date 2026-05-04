@@ -17,6 +17,7 @@ let extractBlockIds;
 let parseHeadingTriggerContext;
 let extractHeadings;
 let parseNoteTriggerContext;
+let parseTagTriggerContext;
 let tmpFile;
 
 suite('block-id-helpers', function () {
@@ -40,6 +41,7 @@ suite('block-id-helpers', function () {
     parseHeadingTriggerContext = mod.parseHeadingTriggerContext;
     extractHeadings = mod.extractHeadings;
     parseNoteTriggerContext = mod.parseNoteTriggerContext;
+    parseTagTriggerContext = mod.parseTagTriggerContext;
   });
 
   suiteTeardown(function () {
@@ -306,6 +308,60 @@ suite('block-id-helpers', function () {
         parseNoteTriggerContext('Already [[A]] but now [['),
         { partial: '', isEmbed: false },
       );
+    });
+  });
+
+  suite('parseTagTriggerContext', function () {
+    test('returns null for empty input', function () {
+      assert.strictEqual(parseTagTriggerContext(''), null);
+    });
+
+    test('matches a # in mid-line body text', function () {
+      assert.deepStrictEqual(parseTagTriggerContext('Hello #'), {
+        partial: '',
+      });
+      assert.deepStrictEqual(parseTagTriggerContext('Hello #wo'), {
+        partial: 'wo',
+      });
+    });
+
+    test('captures nested tag partials', function () {
+      assert.deepStrictEqual(parseTagTriggerContext('See #parent/'), {
+        partial: 'parent/',
+      });
+      assert.deepStrictEqual(parseTagTriggerContext('See #parent/ch'), {
+        partial: 'parent/ch',
+      });
+    });
+
+    test('SUPPRESSES at start of line for ATX heading markers', function () {
+      assert.strictEqual(parseTagTriggerContext('#'), null);
+      assert.strictEqual(parseTagTriggerContext('##'), null);
+      assert.strictEqual(parseTagTriggerContext('###'), null);
+      assert.strictEqual(parseTagTriggerContext('# '), null);
+      assert.strictEqual(parseTagTriggerContext('## '), null);
+    });
+
+    test('does NOT match inside an unclosed [[…]] (handled by heading/block ctx)', function () {
+      assert.strictEqual(parseTagTriggerContext('See [[Note#'), null);
+      assert.strictEqual(parseTagTriggerContext('See [[Note#se'), null);
+    });
+
+    test('matches AFTER a closed [[…]] earlier on the line', function () {
+      assert.deepStrictEqual(parseTagTriggerContext('See [[Other]] now #'), {
+        partial: '',
+      });
+    });
+
+    test('matches `#` after various punctuation delimiters', function () {
+      assert.deepStrictEqual(parseTagTriggerContext('(#'), { partial: '' });
+      assert.deepStrictEqual(parseTagTriggerContext('foo,#'), { partial: '' });
+      assert.deepStrictEqual(parseTagTriggerContext('end. #'), { partial: '' });
+    });
+
+    test('does NOT match when preceded by a word character (URL fragment-ish)', function () {
+      assert.strictEqual(parseTagTriggerContext('http://x.com#'), null);
+      assert.strictEqual(parseTagTriggerContext('foo#'), null);
     });
   });
 });

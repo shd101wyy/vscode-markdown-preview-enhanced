@@ -123,13 +123,13 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
 
     const blockMatch = fragment.match(/\^([a-zA-Z0-9_-]+)$/);
     if (blockMatch) {
-      const found = extractBlockIds(content).find(
-        (b) => b.id === blockMatch[1],
-      );
+      const wanted = blockMatch[1];
+      const blocks = extractBlockIds(content);
+      const found = blocks.find((b) => b.id === wanted);
       if (found) {
         return `> ${found.body}\n\n— *block \`^${found.id}\`*`;
       }
-      return `*Block reference not found:* \`^${blockMatch[1]}\``;
+      return this.formatNotFound('Block', `^${wanted}`, wanted, blocks);
     }
 
     // Heading reference — section under that heading.
@@ -138,6 +138,34 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
       return `*Heading not found:* \`#${fragment}\``;
     }
     return this.previewSection(content, targetLine);
+  }
+
+  /**
+   * Build a "Block reference not found" message that, where possible,
+   * suggests the closest existing IDs ("did you mean …").  Helps the
+   * user spot typos and stale block-references without leaving the
+   * editor.
+   */
+  private formatNotFound(
+    label: string,
+    display: string,
+    wanted: string,
+    blocks: Array<{ id: string; body: string }>,
+  ): string {
+    if (blocks.length === 0) {
+      return `*${label} reference not found:* \`${display}\` (no blocks defined in target note)`;
+    }
+    const ranked = rankByCloseness(
+      wanted,
+      blocks.map((b) => b.id),
+    );
+    const top = ranked.slice(0, Math.min(5, ranked.length));
+    const suggestions = top.map((id) => `\`^${id}\``).join(', ');
+    const tail =
+      ranked.length > top.length
+        ? ` (+${ranked.length - top.length} more)`
+        : '';
+    return `*${label} reference not found:* \`${display}\`\n\n*Did you mean:* ${suggestions}${tail}`;
   }
 
   private previewFileHead(content: string): string {
@@ -205,4 +233,52 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
     );
     return matches[0];
   }
+}
+
+/**
+ * Sort `candidates` from most- to least-similar to `wanted`.  Uses
+ * Levenshtein distance with two cheap shortcuts:
+ *   - case-insensitive comparison
+ *   - candidates that contain `wanted` as a substring rank above
+ *     candidates that don't (typo-vs-shortened-name disambiguation)
+ *
+ * Exported for unit testing.
+ */
+export function rankByCloseness(
+  wanted: string,
+  candidates: string[],
+): string[] {
+  const wantedLower = wanted.toLowerCase();
+  const scored = candidates.map((id) => {
+    const lower = id.toLowerCase();
+    const contains = lower.includes(wantedLower) ? 0 : 1;
+    return { id, contains, distance: levenshtein(wantedLower, lower) };
+  });
+  scored.sort(
+    (a, b) =>
+      a.contains - b.contains ||
+      a.distance - b.distance ||
+      a.id.localeCompare(b.id),
+  );
+  return scored.map((s) => s.id);
+}
+
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  // Single-row DP, O(min(a,b)) memory, O(a*b) time — fine for tag
+  // and block-id sets which are tiny.
+  let prev = new Array<number>(b.length + 1);
+  let curr = new Array<number>(b.length + 1);
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[b.length];
 }

@@ -73,3 +73,45 @@ export function parseNoteTriggerContext(
   if (!match) return null;
   return { partial: match[2], isEmbed: match[1] === '!' };
 }
+
+/**
+ * Parse the text on the current line up to the cursor and decide
+ * whether the user is typing a `#tag` in body text (i.e. NOT inside
+ * a `[[…]]` wikilink — that's heading context handled by
+ * parseHeadingTriggerContext).
+ *
+ * Returns `{ partial }` or `null`.  `partial` is the characters typed
+ * after `#`; the caller filters the tag list against it.
+ *
+ * Suppresses on lines that are JUST `#` / `##` / … / `######` (i.e.
+ * the user is starting an ATX heading).  In that state, popping a tag
+ * list would race with the imminent `space` keypress — and VS Code's
+ * `editor.acceptSuggestionOnCommitCharacter` defaults to true, which
+ * would *insert* a tag instead of starting a heading.
+ *
+ * For `#tag` at the very start of a line (e.g. a tags-only line in a
+ * frontmatter-style file), users can manually trigger via
+ * Ctrl+Space — the heading-vs-tag ambiguity at line start can't be
+ * resolved on the `#` keystroke alone.
+ */
+export function parseTagTriggerContext(
+  textBeforeCursor: string,
+): { partial: string } | null {
+  // Heading-marker line: only `#`s typed so far, with optional
+  // trailing space.
+  if (/^#{1,6}\s?$/.test(textBeforeCursor)) return null;
+
+  // Don't match inside `[[…]]` — that's heading completion territory.
+  // We approximate by looking for an unclosed `[[` on the line; this
+  // is the same trick parseHeadingTriggerContext uses (negated).
+  if (/\[\[[^\]]*$/.test(textBeforeCursor)) return null;
+
+  // The tag itself: preceded by start-of-line OR a non-word
+  // delimiter, then `#`, then valid tag chars.  Mirrors the regex
+  // used in transformer.ts for the rendering side.
+  const match = textBeforeCursor.match(
+    /(?:^|[\s,.;:!?()[\]{}'"\\])#([\w-/]*)$/,
+  );
+  if (!match) return null;
+  return { partial: match[1] };
+}

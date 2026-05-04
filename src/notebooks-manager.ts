@@ -327,6 +327,21 @@ class NotebooksManager {
     this.fileWatcher.startFileWatcher();
     return notebook.getNotesReferringToTag(tag);
   }
+
+  /**
+   * Every `#tag` mentioned anywhere in the notebook (case-folded).
+   * Used by the editor-side autocomplete so users can pick an
+   * existing tag instead of re-typing it.
+   */
+  public async getAllTags(contextUri: vscode.Uri): Promise<string[]> {
+    const notebook = await this.getNotebook(contextUri);
+    await notebook.refreshNotesIfNotLoaded({
+      dir: '.',
+      includeSubdirectories: true,
+    });
+    this.fileWatcher.startFileWatcher();
+    return notebook.getAllTags();
+  }
 }
 
 export default NotebooksManager;

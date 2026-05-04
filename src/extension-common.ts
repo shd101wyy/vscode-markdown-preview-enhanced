@@ -1273,7 +1273,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         { language: 'markdown', scheme: 'file' },
         { language: 'markdown', scheme: 'untitled' },
       ],
-      new WikilinkCompletionProvider(),
+      new WikilinkCompletionProvider(notebooksManager),
       '[',
       '#',
       '^',

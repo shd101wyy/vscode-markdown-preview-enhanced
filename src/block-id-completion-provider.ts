@@ -6,25 +6,25 @@ import {
   parseBlockIdTriggerContext,
   parseHeadingTriggerContext,
   parseNoteTriggerContext,
+  parseTagTriggerContext,
 } from './block-id-helpers';
+import NotebooksManager from './notebooks-manager';
 
 /**
- * Wikilink fragment completion.  Three trigger contexts inside `[[…]]`:
+ * Wikilink fragment + body-text `#tag` completion.  Trigger contexts:
  *
- *   - Note name   (typed as `[[…` or `![[…` — start of a wikilink or
- *                   wikilink embed):  list every Markdown file in the
- *                   workspace.  Embed (`![[`) also includes common
- *                   image extensions.
- *   - `#heading`   (typed as `[[Note#…]]`, no `^` in the fragment yet):
- *                   list every heading in the target note.  The label
- *                   shows the heading text (with `#` prefix per level
- *                   so the user sees structure); the inserted text is
- *                   the HeadingIdGenerator slug — that's what the
- *                   click resolver matches against.
- *   - `^block-id`  (typed by the user as `[[Note^…]]` or
- *                   `[[Note#Heading^…]]`):  list every ` ^id` marker in
- *                   the target note with the block's own content as the
- *                   detail.
+ *   - Note name   (`[[…` or `![[…`):  list workspace markdown files.
+ *                   Embed (`![[`) also includes common image
+ *                   extensions.
+ *   - `#heading`  (`[[Note#…`):  list headings in the target note;
+ *                   inserts the HeadingIdGenerator slug so it matches
+ *                   how crossnote resolves clicks.
+ *   - `^block-id` (`[[Note^…` or `[[Note#H^…`):  list ` ^id` markers
+ *                   in the target note with the block body as detail.
+ *   - `#tag`      (in body text, NOT inside `[[…]]`):  list tags
+ *                   already used anywhere in the notebook.
+ *                   Suppressed at line start when only `#`s have been
+ *                   typed (heading-marker workflow).
  *
  * Activated on Markdown files only.  No-op when the cursor isn't in
  * one of the contexts above.
@@ -32,6 +32,7 @@ import {
 export class WikilinkCompletionProvider
   implements vscode.CompletionItemProvider
 {
+  constructor(private readonly notebooksManager?: NotebooksManager) {}
   // Lower-cased image extensions to also include in the suggestion
   // list when the user is in `![[…` embed context.  Markdown is always
   // included regardless.
@@ -76,7 +77,44 @@ export class WikilinkCompletionProvider
     if (noteCtx) {
       return this.completeNotes(document, noteCtx.partial, noteCtx.isEmbed);
     }
+    // `#tag` in body text — uses crossnote's TagReferenceMap so the
+    // suggestion list matches the tags actually present in the
+    // notebook.
+    const tagCtx = parseTagTriggerContext(before);
+    if (tagCtx) {
+      return this.completeTags(document, tagCtx.partial);
+    }
     return undefined;
+  }
+
+  private async completeTags(
+    document: vscode.TextDocument,
+    partial: string,
+  ): Promise<vscode.CompletionItem[] | undefined> {
+    if (!this.notebooksManager) return undefined;
+    let tags: string[];
+    try {
+      tags = await this.notebooksManager.getAllTags(document.uri);
+    } catch {
+      return undefined;
+    }
+    if (tags.length === 0) return undefined;
+
+    const partialLower = partial.toLowerCase();
+    const items: vscode.CompletionItem[] = [];
+    for (const tag of tags.sort()) {
+      if (partial && !tag.toLowerCase().startsWith(partialLower)) continue;
+      const item = new vscode.CompletionItem(
+        `#${tag}`,
+        vscode.CompletionItemKind.Keyword,
+      );
+      item.insertText = tag; // `#` is already typed
+      // filterText so vscode's substring filter still keeps the item
+      // visible while the user is typing partial chars.
+      item.filterText = `#${tag}`;
+      items.push(item);
+    }
+    return items;
   }
 
   private async completeNotes(
