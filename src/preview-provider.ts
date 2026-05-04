@@ -128,6 +128,11 @@ export class PreviewProvider {
   public static notebooksManager: NotebooksManager | null = null;
 
   /**
+   * When true, the single preview does not follow the active text editor.
+   */
+  private static singlePreviewLocked = false;
+
+  /**
    * The key is markdown file fsPath
    * value is JSAndCssFiles
    */
@@ -439,6 +444,7 @@ export class PreviewProvider {
         // unregister previewPanel.
         previewPanel.onDidDispose(
           () => {
+            PreviewProvider.singlePreviewLocked = false;
             this.destroyPreview(sourceUri);
             this.destroyEngine(sourceUri);
             this.initializedPreviews.delete(previewPanel);
@@ -475,6 +481,26 @@ export class PreviewProvider {
       const initRequestId = ++this.initRequestSeq;
       this.latestInitRequestByPreview.set(previewPanel, initRequestId);
 
+      // Build lightbox head injection when enabled
+      let head = '';
+      if (getMPEConfig<boolean>('enableImageLightbox') ?? true) {
+        const lightboxCssUri = previewPanel.webview.asWebviewUri(
+          vscode.Uri.joinPath(
+            this.context.extensionUri,
+            'media',
+            'lightbox.css',
+          ),
+        );
+        const lightboxJsUri = previewPanel.webview.asWebviewUri(
+          vscode.Uri.joinPath(
+            this.context.extensionUri,
+            'media',
+            'lightbox.js',
+          ),
+        );
+        head = `<link rel="stylesheet" href="${lightboxCssUri}"><script defer src="${lightboxJsUri}"></script>`;
+      }
+
       const html = await engine.generateHTMLTemplateForPreview({
         inputString,
         config: {
@@ -493,7 +519,7 @@ export class PreviewProvider {
         // runtime using the full sourceUri, so we can safely omit it here.
         // For the native extension the default base tag is harmless, but we keep
         // consistent behaviour and let React own it in both cases.
-        head: '',
+        head,
       });
 
       // If a newer initPreview call has taken over this panel, or the panel was
@@ -572,6 +598,42 @@ export class PreviewProvider {
         PreviewProvider.singlePreviewPanelSourceUriTarget.fsPath ===
         sourceUri.fsPath
       );
+    }
+  }
+
+  /**
+   * Returns true if the single preview is currently locked.
+   */
+  public isSinglePreviewLocked(): boolean {
+    return PreviewProvider.singlePreviewLocked;
+  }
+
+  /**
+   * Lock the single preview to its current file and update its title.
+   */
+  public lockSinglePreview() {
+    PreviewProvider.singlePreviewLocked = true;
+    this.updateSinglePreviewTitle();
+  }
+
+  /**
+   * Toggle lock on the single preview and update its title.
+   * Returns the new lock state.
+   */
+  public toggleSinglePreviewLock(): boolean {
+    PreviewProvider.singlePreviewLocked = !PreviewProvider.singlePreviewLocked;
+    this.updateSinglePreviewTitle();
+    return PreviewProvider.singlePreviewLocked;
+  }
+
+  private updateSinglePreviewTitle() {
+    const panel = PreviewProvider.singlePreviewPanel;
+    const sourceUri = PreviewProvider.singlePreviewPanelSourceUriTarget;
+    if (panel && sourceUri) {
+      const baseName = path.basename(sourceUri.fsPath);
+      panel.title = PreviewProvider.singlePreviewLocked
+        ? `Preview [Locked] ${baseName}`
+        : `Preview ${baseName}`;
     }
   }
 

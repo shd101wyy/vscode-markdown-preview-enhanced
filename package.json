@@ -65,6 +65,16 @@
         }
       },
       {
+        "command": "markdown-preview-enhanced.openLockedPreviewToTheSide",
+        "title": "%markdown-preview-enhanced.openLockedPreviewToTheSide.title%",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.togglePreviewLock",
+        "title": "%markdown-preview-enhanced.togglePreviewLock.title%",
+        "category": "Markdown"
+      },
+      {
         "command": "markdown-preview-enhanced.toggleScrollSync",
         "title": "%markdown-preview-enhanced.toggleScrollSync.title%"
       },
@@ -736,6 +746,11 @@
           "description": "When enabled, the context menu in preview inherits VS Code's theme colors and font instead of the default styling.",
           "default": false,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.enableImageLightbox": {
+          "description": "Click an image in the preview to view it in a full-screen lightbox overlay. Press Escape or click the backdrop to close.",
+          "default": true,
+          "type": "boolean"
         }
       }
     },
@@ -762,6 +777,18 @@
         "command": "markdown-preview-enhanced.openPreview",
         "key": "ctrl+shift+v",
         "mac": "cmd+shift+v",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.openLockedPreviewToTheSide",
+        "key": "ctrl+k shift+l",
+        "mac": "cmd+k shift+l",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.togglePreviewLock",
+        "key": "ctrl+k ctrl+shift+l",
+        "mac": "cmd+k cmd+shift+l",
         "when": "editorLangId == markdown"
       },
       {

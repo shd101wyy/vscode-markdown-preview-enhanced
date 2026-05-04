@@ -28,6 +28,7 @@ export default tseslint.config(
       'eslint.config.mjs',
       '.yarn/**',
       'test/**',
+      'media/**',
       'prettier.config.js',
     ],
   },
