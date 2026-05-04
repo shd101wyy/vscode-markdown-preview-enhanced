@@ -153,6 +153,115 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     );
   }
 
+  /**
+   * Append a unique `^id` block-id marker to the line under the cursor (if
+   * one isn't already there) and copy `[[note#^id]]` to the clipboard.
+   * Mirrors Obsidian's "Copy block link" command — pair with crossnote's
+   * already-shipped `^id` rendering and `[[note^id]]` resolution.
+   */
+  async function copyBlockReference() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage('No active editor.');
+      return;
+    }
+    if (!isMarkdownFile(editor.document)) {
+      vscode.window.showWarningMessage(
+        'Block references only work in Markdown files.',
+      );
+      return;
+    }
+    const doc = editor.document;
+    const cursorLineNo = editor.selection.active.line;
+    const lineText = doc.lineAt(cursorLineNo).text;
+    if (!lineText.trim()) {
+      vscode.window.showWarningMessage(
+        'Place the cursor on the paragraph or list item you want to reference.',
+      );
+      return;
+    }
+    if (/^\s*#{1,6}\s/.test(lineText)) {
+      vscode.window.showWarningMessage(
+        'Headings already have anchor IDs. Use [[note#Heading]] to link to a heading.',
+      );
+      return;
+    }
+    if (isInFencedBlock(doc, cursorLineNo)) {
+      vscode.window.showWarningMessage(
+        'Cannot place a block ID inside a code fence.',
+      );
+      return;
+    }
+
+    // Reuse existing trailing ^id if present, otherwise generate one that
+    // doesn't collide with any ^id elsewhere in the document.
+    const trailingMatch = lineText.match(/\s+\^([a-zA-Z0-9_-]+)\s*$/);
+    let blockId: string;
+    if (trailingMatch) {
+      blockId = trailingMatch[1];
+    } else {
+      blockId = generateUniqueBlockId(doc.getText());
+      const ok = await editor.edit((edit) => {
+        edit.insert(doc.lineAt(cursorLineNo).range.end, ` ^${blockId}`);
+      });
+      if (!ok) {
+        vscode.window.showErrorMessage('Failed to insert block ID.');
+        return;
+      }
+    }
+
+    const noteName = path.basename(
+      doc.fileName,
+      path.extname(doc.fileName) || '.md',
+    );
+    const ref = `[[${noteName}#^${blockId}]]`;
+    await vscode.env.clipboard.writeText(ref);
+    vscode.window.showInformationMessage(`Copied block reference: ${ref}`);
+  }
+
+  function generateUniqueBlockId(text: string): string {
+    const existing = new Set<string>();
+    const re = /\s\^([a-zA-Z0-9_-]+)/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      existing.add(m[1]);
+    }
+    // 6-char base36 — ~2.2B keyspace, comfortable for any document size.
+    // Loop in case of collision; in practice we exit on the first try.
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const id = Math.random().toString(36).slice(2, 8).padEnd(6, '0');
+      if (!existing.has(id)) {
+        return id;
+      }
+    }
+    // Pathological fallback: timestamped id.
+    return `b${Date.now().toString(36)}`;
+  }
+
+  function isInFencedBlock(doc: vscode.TextDocument, lineNo: number): boolean {
+    let inBacktickFence = false;
+    let inColonFence = false;
+    for (let i = 0; i <= lineNo; i++) {
+      const line = doc.lineAt(i).text;
+      const backtickMatch = /^\s*(`{3,}|~{3,})/.exec(line);
+      const colonMatch = /^\s*(:{3,})/.exec(line);
+      if (backtickMatch && !inColonFence) {
+        inBacktickFence = !inBacktickFence;
+      } else if (colonMatch && !inBacktickFence) {
+        // A bare ::: closes; ::: with info after opens.  We don't try to
+        // tell apart code-language fences from div fences here — either
+        // way a block ID inside a colon fence is a usage error.
+        const rest = line.slice(colonMatch.index + colonMatch[1].length).trim();
+        if (rest.length > 0) {
+          inColonFence = true;
+        } else if (inColonFence) {
+          inColonFence = false;
+        }
+      }
+    }
+    return inBacktickFence || inColonFence;
+  }
+
   async function toggleScrollSync() {
     const scrollSync = !getMPEConfig<boolean>('scrollSync');
     await updateMPEConfig('scrollSync', scrollSync, true);
@@ -1111,6 +1220,13 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'markdown-preview-enhanced.togglePreviewLock',
       togglePreviewLock,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.copyBlockReference',
+      copyBlockReference,
     ),
   );
 

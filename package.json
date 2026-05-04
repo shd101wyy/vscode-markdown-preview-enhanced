@@ -75,6 +75,11 @@
         "category": "Markdown"
       },
       {
+        "command": "markdown-preview-enhanced.copyBlockReference",
+        "title": "%markdown-preview-enhanced.copyBlockReference.title%",
+        "category": "Markdown"
+      },
+      {
         "command": "markdown-preview-enhanced.toggleScrollSync",
         "title": "%markdown-preview-enhanced.toggleScrollSync.title%"
       },
