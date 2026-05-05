@@ -7,14 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.25] - 2026-05-05
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.24](https://github.com/shd101wyy/crossnote/releases/tag/0.9.24) (via [0.9.23](https://github.com/shd101wyy/crossnote/releases/tag/0.9.23)).
+
 ### New features
 
-- Add click-to-enlarge image lightbox in the preview — click any image to view it full-screen in an overlay; press Escape or click the backdrop to close. Controlled by the `enableImageLightbox` setting (default: `true`). ([vscode-mpe#2267](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2267))
-- Preview locking: "Open Locked Preview to the Side" (`Ctrl+K Shift+L`) and "Toggle Preview Lock" (`Ctrl+K Ctrl+Shift+L`) commands to lock a preview to a specific file, preventing it from switching when the active editor changes ([#2225](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2225))
+#### Obsidian-style note linking and indexing
+
+- **Note embedding via `![[note]]`** — inline embed syntax renders the referenced note's content directly inside the preview. Supports heading fragments (`![[note#section]]`), block references (`![[note^block-id]]`), aliases (`![[note|Title]]`), and a recursion depth limit of 3. Image wikilinks (`![[image.png]]`) continue to render as standard images.
+- **Block references via `^block-id`** — append `^block-id` at the end of a paragraph or list item to assign an explicit block ID. Reference one with `[[note^block-id]]` or `![[note^block-id]]`; combined `[[note#heading^block-id]]` extracts a single block within a heading section.
+- **`#tag` syntax** — `#tag-name` renders as a clickable anchor with theme-aware pill styling. Click a tag to open a quick-pick listing every note that mentions it. Nested tags (`#parent/child`) and case-insensitive matching are supported. Toggle via the new `enableTagSyntax` setting (default: `true`).
+- **`Markdown Preview Enhanced: Copy Block Reference` command** — adds (or reuses) a `^block-id` on the current paragraph and copies a `[[note#^id]]` link to the clipboard, ready to paste in another note.
+
+#### Editor-side authoring help
+
+- **Wikilink autocomplete** — typing `[[` / `![[` lists notes; `[[Note#` lists the note's headings; `[[Note^` lists its `^block-ids` (with the block body shown as item detail). Insert text drops the markdown extension to match what users typically write — crossnote's `wikiLinkTargetFileExtension` adds it back on resolution.
+- **`#tag` autocomplete** — typing `#` in body text lists tags already used elsewhere in the notebook. Suppressed at line start when the line is only `#`s (so `# Heading` doesn't trigger tag completion).
+- **Hover preview for wikilinks** — hovering `[[Note]]`, `[[Note#Heading]]`, or `[[Note^block]]` shows the target's relevant fragment (full file head / heading section / block body) inline. Includes a "did-you-mean" hint listing the closest matching IDs when a block / heading reference doesn't resolve.
+- **`Follow link` (alt+click / Ctrl+click) on `[[wikilinks]]`** — VS Code's built-in markdown link provider already handled `[text](./Note.md)`; the new `WikilinkDocumentLinkProvider` extends the same UX to `[[Note]]`, `![[Note]]`, `[[Note#Heading]]`, and `[[Note^block]]`. Click navigates to the target file (auto-creating it if missing — see below) and jumps to the heading/block line for fragment-bearing links.
+- **Click-to-create wikilinks** — clicking `[[NewNote]]` (in the preview, in an editor via Follow link, or as an orphan node in the graph view) auto-creates `NewNote.md` with a `# NewNote` stub instead of failing with a "file not found" prompt. Only fires for extensions configured in `markdownFileExtensions`; attachments / images / unrecognised extensions still surface the standard not-found error.
+- **Click-to-jump for `[[Note^block-id]]`** — clicking a block-reference wikilink in the preview now navigates to the target file _and_ scrolls to the line of the `^id` marker.
+
+#### Preview features
+
+- **Click-to-enlarge image lightbox** — click any image in the preview to view it full-screen in an overlay; press Escape or click the backdrop to close. Toggle via `enableImageLightbox` (default: `true`). ([vscode-mpe#2267](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2267))
+- **Preview locking** — `Markdown Preview Enhanced: Open Locked Preview to the Side` (`Ctrl+K Shift+L`) and `Toggle Preview Lock` (`Ctrl+K Ctrl+Shift+L`) commands lock a preview to a specific file so it doesn't switch when the active editor changes. ([#2225](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2225))
+- **Preview zoom controls** — zoom in / zoom out / reset zoom commands accessible via the context menu (with current zoom level shown), the footer toolbar (magnifier icons), and `Ctrl/Cmd + mouse wheel`. Zoom is clamped to 20%–500% and applied via `document.body.style.zoom`; fixed-position elements (`.fixed`, `.contexify`) are counter-zoomed so toolbars and menus stay at their original size. ([#418](https://github.com/shd101wyy/crossnote/pull/418), thanks @nielsvdc)
+- **VS Code-themed context menu** — new `useVSCodeThemeForContextMenu` setting (default: `false`). When enabled inside a VS Code webview, the right-click context menu inherits VS Code's menu colors, font, and border via `--vscode-menu-*` CSS variables instead of using the bundled Contexify light/dark theme. ([#419](https://github.com/shd101wyy/crossnote/pull/419), thanks @nielsvdc)
 
 ### Bug fixes
 
-- Fix crash when using Remote SSH with a Windows client and Linux host — a Windows-style URI was passed to the Linux remote, producing an invalid notebook path that caused continuous `"notebookPath is not valid"` errors in the Extension Host log ([#2224](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2224))
+- Fix math formulas not rendering inside HTML blocks (e.g. `$a^2+b^2=c^2$` written inside `<table><tr><td>…</td></tr></table>`) — markdown-it treats top-level HTML blocks as verbatim content, so the inline math rule never saw the formula. The math plugin now also post-processes `html_block` content for math delimiters (skipping `<code>` / `<pre>` / `<script>` / `<style>` regions so embedded code samples aren't rewritten). Works for both KaTeX and MathJax, and respects user-configured `mathInlineDelimiters` / `mathBlockDelimiters`. Fixes [vscode-mpe#2280](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2280).
+- Fix sidebar TOC inserting huge vertical gaps for headings that start with `<digits>. ` (e.g. `# 1. Introduction`) — `generateSidebarToCHTML` was passing heading text through `md.render()` which interpreted the leading digit-dot-space as an ordered list. Switched to `md.renderInline()`. Fixes [vscode-mpe#2276](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2276) and [#2277](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2277).
+- Fix `:::name … :::` Pandoc-style fenced divs being rendered as `<pre>` code blocks (markdown-it) or as literal `:::name {data-source-line="…"}` text (pandoc / markdown_yo) since 0.8.23. The colon-fenced plugin now distinguishes a small whitelist of diagram languages (mermaid, plantuml, wavedrom, graphviz, vega/vega-lite, d2, tikz, …) from arbitrary div-class names; only the former takes the `<pre>` path, everything else renders as `<div class="name">` with the inner content parsed as markdown. Fixes [vscode-mpe#2275](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2275).
+- Fix crash when using Remote SSH with a Windows client and Linux host — a Windows-style URI was passed to the Linux remote, producing an invalid notebook path that caused continuous `"notebookPath is not valid"` errors in the Extension Host log. ([#2224](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2224))
+- Fix note titles keeping the file extension on non-`.md` notebooks — only literal `.md` was stripped, so notebooks configured with `.markdown` / `.mdx` / `.qmd` showed titles like `readme.markdown`. Now strips whichever configured extension matches.
+- Fix wikilink and tag click handlers producing malformed `file://` URIs on Windows — the path was being concatenated as a string (`file://C:\path\foo.md`); now goes through `vscode.Uri.file().toString()` for proper `file:///C:/path/foo.md` form on every platform.
+
+### Improvements
+
+- **Workspace memory model** (crossnote 0.9.23) — note bodies are no longer pinned in the in-memory cache. `Notebook.notes` keeps metadata (title, aliases, front-matter config), the search index, and the reference / tag graph; bodies are read lazily from disk via `getNoteMarkdown(filePath)`. For prose-heavy notebooks this drops cache RSS by roughly the total markdown size. New `maxNoteFileSize` setting (default: `5 MiB`) skips oversized files at index time so a checked-in 50 MB log file with a `.md` extension can't blow up the cache.
+- **Reference graph stays slim** — wikilink references no longer hold markdown-it Token objects; each reference now carries a pre-rendered HTML fragment (what the Backlinks panel renders) plus an integer source line for `#L<n>` click-through. Compute happens once at index time, not on every Backlinks panel open.
+- **Incremental refresh** — the "force refresh" buttons in the graph view and Backlinks panel now use `refreshNotesIncremental`, which walks the workspace and re-tokenises only files whose mtime has advanced since the last refresh. Same cost on cold cache, dramatically faster on warm cache where the file watcher has been keeping indices in sync.
+- **Per-keystroke autocomplete is no longer per-keystroke `findFiles`** — note-name completion reads from the in-memory `notebook.notes` map; image completion in `![[…` context now caches the workspace image list with file-watcher invalidation instead of running a full-workspace scan on every keystroke.
+- **`markdownFileExtensions` / `wikiLinkTargetFileExtension` honoured throughout** — block-id, heading, and note-name completion providers all respect the configured markdown extensions instead of hardcoding `.md`. A notebook configured with `.markdown` / `.mdx` / `.qmd` now resolves wikilinks, autocompletes note names, and renders backlinks consistently.
+- **Backlinks panel** — `getBacklinkedNotes` / `getNotesReferringToTag` / `getTagBacklinks` now read from the in-memory `notes` map directly instead of re-loading each referrer from disk. Same observable behaviour, eliminates N async fs round-trips per panel render.
+- **Concurrency safety** — added a mutex around `Notebook.refreshNotes` so two concurrent callers can't interleave the wipe-and-rebuild cycle and leave the indices half-rebuilt.
+- **Editor-side `findFragmentTargetLine`** — the heading / block-id resolver now matches explicit `{#custom-id}` heading attributes (e.g. `## Foo {#bar}` resolves a wikilink to `#bar`) and stays in sync with crossnote's renderer for ATX heading syntax.
+
+### New configuration settings
+
+- `markdown-preview-enhanced.enableTagSyntax` — toggle Obsidian-style `#tag` parsing (default: `true`).
+- `markdown-preview-enhanced.enableImageLightbox` — toggle the click-to-enlarge image overlay (default: `true`).
+- `markdown-preview-enhanced.maxNoteFileSize` — bytes; markdown files larger than this are skipped during workspace indexing (default: `5242880`, i.e. 5 MiB; set to `0` to disable).
+- `markdown-preview-enhanced.useVSCodeThemeForContextMenu` — inherit VS Code's menu colors / font in the preview right-click menu (default: `false`).
+
+### Internal
+
+- 18 commits cleanly separated by feature on the `0.8.25` branch.
+- 58 mpe unit tests (Mocha, no vscode runtime needed) covering trigger-context parsing for all four autocomplete shapes, the `findFragmentTargetLine` resolver, and the rank-by-closeness "did you mean" suggester.
+- Crossnote bumped to 0.9.24 — full rebuild is clean against the new types (`Note.markdown` removed, `Reference` no longer carries `parentToken` / `token`).
 
 ## [0.8.24] - 2026-04-21
 
