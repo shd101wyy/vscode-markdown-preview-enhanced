@@ -2,7 +2,7 @@ import { constructGraphView, GraphViewData } from 'crossnote';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import NotebooksManager from './notebooks-manager';
-import { getWorkspaceFolderUri } from './utils';
+import { createMissingMarkdownNote, getWorkspaceFolderUri } from './utils';
 
 export class GraphViewProvider {
   static notebooksManager: NotebooksManager;
@@ -107,6 +107,14 @@ export class GraphViewProvider {
             const fileUri = workspaceFolderUri
               ? vscode.Uri.joinPath(workspaceFolderUri, relFilePath)
               : vscode.Uri.file(relFilePath);
+            // Orphan-node case: the wikilink target hasn't been
+            // written yet (graph view shows it as a node because
+            // the referrer linked to it).  Auto-create the file
+            // with a stub title — Obsidian does the same when you
+            // click an unresolved [[NewNote]].  No-op if the file
+            // already exists or the extension isn't a configured
+            // markdown extension.
+            await createMissingMarkdownNote(fileUri);
             const doc = await vscode.workspace.openTextDocument(fileUri);
             await vscode.window.showTextDocument(doc, {
               preview: false,
@@ -167,10 +175,14 @@ export class GraphViewProvider {
 
       // Ensure the reference map is populated before building the graph
       if (forceRefresh) {
-        await notebook.refreshNotes({
+        // Incremental refresh: walk + stat, only re-process files
+        // whose on-disk mtime is newer than the stamped value.  On a
+        // warm cache (watcher kept us in sync) this is mostly the
+        // walk cost; on a cold cache it does the same work as the
+        // full `refreshNotes`.
+        await notebook.refreshNotesIncremental({
           dir: '.',
           includeSubdirectories: true,
-          refreshRelations: true,
         });
       } else {
         await notebook.refreshNotesIfNotLoaded({

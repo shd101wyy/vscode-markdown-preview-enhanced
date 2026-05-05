@@ -1,14 +1,22 @@
 // For both node.js and browser environments
-import { HeadingIdGenerator, PreviewMode, utility } from 'crossnote';
+import { PreviewMode, utility } from 'crossnote';
 import { SHA256 } from 'crypto-js';
 import * as vscode from 'vscode';
+import { WikilinkCompletionProvider } from './block-id-completion-provider';
+import { WikilinkHoverProvider } from './wikilink-hover-provider';
+import {
+  WikilinkDocumentLinkProvider,
+  openWikilinkTarget,
+} from './wikilink-document-link-provider';
 import { PreviewColorScheme, getMPEConfig, updateMPEConfig } from './config';
+import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
 import NotebooksManager from './notebooks-manager';
 import { PreviewCustomEditorProvider } from './preview-custom-editor-provider';
 import { PreviewProvider, getPreviewUri } from './preview-provider';
 import { GraphViewProvider } from './graph-view-provider';
 import {
+  createMissingMarkdownNote,
   getBottomVisibleLine,
   getEditorActiveCursorLine,
   getPreviewMode,
@@ -151,6 +159,115 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         ? 'Preview is locked to the current file.'
         : 'Preview is unlocked and will follow the active editor.',
     );
+  }
+
+  /**
+   * Append a unique `^id` block-id marker to the line under the cursor (if
+   * one isn't already there) and copy `[[note#^id]]` to the clipboard.
+   * Mirrors Obsidian's "Copy block link" command — pair with crossnote's
+   * already-shipped `^id` rendering and `[[note^id]]` resolution.
+   */
+  async function copyBlockReference() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage('No active editor.');
+      return;
+    }
+    if (!isMarkdownFile(editor.document)) {
+      vscode.window.showWarningMessage(
+        'Block references only work in Markdown files.',
+      );
+      return;
+    }
+    const doc = editor.document;
+    const cursorLineNo = editor.selection.active.line;
+    const lineText = doc.lineAt(cursorLineNo).text;
+    if (!lineText.trim()) {
+      vscode.window.showWarningMessage(
+        'Place the cursor on the paragraph or list item you want to reference.',
+      );
+      return;
+    }
+    if (/^\s*#{1,6}\s/.test(lineText)) {
+      vscode.window.showWarningMessage(
+        'Headings already have anchor IDs. Use [[note#Heading]] to link to a heading.',
+      );
+      return;
+    }
+    if (isInFencedBlock(doc, cursorLineNo)) {
+      vscode.window.showWarningMessage(
+        'Cannot place a block ID inside a code fence.',
+      );
+      return;
+    }
+
+    // Reuse existing trailing ^id if present, otherwise generate one that
+    // doesn't collide with any ^id elsewhere in the document.
+    const trailingMatch = lineText.match(/\s+\^([a-zA-Z0-9_-]+)\s*$/);
+    let blockId: string;
+    if (trailingMatch) {
+      blockId = trailingMatch[1];
+    } else {
+      blockId = generateUniqueBlockId(doc.getText());
+      const ok = await editor.edit((edit) => {
+        edit.insert(doc.lineAt(cursorLineNo).range.end, ` ^${blockId}`);
+      });
+      if (!ok) {
+        vscode.window.showErrorMessage('Failed to insert block ID.');
+        return;
+      }
+    }
+
+    const noteName = path.basename(
+      doc.fileName,
+      path.extname(doc.fileName) || '.md',
+    );
+    const ref = `[[${noteName}#^${blockId}]]`;
+    await vscode.env.clipboard.writeText(ref);
+    vscode.window.showInformationMessage(`Copied block reference: ${ref}`);
+  }
+
+  function generateUniqueBlockId(text: string): string {
+    const existing = new Set<string>();
+    const re = /\s\^([a-zA-Z0-9_-]+)/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      existing.add(m[1]);
+    }
+    // 6-char base36 — ~2.2B keyspace, comfortable for any document size.
+    // Loop in case of collision; in practice we exit on the first try.
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const id = Math.random().toString(36).slice(2, 8).padEnd(6, '0');
+      if (!existing.has(id)) {
+        return id;
+      }
+    }
+    // Pathological fallback: timestamped id.
+    return `b${Date.now().toString(36)}`;
+  }
+
+  function isInFencedBlock(doc: vscode.TextDocument, lineNo: number): boolean {
+    let inBacktickFence = false;
+    let inColonFence = false;
+    for (let i = 0; i <= lineNo; i++) {
+      const line = doc.lineAt(i).text;
+      const backtickMatch = /^\s*(`{3,}|~{3,})/.exec(line);
+      const colonMatch = /^\s*(:{3,})/.exec(line);
+      if (backtickMatch && !inColonFence) {
+        inBacktickFence = !inBacktickFence;
+      } else if (colonMatch && !inBacktickFence) {
+        // A bare ::: closes; ::: with info after opens.  We don't try to
+        // tell apart code-language fences from div fences here — either
+        // way a block ID inside a colon fence is a usage error.
+        const rest = line.slice(colonMatch.index + colonMatch[1].length).trim();
+        if (rest.length > 0) {
+          inColonFence = true;
+        } else if (inColonFence) {
+          inColonFence = false;
+        }
+      }
+    }
+    return inBacktickFence || inColonFence;
   }
 
   async function toggleScrollSync() {
@@ -619,6 +736,16 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         fileExists = false;
       }
 
+      // Obsidian-style click-to-create: if the wikilink target is a
+      // markdown file (per `markdownFileExtensions`) that doesn't
+      // exist yet, write an empty stub so the editor below opens a
+      // real file instead of falling through to `vscode.open` and
+      // showing a "File not found" prompt.  No-op for other URI
+      // types (URLs, attachments, missing-but-non-markdown).
+      if (!fileExists && (await createMissingMarkdownNote(fileUri))) {
+        fileExists = true;
+      }
+
       if (fileExists) {
         const previewMode = getPreviewMode();
         const document = await vscode.workspace.openTextDocument(
@@ -670,29 +797,22 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
             editor.selection = sel;
             editor.revealRange(sel, viewPos);
           } else if (fileUri.fragment) {
-            // Normal fragment
-            // Find heading with this id
-            const headingIdGenerator = new HeadingIdGenerator();
-            const text = editor.document.getText();
-            const lines = text.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-              const line = lines[i];
-              if (line.match(/^#+\s+/)) {
-                const heading = line.replace(/^#+\s+/, '');
-                const headingId = headingIdGenerator.generateId(heading);
-                if (headingId === fileUri.fragment) {
-                  // Reveal editor line
-                  let viewPos = vscode.TextEditorRevealType.InCenter;
-                  if (editor.selection.active.line === i) {
-                    viewPos =
-                      vscode.TextEditorRevealType.InCenterIfOutsideViewport;
-                  }
-                  const sel = new vscode.Selection(i, 0, i, 0);
-                  editor.selection = sel;
-                  editor.revealRange(sel, viewPos);
-                  break;
-                }
+            // Normal fragment.  Try, in order:
+            //   1. Block-id reference (^abc) — match the LAST `^id` in
+            //      the fragment so combined `Heading^abc` works too.
+            //   2. Heading-id reference — match by HeadingIdGenerator.
+            const targetLine = findFragmentTargetLine(
+              editor.document.getText(),
+              fileUri.fragment,
+            );
+            if (targetLine >= 0) {
+              let viewPos = vscode.TextEditorRevealType.InCenter;
+              if (editor.selection.active.line === targetLine) {
+                viewPos = vscode.TextEditorRevealType.InCenterIfOutsideViewport;
               }
+              const sel = new vscode.Selection(targetLine, 0, targetLine, 0);
+              editor.selection = sel;
+              editor.revealRange(sel, viewPos);
             }
           }
         }
@@ -708,6 +828,79 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     } else {
       utility.openFile(href);
     }
+  }
+
+  async function clickTag({
+    uri,
+    tag,
+    scheme,
+  }: {
+    uri: string;
+    tag: string;
+    scheme: string;
+  }) {
+    if (!tag) {
+      return;
+    }
+    // Use crossnote's global tag index (TagReferenceMap) to find every
+    // note that mentions `#tag`.  This is exactly the data the
+    // Obsidian "Tags" pane works off — backlinks for files, separate
+    // tag index for tags.
+    const contextUri = uri ? vscode.Uri.parse(uri) : undefined;
+    if (!contextUri) {
+      return;
+    }
+    let notes: import('crossnote').Notes;
+    try {
+      notes = await notebooksManager.getNotesReferringToTag(contextUri, tag);
+    } catch (error) {
+      console.error('[MPE] clickTag lookup failed:', error);
+      vscode.window.showErrorMessage(
+        `MPE: failed to look up tag #${tag}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return;
+    }
+
+    const filePaths = Object.keys(notes);
+    if (filePaths.length === 0) {
+      vscode.window.showInformationMessage(`No notes mention #${tag}.`);
+      return;
+    }
+
+    type Item = vscode.QuickPickItem & { fsPath: string };
+    const items: Item[] = filePaths.sort().map((relPath) => {
+      const note = notes[relPath];
+      const fsPath = vscode.Uri.joinPath(
+        note.notebookPath,
+        note.filePath,
+      ).fsPath;
+      return {
+        label: note.title || relPath,
+        description: relPath,
+        fsPath,
+      };
+    });
+
+    const picked = await vscode.window.showQuickPick(items, {
+      placeHolder: `Notes mentioning #${tag} (${items.length})`,
+      matchOnDescription: true,
+    });
+    if (!picked) {
+      return;
+    }
+    // Open the picked note via the existing clickTagA pipeline so the
+    // file gets revealed in the right column and the previewMode is
+    // honoured (custom preview editor vs text editor).  Build the URI
+    // via `vscode.Uri.file(...)` so backslashes in `picked.fsPath` on
+    // Windows get converted to a proper `file:///C:/...` form;
+    // template-string concat (`${scheme}://${picked.fsPath}`) would
+    // produce a malformed `file://C:\foo\bar`.
+    const pickedUri = vscode.Uri.file(picked.fsPath);
+    await clickTagA({
+      uri,
+      href: encodeURIComponent(pickedUri.toString()),
+      scheme,
+    });
   }
 
   async function openChangelog() {
@@ -1083,6 +1276,79 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
+      'markdown-preview-enhanced.copyBlockReference',
+      copyBlockReference,
+    ),
+  );
+
+  // Wikilink autocomplete:
+  //   - `[[…` / `![[…`  → list workspace notes (and images for `![[`)
+  //   - `[[Note#…`       → list headings in Note
+  //   - `[[Note^…`       → list ^block-id markers in Note
+  // The trigger characters open the suggestion list; the partial text
+  // after each further filters it.  Provider routes by context.
+  // Hold a reference to the provider so its file-system watcher
+  // (used to invalidate the embed-image cache) gets disposed cleanly
+  // alongside the extension.  `registerCompletionItemProvider`
+  // returns a Disposable that unhooks the provider from the language
+  // service, but it doesn't call `dispose()` on the provider object
+  // itself.
+  const wikilinkCompletionProvider = new WikilinkCompletionProvider(
+    notebooksManager,
+  );
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      [
+        { language: 'markdown', scheme: 'file' },
+        { language: 'markdown', scheme: 'untitled' },
+      ],
+      wikilinkCompletionProvider,
+      '[',
+      '#',
+      '^',
+    ),
+    wikilinkCompletionProvider,
+  );
+
+  // Hover preview for `[[Note]]`, `[[Note#Heading]]`, `[[Note^block]]`,
+  // and the `![[…]]` embed forms.  The provider reads the target
+  // file and returns a MarkdownString with the relevant fragment
+  // (full file head, heading section, or block content).
+  context.subscriptions.push(
+    vscode.languages.registerHoverProvider(
+      [
+        { language: 'markdown', scheme: 'file' },
+        { language: 'markdown', scheme: 'untitled' },
+      ],
+      new WikilinkHoverProvider(notebooksManager),
+    ),
+  );
+
+  // Editor-side `Follow link` (alt+click / Ctrl+click) for
+  // `[[Note]]` / `![[Note]]` wikilinks.  Standard
+  // `[text](./Note.md)` links are already handled by VSCode's
+  // built-in markdown link provider; we only emit links for the
+  // wikilink shapes.  Click invokes `_crossnote.openWikilinkTarget`
+  // which auto-creates missing markdown notes (Obsidian-style)
+  // and jumps to fragment lines for `[[Note#Heading]]` /
+  // `[[Note^block]]`.
+  context.subscriptions.push(
+    vscode.languages.registerDocumentLinkProvider(
+      [
+        { language: 'markdown', scheme: 'file' },
+        { language: 'markdown', scheme: 'untitled' },
+      ],
+      new WikilinkDocumentLinkProvider(notebooksManager),
+    ),
+    vscode.commands.registerCommand(
+      '_crossnote.openWikilinkTarget',
+      (sourceUriString: string, wikilinkBody: string) =>
+        openWikilinkTarget(sourceUriString, wikilinkBody, notebooksManager),
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
       'markdown-preview-enhanced.toggleScrollSync',
       toggleScrollSync,
     ),
@@ -1344,6 +1610,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('_crossnote.clickTagA', clickTagA),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('_crossnote.clickTag', clickTag),
   );
 
   context.subscriptions.push(

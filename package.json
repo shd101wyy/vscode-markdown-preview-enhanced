@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.24",
+  "version": "0.8.25",
   "description": "%description%",
   "categories": [
     "Other"
@@ -36,6 +36,7 @@
     "run-in-browser:watch": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "yarn build && node ./node_modules/vscode/bin/test",
+    "test:unit": "mocha --ui tdd --reporter spec test/find-fragment-target-line.test.js test/block-id-helpers.test.js test/rank-by-closeness.test.js",
     "vscode:prepublish": "yarn install && yarn build",
     "watch": "gulp copy-files && gulp clean-out && node build.js --watch"
   },
@@ -72,6 +73,11 @@
       {
         "command": "markdown-preview-enhanced.togglePreviewLock",
         "title": "%markdown-preview-enhanced.togglePreviewLock.title%",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.copyBlockReference",
+        "title": "%markdown-preview-enhanced.copyBlockReference.title%",
         "category": "Markdown"
       },
       {
@@ -341,6 +347,17 @@
           "description": "Enable CriticMarkup syntax. Only works with markdown-it parser. Please check http://criticmarkup.com/users-guide.php for more information.",
           "default": false,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.enableTagSyntax": {
+          "description": "Enable Obsidian-style #tag syntax. Renders `#tag-name` (and nested `#parent/child`) as clickable pill-shaped anchors. Click a tag to open VS Code's \"Search in Files\" pre-filled with the tag.",
+          "default": true,
+          "type": "boolean"
+        },
+        "markdown-preview-enhanced.maxNoteFileSize": {
+          "markdownDescription": "Maximum size (in bytes) of a Markdown file that crossnote will load into the in-memory note index. Files larger than the cap are skipped during workspace refresh — they won't appear in autocomplete, backlinks, or the tag panel, but you can still open them via wikilink click. Prevents pathological cases where a checked-in log/data dump with a `.md` extension would otherwise pin its full content (plus a parsed token tree) in memory. Set to `0` to disable the cap.",
+          "default": 5242880,
+          "type": "number",
+          "minimum": 0
         },
         "markdown-preview-enhanced.wikiLinkTargetFileExtension": {
           "markdownDescription": "The file extension for the link in wikilink if the link does not have an extension.",
@@ -849,7 +866,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.9.23",
+    "crossnote": "^0.9.24",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {

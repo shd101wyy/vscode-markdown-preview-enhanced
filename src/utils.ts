@@ -76,6 +76,57 @@ function getGlobalConfigPath(): string {
 }
 export const globalConfigPath = getGlobalConfigPath();
 
+/**
+ * Obsidian-style "follow link to a missing note": if `fileUri`
+ * points at a non-existent file whose extension matches the
+ * configured `markdownFileExtensions`, create an empty stub there
+ * with a sensible initial title.  Returns true if it created the
+ * file, false if the file already existed or wasn't a markdown
+ * extension we should auto-create.
+ *
+ * Used by the graph-view "click an orphan node" path and the
+ * preview "click [[NewNote]] wikilink" path — both used to fall
+ * through to a `Could not open file: …` error when the target
+ * didn't exist.  Now they create the note and let the caller open
+ * it.  The file watcher picks up the create and refreshes the
+ * notebook indices on its own, so the new node shows up as a real
+ * (non-orphan) node on the next graph render.
+ */
+export async function createMissingMarkdownNote(
+  fileUri: vscode.Uri,
+): Promise<boolean> {
+  // Bail out if it already exists.
+  try {
+    await vscode.workspace.fs.stat(fileUri);
+    return false;
+  } catch {
+    // ENOENT — fall through to create.
+  }
+
+  const markdownFileExtensions =
+    getMPEConfig<string[]>('markdownFileExtensions') ?? [];
+  const ext = path.extname(fileUri.path).toLowerCase();
+  if (!markdownFileExtensions.includes(ext)) {
+    return false;
+  }
+
+  // Stub content: a single H1 with the bare basename, matching what
+  // Obsidian does on click-to-create.  Cheap to delete if the user
+  // doesn't want it.
+  const title = path.basename(fileUri.path, ext);
+  const initialContent = `# ${title}\n\n`;
+  try {
+    await vscode.workspace.fs.writeFile(
+      fileUri,
+      new TextEncoder().encode(initialContent),
+    );
+    return true;
+  } catch (error) {
+    console.error('createMissingMarkdownNote: write failed', error);
+    return false;
+  }
+}
+
 export function isMarkdownFile(document: vscode.TextDocument) {
   let flag =
     (document.languageId === 'markdown' || document.languageId === 'quarto') &&
