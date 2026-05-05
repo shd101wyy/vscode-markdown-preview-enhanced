@@ -342,6 +342,22 @@ suite('block-id-helpers', function () {
       assert.strictEqual(parseTagTriggerContext('## '), null);
     });
 
+    test('MATCHES #tag at line start once non-hash characters follow', function () {
+      // The heading-marker suppression only fires for "all hashes (and
+      // an optional space) so far".  As soon as a non-hash character
+      // arrives (the user is clearly typing a tag, not a heading),
+      // completion should fire.  Obsidian-style `#my-tag` lines at
+      // file start (e.g. tag-only lines) need this.
+      assert.deepStrictEqual(parseTagTriggerContext('#m'), { partial: 'm' });
+      assert.deepStrictEqual(parseTagTriggerContext('#my'), { partial: 'my' });
+      assert.deepStrictEqual(parseTagTriggerContext('#my-tag'), {
+        partial: 'my-tag',
+      });
+      assert.deepStrictEqual(parseTagTriggerContext('#parent/child'), {
+        partial: 'parent/child',
+      });
+    });
+
     test('does NOT match inside an unclosed [[…]] (handled by heading/block ctx)', function () {
       assert.strictEqual(parseTagTriggerContext('See [[Note#'), null);
       assert.strictEqual(parseTagTriggerContext('See [[Note#se'), null);

@@ -32,7 +32,33 @@ import NotebooksManager from './notebooks-manager';
 export class WikilinkCompletionProvider
   implements vscode.CompletionItemProvider
 {
-  constructor(private readonly notebooksManager?: NotebooksManager) {}
+  constructor(private readonly notebooksManager?: NotebooksManager) {
+    // Invalidate the embed-image cache whenever an image is created,
+    // moved, or deleted in the workspace.  Filewatcher fires for any
+    // path matching the glob; we just blow the cache so the next
+    // completion call re-runs `findFiles`.
+    this.imageWatcher = vscode.workspace.createFileSystemWatcher(
+      WikilinkCompletionProvider.IMAGE_GLOB,
+    );
+    const invalidate = () => {
+      this.imageCache = null;
+    };
+    this.imageWatcher.onDidCreate(invalidate);
+    this.imageWatcher.onDidDelete(invalidate);
+    // onDidChange isn't relevant — we only track existence, not content.
+  }
+
+  /**
+   * Cached list of workspace image files for `![[…` embed completion.
+   * `null` means "not loaded / invalidated, re-fetch on next call".
+   * `findFiles` is one of the heaviest VSCode workspace ops, and
+   * pre-fix the embed completion was firing it on every keystroke.
+   */
+  private imageCache: vscode.Uri[] | null = null;
+  private imageCachePromise: Promise<vscode.Uri[]> | null = null;
+  private imageWatcher: vscode.FileSystemWatcher;
+  private static readonly IMAGE_GLOB =
+    '**/*.{png,jpg,jpeg,gif,svg,webp,bmp,avif}';
   // Lower-cased image extensions to also include in the suggestion
   // list when the user is in `![[…` embed context.  Markdown is always
   // included regardless.
@@ -46,6 +72,45 @@ export class WikilinkCompletionProvider
     '.bmp',
     '.avif',
   ]);
+
+  /**
+   * Return the workspace's image files.  Cached for the lifetime of
+   * the provider; invalidated when the file watcher sees an image
+   * created/deleted.  Concurrent callers share the same in-flight
+   * `findFiles` promise so a burst of keystrokes during the cold-cache
+   * window doesn't fan out into N parallel scans.
+   */
+  private async getImageFiles(): Promise<vscode.Uri[]> {
+    if (this.imageCache) return this.imageCache;
+    if (this.imageCachePromise) return this.imageCachePromise;
+    // findFiles returns Thenable, not Promise; wrap so .catch and the
+    // typed return work cleanly.  Concurrent callers share the same
+    // in-flight scan via `imageCachePromise` — a burst of keystrokes
+    // during the cold-cache window won't fan out into N parallel scans.
+    const promise = (async () => {
+      try {
+        const files = await vscode.workspace.findFiles(
+          WikilinkCompletionProvider.IMAGE_GLOB,
+          '**/node_modules/**',
+          500,
+        );
+        this.imageCache = files;
+        return files;
+      } finally {
+        // Clear the in-flight slot regardless of success / failure so
+        // the next call either reads from the cache (success) or
+        // retries (failure).
+        this.imageCachePromise = null;
+      }
+    })();
+    this.imageCachePromise = promise;
+    return promise;
+  }
+
+  /** For the `dispose()` lifecycle when the provider is unregistered. */
+  public dispose() {
+    this.imageWatcher.dispose();
+  }
 
   async provideCompletionItems(
     document: vscode.TextDocument,
@@ -129,15 +194,12 @@ export class WikilinkCompletionProvider
     // each time, which matters on large notebooks.
     const mdFiles = await this.listMarkdownFiles(document);
     const markdownExts = await this.getMarkdownExtensions(document);
-    // Images aren't tracked by the notebook, so we still go through
-    // findFiles — but only when the user is in `![[…` embed context.
-    const imageFiles = isEmbed
-      ? await vscode.workspace.findFiles(
-          '**/*.{png,jpg,jpeg,gif,svg,webp,bmp,avif}',
-          '**/node_modules/**',
-          500,
-        )
-      : [];
+    // Images aren't tracked by the notebook.  We do still go through
+    // `findFiles`, but only on cold cache — `getImageFiles()` memoises
+    // the result and a workspace file watcher invalidates it on
+    // image create/delete.  Pre-cache, every keystroke in `![[…`
+    // context fired a fresh full-workspace scan.
+    const imageFiles = isEmbed ? await this.getImageFiles() : [];
 
     const partialLower = partial.toLowerCase();
     const items: vscode.CompletionItem[] = [];

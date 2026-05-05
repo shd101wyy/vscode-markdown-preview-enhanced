@@ -890,10 +890,15 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     }
     // Open the picked note via the existing clickTagA pipeline so the
     // file gets revealed in the right column and the previewMode is
-    // honoured (custom preview editor vs text editor).
+    // honoured (custom preview editor vs text editor).  Build the URI
+    // via `vscode.Uri.file(...)` so backslashes in `picked.fsPath` on
+    // Windows get converted to a proper `file:///C:/...` form;
+    // template-string concat (`${scheme}://${picked.fsPath}`) would
+    // produce a malformed `file://C:\foo\bar`.
+    const pickedUri = vscode.Uri.file(picked.fsPath);
     await clickTagA({
       uri,
-      href: encodeURIComponent(`${scheme}://${picked.fsPath}`),
+      href: encodeURIComponent(pickedUri.toString()),
       scheme,
     });
   }
@@ -1282,17 +1287,27 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   //   - `[[Note^…`       → list ^block-id markers in Note
   // The trigger characters open the suggestion list; the partial text
   // after each further filters it.  Provider routes by context.
+  // Hold a reference to the provider so its file-system watcher
+  // (used to invalidate the embed-image cache) gets disposed cleanly
+  // alongside the extension.  `registerCompletionItemProvider`
+  // returns a Disposable that unhooks the provider from the language
+  // service, but it doesn't call `dispose()` on the provider object
+  // itself.
+  const wikilinkCompletionProvider = new WikilinkCompletionProvider(
+    notebooksManager,
+  );
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
       [
         { language: 'markdown', scheme: 'file' },
         { language: 'markdown', scheme: 'untitled' },
       ],
-      new WikilinkCompletionProvider(notebooksManager),
+      wikilinkCompletionProvider,
       '[',
       '#',
       '^',
     ),
+    wikilinkCompletionProvider,
   );
 
   // Hover preview for `[[Note]]`, `[[Note#Heading]]`, `[[Note^block]]`,
