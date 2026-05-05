@@ -2,7 +2,7 @@ import { constructGraphView, GraphViewData } from 'crossnote';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import NotebooksManager from './notebooks-manager';
-import { getWorkspaceFolderUri } from './utils';
+import { createMissingMarkdownNote, getWorkspaceFolderUri } from './utils';
 
 export class GraphViewProvider {
   static notebooksManager: NotebooksManager;
@@ -107,6 +107,14 @@ export class GraphViewProvider {
             const fileUri = workspaceFolderUri
               ? vscode.Uri.joinPath(workspaceFolderUri, relFilePath)
               : vscode.Uri.file(relFilePath);
+            // Orphan-node case: the wikilink target hasn't been
+            // written yet (graph view shows it as a node because
+            // the referrer linked to it).  Auto-create the file
+            // with a stub title — Obsidian does the same when you
+            // click an unresolved [[NewNote]].  No-op if the file
+            // already exists or the extension isn't a configured
+            // markdown extension.
+            await createMissingMarkdownNote(fileUri);
             const doc = await vscode.workspace.openTextDocument(fileUri);
             await vscode.window.showTextDocument(doc, {
               preview: false,

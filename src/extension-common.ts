@@ -4,6 +4,10 @@ import { SHA256 } from 'crypto-js';
 import * as vscode from 'vscode';
 import { WikilinkCompletionProvider } from './block-id-completion-provider';
 import { WikilinkHoverProvider } from './wikilink-hover-provider';
+import {
+  WikilinkDocumentLinkProvider,
+  openWikilinkTarget,
+} from './wikilink-document-link-provider';
 import { PreviewColorScheme, getMPEConfig, updateMPEConfig } from './config';
 import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
@@ -12,6 +16,7 @@ import { PreviewCustomEditorProvider } from './preview-custom-editor-provider';
 import { PreviewProvider, getPreviewUri } from './preview-provider';
 import { GraphViewProvider } from './graph-view-provider';
 import {
+  createMissingMarkdownNote,
   getBottomVisibleLine,
   getEditorActiveCursorLine,
   getPreviewMode,
@@ -731,6 +736,16 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         fileExists = false;
       }
 
+      // Obsidian-style click-to-create: if the wikilink target is a
+      // markdown file (per `markdownFileExtensions`) that doesn't
+      // exist yet, write an empty stub so the editor below opens a
+      // real file instead of falling through to `vscode.open` and
+      // showing a "File not found" prompt.  No-op for other URI
+      // types (URLs, attachments, missing-but-non-markdown).
+      if (!fileExists && (await createMissingMarkdownNote(fileUri))) {
+        fileExists = true;
+      }
+
       if (fileExists) {
         const previewMode = getPreviewMode();
         const document = await vscode.workspace.openTextDocument(
@@ -1291,6 +1306,29 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         { language: 'markdown', scheme: 'untitled' },
       ],
       new WikilinkHoverProvider(notebooksManager),
+    ),
+  );
+
+  // Editor-side `Follow link` (alt+click / Ctrl+click) for
+  // `[[Note]]` / `![[Note]]` wikilinks.  Standard
+  // `[text](./Note.md)` links are already handled by VSCode's
+  // built-in markdown link provider; we only emit links for the
+  // wikilink shapes.  Click invokes `_crossnote.openWikilinkTarget`
+  // which auto-creates missing markdown notes (Obsidian-style)
+  // and jumps to fragment lines for `[[Note#Heading]]` /
+  // `[[Note^block]]`.
+  context.subscriptions.push(
+    vscode.languages.registerDocumentLinkProvider(
+      [
+        { language: 'markdown', scheme: 'file' },
+        { language: 'markdown', scheme: 'untitled' },
+      ],
+      new WikilinkDocumentLinkProvider(notebooksManager),
+    ),
+    vscode.commands.registerCommand(
+      '_crossnote.openWikilinkTarget',
+      (sourceUriString: string, wikilinkBody: string) =>
+        openWikilinkTarget(sourceUriString, wikilinkBody, notebooksManager),
     ),
   );
 
