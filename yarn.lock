@@ -2580,10 +2580,10 @@ cross-spawn@^7.0.3, cross-spawn@^7.0.6:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.9.23:
-  version "0.9.23"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.23.tgz#fff200f58b0f71b6bc31ac68d04f092b0cd4213e"
-  integrity sha512-BDptBSnhKS3NpuIsW4RUn5Tj4aRyAWJ5t3n9PxF3aXSEKInXXR7ZXJHqkEQ8SIFrY4qpt2WkmGguIQP4ifNJKg==
+crossnote@^0.9.24:
+  version "0.9.24"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.24.tgz#db5f6195aa105ff10ff186f4f41fe8105f0bb2cc"
+  integrity sha512-jr2qRH2rsSh47ec3LGky9Er1Llme26wzcDLKLt4tqqemMCmv7A7WbdTHINq/h95K5gxZYKr7VWkoNW9cLh4l8A==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
