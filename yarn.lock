@@ -2582,6 +2582,8 @@ cross-spawn@^7.0.3, cross-spawn@^7.0.6:
 
 crossnote@^0.9.23:
   version "0.9.23"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.23.tgz#fff200f58b0f71b6bc31ac68d04f092b0cd4213e"
+  integrity sha512-BDptBSnhKS3NpuIsW4RUn5Tj4aRyAWJ5t3n9PxF3aXSEKInXXR7ZXJHqkEQ8SIFrY4qpt2WkmGguIQP4ifNJKg==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
