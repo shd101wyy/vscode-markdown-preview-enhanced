@@ -228,6 +228,11 @@
           "default": false,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.automaticallyOpenPreviewOnFileOpen": {
+          "description": "Automatically open preview in the same column without splitting when a markdown file is opened or activated.",
+          "default": false,
+          "type": "boolean"
+        },
         "markdown-preview-enhanced.disableAutoPreviewForUriSchemes": {
           "markdownDescription": "A list of URI schemes (e.g., `vscode-notebook-cell`) to exclude from the `automaticallyShowPreviewOfMarkdownBeingEdited` feature. Files matching these schemes won't trigger the automatic preview.",
           "default": [

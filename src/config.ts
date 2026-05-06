@@ -26,6 +26,7 @@ export enum PreviewColorScheme {
 
 type VSCodeMPEConfigKey =
   | 'automaticallyShowPreviewOfMarkdownBeingEdited'
+  | 'automaticallyOpenPreviewOnFileOpen'
   | 'configPath'
   | 'enableImageLightbox'
   | 'imageUploader'
@@ -127,6 +128,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
 
   // preview config
   public readonly automaticallyShowPreviewOfMarkdownBeingEdited: boolean;
+  public readonly automaticallyOpenPreviewOnFileOpen: boolean;
   public readonly hideDefaultVSCodeMarkdownPreviewButtons: boolean;
   public readonly imageUploader: ImageUploader;
   public readonly liveUpdate: boolean;
@@ -240,6 +242,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.automaticallyShowPreviewOfMarkdownBeingEdited =
       getMPEConfig<boolean>('automaticallyShowPreviewOfMarkdownBeingEdited') ??
       false;
+    this.automaticallyOpenPreviewOnFileOpen =
+      getMPEConfig<boolean>('automaticallyOpenPreviewOnFileOpen') ?? false;
     this.previewColorScheme =
       getMPEConfig<PreviewColorScheme>('previewColorScheme') ??
       PreviewColorScheme.selectedPreviewTheme;
