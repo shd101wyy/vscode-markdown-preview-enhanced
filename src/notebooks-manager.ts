@@ -94,9 +94,15 @@ class NotebooksManager {
     let globalConfig: Partial<NotebookConfig> = {};
     if (!isVSCodeWebExtension()) {
       try {
+        // Global config always lives on the same machine where the extension
+        // host runs, regardless of whether the workspace is on a remote host
+        // (WSL/SSH). Using notebook.fs here would inherit the workspace's
+        // authority and misroute the URI (e.g. file://wsl.localhost/C:/...),
+        // which silently drops the user's ~/.crossnote customizations.
+        const localFs = wrapVSCodeFSAsApi('file', '');
         globalConfig = await loadConfigsInDirectory(
           globalConfigPath,
-          notebook.fs,
+          localFs,
           true,
         );
       } catch (error) {
