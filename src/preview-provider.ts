@@ -364,6 +364,7 @@ export class PreviewProvider {
           document,
           viewOptions,
           cursorLine,
+          inputStringOverride,
         });
       } else {
         previewPanel = PreviewProvider.singlePreviewPanel;
@@ -378,6 +379,7 @@ export class PreviewProvider {
             webviewPanel: preview,
             viewOptions,
             cursorLine,
+            inputStringOverride,
           }),
         ),
       );
@@ -679,7 +681,21 @@ export class PreviewProvider {
         renderRequestId,
       );
 
-      const text = document.getText();
+      // Prefer disk content when the buffer has no unsaved edits, so that
+      // external file modifications (e.g. across the WSL boundary or by
+      // notepad.exe) propagate to the preview even when VSCode did not
+      // refresh its cached TextDocument. Reads happen after the stamp so the
+      // existing stale-render guard below still discards us if a newer
+      // updateMarkdown overtakes during the disk read.
+      let text = document.getText();
+      if (!document.isDirty) {
+        try {
+          const data = await vscode.workspace.fs.readFile(sourceUri);
+          text = Buffer.from(data).toString('utf-8');
+        } catch {
+          // Fall back to the cached document content on read failure.
+        }
+      }
       await this.postMessageToPreview(sourceUri, {
         command: 'startParsingMarkdown',
       });
