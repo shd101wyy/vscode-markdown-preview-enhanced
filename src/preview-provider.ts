@@ -332,12 +332,14 @@ export class PreviewProvider {
     webviewPanel,
     cursorLine,
     viewOptions,
+    inputStringOverride,
   }: {
     sourceUri: vscode.Uri;
     document: vscode.TextDocument;
     webviewPanel?: vscode.WebviewPanel;
     cursorLine?: number;
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean };
+    inputStringOverride?: string;
   }): Promise<void> {
     const previewMode = getPreviewMode();
     let previewPanel: vscode.WebviewPanel;
@@ -473,7 +475,7 @@ export class PreviewProvider {
       initialLine = cursorLine;
     }
 
-    const inputString = document.getText() ?? '';
+    const inputString = inputStringOverride ?? document.getText() ?? '';
     const engine = this.getEngine(sourceUri);
     try {
       // Tag this request so we can detect if a newer initPreview overtook us
@@ -766,28 +768,46 @@ export class PreviewProvider {
     })();
   }
 
-  private refreshPreviewPanel(sourceUri: Uri | null) {
+  private async refreshPreviewPanel(sourceUri: Uri | null) {
     if (!sourceUri) {
       return;
     }
 
-    this.previewToDocumentMap.forEach(async (document, previewPanel) => {
+    for (const [previewPanel, document] of this.previewToDocumentMap) {
       if (
-        previewPanel &&
-        isMarkdownFile(document) &&
-        document.uri &&
-        document.uri.fsPath === sourceUri.fsPath
+        !previewPanel ||
+        !isMarkdownFile(document) ||
+        !document.uri ||
+        document.uri.fsPath !== sourceUri.fsPath
       ) {
-        await this.initPreview({
-          sourceUri,
-          document,
-          viewOptions: {
-            viewColumn: previewPanel.viewColumn ?? vscode.ViewColumn.One,
-            preserveFocus: true,
-          },
-        });
+        continue;
       }
-    });
+
+      // Force re-reading from disk so manual refresh works even when the file
+      // was modified by an external editor (e.g. across the WSL boundary, or
+      // by notepad.exe) and VSCode did not pick up the change. Skip when the
+      // buffer has unsaved edits — those would otherwise be overwritten by
+      // the older on-disk content.
+      let inputStringOverride: string | undefined;
+      if (!document.isDirty) {
+        try {
+          const data = await vscode.workspace.fs.readFile(sourceUri);
+          inputStringOverride = Buffer.from(data).toString('utf-8');
+        } catch {
+          // Fall back to the cached document content on read failure.
+        }
+      }
+
+      await this.initPreview({
+        sourceUri,
+        document,
+        inputStringOverride,
+        viewOptions: {
+          viewColumn: previewPanel.viewColumn ?? vscode.ViewColumn.One,
+          preserveFocus: true,
+        },
+      });
+    }
   }
 
   public refreshPreview(sourceUri: Uri) {
