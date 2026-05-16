@@ -129,7 +129,12 @@ export async function createMissingMarkdownNote(
 
 export function isMarkdownFile(document: vscode.TextDocument) {
   let flag =
-    (document.languageId === 'markdown' || document.languageId === 'quarto') &&
+    (document.languageId === 'markdown' ||
+      document.languageId === 'quarto' ||
+      document.languageId === 'prompt' ||
+      document.languageId === 'instructions' ||
+      document.languageId === 'chatagent' ||
+      document.languageId === 'skill') &&
     document.uri.scheme !== 'markdown-preview-enhanced'; // prevent processing of own documents
 
   if (!flag) {
