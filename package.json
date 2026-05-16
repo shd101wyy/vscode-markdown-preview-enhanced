@@ -318,6 +318,11 @@
           "default": "https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js",
           "type": "string"
         },
+        "markdown-preview-enhanced.mathjaxV3ScriptSrc": {
+          "markdownDeprecationMessage": "This setting has been renamed to `#markdown-preview-enhanced.mathjaxScriptSrc#` and the default now loads MathJax v4. Please move your value to the new setting.",
+          "deprecationMessage": "This setting has been renamed to markdown-preview-enhanced.mathjaxScriptSrc and the default now loads MathJax v4. Please move your value to the new setting.",
+          "type": "string"
+        },
         "markdown-preview-enhanced.enableWikiLinkSyntax": {
           "description": "Enable Wiki Link syntax support. More information can be found at https://help.github.com/articles/adding-links-to-wikis/",
           "default": true,
