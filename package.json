@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.25",
+  "version": "0.8.26",
   "description": "%description%",
   "categories": [
     "Other"
@@ -313,9 +313,9 @@
             "https://latex.codecogs.com/png.latex"
           ]
         },
-        "markdown-preview-enhanced.mathjaxV3ScriptSrc": {
-          "description": "MathJax v3 script source. Leave it empty to use the default CDN.",
-          "default": "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
+        "markdown-preview-enhanced.mathjaxScriptSrc": {
+          "description": "MathJax script source. Leave it empty to use the default CDN (MathJax v4).",
+          "default": "https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js",
           "type": "string"
         },
         "markdown-preview-enhanced.enableWikiLinkSyntax": {
@@ -363,6 +363,21 @@
           "markdownDescription": "The file extension for the link in wikilink if the link does not have an extension.",
           "default": ".md",
           "type": "string"
+        },
+        "markdown-preview-enhanced.wikiLinkResolution": {
+          "markdownDescription": "How bare-filename wiki links (e.g. `[[Note]]`) are resolved to a file path.\n\n- `relative` — resolve relative to the current note's directory (default).\n- `shortest` — search all notes by filename, preferring the shortest unique path (with same-directory tiebreaking). Obsidian-style.\n- `absolute` — resolve from the notebook/workspace root.\n\nLinks starting with `/` always resolve from the notebook root regardless of this setting.",
+          "default": "relative",
+          "type": "string",
+          "enum": [
+            "relative",
+            "shortest",
+            "absolute"
+          ],
+          "enumDescriptions": [
+            "Resolve relative to the current note's directory.",
+            "Search all notes by filename, preferring the shortest unique path.",
+            "Resolve from the notebook/workspace root."
+          ]
         },
         "markdown-preview-enhanced.wikiLinkTargetFileNameChangeCase": {
           "markdownDescription": "The case for the file name in wikilink. If the value is `none`, then the file name will not be changed. Otherwise, the file name will be transformed to the specified case. You can read https://www.npmjs.com/package/case-anything for more details.",
@@ -870,7 +885,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "^0.9.24",
+    "crossnote": "^0.9.25",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {

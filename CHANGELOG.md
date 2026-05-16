@@ -7,12 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.25](https://github.com/shd101wyy/crossnote/releases/tag/0.9.25).
+
+### Breaking changes
+
+- Rename the `markdown-preview-enhanced.mathjaxV3ScriptSrc` setting to `markdown-preview-enhanced.mathjaxScriptSrc`. The default MathJax script source now loads MathJax 4 (`https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js`) instead of MathJax 3. Users who have customized the old setting must rename it; the MathJax v4 configuration API is backward-compatible with v3 configurations.
+
+### New features
+
+- **MathJax v4 support** — Upgrade the default MathJax CDN URL from `mathjax@3` to `mathjax@4`. The script loading attribute is changed from `async` to `defer` (per MathJax v4 recommendation). The `MathJax.startup.document.state(0)` call is removed from the client-side typesetting pipeline — `MathJax.typesetPromise()` already resets state internally. Fixes [#2298](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2298).
+- **Block-level `$$` math parsing** — A new `math_block` block rule (inserted before markdown-it's `lheading` Setext parser) prevents multi-line `$$…$$` blocks from being split by Setext heading detection. Previously, a `$$` block containing `=` on its own line (e.g. matrix multiplication `\end{pmatrix} = \begin{pmatrix}`) would be split into an `<h1>` heading and a dangling paragraph. The new block rule consumes the full `$$…$$` block before the Setext or paragraph parsers see it. Works for both KaTeX and MathJax renderers, and respects user-configured `mathBlockDelimiters`.
+- **Obsidian-style wiki link resolution** — New `markdown-preview-enhanced.wikiLinkResolution` setting (`shortest` | `relative` | `absolute`, default `relative`) controls how bare-filename wiki links like `[[Note]]` are resolved. `shortest` searches all notes globally by filename, preferring the shortest unique path (with same-directory tiebreaking). `absolute` resolves from the workspace/notebook root. `relative` preserves the existing behavior (resolve relative to the current note's directory). Links starting with `/` always resolve from the notebook root regardless of this setting. Fixes [crossnote#424](https://github.com/shd101wyy/crossnote/issues/424).
+
 ### Bug fixes
 
 - Fix `openPreviewToTheSide` and `openLockedPreviewToTheSide` opening the preview as a tab in the same editor group instead of creating a side-by-side split when only one editor group is open. Changed `vscode.ViewColumn.Two` to `vscode.ViewColumn.Beside`, which is the symbolic column representing "beside the active editor" and always creates a split when needed. ([#2287](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2287), thanks @SuperLazyDog)
 - Fix the preview refresh button not picking up external file edits (e.g. from another editor, across WSL boundary). The refresh now reads content from disk via `vscode.workspace.fs.readFile()` when the buffer has no unsaved edits, instead of always using the cached `TextDocument`. Unsaved in-flight edits are preserved. Also fixes the `forEach(async...)` → `for...of` serialization bug in `refreshPreviewPanel`. ([#2296](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2296), thanks @xxjapp)
 - Fix global `~/.crossnote` config (`style.less`, `config.js`, `parser.js`, `head.html`) being silently dropped for workspaces on remote hosts (WSL via `\\wsl.localhost\` UNC paths, SSH-Remote). Since 0.8.23 the notebook's fs carried the workspace's authority, misrouting the global config URI (e.g. `file://wsl.localhost/C:/Users/...`) instead of using the local path. Global config now loads via a dedicated local fs with empty authority. ([#2297](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2297), thanks @xxjapp)
 - Fix preview toolbar buttons and editor features (commands, keybindings, wikilink autocomplete/hover/link, context menu) not appearing for files with newer VS Code language IDs (`skill`, `prompt`, `instructions`, `chatagent`) such as `SKILL.md` and `copilot-instructions.md`. MPE now matches the same `editorLangId` regex pattern as the built-in markdown extension. ([#2291](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2291), [#2294](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2294))
+- Fix multi-line `$$` math blocks (matrices, aligned equations, etc.) being split by markdown-it's Setext heading parser when the block contains `=` on its own line.
+- Fix `#tag` CSS pill styling overriding Prism syntax highlighting for XML/HTML tags in code blocks. The `.markdown-preview span.tag` selector now uses `span.tag:not(.token)` so it no longer matches `<span class="token tag">` elements inside `<code>` blocks. Fixes [#2295](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2295).
+- Fix Pandoc-style fenced div attributes (`::: {.class1 .class2 #id}`) not being parsed. The colon fence parser and transformer now properly extract classes, ids, and `key=value` attributes from `{...}` blocks so `::: {.test .vertical}` renders as `<div class="test vertical">` instead of raw `:::`. Fixes [#2275](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2275).
+- Fix PlantUML server rendering producing raw binary image data in the output when the server responds with `Content-Type: image/*` instead of SVG text. The renderer now detects image responses and converts them to base64 `<img>` data URIs instead of treating binary data as text. Fixes [crossnote#416](https://github.com/shd101wyy/crossnote/issues/416).
+
+### Performance
+
+- **Parallel mermaid rendering with client-side cache** — Fix the `forEach(async)` fire-and-forget bug that caused mermaid rendering promises to be silently lost. Parse all mermaid diagrams in parallel (`Promise.all`) instead of sequential `for` loop. Add a client-side SVG cache keyed by source code so unchanged diagrams are not re-parsed or re-rendered on preview refresh. Add a 30-second per-diagram timeout to prevent a single malformed or extremely large diagram from hanging the entire preview.
+
+### Updates
+
+- Update `mermaid` to `11.15.0`.
+- Update `katex` to `0.16.47`.
 
 ## [0.8.25] - 2026-05-05
 

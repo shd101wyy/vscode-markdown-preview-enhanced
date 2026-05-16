@@ -215,9 +215,45 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
     document: vscode.TextDocument,
     noteName: string,
   ): Promise<vscode.Uri | undefined> {
+    // Resolve the notebook (if any) up front so both the primary
+    // resolver path and the typo-recovery fallback can reuse its
+    // configured `wikiLinkTargetFileExtension`.
+    let notebook:
+      | Awaited<ReturnType<NotebooksManager['getNotebook']>>
+      | undefined;
+    if (this.notebooksManager) {
+      try {
+        notebook = await this.notebooksManager.getNotebook(document.uri);
+      } catch {
+        // No notebook for this URI (untitled doc, scratch buffer).
+      }
+    }
+    const defaultExt = notebook?.config.wikiLinkTargetFileExtension || '.md';
     const ext = path.extname(noteName);
-    const defaultExt = await this.getDefaultWikilinkExtension(document);
     const fileName = ext ? noteName : `${noteName}${defaultExt}`;
+
+    // Preferred path: delegate to the notebook's own resolver so
+    // hover honours `wikiLinkResolution` (relative/shortest/absolute)
+    // and lands on the same target the rendered preview points to.
+    if (notebook) {
+      const rootFsPath = notebook.notebookPath.fsPath;
+      const currentRelPath = path.relative(rootFsPath, document.uri.fsPath);
+      const resolvedRel = notebook.resolveWikilink(fileName, currentRelPath);
+      const resolvedUri = vscode.Uri.file(path.join(rootFsPath, resolvedRel));
+      try {
+        await vscode.workspace.fs.stat(resolvedUri);
+        return resolvedUri;
+      } catch {
+        // Resolver returned a path that doesn't exist on disk — fall
+        // through to workspace-wide search so the hover can still
+        // surface a likely target (typo recovery / files outside the
+        // notebook index).
+      }
+    }
+
+    // Fallback: same-dir first, then a workspace-wide basename
+    // search.  Uses the same `defaultExt` resolved above so notebooks
+    // configured with `.markdown` / `.qmd` / etc. stay consistent.
     if (document.uri.scheme === 'file') {
       const sameDir = vscode.Uri.file(
         path.join(path.dirname(document.uri.fsPath), fileName),
@@ -236,25 +272,6 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
       1,
     );
     return matches[0];
-  }
-
-  /**
-   * Read the configured `wikiLinkTargetFileExtension` from the
-   * notebook for the active document, falling back to `.md`.  Uses
-   * the same plumbing as the autocomplete provider so a notebook
-   * configured with `.markdown` / `.qmd` / etc. resolves wikilinks
-   * consistently across hover, autocomplete, and click.
-   */
-  private async getDefaultWikilinkExtension(
-    document: vscode.TextDocument,
-  ): Promise<string> {
-    if (!this.notebooksManager) return '.md';
-    try {
-      const notebook = await this.notebooksManager.getNotebook(document.uri);
-      return notebook.config.wikiLinkTargetFileExtension || '.md';
-    } catch {
-      return '.md';
-    }
   }
 }
 
