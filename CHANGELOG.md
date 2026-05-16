@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug fixes
+
+- Fix `openPreviewToTheSide` and `openLockedPreviewToTheSide` opening the preview as a tab in the same editor group instead of creating a side-by-side split when only one editor group is open. Changed `vscode.ViewColumn.Two` to `vscode.ViewColumn.Beside`, which is the symbolic column representing "beside the active editor" and always creates a split when needed. ([#2287](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2287), thanks @SuperLazyDog)
+
 ## [0.8.25] - 2026-05-05
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.24](https://github.com/shd101wyy/crossnote/releases/tag/0.9.24) (via [0.9.23](https://github.com/shd101wyy/crossnote/releases/tag/0.9.23)).
