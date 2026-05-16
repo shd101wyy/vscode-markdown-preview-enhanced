@@ -12,6 +12,7 @@ import {
   PreviewMode,
   PreviewTheme,
   RevealJsTheme,
+  WikiLinkResolution,
   WikiLinkTargetFileNameChangeCase,
   getDefaultNotebookConfig,
 } from 'crossnote';
@@ -71,7 +72,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly mathInlineDelimiters: string[][];
   public readonly mathBlockDelimiters: string[][];
   public readonly mathRenderingOnlineService: string;
-  public readonly mathjaxV3ScriptSrc: string;
+  public readonly mathjaxScriptSrc: string;
   public readonly codeBlockTheme: CodeBlockTheme;
   public readonly mermaidTheme: MermaidTheme;
   public readonly previewTheme: PreviewTheme;
@@ -111,6 +112,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly useVSCodeThemeForContextMenu: boolean;
   public readonly wikiLinkTargetFileExtension: string;
   public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
+  public readonly wikiLinkResolution: WikiLinkResolution;
   // D2 diagram settings
   public readonly d2Path: string;
   public readonly d2Layout: string;
@@ -190,9 +192,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.mathRenderingOnlineService =
       getMPEConfig<string>('mathRenderingOnlineService') ??
       defaultConfig.mathRenderingOnlineService;
-    this.mathjaxV3ScriptSrc =
-      getMPEConfig<string>('mathjaxV3ScriptSrc') ??
-      defaultConfig.mathjaxV3ScriptSrc;
+    this.mathjaxScriptSrc =
+      getMPEConfig<string>('mathjaxScriptSrc') ??
+      defaultConfig.mathjaxScriptSrc;
     this.codeBlockTheme =
       getMPEConfig<CodeBlockTheme>('codeBlockTheme') ??
       defaultConfig.codeBlockTheme;
@@ -300,6 +302,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       getMPEConfig<WikiLinkTargetFileNameChangeCase>(
         'wikiLinkTargetFileNameChangeCase',
       ) ?? defaultConfig.wikiLinkTargetFileNameChangeCase;
+    this.wikiLinkResolution =
+      getMPEConfig<WikiLinkResolution>('wikiLinkResolution') ??
+      defaultConfig.wikiLinkResolution;
     this.d2Path = getMPEConfig<string>('d2Path') ?? 'd2';
     this.d2Layout = getMPEConfig<string>('d2Layout') ?? 'dagre';
     this.d2Theme = getMPEConfig<number>('d2Theme') ?? 0;

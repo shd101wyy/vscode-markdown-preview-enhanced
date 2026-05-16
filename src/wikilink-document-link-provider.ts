@@ -174,40 +174,51 @@ export async function openWikilinkTarget(
 }
 
 /**
- * Resolve a wikilink note name to an absolute URI.  First tries
- * sibling-of-source-document (the common Obsidian case where notes
- * sit alongside each other in a flat folder); falls back to a
- * workspace-wide basename search; finally to a sibling-relative
- * URI even if the file doesn't exist (so the auto-create path can
- * write it next to the source note).
+ * Resolve a wikilink note name to an absolute URI.  Delegates to
+ * the notebook's `resolveWikilink()` so editor-side alt+click
+ * honours `wikiLinkResolution` (relative/shortest/absolute) and
+ * lands on the same target the rendered preview links to.  If the
+ * resolved file doesn't exist, the URI is still returned so the
+ * caller's auto-create step can write a stub there — Obsidian-style
+ * click-to-create.
  *
- * The default extension comes from the notebook's
- * `wikiLinkTargetFileExtension` config — same source the renderer
- * uses, so click and render resolve the same target.
+ * Falls back to the historical sibling-then-workspace-search
+ * heuristic when no notebook is available (untitled docs, scratch
+ * buffers).
  */
 async function resolveWikilinkUri(
   sourceUri: vscode.Uri,
   noteName: string,
   notebooksManager?: NotebooksManager,
 ): Promise<vscode.Uri | undefined> {
-  const ext = path.extname(noteName);
-  let defaultExt = '.md';
+  // Resolve the notebook (if any) up front so both the primary
+  // resolver path and the legacy fallback use the same configured
+  // `wikiLinkTargetFileExtension`.
+  let notebook:
+    | Awaited<ReturnType<NotebooksManager['getNotebook']>>
+    | undefined;
   if (notebooksManager) {
     try {
-      const notebook = await notebooksManager.getNotebook(sourceUri);
-      defaultExt = notebook.config.wikiLinkTargetFileExtension || '.md';
+      notebook = await notebooksManager.getNotebook(sourceUri);
     } catch {
-      // Fall back to .md if the notebook can't be resolved (test
-      // scaffolds, untitled docs, etc.).
+      // No notebook for this URI (test scaffold, untitled, etc.).
     }
   }
+  const defaultExt = notebook?.config.wikiLinkTargetFileExtension || '.md';
+  const ext = path.extname(noteName);
   const fileName = ext ? noteName : `${noteName}${defaultExt}`;
+
+  if (notebook) {
+    const rootFsPath = notebook.notebookPath.fsPath;
+    const currentRelPath = path.relative(rootFsPath, sourceUri.fsPath);
+    const resolvedRel = notebook.resolveWikilink(fileName, currentRelPath);
+    return vscode.Uri.file(path.join(rootFsPath, resolvedRel));
+  }
+
   const sameDir = vscode.Uri.joinPath(
     vscode.Uri.parse(path.dirname(sourceUri.toString(true)) + '/'),
     fileName,
   );
-  // Prefer sibling-of-source-document.  Try existence; fall back to
-  // workspace-wide basename search if the sibling isn't there.
   try {
     await vscode.workspace.fs.stat(sameDir);
     return sameDir;
@@ -223,9 +234,5 @@ async function resolveWikilinkUri(
   if (matches.length > 0) {
     return matches[0];
   }
-  // No match anywhere — return the sibling URI so the caller can
-  // auto-create it next to the source note.  This is the
-  // Obsidian-style behaviour: clicking a not-yet-existing wikilink
-  // creates it in the same folder as the linking note.
   return sameDir;
 }

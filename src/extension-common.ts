@@ -1301,6 +1301,16 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       [
         { language: 'markdown', scheme: 'file' },
         { language: 'markdown', scheme: 'untitled' },
+        { language: 'quarto', scheme: 'file' },
+        { language: 'quarto', scheme: 'untitled' },
+        { language: 'prompt', scheme: 'file' },
+        { language: 'prompt', scheme: 'untitled' },
+        { language: 'instructions', scheme: 'file' },
+        { language: 'instructions', scheme: 'untitled' },
+        { language: 'chatagent', scheme: 'file' },
+        { language: 'chatagent', scheme: 'untitled' },
+        { language: 'skill', scheme: 'file' },
+        { language: 'skill', scheme: 'untitled' },
       ],
       wikilinkCompletionProvider,
       '[',
@@ -1319,6 +1329,16 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       [
         { language: 'markdown', scheme: 'file' },
         { language: 'markdown', scheme: 'untitled' },
+        { language: 'quarto', scheme: 'file' },
+        { language: 'quarto', scheme: 'untitled' },
+        { language: 'prompt', scheme: 'file' },
+        { language: 'prompt', scheme: 'untitled' },
+        { language: 'instructions', scheme: 'file' },
+        { language: 'instructions', scheme: 'untitled' },
+        { language: 'chatagent', scheme: 'file' },
+        { language: 'chatagent', scheme: 'untitled' },
+        { language: 'skill', scheme: 'file' },
+        { language: 'skill', scheme: 'untitled' },
       ],
       new WikilinkHoverProvider(notebooksManager),
     ),
@@ -1337,6 +1357,16 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       [
         { language: 'markdown', scheme: 'file' },
         { language: 'markdown', scheme: 'untitled' },
+        { language: 'quarto', scheme: 'file' },
+        { language: 'quarto', scheme: 'untitled' },
+        { language: 'prompt', scheme: 'file' },
+        { language: 'prompt', scheme: 'untitled' },
+        { language: 'instructions', scheme: 'file' },
+        { language: 'instructions', scheme: 'untitled' },
+        { language: 'chatagent', scheme: 'file' },
+        { language: 'chatagent', scheme: 'untitled' },
+        { language: 'skill', scheme: 'file' },
+        { language: 'skill', scheme: 'untitled' },
       ],
       new WikilinkDocumentLinkProvider(notebooksManager),
     ),
@@ -1668,7 +1698,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   // Refresh graph view when any markdown document is saved (force-rebuild relations)
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument(async (doc) => {
-      if (doc.languageId === 'markdown') {
+      if (isMarkdownFile(doc)) {
         await GraphViewProvider.refreshGraphData(doc.uri, true);
       }
     }),
@@ -1677,7 +1707,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   // Update active file highlight in graph view when editor changes
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(async (editor) => {
-      if (editor && editor.document.languageId === 'markdown') {
+      if (editor && isMarkdownFile(editor.document)) {
         await GraphViewProvider.sendActiveFile(editor.document.uri);
       }
     }),
