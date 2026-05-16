@@ -83,7 +83,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         document: editor.document,
         cursorLine: getEditorActiveCursorLine(editor),
         viewOptions: {
-          viewColumn: vscode.ViewColumn.Two,
+          viewColumn: vscode.ViewColumn.Beside,
           preserveFocus: true,
         },
       });
@@ -132,7 +132,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         document: editor.document,
         cursorLine: getEditorActiveCursorLine(editor),
         viewOptions: {
-          viewColumn: vscode.ViewColumn.Two,
+          viewColumn: vscode.ViewColumn.Beside,
           preserveFocus: true,
         },
       });
