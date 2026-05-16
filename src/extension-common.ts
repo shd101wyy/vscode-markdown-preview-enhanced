@@ -1173,6 +1173,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
             getMPEConfig<boolean>(
               'automaticallyShowPreviewOfMarkdownBeingEdited',
             );
+          const automaticallyOpenPreviewOnFileOpen = getMPEConfig<boolean>(
+            'automaticallyOpenPreviewOnFileOpen',
+          );
           const previewMode = getPreviewMode();
           /**
            * Is using single preview and the preview is on.
@@ -1209,8 +1212,11 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
               }
             }
             // NOTE: For PreviewMode.PreviewsOnly, we don't need to do anything.
+          } else if (automaticallyOpenPreviewOnFileOpen) {
+            if (!excluded) {
+              openPreview(sourceUri);
+            }
           } else if (automaticallyShowPreviewOfMarkdownBeingEdited) {
-            // Skip auto-opening preview for an excluded file
             if (!excluded) {
               openPreviewToTheSide(sourceUri);
             }
