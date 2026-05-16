@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug fixes
 
 - Fix `openPreviewToTheSide` and `openLockedPreviewToTheSide` opening the preview as a tab in the same editor group instead of creating a side-by-side split when only one editor group is open. Changed `vscode.ViewColumn.Two` to `vscode.ViewColumn.Beside`, which is the symbolic column representing "beside the active editor" and always creates a split when needed. ([#2287](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2287), thanks @SuperLazyDog)
+- Fix the preview refresh button not picking up external file edits (e.g. from another editor, across WSL boundary). The refresh now reads content from disk via `vscode.workspace.fs.readFile()` when the buffer has no unsaved edits, instead of always using the cached `TextDocument`. Unsaved in-flight edits are preserved. Also fixes the `forEach(async...)` → `for...of` serialization bug in `refreshPreviewPanel`. ([#2296](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2296), thanks @xxjapp)
+- Fix global `~/.crossnote` config (`style.less`, `config.js`, `parser.js`, `head.html`) being silently dropped for workspaces on remote hosts (WSL via `\\wsl.localhost\` UNC paths, SSH-Remote). Since 0.8.23 the notebook's fs carried the workspace's authority, misrouting the global config URI (e.g. `file://wsl.localhost/C:/Users/...`) instead of using the local path. Global config now loads via a dedicated local fs with empty authority. ([#2297](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2297), thanks @xxjapp)
 
 ## [0.8.25] - 2026-05-05
 
