@@ -211,6 +211,15 @@ async function resolveWikilinkUri(
   if (notebook) {
     const rootFsPath = notebook.notebookPath.fsPath;
     const currentRelPath = path.relative(rootFsPath, sourceUri.fsPath);
+    // shortest mode searches the note index — ensure it is populated.
+    // relative and absolute modes compute paths purely from the link string
+    // and never access this.notes, so no indexing is needed for them.
+    if (notebook.config.wikiLinkResolution === 'shortest') {
+      await notebook.refreshNotesIfNotLoaded({
+        dir: '.',
+        includeSubdirectories: true,
+      });
+    }
     const resolvedRel = notebook.resolveWikilink(fileName, currentRelPath);
     return vscode.Uri.file(path.join(rootFsPath, resolvedRel));
   }
