@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.27] - 2026-05-24
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.26](https://github.com/shd101wyy/crossnote/releases/tag/0.9.26).
+
+### New features
+
+- **Graph View link direction filter** — Add All/Direct/Front/Back filter buttons in local Graph View mode. "Direct" shows only links connected to the current file, "Front" shows outgoing links, "Back" shows incoming links. ([crossnote#434](https://github.com/shd101wyy/crossnote/pull/434), thanks @substitute5)
+
+### Bug fixes
+
+- **Wikilink preview + Ctrl+Click now respect `wikiLinkResolution` config** — `shortest` and `absolute` modes now correctly affect both the preview `<a href>` and Ctrl+Click navigation. Previously the wikilink renderer never called `resolveWikilink()`, so all links resolved relative to the current file regardless of config. The Ctrl+Click handler now also ensures the note index is populated before resolution in `shortest` mode. Fixes [crossnote#424](https://github.com/shd101wyy/crossnote/issues/424). ([crossnote#434](https://github.com/shd101wyy/crossnote/pull/434) + [#2301](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2301), thanks @substitute5)
+- **`#heading` and `^block-id` transclusion slicing** — Fix `^block-id` transclusion not working in `@import`/markdown-link syntaxes. Fix `#heading` lookup falling through to full-file render on slug/case mismatch. Fix wikilink embed heading-section and block extraction missing auto-generated slugs. Fix recursive imports sharing `HeadingIdGenerator` state. Fix URL-encoded paths and fragments not being decoded. ([crossnote#438](https://github.com/shd101wyy/crossnote/pull/438), thanks @marcpbailey)
+- Fix markdown export generating image URLs with `?Math.random()` query strings — exported image references now contain clean paths without query strings that would break preview. Fixes [crossnote#435](https://github.com/shd101wyy/crossnote/issues/435).
+- Fix MathJax block math (`$$...$$`) inside HTML table cells losing the `$$` delimiters — the placeholder is now protected from inline re-scanning. Fixes [#2302](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2302).
+- Fix colon fences (`:::name`) being recognized when indented or inside list items — colon fences are now only recognized at the top level with no additional indentation. Fixes [#2275](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2275).
+- Fix preview link clicks not working for workspaces opened on remote hosts (WSL via `\\wsl.localhost\` UNC paths, SSH-Remote) — the webview resource URL authority is now decoded and preserved so `fs.stat` resolves the correct target. ([#2305](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2305), thanks @xxjapp)
+
+### Improvements
+
+- **Suffix-matching in `shortest` wiki link resolution** — `[[summary/report]]` now resolves to notes whose path ends with that sub-path, disambiguating same-named files in different directories. ([crossnote#434](https://github.com/shd101wyy/crossnote/pull/434), thanks @substitute5)
+- **Replace deprecated `temp` package with Node built-ins** — eliminates four deprecation warnings (`inflight`, `rimraf@2`, `glob@7`, `mkdirp@0.5`) on every install. ([crossnote#437](https://github.com/shd101wyy/crossnote/pull/437), thanks @dougborg)
+
 ## [0.8.26] - 2026-05-16
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.25](https://github.com/shd101wyy/crossnote/releases/tag/0.9.25).
