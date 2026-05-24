@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.27] - 2026-05-24
 
-Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.26](https://github.com/shd101wyy/crossnote/releases/tag/0.9.26).
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.26](https://github.com/shd101wyy/crossnote/releases/tag/0.9.26) / [0.9.27](https://github.com/shd101wyy/crossnote/releases/tag/0.9.27).
 
 ### New features
 
@@ -25,6 +25,7 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.26](https://
 - Fix preview link clicks not working for workspaces opened on remote hosts (WSL via `\\wsl.localhost\` UNC paths, SSH-Remote) — the webview resource URL authority is now decoded and preserved so `fs.stat` resolves the correct target. ([#2305](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2305), thanks @xxjapp)
 - Fix workspace `.crossnote/style.less` not being applied when the workspace is opened via a UNC network path (`\\server\share\project`) — `getUri()` now uses `vscode.Uri.file()` to correctly decompose UNC paths into authority + path components instead of putting the full filesystem path into the URI `path`. Fixes [#2290](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2290).
 - Fix `enableWikiLinkSyntax` only disabling wikilinks in the preview panel but not in the editor — the setting now also gates editor-side features: wikilink autocomplete, hover preview, Ctrl+Click navigation, and the Copy Block Reference command. Fixes [#2303](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2303).
+- Fix colon fence `{data-source-line}` attribute injection leaking into `:::` lines inside backtick and indented code blocks — the transformer now skips colon fence matching when inside a code block. ([crossnote 0.9.27](https://github.com/shd101wyy/crossnote/releases/tag/0.9.27))
 
 ### Improvements
 
