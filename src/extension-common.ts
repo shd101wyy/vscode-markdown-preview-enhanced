@@ -675,9 +675,24 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       .replace(/^vscode-resource:\/\//, '')
       .replace(/^vscode-webview-resource:\/\/(.+?)\//, '')
       .replace(/^file\/\/\//, '${scheme}:///')
+      // VSCode's webview resource URLs encode the source URI's authority
+      // into the host as `file+<encoded-authority>.vscode-resource.vscode-cdn.net`.
+      // Non-[a-z0-9-] chars in the authority are encoded as `-XXXX` (4-digit
+      // hex char code; e.g. `.` -> `-002e`). Decode it back so that
+      // workspaces on a remote host (WSL via \\wsl.localhost\, SSH-Remote)
+      // keep their authority when handed to `vscode.Uri.parse`. The
+      // catch-all replacement below strips the entire host, yielding a
+      // broken `file:///Ubuntu/...` URI whose fsPath has no UNC prefix and
+      // resolves to nothing on the local Windows filesystem.
       .replace(
-        /^https:\/\/file\+\.vscode-resource.vscode-cdn.net\//,
-        `${scheme}:///`,
+        /^https:\/\/file\+([^./]*)\.vscode-resource\.vscode-cdn\.net\//,
+        (_match, encodedAuthority: string) => {
+          const authority = encodedAuthority.replace(
+            /-([0-9a-f]{4})/gi,
+            (_m, hex: string) => String.fromCharCode(parseInt(hex, 16)),
+          );
+          return `${scheme}://${authority}/`;
+        },
       )
       .replace(/^https:\/\/.+\.vscode-cdn.net\//, `${scheme}:///`)
       .replace(
