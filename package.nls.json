@@ -2,6 +2,7 @@
   "displayName": "Markdown Preview Enhanced",
   "description": "Markdown Preview Enhanced ported to vscode",
   "customEditorPreviewDisplayName": "Markdown Preview Enhanced",
+  "markdown-preview-enhanced.openGraphView.title": "Markdown Preview Enhanced: Open Graph View",
   "markdown-preview-enhanced.openPreviewToTheSide.title": "Markdown Preview Enhanced: Open Preview to the Side",
   "markdown-preview-enhanced.openPreview.title": "Markdown Preview Enhanced: Open Preview",
   "markdown-preview-enhanced.openLockedPreviewToTheSide.title": "Markdown Preview Enhanced: Open Locked Preview to the Side",

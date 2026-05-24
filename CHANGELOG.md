@@ -31,6 +31,7 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.26](https://
 
 - **Suffix-matching in `shortest` wiki link resolution** — `[[summary/report]]` now resolves to notes whose path ends with that sub-path, disambiguating same-named files in different directories. ([crossnote#434](https://github.com/shd101wyy/crossnote/pull/434), thanks @substitute5)
 - **Replace deprecated `temp` package with Node built-ins** — eliminates four deprecation warnings (`inflight`, `rimraf@2`, `glob@7`, `mkdirp@0.5`) on every install. ([crossnote#437](https://github.com/shd101wyy/crossnote/pull/437), thanks @dougborg)
+- **Localized command titles** — Add translations for 8 languages: 繁體中文, 日本語, 한국어, Français, Español, Português, Nederlands, Türkçe.
 
 ## [0.8.26] - 2026-05-16
 
