@@ -24,6 +24,7 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.26](https://
 - Fix colon fences (`:::name`) being recognized when indented or inside list items — colon fences are now only recognized at the top level with no additional indentation. Fixes [#2275](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2275).
 - Fix preview link clicks not working for workspaces opened on remote hosts (WSL via `\\wsl.localhost\` UNC paths, SSH-Remote) — the webview resource URL authority is now decoded and preserved so `fs.stat` resolves the correct target. ([#2305](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2305), thanks @xxjapp)
 - Fix workspace `.crossnote/style.less` not being applied when the workspace is opened via a UNC network path (`\\server\share\project`) — `getUri()` now uses `vscode.Uri.file()` to correctly decompose UNC paths into authority + path components instead of putting the full filesystem path into the URI `path`. Fixes [#2290](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2290).
+- Fix `enableWikiLinkSyntax` only disabling wikilinks in the preview panel but not in the editor — the setting now also gates editor-side features: wikilink autocomplete, hover preview, Ctrl+Click navigation, and the Copy Block Reference command. Fixes [#2303](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2303).
 
 ### Improvements
 

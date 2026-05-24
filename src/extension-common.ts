@@ -1289,75 +1289,71 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     ),
   );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      'markdown-preview-enhanced.copyBlockReference',
-      copyBlockReference,
-    ),
-  );
+  if (getMPEConfig<boolean>('enableWikiLinkSyntax')) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(
+        'markdown-preview-enhanced.copyBlockReference',
+        copyBlockReference,
+      ),
+    );
+  }
 
   // Wikilink autocomplete:
-  //   - `[[…` / `![[…`  → list workspace notes (and images for `![[`)
-  //   - `[[Note#…`       → list headings in Note
-  //   - `[[Note^…`       → list ^block-id markers in Note
-  // The trigger characters open the suggestion list; the partial text
-  // after each further filters it.  Provider routes by context.
-  // Hold a reference to the provider so its file-system watcher
-  // (used to invalidate the embed-image cache) gets disposed cleanly
-  // alongside the extension.  `registerCompletionItemProvider`
-  // returns a Disposable that unhooks the provider from the language
-  // service, but it doesn't call `dispose()` on the provider object
-  // itself.
-  const wikilinkCompletionProvider = new WikilinkCompletionProvider(
-    notebooksManager,
-  );
-  context.subscriptions.push(
-    vscode.languages.registerCompletionItemProvider(
-      [
-        { language: 'markdown', scheme: 'file' },
-        { language: 'markdown', scheme: 'untitled' },
-        { language: 'quarto', scheme: 'file' },
-        { language: 'quarto', scheme: 'untitled' },
-        { language: 'prompt', scheme: 'file' },
-        { language: 'prompt', scheme: 'untitled' },
-        { language: 'instructions', scheme: 'file' },
-        { language: 'instructions', scheme: 'untitled' },
-        { language: 'chatagent', scheme: 'file' },
-        { language: 'chatagent', scheme: 'untitled' },
-        { language: 'skill', scheme: 'file' },
-        { language: 'skill', scheme: 'untitled' },
-      ],
+  // ...
+  if (getMPEConfig<boolean>('enableWikiLinkSyntax')) {
+    const wikilinkCompletionProvider = new WikilinkCompletionProvider(
+      notebooksManager,
+    );
+    context.subscriptions.push(
+      vscode.languages.registerCompletionItemProvider(
+        [
+          { language: 'markdown', scheme: 'file' },
+          { language: 'markdown', scheme: 'untitled' },
+          { language: 'quarto', scheme: 'file' },
+          { language: 'quarto', scheme: 'untitled' },
+          { language: 'prompt', scheme: 'file' },
+          { language: 'prompt', scheme: 'untitled' },
+          { language: 'instructions', scheme: 'file' },
+          { language: 'instructions', scheme: 'untitled' },
+          { language: 'chatagent', scheme: 'file' },
+          { language: 'chatagent', scheme: 'untitled' },
+          { language: 'skill', scheme: 'file' },
+          { language: 'skill', scheme: 'untitled' },
+        ],
+        wikilinkCompletionProvider,
+        '[',
+        '#',
+        '^',
+      ),
       wikilinkCompletionProvider,
-      '[',
-      '#',
-      '^',
-    ),
-    wikilinkCompletionProvider,
-  );
+    );
+  }
 
   // Hover preview for `[[Note]]`, `[[Note#Heading]]`, `[[Note^block]]`,
   // and the `![[…]]` embed forms.  The provider reads the target
   // file and returns a MarkdownString with the relevant fragment
   // (full file head, heading section, or block content).
-  context.subscriptions.push(
-    vscode.languages.registerHoverProvider(
-      [
-        { language: 'markdown', scheme: 'file' },
-        { language: 'markdown', scheme: 'untitled' },
-        { language: 'quarto', scheme: 'file' },
-        { language: 'quarto', scheme: 'untitled' },
-        { language: 'prompt', scheme: 'file' },
-        { language: 'prompt', scheme: 'untitled' },
-        { language: 'instructions', scheme: 'file' },
-        { language: 'instructions', scheme: 'untitled' },
-        { language: 'chatagent', scheme: 'file' },
-        { language: 'chatagent', scheme: 'untitled' },
-        { language: 'skill', scheme: 'file' },
-        { language: 'skill', scheme: 'untitled' },
-      ],
-      new WikilinkHoverProvider(notebooksManager),
-    ),
-  );
+  if (getMPEConfig<boolean>('enableWikiLinkSyntax')) {
+    context.subscriptions.push(
+      vscode.languages.registerHoverProvider(
+        [
+          { language: 'markdown', scheme: 'file' },
+          { language: 'markdown', scheme: 'untitled' },
+          { language: 'quarto', scheme: 'file' },
+          { language: 'quarto', scheme: 'untitled' },
+          { language: 'prompt', scheme: 'file' },
+          { language: 'prompt', scheme: 'untitled' },
+          { language: 'instructions', scheme: 'file' },
+          { language: 'instructions', scheme: 'untitled' },
+          { language: 'chatagent', scheme: 'file' },
+          { language: 'chatagent', scheme: 'untitled' },
+          { language: 'skill', scheme: 'file' },
+          { language: 'skill', scheme: 'untitled' },
+        ],
+        new WikilinkHoverProvider(notebooksManager),
+      ),
+    );
+  }
 
   // Editor-side `Follow link` (alt+click / Ctrl+click) for
   // `[[Note]]` / `![[Note]]` wikilinks.  Standard
@@ -1367,30 +1363,32 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   // which auto-creates missing markdown notes (Obsidian-style)
   // and jumps to fragment lines for `[[Note#Heading]]` /
   // `[[Note^block]]`.
-  context.subscriptions.push(
-    vscode.languages.registerDocumentLinkProvider(
-      [
-        { language: 'markdown', scheme: 'file' },
-        { language: 'markdown', scheme: 'untitled' },
-        { language: 'quarto', scheme: 'file' },
-        { language: 'quarto', scheme: 'untitled' },
-        { language: 'prompt', scheme: 'file' },
-        { language: 'prompt', scheme: 'untitled' },
-        { language: 'instructions', scheme: 'file' },
-        { language: 'instructions', scheme: 'untitled' },
-        { language: 'chatagent', scheme: 'file' },
-        { language: 'chatagent', scheme: 'untitled' },
-        { language: 'skill', scheme: 'file' },
-        { language: 'skill', scheme: 'untitled' },
-      ],
-      new WikilinkDocumentLinkProvider(notebooksManager),
-    ),
-    vscode.commands.registerCommand(
-      '_crossnote.openWikilinkTarget',
-      (sourceUriString: string, wikilinkBody: string) =>
-        openWikilinkTarget(sourceUriString, wikilinkBody, notebooksManager),
-    ),
-  );
+  if (getMPEConfig<boolean>('enableWikiLinkSyntax')) {
+    context.subscriptions.push(
+      vscode.languages.registerDocumentLinkProvider(
+        [
+          { language: 'markdown', scheme: 'file' },
+          { language: 'markdown', scheme: 'untitled' },
+          { language: 'quarto', scheme: 'file' },
+          { language: 'quarto', scheme: 'untitled' },
+          { language: 'prompt', scheme: 'file' },
+          { language: 'prompt', scheme: 'untitled' },
+          { language: 'instructions', scheme: 'file' },
+          { language: 'instructions', scheme: 'untitled' },
+          { language: 'chatagent', scheme: 'file' },
+          { language: 'chatagent', scheme: 'untitled' },
+          { language: 'skill', scheme: 'file' },
+          { language: 'skill', scheme: 'untitled' },
+        ],
+        new WikilinkDocumentLinkProvider(notebooksManager),
+      ),
+      vscode.commands.registerCommand(
+        '_crossnote.openWikilinkTarget',
+        (sourceUriString: string, wikilinkBody: string) =>
+          openWikilinkTarget(sourceUriString, wikilinkBody, notebooksManager),
+      ),
+    );
+  }
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
