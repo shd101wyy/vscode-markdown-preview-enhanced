@@ -6,7 +6,11 @@ function getUri(
   scheme: string,
   authority: string,
 ): vscode.Uri {
-  return vscode.Uri.from({ scheme, authority, path: filePath });
+  // vscode.Uri.file() correctly decomposes filesystem paths including
+  // UNC paths (\\server\share\...) into proper URI authority + path.
+  // We use its path decomposition and overlay our scheme and authority.
+  const uri = vscode.Uri.file(filePath);
+  return vscode.Uri.from({ scheme, authority, path: uri.path });
 }
 
 export function wrapVSCodeFSAsApi(
