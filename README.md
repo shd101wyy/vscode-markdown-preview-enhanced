@@ -33,6 +33,19 @@ Feel free to ask questions, post issues, submit pull request, and request new fe
 
 For more information about this project and how to use this extension, please check out our documentation ⬇︎
 
+## Privacy
+
+**This extension does not collect, transmit, or share your data with any external service.** The core preview, scroll sync, math typesetting, diagram rendering, and all editor features run entirely on your local machine. No telemetry, no tracking, no phone-home.
+
+- **Markdown content** — rendered locally; never leaves your machine.
+- **Math (KaTeX/MathJax)** — typeset locally or via a CDN JavaScript library you configure (default: jsdelivr).
+- **Diagrams (Mermaid, Graphviz, Vega, WaveDrom, D2, TikZ)** — rendered locally using bundled or system-installed tools.
+- **PlantUML** — rendered via your own PlantUML server (`plantumlServer` config) or a local `.jar` file. Unless explicitly configured to use `kroki.io`, no diagram data is sent to any remote service.
+- **Image upload (imgur, sm.ms, qiniu)** — opt-in only. Requires you to manually trigger the upload and configure API credentials.
+- **Pandoc / ebook / PDF export** — uses locally installed tools; no data is uploaded.
+
+If you have any questions about data handling, please [open an issue](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues).
+
 ## Documentation
 
 To check out the documentation, visit
