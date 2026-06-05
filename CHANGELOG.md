@@ -16,6 +16,7 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.29](https://
 
 ### Bug fixes
 
+- **Simplified Chinese (`zh-cn`) menus now localize** — the bundled Simplified-Chinese translation shipped as `package.nls.zh.json`, but VS Code loads `package.nls.zh-cn.json`, so command/menu titles stayed in English for Simplified-Chinese users. Renamed the file so the translation applies. Partially addresses [#2310](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2310) (most _settings_ descriptions are not yet localizable — tracked as a follow-up).
 - **Faster MathJax rendering** — formula-heavy previews re-render much faster. MathJax 4's accessibility semantic enrichment is now disabled by default (it dominated per-formula typeset cost); re-enable it with `enableEnrichment: true` in your `mathjaxConfig`. Addresses [#2312](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2312).
 
 ## [0.8.27] - 2026-05-24
