@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.29](https://github.com/shd101wyy/crossnote/releases/tag/0.9.29).
+
+### Security
+
+- **WaveDrom arbitrary code execution** — WaveDrom diagrams could run arbitrary JavaScript from a `.md` file (in the live preview, presentation mode, and HTML export). WaveDrom data is now parsed and sanitized as inert JSON, so it can no longer execute code. Fixes [#2315](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2315).
+- **Command injection when opening links/files (Windows)** — opening external links and files from the preview no longer goes through a shell, closing a one-click command-injection issue on Windows. Thanks to @byte16384 for the responsible disclosure.
+
+### Bug fixes
+
+- **Faster MathJax rendering** — formula-heavy previews re-render much faster. MathJax 4's accessibility semantic enrichment is now disabled by default (it dominated per-formula typeset cost); re-enable it with `enableEnrichment: true` in your `mathjaxConfig`. Addresses [#2312](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2312).
+
 ## [0.8.27] - 2026-05-24
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.26](https://github.com/shd101wyy/crossnote/releases/tag/0.9.26) / [0.9.27](https://github.com/shd101wyy/crossnote/releases/tag/0.9.27) / [0.9.28](https://github.com/shd101wyy/crossnote/releases/tag/0.9.28).

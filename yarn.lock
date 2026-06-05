@@ -2534,10 +2534,10 @@ cross-spawn@^7.0.3, cross-spawn@^7.0.6:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@^0.9.28:
-  version "0.9.28"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.28.tgz#3bab68f4dfe1ca08c4280122e3dd9927943c3e0d"
-  integrity sha512-9AaTgWYWxCN5Qb8f1hlMfb9U3UE0v086E6ictZa5xNBA+z8PMUcgayXSLmBPGfZv3u1hugHSaQByMj69RuF2MQ==
+crossnote@0.9.29:
+  version "0.9.29"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.29.tgz#18de19bfdcbf036df5caa709d3fe7e66ad48ff3c"
+  integrity sha512-HKTPPuisnRFk4Mip1W/tMn0ZxnXGGm9fqInIb+rUQeEqiB5udLstlf/5i7ksSdJN8qCw15DgCoJ6y5eMNil4Pw==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
@@ -2577,6 +2577,7 @@ crossnote@^0.9.28:
     ignore "^7.0.5"
     imagemagick-cli "^0.5.0"
     jquery "^3.7.1"
+    json5 "^2.2.3"
     katex "^0.16.47"
     less "^4.2.0"
     markdown-it "^14.1.1"
@@ -5426,6 +5427,11 @@ json-stable-stringify-without-jsonify@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz#9db7b59496ad3f3cfef30a75142d2d930ad72651"
   integrity sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==
+
+json5@^2.2.3:
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/json5/-/json5-2.2.3.tgz#78cd6f1a19bdc12b73db5ad0c61efd66c1e29283"
+  integrity sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==
 
 jsonfile@^4.0.0:
   version "4.0.0"
