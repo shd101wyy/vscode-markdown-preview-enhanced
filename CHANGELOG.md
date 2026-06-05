@@ -11,15 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.29](https://github.com/shd101wyy/crossnote/releases/tag/0.9.29).
 
-### Security
-
-- **WaveDrom arbitrary code execution** — WaveDrom diagrams could run arbitrary JavaScript from a `.md` file (in the live preview, presentation mode, and HTML export). WaveDrom data is now parsed and sanitized as inert JSON, so it can no longer execute code. Fixes [#2315](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2315).
-- **Command injection when opening links/files (Windows)** — opening external links and files from the preview no longer goes through a shell, closing a one-click command-injection issue on Windows. Thanks to @byte16384 for the responsible disclosure.
-
 ### Bug fixes
 
-- **Simplified Chinese (`zh-cn`) menus now localize** — the bundled Simplified-Chinese translation shipped as `package.nls.zh.json`, but VS Code loads `package.nls.zh-cn.json`, so command/menu titles stayed in English for Simplified-Chinese users. Renamed the file so the translation applies. Partially addresses [#2310](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2310) (most _settings_ descriptions are not yet localizable — tracked as a follow-up).
-- **Faster MathJax rendering** — formula-heavy previews re-render much faster. MathJax 4's accessibility semantic enrichment is now disabled by default (it dominated per-formula typeset cost); re-enable it with `enableEnrichment: true` in your `mathjaxConfig`. Addresses [#2312](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2312).
+- **Harden external file/link opening against command injection** — Opening links and files from the preview no longer goes through a shell, and untrusted inputs (the diagram `filename` attribute, imported file paths, and the `latex_engine` code-chunk attribute) are passed as literal arguments or validated before use. This closes a security issue affecting Windows. Thanks to @byte16384 for the responsible disclosure.
+- **Eliminate arbitrary code execution in WaveDrom rendering** — WaveDrom diagrams were parsed by evaluating untrusted markdown content with `eval()`, enabling arbitrary JavaScript execution. This affected every render path: the live preview (`window.eval`), and presentation mode plus HTML export (the bundled `WaveDrom.ProcessAll()`/`eva()` helpers). The live preview now parses with `JSON5.parse()`, and — because a malicious `<script type="WaveDrom">` can also be injected via raw HTML in markdown — the HTML sanitizer now validates and normalizes every WaveDrom data script to inert strict JSON, so no downstream `eval`/`ProcessAll` can execute attacker-controlled code. Fixes the security vulnerability reported in [#2315](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2315).
+- **Replace `interpretJS` with `JSON5.parse` in Bitfield renderer** — Bitfield fenced code blocks were parsed using `interpretJS()` which evaluates user input via `vm.runInNewContext`, enabling arbitrary code execution on the server side. Replaced with `JSON5.parse()` since bitfield register definitions are purely data (arrays of objects).
+- **Improve MathJax 4 rendering performance** — MathJax 4's combined `tex-mml-chtml` component runs accessibility _semantic enrichment_ (the speech-rule-engine) on every typeset, which dominates per-formula cost and made formula-heavy previews re-render slowly on each edit (measured ~890 ms vs ~42 ms for 127 formulas in Chrome — a ~21× difference). Semantic enrichment is now disabled by default (`options.enableEnrichment: false`), restoring MathJax-3-like performance; users who need screen-reader speech output can set `enableEnrichment: true` in their `mathjaxConfig`. Addresses [#2312](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2312).
+
+### Improvements
+
+- **Simplified Chinese (`zh-cn`) localization for menus and settings** — The bundled Simplified-Chinese translation shipped as `package.nls.zh.json`, but VS Code loads `package.nls.zh-cn.json`, so it never applied and menus stayed English; renamed so command/menu titles localize. In addition, all settings descriptions (and enum option descriptions) in the Settings UI — previously hardcoded English — are now localizable via VS Code's NLS mechanism and fully translated to Simplified Chinese. Other display languages fall back to English for the newly-extracted strings until translated. Addresses [#2310](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2310).
 
 ## [0.8.27] - 2026-05-24
 
