@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.28] - 2026-06-05
+
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.29](https://github.com/shd101wyy/crossnote/releases/tag/0.9.29).
 
 ### Security
