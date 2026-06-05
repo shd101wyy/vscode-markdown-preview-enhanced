@@ -20,7 +20,7 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.29](https://
 
 ### Improvements
 
-- **Simplified Chinese (`zh-cn`) localization for menus and settings** — The bundled Simplified-Chinese translation shipped as `package.nls.zh.json`, but VS Code loads `package.nls.zh-cn.json`, so it never applied and menus stayed English; renamed so command/menu titles localize. In addition, all settings descriptions (and enum option descriptions) in the Settings UI — previously hardcoded English — are now localizable via VS Code's NLS mechanism and fully translated to Simplified Chinese. Other display languages fall back to English for the newly-extracted strings until translated. Addresses [#2310](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2310).
+- **Localized menus and settings (incl. Simplified Chinese)** — The bundled Simplified-Chinese translation shipped as `package.nls.zh.json`, but VS Code loads `package.nls.zh-cn.json`, so it never applied and menus stayed English; renamed so command/menu titles localize. In addition, all settings descriptions (and enum option descriptions) in the Settings UI — previously hardcoded English — are now localizable via VS Code's NLS mechanism and translated for every bundled display language (Simplified & Traditional Chinese, Japanese, Korean, Spanish, French, Brazilian Portuguese, Dutch, Turkish). Addresses [#2310](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2310).
 
 ## [0.8.27] - 2026-05-24
 
