@@ -453,6 +453,18 @@
     wrap-ansi "^8.1.0"
     wrap-ansi-cjs "npm:wrap-ansi@^7.0.0"
 
+"@jitl/quickjs-ffi-types@0.32.0":
+  version "0.32.0"
+  resolved "https://registry.yarnpkg.com/@jitl/quickjs-ffi-types/-/quickjs-ffi-types-0.32.0.tgz#43664daea79b1c42d69c262d80ebe743da25dc7d"
+  integrity sha512-v9T+GQpmk43VDJ7d72sf0Nexhk+ArvtUihW27dy7lqAl0zBObFKtSBBIm5RBjwIhE8VwsPPm9PNuvPvNqLWUEg==
+
+"@jitl/quickjs-singlefile-cjs-release-sync@^0.32.0":
+  version "0.32.0"
+  resolved "https://registry.yarnpkg.com/@jitl/quickjs-singlefile-cjs-release-sync/-/quickjs-singlefile-cjs-release-sync-0.32.0.tgz#69a2fc79f7f073ae20b123a68a632f9c0c976683"
+  integrity sha512-NjUUcw26PoeJHND6nmflAH8nIvAJvxJ2qkSPi95wfiBqPim80GtcdWommroiWb8hh1/7fVettEwodAsGt2Mrsg==
+  dependencies:
+    "@jitl/quickjs-ffi-types" "0.32.0"
+
 "@jridgewell/gen-mapping@^0.3.2", "@jridgewell/gen-mapping@^0.3.5":
   version "0.3.8"
   resolved "https://registry.yarnpkg.com/@jridgewell/gen-mapping/-/gen-mapping-0.3.8.tgz#4f0e06362e01362f823d348f1872b08f666d8142"
@@ -2534,13 +2546,14 @@ cross-spawn@^7.0.3, cross-spawn@^7.0.6:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
-crossnote@0.9.29:
-  version "0.9.29"
-  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.29.tgz#18de19bfdcbf036df5caa709d3fe7e66ad48ff3c"
-  integrity sha512-HKTPPuisnRFk4Mip1W/tMn0ZxnXGGm9fqInIb+rUQeEqiB5udLstlf/5i7ksSdJN8qCw15DgCoJ6y5eMNil4Pw==
+crossnote@0.9.30:
+  version "0.9.30"
+  resolved "https://registry.yarnpkg.com/crossnote/-/crossnote-0.9.30.tgz#9a824c949b15cf91f4cb758354a9c0bac2489cb0"
+  integrity sha512-ulFKtHBMiUDXmLvr9MMfAM1GqXCbrKJx1kQFFQx+jjDzWiBgTke/dL9bnmdm0gBiDBGOqhnn7NYB8GlKWYS8hA==
   dependencies:
     "@headlessui/react" "^1.7.17"
     "@heroicons/react" "^2.0.18"
+    "@jitl/quickjs-singlefile-cjs-release-sync" "^0.32.0"
     "@mdi/js" "^7.2.96"
     "@mdi/react" "^1.6.1"
     "@monaco-editor/react" "^4.5.2"
@@ -2603,6 +2616,7 @@ crossnote@0.9.29:
     plantuml-encoder "^1.4.0"
     puppeteer-core "^24.16.2"
     qiniu "^7.9.0"
+    quickjs-emscripten-core "^0.32.0"
     react "^18.2.0"
     react-contexify "^6.0.0"
     react-dom "^18.2.0"
@@ -2610,7 +2624,6 @@ crossnote@0.9.29:
     sharp "^0.33.5"
     simple-icons "^9.13.0"
     slash "^5.1.0"
-    sval "^0.6.9"
     twemoji "^13.1.0"
     type-fest "^4.3.1"
     unstated-next "^1.1.0"
@@ -7228,6 +7241,13 @@ queue-microtask@^1.2.2:
   resolved "https://registry.yarnpkg.com/queue-microtask/-/queue-microtask-1.2.3.tgz#4929228bbc724dfac43e0efb058caf7b6cfb6243"
   integrity sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==
 
+quickjs-emscripten-core@^0.32.0:
+  version "0.32.0"
+  resolved "https://registry.yarnpkg.com/quickjs-emscripten-core/-/quickjs-emscripten-core-0.32.0.tgz#a7b1c923fb57538c2ee543c70a6755df52533b3f"
+  integrity sha512-QFnPfjFey8EqknSrSxe1hZrf1/8z7/6s1QzGOmKo6++02r7QRRX7ZoyNaZh7JuVjWsVW87KnQrbZqnHkOAzUyg==
+  dependencies:
+    "@jitl/quickjs-ffi-types" "0.32.0"
+
 randombytes@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/randombytes/-/randombytes-2.1.0.tgz#df6f84372f0270dc65cdf6291349ab7a473d4f2a"
@@ -8355,13 +8375,6 @@ supports-preserve-symlinks-flag@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz#6eda4bd344a3c94aea376d4cc31bc77311039e09"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
-
-sval@^0.6.9:
-  version "0.6.9"
-  resolved "https://registry.yarnpkg.com/sval/-/sval-0.6.9.tgz#a197b5c141bd6633ba677444481937f65572a56e"
-  integrity sha512-IZszs15QLaH+N79oRhczeucVLK4J8iUFRn3jgVwwHJylc5v0cxZDCX3fA/4uj8xxINpGpVgEojSi3DTNzyd8jA==
-  dependencies:
-    acorn "^8.14.0"
 
 sver-compat@^1.5.0:
   version "1.5.0"

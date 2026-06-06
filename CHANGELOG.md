@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.29] - 2026-06-06
+
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.30](https://github.com/shd101wyy/crossnote/releases/tag/0.9.30).
+
+### Security
+
+- **Fix a remote code execution vulnerability in `.crossnote/config.js` and `.crossnote/parser.js` evaluation**. These workspace files are now evaluated inside a [QuickJS](https://github.com/justjake/quickjs-emscripten) WebAssembly sandbox so untrusted code from a repository can no longer reach the host environment. Thanks to @ritikchaddha for reporting the issue.
+
+### Bug fixes
+
+- **Fix heading auto-ID generation for underscore-based italic/bold** — When a heading used underscore-based emphasis at the beginning or end (e.g., `_Toy Story_` or `__Bold Title__`), the generated heading ID would retain the underscores (e.g., `_toy-story_`), which markdown-it would interpret as emphasis markers, splitting the `{#id data-source-line="N"}` attribute block across multiple tokens and leaving it visible in the rendered output. Heading IDs now strip underscore emphasis markers following CommonMark rules — boundaries include punctuation (`# x _foo bar_! end` → `x-foo-bar-end`), adjacent runs both match (`_a_ _b_` → `a-b`), and intraword underscores are kept (`foo_bar_` → `foo_bar_`) — matching the anchors GitHub generates for the same headings. Additionally, ids embedded in the internal `{#id}` attribute block are now backslash-escaped so that any id still containing `_`/`*` survives inline parsing intact and rendered heading ids always match TOC anchors. Fixes [#2319](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2319). Reported by @skycommand.
+- **Fix `@import` / `![[wikilink]]` file resolution when the file path contains `#`** — When a project directory name contains `#` (e.g., `[#11111111]`), the `@import` and wikilink-based file imports would fail because the `#` in the directory name was incorrectly treated as a heading anchor fragment separator during post-resolution path splitting. The `#fragment` is now extracted from the original import syntax before path resolution, so literal `#` characters in directory paths are preserved (and `%23` can be used to write a literal `#` in import paths). Also fixed line-level `![[note^block-id]]` embeds (bare block reference without `#`), which previously failed to resolve the target block. Fixes [#2317](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2317). Reported by @LY1806620741.
+
 ## [0.8.28] - 2026-06-05
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.29](https://github.com/shd101wyy/crossnote/releases/tag/0.9.29).
