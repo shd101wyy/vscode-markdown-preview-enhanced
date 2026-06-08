@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-- **Fix blind command dispatch via unvalidated webview message handler** — The webview message handler at `preview-provider.ts` blindly dispatched any `_crossnote.{command}` with attacker-supplied arguments, allowing a compromised webview to invoke dangerous commands (e.g. `updateMarkdown`, `chromeExport`, `pandocExport`) with arbitrary parameters. Now enforces a strict allowlist of 37 commands that the webview legitimately sends, validates that `args` is always an array, and — for `updateMarkdown` — verifies that the target URI matches the preview's own source URI. Thanks to @ritikchaddha for the responsible disclosure.
+- **Fix blind command dispatch via unvalidated webview message handler** — The webview message handler at `preview-provider.ts` blindly dispatched any `_crossnote.{command}` with attacker-supplied arguments, allowing a compromised webview to invoke dangerous commands (e.g. `updateMarkdown`, `chromeExport`, `pandocExport`) with arbitrary parameters. Now enforces a strict allowlist of 37 commands that the webview legitimately sends, validates that `args` is always an array, and — for `updateMarkdown` — verifies that the target URI matches the preview's own source URI. Additionally, `updateMarkdown` in `extension-common.ts` now validates that the target path has a markdown file extension, preventing writes to `.bashrc`, `authorized_keys`, or other non-markdown files. Thanks to @ritikchaddha for the responsible disclosure.
 
 ## [0.8.29] - 2026-06-06
 
