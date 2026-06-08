@@ -493,10 +493,21 @@ export class PreviewProvider {
             if (!Array.isArray(args)) {
               return;
             }
+            // The handler is registered once per webview panel.  In single
+            // preview mode the panel is reused across files, so the closure's
+            // `sourceUri` goes stale after a switch — compare against the
+            // panel's current target instead so legitimate `updateMarkdown`
+            // edits are not dropped (and an attacker still can only write to
+            // the file the preview currently represents).
+            const expectedSourceUri =
+              getPreviewMode() === PreviewMode.SinglePreview
+                ? PreviewProvider.singlePreviewPanelSourceUriTarget
+                : sourceUri;
             if (
               command === 'updateMarkdown' &&
               (typeof args[0] !== 'string' ||
-                Uri.parse(args[0]).toString() !== sourceUri.toString())
+                !expectedSourceUri ||
+                Uri.parse(args[0]).toString() !== expectedSourceUri.toString())
             ) {
               return;
             }
