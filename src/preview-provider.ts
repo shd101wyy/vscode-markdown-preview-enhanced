@@ -66,6 +66,53 @@ utility.useExternalAddFileProtocolFunction((filePath, preview) => {
 const WORKSPACE_PREVIEW_PROVIDER_MAP: Map<string, PreviewProvider> = new Map();
 
 /**
+ * Commands the webview is allowed to dispatch to the extension host.
+ * Any command received from the webview that is not in this set is
+ * silently dropped.  This prevents a compromised webview from invoking
+ * arbitrary `_crossnote.*` commands with attacker-controlled arguments
+ * (blind command dispatch, GHSA-83c6-hcjv-pvmg).
+ */
+const WEBVIEW_MESSAGE_COMMANDS: Set<string> = new Set([
+  'cacheCodeChunkResult',
+  'chromeExport',
+  'clickTag',
+  'clickTagA',
+  'clickTaskListCheckbox',
+  'eBookExport',
+  'graphViewReady',
+  'htmlExport',
+  'insertImageUrl',
+  'markdownExport',
+  'openChangelog',
+  'openDocumentation',
+  'openExternalEditor',
+  'openFile',
+  'openGraphView',
+  'openInBrowser',
+  'openIssues',
+  'openSponsors',
+  'pandocExport',
+  'pasteImageFile',
+  'princeExport',
+  'refreshPreview',
+  'revealLine',
+  'runAllCodeChunks',
+  'runCodeChunk',
+  'saveSetting',
+  'setCodeBlockTheme',
+  'setImageUploader',
+  'setPreviewTheme',
+  'setRevealjsTheme',
+  'setZoomLevel',
+  'showBacklinks',
+  'toggleAlwaysShowBacklinksInPreview',
+  'togglePreviewZenMode',
+  'updateMarkdown',
+  'uploadImageFile',
+  'webviewFinishLoading',
+]);
+
+/**
  * key is workspaceUri.toString()
  * value is the `Mutex`
  */
@@ -435,11 +482,25 @@ export class PreviewProvider {
         // register previewPanel message events.
         previewPanel.webview.onDidReceiveMessage(
           (message) => {
-            // console.log('@ receiveMessage: ', message, previewPanel);
-            vscode.commands.executeCommand(
-              `_crossnote.${message.command}`,
-              ...message.args,
-            );
+            const command = message?.command;
+            const args = message?.args;
+            if (
+              typeof command !== 'string' ||
+              !WEBVIEW_MESSAGE_COMMANDS.has(command)
+            ) {
+              return;
+            }
+            if (!Array.isArray(args)) {
+              return;
+            }
+            if (
+              command === 'updateMarkdown' &&
+              (typeof args[0] !== 'string' ||
+                Uri.parse(args[0]).toString() !== sourceUri.toString())
+            ) {
+              return;
+            }
+            vscode.commands.executeCommand(`_crossnote.${command}`, ...args);
           },
           null,
           this.context.subscriptions,
