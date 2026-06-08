@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.31](https://github.com/shd101wyy/crossnote/releases/tag/0.9.31).
+
 ### Security
 
 - **Fix blind command dispatch via unvalidated webview message handler** — The webview message handler at `preview-provider.ts` blindly dispatched any `_crossnote.{command}` with attacker-supplied arguments, allowing a compromised webview to invoke dangerous commands (e.g. `updateMarkdown`, `chromeExport`, `pandocExport`) with arbitrary parameters. Now enforces a strict allowlist of 37 commands that the webview legitimately sends, validates that `args` is always an array, and — for `updateMarkdown` — verifies that the target URI matches the preview's own source URI. Additionally, `updateMarkdown` in `extension-common.ts` now validates that the target path has a markdown file extension, preventing writes to `.bashrc`, `authorized_keys`, or other non-markdown files. Thanks to @ritikchaddha for the responsible disclosure.
+- **Strip `<script>` tags from `.crossnote/head.html` content injected into webview templates** — `.crossnote/head.html` was read raw and injected into the webview's `<head>` without sanitization, executing before the React app and any DOMPurify or CSP defenses. A malicious repository could include scripts in `head.html` that traverse React internals to reach `acquireVsCodeApi()` and send arbitrary messages to the extension host. `resolvePathsInHeader()` now removes all `<script>` tags from the header content before injection. `<style>`, `<meta>`, and `<link>` tags continue to work as before. Fixes [GHSA-mcwg-4j78-qwv3](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/security/advisories/GHSA-mcwg-4j78-qwv3). Thanks to @ritikchaddha for reporting the issue.
+
+### Bug fixes
+
+- **Fix `^block-id` being incorrectly injected inside `$$...$$` display math blocks** — When a display math block contained a line ending with ` ^<single-char>` (e.g. `a ^n` for superscript), the transformer's `^block-id` regex would match it and inject `<span id="n" class="block-id"></span>`, corrupting the LaTeX before it reached either the KaTeX or MathJax renderer. The transformer now tracks display math block boundaries (using the configured `mathBlockDelimiters`) and passes content inside them through verbatim. Fixes [#2321](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2321). Reported by @MZMTab.
+- **Fix invisible scrollbar thumb in dark mode** — The preview scrollbar thumb used a fixed `rgba(150, 150, 150, 0.66)` color that blended into dark backgrounds, making it invisible unless hovered. Now uses VS Code's `--vscode-scrollbarSlider-background` and `--vscode-scrollbarSlider-hoverBackground` CSS variables which adapt to the active color theme, with the original gray as a fallback for non-VSCode contexts. Fixes [#2322](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2322). Reported by @deviesoft.
 
 ## [0.8.29] - 2026-06-06
 
