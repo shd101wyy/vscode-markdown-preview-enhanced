@@ -13,6 +13,7 @@ import {
 } from './config';
 import FileWatcher from './file-watcher';
 import { getAllPreviewProviders } from './preview-provider';
+import * as path from 'path';
 import {
   getWorkspaceFolderUri,
   globalConfigPath,
@@ -28,6 +29,7 @@ class NotebooksManager {
     MarkdownPreviewEnhancedConfig.getCurrentConfig();
 
   private failedNotebookPaths: Set<string> = new Set();
+  private cachedBrowserExportDarkHeader: string | null = null;
 
   constructor(private context: vscode.ExtensionContext) {
     this.fileWatcher = new FileWatcher(this.context, this);
@@ -141,14 +143,75 @@ class NotebooksManager {
       vscodeMPEConfig.previewColorScheme,
     );
 
+    // crossnote's generateHTMLTemplateForExport hardcodes github-light.css
+    // If crossnote fixes this problem one day, just remove this method
+    const browserExportDarkHeader = await this.buildBrowserExportDarkHeader();
+
+    let includeInHeader =
+      (globalConfig.includeInHeader ?? '') +
+      (workspaceConfig.includeInHeader ?? '');
+
+    if (browserExportDarkHeader) {
+      includeInHeader = browserExportDarkHeader + includeInHeader;
+    }
+
     return {
       ...vscodeMPEConfig,
       ...globalConfig,
       ...workspaceConfig,
       globalCss:
         (globalConfig.globalCss ?? '') + (workspaceConfig.globalCss ?? ''),
+      includeInHeader,
       previewTheme,
     };
+  }
+
+  /**
+   * Build the <head> content for browser-exported HTML to support dark mode.
+   */
+  private async buildBrowserExportDarkHeader(): Promise<string> {
+    if (this.cachedBrowserExportDarkHeader !== null) {
+      return this.cachedBrowserExportDarkHeader;
+    }
+
+    let header = '<meta name="color-scheme" content="light dark">';
+
+    if (isVSCodeWebExtension()) {
+      this.cachedBrowserExportDarkHeader = '';
+      return '';
+    }
+
+    try {
+      const previewDark = await this.readCrossnoteCSS(
+        'styles/preview_theme/github-dark.css',
+      );
+      // Scope to body[for="html-export"] so it never affects VSCode webview
+      header += this.wrapDarkThemeCSS(
+        previewDark.replace(/html\s+body/g, 'html body[for="html-export"]'),
+      );
+
+      const prismDark = await this.readCrossnoteCSS(
+        'styles/prism_theme/github-dark.css',
+      );
+      header += this.wrapDarkThemeCSS(prismDark);
+    } catch (error) {
+      console.error('[MPE] Failed to load dark theme CSS:', error);
+    }
+
+    this.cachedBrowserExportDarkHeader = header;
+    return header;
+  }
+
+  private async readCrossnoteCSS(relativePath: string): Promise<string> {
+    const uri = vscode.Uri.file(
+      path.join(this.context.extensionPath, 'crossnote', relativePath),
+    );
+    const bytes = await vscode.workspace.fs.readFile(uri);
+    return Buffer.from(bytes).toString('utf-8');
+  }
+
+  private wrapDarkThemeCSS(css: string): string {
+    return `<style>@media (prefers-color-scheme: dark) { ${css} }</style>`;
   }
 
   public setSystemColorScheme(colorScheme: 'light' | 'dark') {
