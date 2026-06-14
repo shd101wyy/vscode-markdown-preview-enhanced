@@ -902,7 +902,7 @@
     "@typescript-eslint/parser": "^8",
     "@vscode/test-web": "^0.0.80",
     "concurrently": "^8.2.1",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.1",
     "esbuild-plugin-polyfill-node": "^0.3.0",
     "eslint": "^10",
     "gulp": "^4.0.2",
