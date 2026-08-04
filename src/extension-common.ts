@@ -2,6 +2,7 @@
 import { PreviewMode, utility } from 'crossnote';
 import { SHA256 } from 'crypto-js';
 import * as vscode from 'vscode';
+import { setAiTranslatorContext, promptAndStoreApiKey } from './ai-translator';
 import { WikilinkCompletionProvider } from './block-id-completion-provider';
 import { WikilinkHoverProvider } from './wikilink-hover-provider';
 import {
@@ -41,6 +42,7 @@ if (hideDefaultVSCodeMarkdownPreviewButtons) {
 }
 
 export async function initExtensionCommon(context: vscode.ExtensionContext) {
+  setAiTranslatorContext(context);
   const notebooksManager = new NotebooksManager(context);
   try {
     await notebooksManager.updateWorkbenchEditorAssociationsBasedOnPreviewMode();
@@ -411,6 +413,18 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const sourceUri = vscode.Uri.parse(uri);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.openInBrowser(sourceUri);
+  }
+
+  async function translateDocument(uri: string) {
+    const sourceUri = vscode.Uri.parse(uri);
+    const previewProvider = await getPreviewContentProvider(sourceUri);
+    previewProvider.translateDocument(sourceUri);
+  }
+
+  async function restoreOriginal(uri: string) {
+    const sourceUri = vscode.Uri.parse(uri);
+    const previewProvider = await getPreviewContentProvider(sourceUri);
+    previewProvider.restoreOriginal(sourceUri);
   }
 
   async function htmlExport(uri: string, offline: boolean) {
@@ -1521,6 +1535,20 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.translateDocument',
+      translateDocument,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.restoreOriginal',
+      restoreOriginal,
+    ),
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand('_crossnote.htmlExport', htmlExport),
   );
 
@@ -1665,6 +1693,46 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'markdown-preview-enhanced.customizePreviewHtmlHeadInWorkspace',
       customizePreviewHtmlHeadInWorkspace,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.setAiTranslationApiKey',
+      async () => {
+        await promptAndStoreApiKey();
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.translateNow',
+      async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+          vscode.window.showWarningMessage('Open a markdown file first.');
+          return;
+        }
+        const previewProvider = await getPreviewContentProvider(
+          editor.document.uri,
+        );
+        previewProvider.translateDocument(editor.document.uri);
+      },
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.showOriginalTranslation',
+      async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+          vscode.window.showWarningMessage('Open a markdown file first.');
+          return;
+        }
+        const previewProvider = await getPreviewContentProvider(
+          editor.document.uri,
+        );
+        previewProvider.restoreOriginal(editor.document.uri);
+      },
     ),
   );
 

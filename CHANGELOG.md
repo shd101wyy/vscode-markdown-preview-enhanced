@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.31] - 2026-08-04
+
+Updated [crossnote](https://github.com/loorr/crossnote) to [0.9.32](https://github.com/loorr/crossnote/releases/tag/0.9.32).
+
+### New features
+
+- **AI translation preview** — Translate the current Markdown preview into Chinese and switch back to the original content. Translations are cached by document and Markdown block so contiguous changed blocks can be retranslated after edits without retranslating the entire document.
+- **New AI translation commands** — Add commands to set the AI translation API key, translate the current preview, and show the original content. API keys are stored securely using VS Code SecretStorage.
+
+### New settings
+
+- `markdown-preview-enhanced.aiTranslationProvider` — Set the AI translation provider ID, such as `openai`, `anthropic`, `minimax-cn`, or `deepseek`.
+- `markdown-preview-enhanced.aiTranslationModel` — Set the model ID used by the selected provider.
+- `markdown-preview-enhanced.aiTranslationAutoUpdate` — Automatically retranslate changed blocks three seconds after typing stops while translation mode is active. Disabled by default to avoid unexpected API usage.
+
 ## [0.8.30] - 2026-06-08
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.31](https://github.com/shd101wyy/crossnote/releases/tag/0.9.31).
