@@ -451,8 +451,6 @@ export class PreviewProvider {
           enableScripts: true,
           localResourceRoots,
         };
-        // @ts-expect-error retainContextWhenHidden is not in type definitions
-        previewPanel.options.retainContextWhenHidden = true;
       } else {
         previewPanel = vscode.window.createWebviewPanel(
           'markdown-preview-enhanced',
