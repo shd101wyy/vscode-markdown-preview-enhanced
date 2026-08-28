@@ -132,17 +132,19 @@ const webConfig = {
  *
  * @param {string} packageName
  * @param {(pkgDir: string) => string} resolveWithinPackage
- * @returns {string | undefined}
+ * @returns {{ found: string | undefined, tried: string[] }}
  */
 function findInPackage(packageName, resolveWithinPackage) {
+  const tried = [];
   const bases = [
     join(__dirname, 'node_modules'),
     join(__dirname, 'node_modules', 'crossnote', 'node_modules'),
   ];
   for (const base of bases) {
     const candidate = resolveWithinPackage(join(base, packageName));
+    tried.push(candidate);
     if (existsSync(candidate)) {
-      return candidate;
+      return { found: candidate, tried };
     }
   }
 
@@ -161,12 +163,13 @@ function findInPackage(packageName, resolveWithinPackage) {
       const candidate = resolveWithinPackage(
         join(pnpmStore, d, 'node_modules', packageName),
       );
+      tried.push(candidate);
       if (existsSync(candidate)) {
-        return candidate;
+        return { found: candidate, tried };
       }
     }
   }
-  return undefined;
+  return { found: undefined, tried };
 }
 
 /**
@@ -175,11 +178,14 @@ function findInPackage(packageName, resolveWithinPackage) {
  * path.join(__dirname, '../tex') at runtime.
  */
 function copyTikzjaxTexFiles() {
-  const tikzjaxTexDir = findInPackage('node-tikzjax', (pkgDir) =>
-    join(pkgDir, 'tex'),
+  const { found: tikzjaxTexDir, tried } = findInPackage(
+    'node-tikzjax',
+    (pkgDir) => join(pkgDir, 'tex'),
   );
   if (!tikzjaxTexDir) {
-    throw new Error('node-tikzjax tex directory not found');
+    throw new Error(
+      `node-tikzjax tex directory not found. Tried:\n${tried.join('\n')}`,
+    );
   }
   const outTexDir = join(__dirname, 'out', 'tex');
   mkdirSync(outTexDir, { recursive: true });
@@ -197,12 +203,14 @@ function copyTikzjaxTexFiles() {
  * exist at the resolved path.
  */
 function copyXhrSyncWorker() {
-  const workerSrc = findInPackage('jsdom', (pkgDir) =>
+  const { found: workerSrc, tried } = findInPackage('jsdom', (pkgDir) =>
     join(pkgDir, 'lib', 'jsdom', 'living', 'xhr', 'xhr-sync-worker.js'),
   );
 
   if (!workerSrc) {
-    console.warn('Could not find jsdom xhr-sync-worker.js, skipping copy');
+    console.warn(
+      `Could not find jsdom xhr-sync-worker.js, skipping copy. Tried:\n${tried.join('\n')}`,
+    );
     return;
   }
   const outNativeDir = join(__dirname, 'out', 'native');
@@ -212,12 +220,14 @@ function copyXhrSyncWorker() {
 }
 
 function copyMarkdownYoWasm() {
-  const wasmSrc = findInPackage('markdown_yo', (pkgDir) =>
+  const { found: wasmSrc, tried } = findInPackage('markdown_yo', (pkgDir) =>
     join(pkgDir, 'markdown_yo_wasm_api.wasm'),
   );
 
   if (!wasmSrc) {
-    console.warn('Could not find markdown_yo WASM, skipping copy');
+    console.warn(
+      `Could not find markdown_yo WASM, skipping copy. Tried:\n${tried.join('\n')}`,
+    );
     return;
   }
   const outNativeDir = join(__dirname, 'out', 'native');
