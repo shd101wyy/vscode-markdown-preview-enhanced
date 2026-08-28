@@ -33,12 +33,21 @@ jobs:
           path: 'CHANGELOG.md'
       - name: Publish extension to Visual Studio Marketplace
         id: create_vsix
+        # A marketplace publish failure (e.g. an expired/missing
+        # VS_MARKETPLACE_TOKEN) must not fail the workflow: the vsix is still
+        # packaged (vsixPath is set before publishing), so Open VSX, the
+        # GitHub release, and the vsix attachment all proceed. Update the
+        # VS_MARKETPLACE_TOKEN secret and re-run this workflow to retry the
+        # publish; skipDuplicate makes re-runs safe for already-published
+        # versions.
+        continue-on-error: true
         uses: HaaLeo/publish-vscode-extension@v1
         with:
           dryRun: ${{ github.ref != 'refs/heads/master' }}
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
           dependencies: false
+          skipDuplicate: true
       - name: Publish extension to Open VSX
         uses: HaaLeo/publish-vscode-extension@v1
         with:
@@ -47,8 +56,15 @@ jobs:
           registryUrl: https://open-vsx.org
           extensionFile: ${{ steps.create_vsix.outputs.vsixPath }}
           dependencies: false
+          # Keeps workflow re-runs green when the version is already published.
+          skipDuplicate: true
+      - name: Warn about Visual Studio Marketplace publish failure
+        if: steps.create_vsix.outcome == 'failure'
+        run: |
+          echo "::warning::Publishing to the Visual Studio Marketplace failed (often caused by an invalid or missing VS_MARKETPLACE_TOKEN). Everything else succeeded."
+          echo "::warning::To retry: update the VS_MARKETPLACE_TOKEN secret, then re-run this workflow. Already-published versions are skipped (skipDuplicate)."
       - name: Create a Release
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && steps.create_vsix.outputs.vsixPath != ''
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -58,7 +74,7 @@ jobs:
           release_name: ${{ steps.package_version.outputs.current-version}}
           body: ${{ steps.changelog_reader.outputs.changes }}
       - name: Attach vsix to release
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && steps.create_vsix.outputs.vsixPath != ''
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
