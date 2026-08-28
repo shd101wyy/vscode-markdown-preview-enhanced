@@ -24,24 +24,27 @@ This is the **VS Code extension** for Markdown Preview Enhanced. It wraps the [c
 
 - **Single quotes** everywhere (Prettier-enforced)
 - **TypeScript**: `strict: true` — no implicit `any`
-- Package manager: **yarn** (not npm or pnpm)
+- Package manager: **pnpm** (not npm or yarn), pinned via the `packageManager` field in `package.json`
+- **nix shell**: the dev environment (node, pnpm, vsce, playwright browsers) is provided by `flake.nix` → `shell.nix`. With direnv (`use flake` in `.envrc`) the tools are available automatically; otherwise prefix commands with `nix develop -c` (e.g. `nix develop -c pnpm build`).
 
 ### Build & Lint
 
-- Build: `yarn build`
-- Lint: `yarn check:all` (ESLint + Prettier + tsc)
-- Fix: `yarn fix:all`
-- Watch mode (for extension dev): `yarn watch`
+- Build: `pnpm build`
+- Lint: `pnpm check:all` (ESLint + Prettier + tsc)
+- Fix: `pnpm fix:all`
+- Watch mode (for extension dev): `pnpm watch`
 
 ### Working with Local crossnote
 
 The extension depends on `crossnote` as a local path dependency. When making changes to crossnote:
 
 1. In `~/Workspace/crossnote`: run `pnpm build`
-2. In this repo: run `yarn add ../crossnote` to update `node_modules/crossnote` with the new build
-3. Then run `yarn build` to rebundle the extension
+2. In this repo: run `pnpm add ../crossnote` to update `node_modules/crossnote` with the new build
+3. Then run `pnpm build` to rebundle the extension
 
-> **Note**: `yarn install` copies the local package rather than symlinking, so you must re-run `yarn add ../crossnote` after any crossnote build to pick up changes.
+> **Note**: pnpm copies `file:` dependencies into its virtual store (`node_modules/.pnpm`) rather than symlinking the source directory, so you must re-run `pnpm add ../crossnote` after any crossnote build to pick up changes.
+
+> **Note**: pnpm 10 blocks dependency build scripts by default, so `pnpm install` warns about "Ignored build scripts" (esbuild, sharp, fsevents, …). This is expected — those packages work via prebuilt platform binaries, and playwright browsers are provided by the nix shell.
 
 ## Extension Bundling Notes
 
@@ -54,9 +57,9 @@ The native extension (`out/native/extension.js`) is bundled by esbuild with `pla
 
 ## Testing
 
-- Run tests: `yarn test`
+- Run tests: `pnpm test`
 - For manual testing, press **F5** in VS Code to launch the Extension Development Host.
-- After making changes to `build.js` or `src/`, run `yarn build` then reload the Extension Development Host (`Developer: Reload Window`).
+- After making changes to `build.js` or `src/`, run `pnpm build` then reload the Extension Development Host (`Developer: Reload Window`).
 
 ## Adding New Settings
 

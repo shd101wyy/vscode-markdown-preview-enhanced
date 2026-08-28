@@ -14,12 +14,13 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '20'
+      - name: 'Install pnpm'
+        uses: pnpm/action-setup@v4
+        # The pnpm version is read from the packageManager field in package.json
       - name: Install dependencies
-        run: |
-          corepack enable
-          yarn install
+        run: pnpm install --frozen-lockfile
       - name: Build
-        run: yarn run build
+        run: pnpm run build
       - name: Get current package version
         id: package_version
         uses: martinbeentjes/npm-get-version-action@v1.1.0
@@ -37,7 +38,7 @@ jobs:
           dryRun: ${{ github.ref != 'refs/heads/master' }}
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
-          yarn: true
+          dependencies: false
       - name: Publish extension to Open VSX
         uses: HaaLeo/publish-vscode-extension@v1
         with:
@@ -45,7 +46,7 @@ jobs:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           registryUrl: https://open-vsx.org
           extensionFile: ${{ steps.create_vsix.outputs.vsixPath }}
-          yarn: true
+          dependencies: false
       - name: Create a Release
         if: github.ref == 'refs/heads/master'
         id: create_release

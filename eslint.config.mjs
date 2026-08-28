@@ -26,7 +26,6 @@ export default tseslint.config(
       'build.js',
       'gulpfile.js',
       'eslint.config.mjs',
-      '.yarn/**',
       'test/**',
       'media/**',
       'prettier.config.js',

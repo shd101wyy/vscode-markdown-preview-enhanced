@@ -195,8 +195,7 @@ async function resolveWikilinkUri(
   // resolver path and the legacy fallback use the same configured
   // `wikiLinkTargetFileExtension`.
   let notebook:
-    | Awaited<ReturnType<NotebooksManager['getNotebook']>>
-    | undefined;
+    Awaited<ReturnType<NotebooksManager['getNotebook']>> | undefined;
   if (notebooksManager) {
     try {
       notebook = await notebooksManager.getNotebook(sourceUri);
