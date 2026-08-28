@@ -7,6 +7,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -63,23 +65,22 @@ jobs:
         run: |
           echo "::warning::Publishing to the Visual Studio Marketplace failed (often caused by an invalid or missing VS_MARKETPLACE_TOKEN). Everything else succeeded."
           echo "::warning::To retry: update the VS_MARKETPLACE_TOKEN secret, then re-run this workflow. Already-published versions are skipped (skipDuplicate)."
-      - name: Create a Release
+      # Idempotent across workflow re-runs: an existing release is kept and
+      # only the vsix asset is (re-)uploaded, so retrying a marketplace
+      # publish after updating VS_MARKETPLACE_TOKEN stays green.
+      - name: Create or update GitHub Release
         if: github.ref == 'refs/heads/master' && steps.create_vsix.outputs.vsixPath != ''
-        id: create_release
-        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name : ${{ steps.package_version.outputs.current-version}}
-          release_name: ${{ steps.package_version.outputs.current-version}}
-          body: ${{ steps.changelog_reader.outputs.changes }}
-      - name: Attach vsix to release
-        if: github.ref == 'refs/heads/master' && steps.create_vsix.outputs.vsixPath != ''
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.create_vsix.outputs.vsixPath}}
-          asset_name: ${{ steps.create_vsix.outputs.vsixPath}}
-          asset_content_type: application/vsix
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.package_version.outputs.current-version }}"
+          VSIX_PATH="${{ steps.create_vsix.outputs.vsixPath }}"
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES_EOF'
+          ${{ steps.changelog_reader.outputs.changes }}
+          NOTES_EOF
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists, only (re-)uploading the vsix asset"
+          else
+            gh release create "$VERSION" --target "$GITHUB_SHA" --title "$VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"
+          fi
+          gh release upload "$VERSION" "$VSIX_PATH" --clobber
