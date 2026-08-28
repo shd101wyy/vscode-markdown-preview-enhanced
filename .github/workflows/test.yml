@@ -32,7 +32,11 @@ jobs:
           pnpm run check:all
           pnpm run build
           # pnpm test
-          vsce package
+          # --no-dependencies: vsce's built-in dependency check runs
+          # `npm list`, which fails on pnpm's symlinked node_modules layout.
+          # The extension is fully bundled by esbuild, so runtime
+          # dependencies don't need to be analyzed.
+          vsce package --no-dependencies
           ls -lah *.vsix
       - name: Dry run publish to Visual Studio Marketplace
         id: dry_run_vsix
