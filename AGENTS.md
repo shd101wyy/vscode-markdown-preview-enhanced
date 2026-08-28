@@ -57,7 +57,7 @@ The native extension (`out/native/extension.js`) is bundled by esbuild with `pla
 
 ## Testing
 
-- Run tests: `pnpm test`
+- Run tests: `pnpm test` (alias for `pnpm test:unit`, the mocha unit tests in `test/`)
 - For manual testing, press **F5** in VS Code to launch the Extension Development Host.
 - After making changes to `build.js` or `src/`, run `pnpm build` then reload the Extension Development Host (`Developer: Reload Window`).
 
