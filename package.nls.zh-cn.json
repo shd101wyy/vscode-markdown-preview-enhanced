@@ -125,5 +125,6 @@
   "markdown-preview-enhanced.alwaysShowBacklinksInPreview.description": "始终在预览中显示反向链接。",
   "markdown-preview-enhanced.enablePreviewZenMode.description": "启用此选项将隐藏预览中不必要的 UI 元素，除非鼠标悬停其上。",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "启用后，预览中的右键菜单将继承 VS Code 的主题颜色和字体，而非默认样式。",
+  "markdown-preview-enhanced.enablePreviewContextMenu.description": "在预览中显示扩展的自定义右键菜单。关闭后将回退到浏览器原生右键菜单，保留惯用的复制/粘贴等条目。",
   "markdown-preview-enhanced.enableImageLightbox.description": "点击预览中的图片可在全屏灯箱叠层中查看。按 Escape 或点击背景关闭。"
 }
