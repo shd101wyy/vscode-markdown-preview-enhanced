@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **Localize the preview webview UI** — The preview's UI widgets (context menu, footer, topbar, backlinks, in-preview markdown editor, image helper, floating actions) now follow the VS Code display language (`vscode.env.language`), covering the same ten locales as this extension's settings: English, 简体中文, 繁體中文, 日本語, 한국어, Español, Français, Nederlands, Português (Brasil) and Türkçe. The translations live in crossnote and fall back to English for anything missing. Requires the accompanying crossnote release; against crossnote 0.9.31 the webview remains English.
+
 ## [0.8.30] - 2026-06-08
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.31](https://github.com/shd101wyy/crossnote/releases/tag/0.9.31).
