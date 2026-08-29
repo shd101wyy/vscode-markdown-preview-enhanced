@@ -2,14 +2,8 @@
   description = "A very basic flake";
 
   inputs = {
-    nixpkgs = {
-      url = "github:NixOS/nixpkgs/nixos-25.11";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    unstableNixpkgs = {
-      url = "github:NixOS/nixpkgs/nixos-unstable";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    unstableNixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils = {
       url = "github:numtide/flake-utils";
     };
@@ -29,7 +23,7 @@
         unstablePkgs = import unstableNixpkgs { inherit system; };
       in
       {
-        devShell = import ./shell.nix {
+        devShells.default = import ./shell.nix {
           inherit pkgs;
           inherit unstablePkgs;
         };
