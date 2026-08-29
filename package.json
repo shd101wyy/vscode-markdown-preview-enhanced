@@ -21,23 +21,24 @@
     "mavaddat"
   ],
   "publisher": "shd101wyy",
+  "packageManager": "pnpm@10.28.0",
   "main": "./out/native/extension.js",
   "browser": "./out/web/extension.js",
   "scripts": {
     "build": "gulp copy-files && gulp clean-out && node build.js",
-    "check:all": "yarn check:eslint && yarn check:prettier",
+    "check:all": "pnpm check:eslint && pnpm check:prettier",
     "check:eslint": "eslint \"**/*\"",
     "check:prettier": "prettier --check \"**/*.*\"",
-    "fix:all": "yarn fix:eslint && yarn fix:eslint && yarn fix:prettier",
+    "fix:all": "pnpm fix:eslint && pnpm fix:prettier",
     "fix:eslint": "eslint --fix \"**/*\"",
     "fix:prettier": "prettier --write \"**/*.*\"",
     "prepare": "husky",
     "run-in-browser": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\"",
     "run-in-browser:watch": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
-    "test": "yarn build && node ./node_modules/vscode/bin/test",
+    "test": "pnpm test:unit",
     "test:unit": "mocha --ui tdd --reporter spec test/find-fragment-target-line.test.js test/block-id-helpers.test.js test/rank-by-closeness.test.js",
-    "vscode:prepublish": "yarn install && yarn build",
+    "vscode:prepublish": "pnpm install --frozen-lockfile && pnpm build",
     "watch": "gulp copy-files && gulp clean-out && node build.js --watch"
   },
   "contributes": {
@@ -920,6 +921,11 @@
   },
   "engines": {
     "vscode": "^1.70.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "less": "4.2.2"
+    }
   },
   "icon": "media/mpe.png"
 }

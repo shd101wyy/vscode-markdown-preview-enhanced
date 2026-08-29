@@ -14,6 +14,9 @@ flake.lock
 flake.nix
 shell.nix
 node_modules
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
 .eslintignore
 .prettierignore
 build.js
