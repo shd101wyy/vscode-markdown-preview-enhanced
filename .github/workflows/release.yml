@@ -63,7 +63,12 @@ jobs:
         run: |
           TODAY=$(date +%F)
           # rename [Unreleased] to the new version and prepend a fresh [Unreleased] section
-          perl -0pi -e "s/^## \[Unreleased\]\n/## [Unreleased]\n\n## [$ENV{NEW_VERSION}] - $ENV{TODAY}\n/m" CHANGELOG.md
+          # Single quotes are required: in double quotes bash expands `$ENV` (undefined)
+          # to an empty string before perl ever sees the pattern — the identical bug
+          # failed crossnote's release workflow on its first real dispatch. TODAY must
+          # be exported for perl's %ENV.
+          export TODAY
+          perl -0pi -e 's/^## \[Unreleased\]\n/## [Unreleased]\n\n## [$ENV{NEW_VERSION}] - $ENV{TODAY}\n/m' CHANGELOG.md
           grep -q "## \[$NEW_VERSION\] - $TODAY" CHANGELOG.md
 
       - name: Get Changelog Entry
