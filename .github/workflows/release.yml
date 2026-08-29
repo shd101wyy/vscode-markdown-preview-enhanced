@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          # full history so we can push the release commit and tag
+          # full history so we can push the release branch and tag
           fetch-depth: 0
 
       - name: Install nodejs 20
@@ -112,14 +112,18 @@ jobs:
           echo "::warning::Publishing to the Visual Studio Marketplace failed (often caused by an invalid or missing VS_MARKETPLACE_TOKEN). Everything else succeeded."
           echo "::warning::To retry: update the VS_MARKETPLACE_TOKEN secret, then re-run this workflow. Already-published versions are skipped (skipDuplicate)."
 
-      - name: Commit, tag and push
+      - name: Commit, tag and push the release branch
         env:
           NEW_VERSION: ${{ steps.bump.outputs.new-version }}
         run: |
           git add package.json CHANGELOG.md
           git commit -m "$NEW_VERSION"
           git tag "$NEW_VERSION"
-          git push origin HEAD:master
+          # master is branch-protected and slated for deprecation — the
+          # release commit lives on release/v<version> and merges back to
+          # develop via the PR below; a direct push to master is both
+          # rejected (GH006) and unnecessary.
+          git push origin "HEAD:refs/heads/release/v$NEW_VERSION"
           git push origin "refs/tags/$NEW_VERSION"
 
       # Idempotent across workflow re-runs: an existing release is kept and
@@ -137,7 +141,8 @@ jobs:
           if gh release view "$NEW_VERSION" > /dev/null 2>&1; then
             echo "Release $NEW_VERSION already exists, only (re-)uploading the vsix asset"
           else
-            gh release create "$NEW_VERSION" --target master --title "$NEW_VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"
+            # The tag already points at the release commit — no --target needed.
+            gh release create "$NEW_VERSION" --title "$NEW_VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"
           fi
           gh release upload "$NEW_VERSION" "$VSIX_PATH" --clobber
 
@@ -146,7 +151,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEW_VERSION: ${{ steps.bump.outputs.new-version }}
         run: |
-          git push origin "HEAD:refs/heads/release/v$NEW_VERSION"
           gh pr create \
             --base develop \
             --head "release/v$NEW_VERSION" \

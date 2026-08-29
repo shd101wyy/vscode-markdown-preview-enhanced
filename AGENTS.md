@@ -71,7 +71,7 @@ What the workflow does, in order:
 2. Bumps `package.json` (`npm version <level>`)
 3. Rewrites `CHANGELOG.md`: renames `## [Unreleased]` to `## [X.Y.Z] - <today>` and prepends a fresh empty `## [Unreleased]` section — **write changelog entries under `[Unreleased]` before dispatching a release**
 4. Publishes to the Visual Studio Marketplace (tolerated failure — re-run after fixing `VS_MARKETPLACE_TOKEN`; `skipDuplicate` keeps re-runs safe) and Open VSX
-5. Commits the bump + changelog, tags it, pushes to `master` + tag, creates/updates the GitHub Release with the `.vsix` attached
+5. Commits the bump + changelog on a `release/vX.Y.Z` branch, tags it, pushes the branch + tag, creates/updates the GitHub Release with the `.vsix` attached (master is deprecated and not pushed to)
 6. Opens a `release/vX.Y.Z` → `develop` PR, approves it via the `RELEASE_TOKEN` secret, and auto-merges it
 
 ### Branch protection on `develop`
