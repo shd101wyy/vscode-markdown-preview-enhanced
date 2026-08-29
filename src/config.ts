@@ -29,6 +29,7 @@ type VSCodeMPEConfigKey =
   | 'automaticallyShowPreviewOfMarkdownBeingEdited'
   | 'configPath'
   | 'enableImageLightbox'
+  | 'enablePreviewScripts'
   | 'imageUploader'
   | 'hideDefaultVSCodeMarkdownPreviewButtons'
   | 'liveUpdate'
@@ -88,6 +89,15 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly pandocArguments: string[];
   public readonly latexEngine: string;
   public readonly enableScriptExecution: boolean;
+  /**
+   * Whether user-provided preview scripts may run in the preview webview.
+   * Application-scope setting: repository-provided `.vscode/settings.json`
+   * cannot enable it. Unlike the other fields above, this one is never
+   * merged into crossnote's `NotebookConfig` (which repository-controlled
+   * `.crossnote/config.js` files contribute to) — it is applied to the
+   * `Notebook` object itself by `NotebooksManager.applyPreviewScripts()`.
+   */
+  public readonly enablePreviewScripts: boolean;
   public readonly enableHTML5Embed: boolean;
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public readonly HTML5EmbedUseImageSyntax: boolean;
@@ -232,6 +242,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.enableScriptExecution =
       getMPEConfig<boolean>('enableScriptExecution') ??
       defaultConfig.enableScriptExecution;
+    this.enablePreviewScripts =
+      getMPEConfig<boolean>('enablePreviewScripts') ?? false;
 
     this.scrollSync = getMPEConfig<boolean>('scrollSync') ?? true;
     this.liveUpdate = getMPEConfig<boolean>('liveUpdate') ?? true;

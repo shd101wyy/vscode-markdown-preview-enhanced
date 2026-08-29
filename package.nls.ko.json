@@ -102,6 +102,7 @@
   "markdown-preview-enhanced.pandocArguments.description": "pandoc 명령에 전달되는 인수입니다. 예: [\"--smart\", \"--filter=/bin/exe\"]. 긴 인수 이름을 사용하세요.",
   "markdown-preview-enhanced.latexEngine.description": "Pandoc 내보내기 및 latex 코드 청크의 기본 latex 엔진입니다.",
   "markdown-preview-enhanced.enableScriptExecution.description": "코드 청크 실행 및 JavaScript 파일 가져오기를 활성화합니다.\n⚠️ 이 기능은 보안 위험을 초래할 수 있으므로 주의해서 사용하세요! 스크립트 실행이 활성화된 상태에서 악성 코드가 포함된 Markdown을 열도록 유도되면 컴퓨터가 해킹될 수 있습니다.",
+  "markdown-preview-enhanced.enablePreviewScripts.description": "사용자 제공 미리보기 스크립트를 활성화합니다: `.crossnote/head.html`의 `<script src>` 태그와 `@import \"*.js\"`로 가져온 파일.\n워크스페이스 내부의 파일만 로드할 수 있으며, 인라인 스크립트와 원격 URL은 절대 실행되지 않습니다.\n⚠️ 이 기능은 신중하게 사용하세요. 스크립트는 미리보기 webview에서 실행되므로 악성 리포지토리가 미리보기의 권한을 악용할 수 있습니다. 이 설정은 사용자 설정에서만 변경할 수 있으며, 신뢰할 수 없는 워크스페이스에서는 무시됩니다.",
   "markdown-preview-enhanced.enableHTML5Embed.description": "오디오/비디오 링크를 HTML5 임베드 audio/video 태그로 변환하는 기능을 활성화합니다.",
   "markdown-preview-enhanced.HTML5EmbedUseImageSyntax.description": "![]() 구문을 사용한 비디오/오디오 임베드를 활성화합니다(기본값).",
   "markdown-preview-enhanced.HTML5EmbedUseLinkSyntax.description": "[]() 구문을 사용한 비디오/오디오 임베드를 활성화합니다.",
