@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **New setting `markdown-preview-enhanced.enablePreviewContextMenu`** (default `true`) — Disable it to turn off the custom right-click menu in the preview and fall back to the browser's native context menu with its usual Copy/Paste entries. Together with the companion crossnote change, the custom menu also gains a **Copy** item when text is selected and closes on **Escape**. Fixes [#2356](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2356) and [#2363](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2363). Reported by @andy-clapham and @miblooming. Requires the accompanying crossnote release; against crossnote 0.9.31 the setting has no effect.
+
 ### Bug fixes
 
 - **Preserve Preview Only scroll position when switching tabs** — Custom-editor previews now retain their webview context while hidden, preventing a reload and scroll-position jump when returning to a rendered Markdown tab. Fixes [#2147](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2147).

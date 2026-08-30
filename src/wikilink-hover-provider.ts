@@ -219,8 +219,7 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
     // resolver path and the typo-recovery fallback can reuse its
     // configured `wikiLinkTargetFileExtension`.
     let notebook:
-      | Awaited<ReturnType<NotebooksManager['getNotebook']>>
-      | undefined;
+      Awaited<ReturnType<NotebooksManager['getNotebook']>> | undefined;
     if (this.notebooksManager) {
       try {
         notebook = await this.notebooksManager.getNotebook(document.uri);

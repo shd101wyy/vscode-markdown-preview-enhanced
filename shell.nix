@@ -6,7 +6,7 @@ with pkgs;
 mkShell {
   buildInputs = [
     nodejs_22
-    yarn
+    pnpm
     bash
     vsce
   ];

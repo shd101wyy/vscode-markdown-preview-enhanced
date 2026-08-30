@@ -125,5 +125,6 @@
   "markdown-preview-enhanced.alwaysShowBacklinksInPreview.description": "Sempre mostrar backlinks na visualização.",
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Ativar esta opção ocultará elementos de interface desnecessários na visualização, a menos que o mouse esteja sobre eles.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "Quando ativado, o menu de contexto na visualização herda as cores e a fonte do tema do VS Code em vez do estilo padrão.",
+  "markdown-preview-enhanced.enablePreviewContextMenu.description": "Mostra o menu de contexto personalizado da extensão na pré-visualização. Desative-o para voltar ao menu de contexto nativo do navegador, com as entradas usuais de copiar/colar.",
   "markdown-preview-enhanced.enableImageLightbox.description": "Clique em uma imagem na visualização para vê-la em uma sobreposição de lightbox em tela cheia. Pressione Esc ou clique no fundo para fechar."
 }
