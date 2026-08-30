@@ -624,6 +624,14 @@ export class PreviewProvider {
           isVSCode: true,
           scrollSync: getMPEConfig<boolean>('scrollSync'),
           imageUploader: getMPEConfig<ImageUploader>('imageUploader'),
+          // Localize the webview UI (context menu, footer, etc.)
+          // following the VS Code display language; unknown locales
+          // fall back to English inside crossnote. Passed via spread
+          // because `locale` requires crossnote >= 0.9.32 — against
+          // 0.9.31 the extra property is ignored at runtime, but a
+          // plain property would fail object-literal excess-property
+          // checks against its older typings.
+          ...{ locale: vscode.env.language },
         },
         contentSecurityPolicy: buildPreviewCSP(previewPanel),
         vscodePreviewPanel: previewPanel,
