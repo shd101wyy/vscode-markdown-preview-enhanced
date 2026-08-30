@@ -1,38 +1,84 @@
 name: "Publish the extension"
+
 on:
-  push:
-    branches:
-      - master
-      - develop
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump level"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: 'Install nodejs 20'
-        uses: actions/setup-node@v2
+        uses: actions/checkout@v5
         with:
-          node-version: '20'
-      - name: 'Install pnpm'
-        uses: pnpm/action-setup@v4
+          # full history so we can push the release branch and tag
+          fetch-depth: 0
+
+      - name: Install nodejs 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
         # The pnpm version is read from the packageManager field in package.json
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run check:all
+
+      - name: Test
+        run: pnpm test
+
       - name: Build
         run: pnpm run build
-      - name: Get current package version
-        id: package_version
-        uses: martinbeentjes/npm-get-version-action@v1.1.0
+
+      - name: Bump version
+        id: bump
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          NEW_VERSION=$(npm version ${{ inputs.bump }} --no-git-tag-version)
+          echo "new-version=${NEW_VERSION#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Update CHANGELOG.md
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.new-version }}
+        run: |
+          TODAY=$(date +%F)
+          # rename [Unreleased] to the new version and prepend a fresh [Unreleased] section
+          # Single quotes are required: in double quotes bash expands `$ENV` (undefined)
+          # to an empty string before perl ever sees the pattern — the identical bug
+          # failed crossnote's release workflow on its first real dispatch. TODAY must
+          # be exported for perl's %ENV.
+          export TODAY
+          perl -0pi -e 's/^## \[Unreleased\]\n/## [Unreleased]\n\n## [$ENV{NEW_VERSION}] - $ENV{TODAY}\n/m' CHANGELOG.md
+          grep -q "## \[$NEW_VERSION\] - $TODAY" CHANGELOG.md
+
       - name: Get Changelog Entry
         id: changelog_reader
         uses: mindsers/changelog-reader-action@v2.0.0
         with:
           validation_level: warn
-          version: ${{ steps.package_version.outputs.current-version }}
-          path: 'CHANGELOG.md'
+          version: ${{ steps.bump.outputs.new-version }}
+          path: "CHANGELOG.md"
+
       - name: Publish extension to Visual Studio Marketplace
         id: create_vsix
         # A marketplace publish failure (e.g. an expired/missing
@@ -45,42 +91,79 @@ jobs:
         continue-on-error: true
         uses: HaaLeo/publish-vscode-extension@v1
         with:
-          dryRun: ${{ github.ref != 'refs/heads/master' }}
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
           dependencies: false
           skipDuplicate: true
+
       - name: Publish extension to Open VSX
         uses: HaaLeo/publish-vscode-extension@v1
         with:
-          dryRun: ${{ github.ref != 'refs/heads/master' }}
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           registryUrl: https://open-vsx.org
           extensionFile: ${{ steps.create_vsix.outputs.vsixPath }}
           dependencies: false
           # Keeps workflow re-runs green when the version is already published.
           skipDuplicate: true
+
       - name: Warn about Visual Studio Marketplace publish failure
         if: steps.create_vsix.outcome == 'failure'
         run: |
           echo "::warning::Publishing to the Visual Studio Marketplace failed (often caused by an invalid or missing VS_MARKETPLACE_TOKEN). Everything else succeeded."
           echo "::warning::To retry: update the VS_MARKETPLACE_TOKEN secret, then re-run this workflow. Already-published versions are skipped (skipDuplicate)."
+
+      - name: Commit, tag and push the release branch
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.new-version }}
+        run: |
+          git add package.json CHANGELOG.md
+          git commit -m "$NEW_VERSION"
+          git tag "$NEW_VERSION"
+          # master is branch-protected and slated for deprecation — the
+          # release commit lives on release/v<version> and merges back to
+          # develop via the PR below; a direct push to master is both
+          # rejected (GH006) and unnecessary.
+          git push origin "HEAD:refs/heads/release/v$NEW_VERSION"
+          git push origin "refs/tags/$NEW_VERSION"
+
       # Idempotent across workflow re-runs: an existing release is kept and
       # only the vsix asset is (re-)uploaded, so retrying a marketplace
       # publish after updating VS_MARKETPLACE_TOKEN stays green.
       - name: Create or update GitHub Release
-        if: github.ref == 'refs/heads/master' && steps.create_vsix.outputs.vsixPath != ''
+        if: steps.create_vsix.outputs.vsixPath != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.bump.outputs.new-version }}
+          VSIX_PATH: ${{ steps.create_vsix.outputs.vsixPath }}
+          RELEASE_NOTES: ${{ steps.changelog_reader.outputs.changes }}
         run: |
-          VERSION="${{ steps.package_version.outputs.current-version }}"
-          VSIX_PATH="${{ steps.create_vsix.outputs.vsixPath }}"
-          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES_EOF'
-          ${{ steps.changelog_reader.outputs.changes }}
-          NOTES_EOF
-          if gh release view "$VERSION" > /dev/null 2>&1; then
-            echo "Release $VERSION already exists, only (re-)uploading the vsix asset"
+          echo "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.md"
+          if gh release view "$NEW_VERSION" > /dev/null 2>&1; then
+            echo "Release $NEW_VERSION already exists, only (re-)uploading the vsix asset"
           else
-            gh release create "$VERSION" --target "$GITHUB_SHA" --title "$VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"
+            # The tag already points at the release commit — no --target needed.
+            gh release create "$NEW_VERSION" --title "$NEW_VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"
           fi
-          gh release upload "$VERSION" "$VSIX_PATH" --clobber
+          gh release upload "$NEW_VERSION" "$VSIX_PATH" --clobber
+
+      - name: Open auto-merge PR back to develop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.bump.outputs.new-version }}
+        run: |
+          gh pr create \
+            --base develop \
+            --head "release/v$NEW_VERSION" \
+            --title "chore: release v$NEW_VERSION" \
+            --body "Automated version bump and changelog update for v$NEW_VERSION."
+
+      # develop requires 1 approving review; the bot can't approve its own PR,
+      # so RELEASE_TOKEN (a PAT of the maintainer) supplies the approval
+      - name: Approve and auto-merge the release PR
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          NEW_VERSION: ${{ steps.bump.outputs.new-version }}
+        run: |
+          gh pr review "release/v$NEW_VERSION" --approve \
+            --body "Automated approval for release v$NEW_VERSION."
+          gh pr merge "release/v$NEW_VERSION" --auto --merge --delete-branch

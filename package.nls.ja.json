@@ -125,5 +125,6 @@
   "markdown-preview-enhanced.alwaysShowBacklinksInPreview.description": "プレビューに常にバックリンクを表示します。",
   "markdown-preview-enhanced.enablePreviewZenMode.description": "このオプションを有効にすると、マウスを乗せていない限り、プレビュー内の不要な UI 要素が非表示になります。",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "有効にすると、プレビュー内のコンテキストメニューが既定のスタイルではなく VS Code のテーマカラーとフォントを継承します。",
+  "markdown-preview-enhanced.enablePreviewContextMenu.description": "プレビューに拡張機能のカスタム右クリックメニューを表示します。無効にすると、通常のコピー/貼り付けなどの項目を備えたブラウザー標準の右クリックメニューに戻ります。",
   "markdown-preview-enhanced.enableImageLightbox.description": "プレビュー内の画像をクリックすると、全画面のライトボックスオーバーレイで表示できます。Escape を押すか背景をクリックすると閉じます。"
 }

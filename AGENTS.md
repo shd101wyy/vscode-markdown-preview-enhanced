@@ -61,6 +61,25 @@ The native extension (`out/native/extension.js`) is bundled by esbuild with `pla
 - For manual testing, press **F5** in VS Code to launch the Extension Development Host.
 - After making changes to `build.js` or `src/`, run `pnpm build` then reload the Extension Development Host (`Developer: Reload Window`).
 
+## Release Process
+
+Releases are automated via [`.github/workflows/release.yml`](.github/workflows/release.yml), triggered manually (**workflow_dispatch**) with a `bump` level of `patch` / `minor` / `major` / `prerelease`. Do **not** bump `package.json` or cut tags by hand.
+
+What the workflow does, in order:
+
+1. Runs `pnpm run check:all`, `pnpm test`, and `pnpm run build`
+2. Bumps `package.json` (`npm version <level>`)
+3. Rewrites `CHANGELOG.md`: renames `## [Unreleased]` to `## [X.Y.Z] - <today>` and prepends a fresh empty `## [Unreleased]` section — **write changelog entries under `[Unreleased]` before dispatching a release**
+4. Publishes to the Visual Studio Marketplace (tolerated failure — re-run after fixing `VS_MARKETPLACE_TOKEN`; `skipDuplicate` keeps re-runs safe) and Open VSX
+5. Commits the bump + changelog on a `release/vX.Y.Z` branch, tags it, pushes the branch + tag, creates/updates the GitHub Release with the `.vsix` attached (master is deprecated and not pushed to)
+6. Opens a `release/vX.Y.Z` → `develop` PR, approves it via the `RELEASE_TOKEN` secret, and auto-merges it
+
+### Branch protection on `develop`
+
+- Classic branch protection: requires a PR + **1 approving review** before merging; admins (the maintainer) may merge without waiting via "Merge without waiting for requirements"
+- No force pushes or deletions; conversation resolution required
+- The release PR satisfies the review requirement through the `RELEASE_TOKEN` secret — a fine-grained PAT of the maintainer (Contents + Pull requests: read/write on this repo only). If the token expires, the release PR will stall at the approval step; rotate it and re-run the failed job.
+
 ## Adding New Settings
 
 1. Add the setting to `package.json` under `contributes.configuration`
