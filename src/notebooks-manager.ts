@@ -42,6 +42,7 @@ class NotebooksManager {
         this.notebooks[i].notebookPath.toString() ===
         workspaceFolderUri.toString()
       ) {
+        this.applyPreviewScripts(this.notebooks[i]);
         return this.notebooks[i];
       }
     }
@@ -68,6 +69,7 @@ class NotebooksManager {
       throw error;
     }
     this.notebooks.push(notebook);
+    this.applyPreviewScripts(notebook);
     notebook.updateConfig(await this.loadNotebookConfig(uri));
     return notebook;
   }
@@ -151,6 +153,27 @@ class NotebooksManager {
     };
   }
 
+  /**
+   * Apply the host-application preview-scripts flag to a notebook.
+   *
+   * `previewScriptsEnabled` is a crossnote host flag (NOT part of
+   * `NotebookConfig`): repository-controlled files (`.crossnote/config.js`,
+   * workspace `.vscode/settings.json`) can never set it. It is only ever
+   * derived from the application-scope `enablePreviewScripts` user setting
+   * — and requires the workspace to be trusted.
+   *
+   * The cast keeps this compiling against crossnote 0.9.31, where the
+   * property doesn't exist yet; the assignment is a harmless no-op there.
+   * TODO: assign directly once crossnote >= 0.9.32 is the minimum dependency.
+   */
+  private applyPreviewScripts(notebook: Notebook) {
+    (
+      notebook as Notebook & { previewScriptsEnabled?: boolean }
+    ).previewScriptsEnabled =
+      vscode.workspace.isTrusted &&
+      (getMPEConfig<boolean>('enablePreviewScripts') ?? false);
+  }
+
   public setSystemColorScheme(colorScheme: 'light' | 'dark') {
     if (this.systemColorScheme !== colorScheme) {
       this.systemColorScheme = colorScheme;
@@ -216,6 +239,7 @@ class NotebooksManager {
     // Update all notebooks config
     await Promise.all(
       this.notebooks.map(async (notebook) => {
+        this.applyPreviewScripts(notebook);
         const config = await this.loadNotebookConfig(notebook.notebookPath);
         notebook.updateConfig(config);
       }),

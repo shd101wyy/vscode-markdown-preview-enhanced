@@ -611,6 +611,12 @@
           "default": false,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.enablePreviewScripts": {
+          "description": "%markdown-preview-enhanced.enablePreviewScripts.description%",
+          "scope": "application",
+          "default": false,
+          "type": "boolean"
+        },
         "markdown-preview-enhanced.enableHTML5Embed": {
           "description": "%markdown-preview-enhanced.enableHTML5Embed.description%",
           "default": false,
@@ -896,7 +902,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "0.9.31",
+    "crossnote": "0.9.32",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {
