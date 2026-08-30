@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.32](https://github.com/shd101wyy/crossnote/releases/tag/0.9.32). This activates everything shipped on the extension side ahead of the bump: the `enablePreviewScripts` opt-in (with the preview webview CSP), the preview UI translations, and the context-menu Copy/Escape/opt-out support — plus crossnote's export color-scheme following, the blockquote math fix, and the WSL "Open in Browser" fix.
+
 ### Features
 
 - **New setting `markdown-preview-enhanced.enablePreviewContextMenu`** (default `true`) — Disable it to turn off the custom right-click menu in the preview and fall back to the browser's native context menu with its usual Copy/Paste entries. Together with the companion crossnote change, the custom menu also gains a **Copy** item when text is selected and closes on **Escape**. Fixes [#2356](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2356) and [#2363](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2363). Reported by @andy-clapham and @miblooming. Requires the accompanying crossnote release; against crossnote 0.9.31 the setting has no effect.
