@@ -126,5 +126,6 @@
   "markdown-preview-enhanced.alwaysShowBacklinksInPreview.description": "Always show backlinks in preview.",
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Enable this option will hide unnecessary UI elements in preview unless your mouse is over it.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "When enabled, the context menu in preview inherits VS Code's theme colors and font instead of the default styling.",
+  "markdown-preview-enhanced.enablePreviewContextMenu.description": "Show the extension's custom right-click menu in the preview. Disable it to fall back to the browser's native context menu, with its usual Copy/Paste entries.",
   "markdown-preview-enhanced.enableImageLightbox.description": "Click an image in the preview to view it in a full-screen lightbox overlay. Press Escape or click the backdrop to close."
 }

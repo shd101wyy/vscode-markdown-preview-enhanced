@@ -126,5 +126,6 @@
   "markdown-preview-enhanced.alwaysShowBacklinksInPreview.description": "Toujours afficher les rétroliens dans l'aperçu.",
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Activer cette option masquera les éléments d'interface inutiles dans l'aperçu, sauf lorsque votre souris se trouve dessus.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "Lorsque cette option est activée, le menu contextuel de l'aperçu hérite des couleurs et de la police du thème de VS Code au lieu du style par défaut.",
+  "markdown-preview-enhanced.enablePreviewContextMenu.description": "Affiche le menu contextuel personnalisé de l'extension dans l'aperçu. Désactivez-le pour revenir au menu contextuel natif du navigateur, avec ses entrées copier/coller habituelles.",
   "markdown-preview-enhanced.enableImageLightbox.description": "Cliquez sur une image dans l'aperçu pour la voir dans une superposition lightbox en plein écran. Appuyez sur Échap ou cliquez sur l'arrière-plan pour fermer."
 }

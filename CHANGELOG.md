@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
+- **New setting `markdown-preview-enhanced.enablePreviewContextMenu`** (default `true`) — Disable it to turn off the custom right-click menu in the preview and fall back to the browser's native context menu with its usual Copy/Paste entries. Together with the companion crossnote change, the custom menu also gains a **Copy** item when text is selected and closes on **Escape**. Fixes [#2356](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2356) and [#2363](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2363). Reported by @andy-clapham and @miblooming. Requires the accompanying crossnote release; against crossnote 0.9.31 the setting has no effect.
 - **Explicit opt-in for custom preview scripts (`markdown-preview-enhanced.enablePreviewScripts`)** — Restores an escape hatch for the script injection that [0.8.30](#0830---2026-06-08) removed ([crossnote#446](https://github.com/shd101wyy/crossnote/issues/446)). When enabled (default `false`), `<script src>` tags in `.crossnote/head.html` and `@import "*.js"` file imports load again — but only workspace-local files; inline scripts and remote URLs stay blocked. The setting is **application-scope** (user settings only — a repository's `.vscode/settings.json` cannot enable it) and is ignored in untrusted workspaces. Requires the accompanying crossnote release; against crossnote 0.9.31 the flag is a harmless no-op.
 
 ### Security

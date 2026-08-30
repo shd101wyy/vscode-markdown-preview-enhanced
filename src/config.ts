@@ -29,6 +29,7 @@ type VSCodeMPEConfigKey =
   | 'automaticallyShowPreviewOfMarkdownBeingEdited'
   | 'configPath'
   | 'enableImageLightbox'
+  | 'enablePreviewContextMenu'
   | 'enablePreviewScripts'
   | 'imageUploader'
   | 'hideDefaultVSCodeMarkdownPreviewButtons'
@@ -120,6 +121,12 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly alwaysShowBacklinksInPreview: boolean;
   public readonly enablePreviewZenMode: boolean;
   public readonly useVSCodeThemeForContextMenu: boolean;
+  /**
+   * Whether to show the custom context menu in the preview. Part of
+   * crossnote's `NotebookConfig` (read by the webview); against
+   * crossnote versions that predate the field the value is ignored.
+   */
+  public readonly enablePreviewContextMenu: boolean;
   public readonly wikiLinkTargetFileExtension: string;
   public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
   public readonly wikiLinkResolution: WikiLinkResolution;
@@ -307,6 +314,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
     this.useVSCodeThemeForContextMenu =
       getMPEConfig<boolean>('useVSCodeThemeForContextMenu') ??
       defaultConfig.useVSCodeThemeForContextMenu;
+    this.enablePreviewContextMenu =
+      getMPEConfig<boolean>('enablePreviewContextMenu') ?? true;
     this.wikiLinkTargetFileExtension =
       getMPEConfig<string>('wikiLinkTargetFileExtension') ??
       defaultConfig.wikiLinkTargetFileExtension;
