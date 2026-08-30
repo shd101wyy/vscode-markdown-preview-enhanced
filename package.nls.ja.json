@@ -102,6 +102,7 @@
   "markdown-preview-enhanced.pandocArguments.description": "pandoc コマンドに渡す引数。例: [\"--smart\", \"--filter=/bin/exe\"]。長い引数名を使用してください。",
   "markdown-preview-enhanced.latexEngine.description": "Pandoc エクスポートと latex コードチャンクの既定の latex エンジン。",
   "markdown-preview-enhanced.enableScriptExecution.description": "コードチャンクの実行と JavaScript ファイルのインポートを有効にします。\n⚠️ この機能はセキュリティ上のリスクを伴う可能性があるため、注意して使用してください。スクリプト実行が有効な状態で悪意のあるコードを含む Markdown を開かされると、マシンが乗っ取られる可能性があります。",
+  "markdown-preview-enhanced.enablePreviewScripts.description": "ユーザー設定のプレビュースクリプトを有効にします：`.crossnote/head.html` 内の `<script src>` タグ、および `@import \"*.js\"` でインポートしたファイル。\n読み込みできるのはワークスペース内のファイルのみです。インラインスクリプトとリモート URL は決して実行されません。\n⚠️ この機能は慎重に使用してください。スクリプトはプレビュー webview 内で実行されるため、悪意のあるリポジトリにプレビューの権限を悪用される可能性があります。この設定はユーザー設定でのみ変更でき、信頼されていないワークスペースでは無視されます。",
   "markdown-preview-enhanced.enableHTML5Embed.description": "オーディオ/ビデオのリンクを HTML5 の埋め込み audio/video タグに変換する機能を有効にします。",
   "markdown-preview-enhanced.HTML5EmbedUseImageSyntax.description": "![]() 構文でのビデオ/オーディオ埋め込みを有効にします（既定）。",
   "markdown-preview-enhanced.HTML5EmbedUseLinkSyntax.description": "[]() 構文でのビデオ/オーディオ埋め込みを有効にします。",

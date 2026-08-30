@@ -102,6 +102,7 @@
   "markdown-preview-enhanced.pandocArguments.description": "傳遞給 pandoc 命令的參數，例如 [\"--smart\", \"--filter=/bin/exe\"]。請使用長參數名稱。",
   "markdown-preview-enhanced.latexEngine.description": "用於 Pandoc 匯出和 latex 程式碼區塊的預設 latex 引擎。",
   "markdown-preview-enhanced.enableScriptExecution.description": "啟用執行程式碼區塊和匯入 JavaScript 檔案。\n⚠️ 請謹慎使用此功能，因為它可能帶來安全風險！如果有人誘導你在啟用指令碼執行時開啟包含惡意程式碼的 Markdown，你的電腦可能遭到入侵。",
+  "markdown-preview-enhanced.enablePreviewScripts.description": "啟用使用者自訂預覽指令碼：`.crossnote/head.html` 中的 `<script src>` 標籤，以及 `@import \"*.js\"` 匯入的檔案。\n只能載入工作區內的檔案——內嵌指令碼和遠端 URL 永遠不會被執行。\n⚠️ 請謹慎使用此功能：指令碼會在預覽 webview 中執行，惡意儲存庫可能藉此濫用預覽的權限。該設定只能在使用者設定中修改，且在不受信任的工作區中會被忽略。",
   "markdown-preview-enhanced.enableHTML5Embed.description": "啟用將音訊/影片連結轉換為 HTML5 嵌入的 audio/video 標籤。",
   "markdown-preview-enhanced.HTML5EmbedUseImageSyntax.description": "啟用使用 ![]() 語法嵌入影片/音訊（預設）。",
   "markdown-preview-enhanced.HTML5EmbedUseLinkSyntax.description": "啟用使用 []() 語法嵌入影片/音訊。",
