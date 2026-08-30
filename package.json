@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-enhanced",
   "displayName": "%displayName%",
-  "version": "0.8.30",
+  "version": "0.8.31",
   "description": "%description%",
   "categories": [
     "Other"
@@ -166,6 +166,18 @@
         "command": "markdown-preview-enhanced.showUploadedImages",
         "title": "%markdown-preview-enhanced.showUploadedImages.title%",
         "enablement": "!isWeb"
+      },
+      {
+        "command": "markdown-preview-enhanced.setAiTranslationApiKey",
+        "title": "%markdown-preview-enhanced.setAiTranslationApiKey.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.translateNow",
+        "title": "%markdown-preview-enhanced.translateNow.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.showOriginalTranslation",
+        "title": "%markdown-preview-enhanced.showOriginalTranslation.title%"
       }
     ],
     "configuration": {
@@ -800,6 +812,21 @@
           "description": "%markdown-preview-enhanced.enableImageLightbox.description%",
           "default": true,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.aiTranslationProvider": {
+          "description": "%markdown-preview-enhanced.aiTranslationProvider.description%",
+          "default": "",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.aiTranslationModel": {
+          "description": "%markdown-preview-enhanced.aiTranslationModel.description%",
+          "default": "",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.aiTranslationAutoUpdate": {
+          "description": "%markdown-preview-enhanced.aiTranslationAutoUpdate.description%",
+          "default": false,
+          "type": "boolean"
         }
       }
     },
@@ -901,6 +928,7 @@
   "dependencies": {
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
+    "@earendil-works/pi-ai": "^0.83.0",
     "async-mutex": "^0.4.0",
     "crossnote": "0.9.32",
     "crypto-js": "^4.2.0"

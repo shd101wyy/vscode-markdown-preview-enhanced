@@ -127,5 +127,11 @@
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Enable this option will hide unnecessary UI elements in preview unless your mouse is over it.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "When enabled, the context menu in preview inherits VS Code's theme colors and font instead of the default styling.",
   "markdown-preview-enhanced.enablePreviewContextMenu.description": "Show the extension's custom right-click menu in the preview. Disable it to fall back to the browser's native context menu, with its usual Copy/Paste entries.",
-  "markdown-preview-enhanced.enableImageLightbox.description": "Click an image in the preview to view it in a full-screen lightbox overlay. Press Escape or click the backdrop to close."
+  "markdown-preview-enhanced.enableImageLightbox.description": "Click an image in the preview to view it in a full-screen lightbox overlay. Press Escape or click the backdrop to close.",
+  "markdown-preview-enhanced.aiTranslationProvider.description": "AI provider id for the Translate feature, e.g. \"openai\", \"anthropic\", \"minimax-cn\", \"deepseek\". See @earendil-works/pi-ai provider list.",
+  "markdown-preview-enhanced.aiTranslationModel.description": "Model id for AI translation, e.g. \"gpt-4o-mini\". Must be a valid model for the chosen provider.",
+  "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "When the preview is in translation mode, automatically re-translate changed blocks after you stop typing for 3 seconds. Disabled by default to avoid unattended API usage.",
+  "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE: Set AI Translation API Key",
+  "markdown-preview-enhanced.translateNow.title": "MPE: Translate Current Preview",
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE: Show Original Translation"
 }

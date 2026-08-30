@@ -127,5 +127,11 @@
   "markdown-preview-enhanced.enablePreviewZenMode.description": "啟用此選項將隱藏預覽中不必要的 UI 元素，除非滑鼠停留其上。",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "啟用後，預覽中的右鍵選單將繼承 VS Code 的主題顏色和字型，而非預設樣式。",
   "markdown-preview-enhanced.enablePreviewContextMenu.description": "在預覽中顯示擴充功能的自訂右鍵選單。關閉後將回退到瀏覽器原生右鍵選單，保留慣用的複製/貼上等項目。",
-  "markdown-preview-enhanced.enableImageLightbox.description": "點擊預覽中的圖片可在全螢幕燈箱疊層中檢視。按 Escape 或點擊背景關閉。"
+  "markdown-preview-enhanced.enableImageLightbox.description": "點擊預覽中的圖片可在全螢幕燈箱疊層中檢視。按 Escape 或點擊背景關閉。",
+  "markdown-preview-enhanced.aiTranslationProvider.description": "翻譯功能的 AI 提供商 id，例如 \"openai\"、\"anthropic\"、\"minimax-cn\"、\"deepseek\"。參見 @earendil-works/pi-ai 提供商列表。",
+  "markdown-preview-enhanced.aiTranslationModel.description": "AI 翻譯使用的模型 id，例如 \"gpt-4o-mini\"。必須是所選提供商支援的有效模型。",
+  "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "預覽處於翻譯模式時，停止打字 3 秒後自動重新翻譯變更的區塊。預設關閉，避免無人值守時消耗 API 額度。",
+  "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE: 設定 AI 翻譯 API Key",
+  "markdown-preview-enhanced.translateNow.title": "MPE: 翻譯目前預覽",
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE: 顯示原文"
 }

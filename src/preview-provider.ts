@@ -4,7 +4,13 @@ import { tmpdir } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
+import { streamTranslateBlock, streamTranslateDocument } from './ai-translator';
+import {
+  getBlockTranslation,
+  setBlockTranslation,
+} from './ai-translation-cache';
 import { getMPEConfig } from './config';
+import { hashBlock, splitMarkdownBlocks } from './markdown-blocks';
 import NotebooksManager from './notebooks-manager';
 import {
   getCrossnoteVersion,
@@ -96,6 +102,7 @@ const WEBVIEW_MESSAGE_COMMANDS: Set<string> = new Set([
   'princeExport',
   'refreshPreview',
   'revealLine',
+  'restoreOriginal',
   'runAllCodeChunks',
   'runCodeChunk',
   'saveSetting',
@@ -107,6 +114,7 @@ const WEBVIEW_MESSAGE_COMMANDS: Set<string> = new Set([
   'showBacklinks',
   'toggleAlwaysShowBacklinksInPreview',
   'togglePreviewZenMode',
+  'translateDocument',
   'updateMarkdown',
   'uploadImageFile',
   'webviewFinishLoading',
@@ -189,6 +197,41 @@ export class PreviewProvider {
    */
   private renderRequestSeq = 0;
   private latestRenderRequestBySourceUri: Map<string, number> = new Map();
+
+  /**
+   * Per-sourceUri AbortController for in-flight AI translations. Used to
+   * cancel a translation when the source changes or the user requests a new one.
+   */
+  private readonly abortControllers: Map<string, AbortController> = new Map();
+
+  /**
+   * Per-sourceUri promise chain that serializes streaming preview refreshes
+   * during incremental translation. Without this, concurrent block-completion
+   * callbacks each grab a new renderRequestId, so a later-started refresh can
+   * mark an earlier (content-richer) refresh stale and drop it, losing blocks
+   * and producing out-of-order renders. The chain runs refreshes one at a
+   * time, in completion order, each using the latest partial state.
+   */
+  private readonly refreshChains: Map<string, Promise<void>> = new Map();
+
+  /**
+   * Per-sourceUri debounce timers for auto-translate while in translation
+   * mode. When `aiTranslationAutoUpdate` is on and the preview is showing a
+   * translation, `update()` arms a 3s timer here instead of refreshing the
+   * preview from the original text — after the user stops typing, it calls
+   * `translateDocument`, which incrementally re-translates only changed
+   * blocks (reusing the block cache) and aborts any in-flight translation.
+   */
+  private readonly autoTranslateTimers: Map<string, NodeJS.Timeout> = new Map();
+
+  /**
+   * When non-empty, the preview is showing a TRANSLATED version of the source.
+   * updateMarkdown (live update) checks this: if the uri has an override, it
+   * uses the translated markdown instead of the editor's original content, so
+   * live updates don't clobber the translation with the original text.
+   * Cleared by restoreOriginal().
+   */
+  private readonly translatedMarkdownOverrides: Map<string, string> = new Map();
 
   /**
    * Each PreviewProvider has a one notebook.
@@ -401,6 +444,7 @@ export class PreviewProvider {
       }
       this.latestRenderRequestBySourceUri.delete(sourceUri.toString());
     }
+    this.clearAutoTranslateTimer(sourceUri.toString());
   }
 
   /**
@@ -622,6 +666,12 @@ export class PreviewProvider {
           isVSCode: true,
           scrollSync: getMPEConfig<boolean>('scrollSync'),
           imageUploader: getMPEConfig<ImageUploader>('imageUploader'),
+          // v2 translation: tell the webview whether it's currently showing
+          // the translated markdown, so the context-menu item can toggle
+          // between "Translate" and "Show Original".
+          isShowingTranslation: this.translatedMarkdownOverrides.has(
+            sourceUri.toString(),
+          ),
           // Localize the webview UI (context menu, footer, etc.)
           // following the VS Code display language; unknown locales
           // fall back to English inside crossnote. Passed via spread
@@ -653,7 +703,6 @@ export class PreviewProvider {
       ) {
         return;
       }
-
       previewPanel.webview.html = html;
     } catch (error) {
       vscode.window.showErrorMessage(String(error));
@@ -683,6 +732,8 @@ export class PreviewProvider {
     // Clear all pending update timeouts
     this.updateTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.updateTimeouts.clear();
+    this.autoTranslateTimers.forEach((timer) => clearTimeout(timer));
+    this.autoTranslateTimers.clear();
     this.latestRenderRequestBySourceUri.clear();
     // this.engineMaps = {};
     PreviewProvider.singlePreviewPanel = null;
@@ -812,6 +863,15 @@ export class PreviewProvider {
         } catch {
           // Fall back to the cached document content on read failure.
         }
+      }
+
+      // If we're showing a translation, use the translated markdown instead
+      // of the editor's original content so live updates don't clobber it.
+      const translationOverride = this.translatedMarkdownOverrides.get(
+        sourceUri.toString(),
+      );
+      if (translationOverride !== undefined) {
+        text = translationOverride;
       }
       await this.postMessageToPreview(sourceUri, {
         command: 'startParsingMarkdown',
@@ -944,12 +1004,562 @@ export class PreviewProvider {
   }
 
   public refreshPreview(sourceUri: Uri) {
+    // If a translation is in-flight for this uri, abort it: the source changed,
+    // so the in-flight translation is stale. The refresh below re-renders from
+    // disk (the original source).
+    this.abortControllers.get(sourceUri.toString())?.abort();
+    this.abortControllers.delete(sourceUri.toString());
+    // Clear any translation override — the source changed, so the cached
+    // translation is no longer valid.
+    this.translatedMarkdownOverrides.delete(sourceUri.toString());
+    this.clearAutoTranslateTimer(sourceUri.toString());
     const engine = this.getEngine(sourceUri);
     if (engine) {
       engine.clearCaches();
       // restart iframe
       this.refreshPreviewPanel(sourceUri);
     }
+  }
+
+  /**
+   * Translate the document to Chinese and re-render the preview from the
+   * translated markdown (v2 design). The translated markdown is fed back
+   * through `initPreview`, so crossnote's full pipeline runs on it: TOC,
+   * line-numbers, exports, and menu actions all work on the translated
+   * content. A disk cache avoids re-calling the API on unchanged documents.
+   */
+  public async translateDocument(sourceUri: vscode.Uri) {
+    const document = vscode.workspace.textDocuments.find(
+      (d) => d.uri.toString() === sourceUri.toString(),
+    );
+    if (!document) {
+      return;
+    }
+    let markdown: string;
+    try {
+      markdown = document.getText() ?? (await this.readSourceFile(sourceUri));
+    } catch {
+      return;
+    }
+    if (!markdown.trim()) {
+      return;
+    }
+
+    const providerId = getMPEConfig<string>('aiTranslationProvider') ?? '';
+    const modelId = getMPEConfig<string>('aiTranslationModel') ?? '';
+    if (!providerId || !modelId) {
+      // Silent no-ops make the command look broken — say what's missing
+      // (review on #2353).
+      void vscode.window.showErrorMessage(
+        'AI translation is not configured: set markdown-preview-enhanced.aiTranslationProvider and aiTranslationModel, and store an API key with the "MPE: Set AI Translation API Key" command.',
+      );
+      return;
+    }
+
+    // Incremental path: split into blocks, reuse cached translations for
+    // unchanged blocks, and only translate changed blocks (one API call
+    // per changed block, concurrently). Falls back to a whole-document
+    // translation if anything goes wrong. An unchanged document already
+    // assembles from the block cache with zero API calls.
+    const translatedMarkdown = await this.translateIncrementally(
+      sourceUri,
+      document,
+      markdown,
+      providerId,
+      modelId,
+    );
+    if (translatedMarkdown === undefined) {
+      return; // aborted or failed entirely
+    }
+
+    this.translatedMarkdownOverrides.set(
+      sourceUri.toString(),
+      translatedMarkdown,
+    );
+    await this.rerenderWithMarkdown(sourceUri, document, translatedMarkdown);
+  }
+
+  /**
+   * Incremental translation: split `markdown` into blocks, reuse cached
+   * block translations for unchanged blocks, and translate only the changed
+   * blocks concurrently (one API call each). Returns the assembled translated
+   * markdown, or `undefined` if aborted or if every changed block failed and
+   * the whole-document fallback also failed.
+   *
+   * On any structural error (split failure, all-blocks-failed), falls back to
+   * a single whole-document translation so the user always gets a result.
+   */
+  private async translateIncrementally(
+    sourceUri: vscode.Uri,
+    document: vscode.TextDocument,
+    markdown: string,
+    providerId: string,
+    modelId: string,
+  ): Promise<string | undefined> {
+    let blocks: string[];
+    try {
+      blocks = splitMarkdownBlocks(markdown);
+    } catch {
+      blocks = [];
+    }
+    // If splitting produced nothing sensible, fall back to whole-document.
+    if (blocks.length === 0) {
+      return this.translateWholeDocumentStreaming(
+        sourceUri,
+        undefined,
+        markdown,
+      );
+    }
+
+    // Resolve each block: cache hit → reuse, miss → translate.
+    const hashes = blocks.map((b) => hashBlock(b));
+    const translated: string[] = new Array(blocks.length);
+    const toTranslate: { index: number; block: string }[] = [];
+    for (let i = 0; i < blocks.length; i++) {
+      const cachedBlock = getBlockTranslation(hashes[i]);
+      if (cachedBlock !== undefined) {
+        translated[i] = cachedBlock;
+      } else {
+        toTranslate.push({ index: i, block: blocks[i] });
+      }
+    }
+
+    // Everything cached → assemble immediately, no API calls.
+    if (toTranslate.length === 0) {
+      return translated.join('\n\n');
+    }
+
+    // No block had a cached translation → this is a first translation (or the
+    // whole document changed). Use a single whole-document streaming request
+    // with periodic preview refresh, which also gives the AI full document
+    // context for term consistency. Per-block translation only pays off when
+    // some blocks are already cached.
+    if (toTranslate.length === blocks.length) {
+      const whole = await this.translateWholeDocumentStreaming(
+        sourceUri,
+        document,
+        markdown,
+      );
+      if (whole !== undefined) {
+        // Persist per-block translations so a later small edit can reuse them
+        // via the incremental path (instead of re-translating the whole
+        // document again). Split the translated markdown into blocks; only
+        // store when the block count matches the source so block i's hash
+        // (from the SOURCE block) maps to block i of the TRANSLATION. If the
+        // AI restructured the document (different block count), skip caching
+        // rather than store a misaligned mapping.
+        try {
+          const translatedBlocks = splitMarkdownBlocks(whole);
+          if (translatedBlocks.length === blocks.length) {
+            for (let i = 0; i < blocks.length; i++) {
+              setBlockTranslation(
+                hashes[i],
+                translatedBlocks[i],
+                providerId,
+                modelId,
+              );
+            }
+          }
+        } catch {
+          // best-effort
+        }
+      }
+      return whole;
+    }
+
+    // Streaming partial render: `partialBlocks` holds the current
+    // best-effort assembled document — cached translations where available,
+    // original block text where not yet translated. It is refreshed into
+    // the preview after each run completes, so the user sees translated
+    // blocks appear incrementally.
+    const partialBlocks = blocks.map((b, i) => translated[i] ?? b);
+
+    // Group consecutive to-translate blocks into RUNS so that consecutive
+    // changed blocks are sent as a single AI request (giving the model
+    // context and reducing request count). A run is a maximal sequence of
+    // to-translate blocks with contiguous indices; it is further split if it
+    // exceeds the size cap (so a single request is never too large).
+    const MAX_RUN_BYTES = 8192;
+    const MAX_RUN_BLOCKS = 20;
+    const runs: { startIndex: number; indices: number[]; blocks: string[] }[] =
+      [];
+    {
+      let i = 0;
+      while (i < toTranslate.length) {
+        const runIndices: number[] = [];
+        const runBlocks: string[] = [];
+        let runBytes = 0;
+        const start = toTranslate[i].index;
+        let prevIndex = start - 1;
+        while (i < toTranslate.length) {
+          const { index, block } = toTranslate[i];
+          // Must be contiguous with the previous block in this run, AND
+          // stay under both caps (a single oversized block still goes alone).
+          const contiguous = index === prevIndex + 1;
+          const wouldExceedBytes =
+            runBlocks.length > 0 && runBytes + block.length > MAX_RUN_BYTES;
+          const wouldExceedBlocks = runBlocks.length >= MAX_RUN_BLOCKS;
+          if (
+            runBlocks.length > 0 &&
+            (!contiguous || wouldExceedBytes || wouldExceedBlocks)
+          ) {
+            break;
+          }
+          runIndices.push(index);
+          runBlocks.push(block);
+          runBytes += block.length;
+          prevIndex = index;
+          i++;
+        }
+        runs.push({
+          startIndex: start,
+          indices: runIndices,
+          blocks: runBlocks,
+        });
+      }
+    }
+
+    // Abort any prior in-flight translation for this uri.
+    this.abortControllers.get(sourceUri.toString())?.abort();
+    const controller = new AbortController();
+    this.abortControllers.set(sourceUri.toString(), controller);
+
+    const runCount = runs.length;
+    const totalCount = blocks.length;
+    const failureCount = await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: `Translating ${runCount} run${runCount === 1 ? '' : 's'}/${totalCount} blocks…`,
+        cancellable: true,
+      },
+      async (progress, token) => {
+        token.onCancellationRequested(() => controller.abort());
+        let done = 0;
+        let failures = 0;
+        // Translate runs SEQUENTIALLY in document order (runs are built in
+        // ascending index order), so the user sees the translation appear
+        // from top to bottom. On each run's completion, split the translated
+        // markdown back into its blocks, update partialBlocks / translated,
+        // and refresh the preview.
+        for (const run of runs) {
+          if (controller.signal.aborted) {
+            return failures;
+          }
+          const r = await streamTranslateBlock({
+            block: run.blocks.join('\n\n'),
+            signal: controller.signal,
+          });
+          if (controller.signal.aborted) {
+            return failures;
+          }
+          done++;
+          progress.report({
+            message: `${done}/${runCount} runs`,
+          });
+          if (r.ok && r.markdown) {
+            // Split the translated run back into blocks. If the AI preserved
+            // the block structure (block count matches), align 1:1 with the
+            // run's source blocks. If not, put the whole translation in the
+            // first slot and clear the rest (markdown collapses the extra
+            // blank lines, so this stays visually correct).
+            let translatedRunBlocks: string[];
+            try {
+              translatedRunBlocks = splitMarkdownBlocks(r.markdown);
+            } catch {
+              translatedRunBlocks = [r.markdown];
+            }
+            if (translatedRunBlocks.length === run.indices.length) {
+              for (let j = 0; j < run.indices.length; j++) {
+                const idx = run.indices[j];
+                partialBlocks[idx] = translatedRunBlocks[j];
+                translated[idx] = translatedRunBlocks[j];
+              }
+            } else {
+              // Mismatch: keep the run's translation as a single block at the
+              // start index, blank the rest. Content is preserved; only the
+              // per-block granularity is lost for this run.
+              partialBlocks[run.startIndex] = r.markdown;
+              translated[run.startIndex] = r.markdown;
+              for (let j = 1; j < run.indices.length; j++) {
+                partialBlocks[run.indices[j]] = '';
+                translated[run.indices[j]] = '';
+              }
+            }
+            // Refresh the preview with the updated partial document so the
+            // newly translated run shows up immediately.
+            await this.refreshPreviewWithMarkdown(
+              sourceUri,
+              document,
+              partialBlocks.join('\n\n'),
+            );
+          } else {
+            failures++;
+          }
+        }
+        return failures;
+      },
+    );
+
+    if (this.abortControllers.get(sourceUri.toString()) === controller) {
+      this.abortControllers.delete(sourceUri.toString());
+    }
+    if (controller.signal.aborted) {
+      return undefined;
+    }
+
+    // Persist successful block translations to the block cache. A block is
+    // considered successful if translated[index] is a non-empty string.
+    // Blank fallbacks (mismatch case) are not cached so the next attempt can
+    // retry. The whole-run translation (first slot of a mismatched run) IS
+    // cached under its source block hash — reusing it next time is correct
+    // even though it covers multiple original blocks.
+    for (const { index } of toTranslate) {
+      if (translated[index] !== undefined && translated[index] !== '') {
+        setBlockTranslation(
+          hashes[index],
+          translated[index],
+          providerId,
+          modelId,
+        );
+      }
+    }
+
+    // If every run failed, fall back to whole-document translation so the
+    // user still gets a result (rather than a half-translated doc).
+    if (failureCount === runCount) {
+      return this.translateWholeDocumentStreaming(
+        sourceUri,
+        undefined,
+        markdown,
+      );
+    }
+
+    // Any untranslated (failed) slots fall back to the original block text so
+    // the assembled document is still complete and well-formed.
+    for (let i = 0; i < translated.length; i++) {
+      if (translated[i] === undefined) {
+        translated[i] = blocks[i];
+      }
+    }
+    return translated.join('\n\n');
+  }
+
+  /**
+   * Whole-document streaming translation. Used for first-time translation
+   * (no block cached) so the user sees the translation appear progressively
+   * as the stream arrives, AND the AI gets full document context for term
+   * consistency — and as the fallback when block splitting or every
+   * per-block translation fails. With a `document`, the stream's `onPartial`
+   * (throttled to 500ms) renders the accumulated partial translation into
+   * the preview via refreshPreviewWithMarkdown; without one, no partial
+   * rendering happens (fallback call sites). Returns the complete translated
+   * markdown, or `undefined` if aborted / failed.
+   */
+  private async translateWholeDocumentStreaming(
+    sourceUri: vscode.Uri,
+    document: vscode.TextDocument | undefined,
+    markdown: string,
+  ): Promise<string | undefined> {
+    this.abortControllers.get(sourceUri.toString())?.abort();
+    const controller = new AbortController();
+    this.abortControllers.set(sourceUri.toString(), controller);
+
+    const result = await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: 'Translating…',
+        cancellable: true,
+      },
+      async (_progress, token) => {
+        token.onCancellationRequested(() => controller.abort());
+        return streamTranslateDocument({
+          markdown,
+          signal: controller.signal,
+          onPartial: document
+            ? (partial) => {
+                // Fire-and-forget: the per-uri refresh queue serializes and
+                // the final initPreview is authoritative.
+                void this.refreshPreviewWithMarkdown(
+                  sourceUri,
+                  document,
+                  partial,
+                ).catch(() => {
+                  // best-effort
+                });
+              }
+            : undefined,
+        });
+      },
+    );
+
+    if (this.abortControllers.get(sourceUri.toString()) === controller) {
+      this.abortControllers.delete(sourceUri.toString());
+    }
+    if (controller.signal.aborted) {
+      return undefined;
+    }
+    if (!result.ok || !result.markdown) {
+      // A "Translating…" notification that just closes tells the user
+      // nothing — surface the failure (review on #2353).
+      const detail = result.error ?? 'unknown error';
+      void vscode.window.showErrorMessage(`Translation failed: ${detail}`);
+      return undefined;
+    }
+    return result.markdown;
+  }
+
+  /**
+   * Cancel any pending auto-translate for `sourceUriString`. Called when the
+   * user leaves translation mode (restoreOriginal) or the source is externally
+   * refreshed, so a stray timer can't re-arm a translation after the override
+   * was cleared.
+   */
+  private clearAutoTranslateTimer(sourceUriString: string) {
+    const timer = this.autoTranslateTimers.get(sourceUriString);
+    if (timer) {
+      clearTimeout(timer);
+      this.autoTranslateTimers.delete(sourceUriString);
+    }
+  }
+
+  /**
+   * Restore the original-language preview by re-running initPreview with the
+   * document's actual (possibly unsaved) markdown.
+   */
+  public async restoreOriginal(sourceUri: vscode.Uri) {
+    const document = vscode.workspace.textDocuments.find(
+      (d) => d.uri.toString() === sourceUri.toString(),
+    );
+    if (!document) {
+      return;
+    }
+    // Clear the translation override so live updates use the original again.
+    this.translatedMarkdownOverrides.delete(sourceUri.toString());
+    this.abortControllers.get(sourceUri.toString())?.abort();
+    this.abortControllers.delete(sourceUri.toString());
+    this.clearAutoTranslateTimer(sourceUri.toString());
+    await this.rerenderWithMarkdown(sourceUri, document, document.getText());
+  }
+
+  /**
+   * Re-render the preview for `sourceUri` using `markdown` as the source
+   * (instead of reading from disk). Mirrors what refreshPreviewPanel does,
+   * but takes an explicit markdown override so we can feed translated markdown.
+   */
+  private async rerenderWithMarkdown(
+    sourceUri: vscode.Uri,
+    document: vscode.TextDocument,
+    markdown: string,
+  ): Promise<void> {
+    const panels = this.getPreviews(sourceUri);
+    if (!panels || panels.length === 0) {
+      return;
+    }
+    const previewPanel = panels[0];
+    await this.initPreview({
+      sourceUri,
+      document,
+      inputStringOverride: markdown,
+      viewOptions: {
+        viewColumn: previewPanel.viewColumn ?? vscode.ViewColumn.Active,
+        preserveFocus: true,
+      },
+    });
+  }
+
+  /**
+   * Lightweight in-place refresh of the preview content for `sourceUri`:
+   * parse `markdown` and postMessage `updateHtml` to the existing webview,
+   * WITHOUT reloading the webview HTML (so React state, scroll position,
+   * and the context-menu state are preserved). Used by the streaming
+   * incremental-translation path so each newly-translated block can be
+   * shown as it arrives. Mirrors the updateMarkdown parseMD+updateHtml
+   * path but takes an explicit markdown string instead of reading the
+   * document / disk.
+   *
+   * Refreshes are SERIALIZED per sourceUri via `refreshChains` so that
+   * concurrent block-completion callbacks don't race: each refresh runs
+   * one at a time, in the order they were queued, each rendering the
+   * latest partial state. (A renderRequestId-style stale guard would be
+   * wrong here because a later-STARTED but content-richer refresh would
+   * mark an earlier one stale and drop it.)
+   *
+   * Best-effort: any error is swallowed (the final initPreview produces
+   * the authoritative render).
+   */
+  private async refreshPreviewWithMarkdown(
+    sourceUri: vscode.Uri,
+    document: vscode.TextDocument,
+    markdown: string,
+  ): Promise<void> {
+    const key = sourceUri.toString();
+    const run = async (): Promise<void> => {
+      try {
+        const engine = this.getEngine(sourceUri);
+        if (!engine) {
+          return;
+        }
+        const previews = this.getPreviews(sourceUri);
+        if (!previews || previews.length === 0) {
+          return;
+        }
+        const preview = previews[0];
+        const { html, tocHTML, yamlConfig } = await engine.parseMD(markdown, {
+          isForPreview: true,
+          useRelativeFilePath: false,
+          hideFrontMatter: false,
+          vscodePreviewPanel: preview,
+        });
+        // Aborted translation? Stop refreshing.
+        if (
+          !this.isSinglePreviewTarget(sourceUri) ||
+          this.abortControllers.get(key)?.signal.aborted
+        ) {
+          return;
+        }
+        await this.postMessageToPreview(sourceUri, {
+          command: 'updateHtml',
+          markdown,
+          html,
+          tocHTML,
+          totalLineCount: document.lineCount,
+          sourceUri: sourceUri.toString(),
+          sourceScheme: sourceUri.scheme,
+          id: yamlConfig.id || '',
+          class:
+            (yamlConfig.class || '') +
+            ` ${
+              this.getNotebooksManager().systemColorScheme === 'dark'
+                ? 'system-dark'
+                : 'system-ligtht'
+            } ${
+              this.getNotebooksManager().getEditorColorScheme() === 'dark'
+                ? 'editor-dark'
+                : 'editor-light'
+            } ${isVSCodeWebExtension() ? 'vscode-web-extension' : ''}`,
+        });
+      } catch {
+        // Best-effort streaming refresh; the final initPreview is authoritative.
+      }
+    };
+    // Serialize: chain onto the per-uri tail. This guarantees refreshes run
+    // one at a time, in queue order, so the webview always receives a
+    // monotonically richer document (no out-of-order, no dropped blocks).
+    const prev = this.refreshChains.get(key) ?? Promise.resolve();
+    const next = prev.then(run, run);
+    this.refreshChains.set(key, next);
+    // Clean up the map entry once the chain is idle so it doesn't leak.
+    next.finally(() => {
+      if (this.refreshChains.get(key) === next) {
+        this.refreshChains.delete(key);
+      }
+    });
+    return next;
+  }
+
+  private async readSourceFile(sourceUri: vscode.Uri): Promise<string> {
+    const bytes = await vscode.workspace.fs.readFile(sourceUri);
+    return Buffer.from(bytes).toString('utf8');
   }
 
   public openInBrowser(sourceUri: Uri) {
@@ -1128,6 +1738,27 @@ export class PreviewProvider {
     }
 
     const sourceUriString = sourceUri.toString();
+
+    // Auto-translate: when the preview is showing a translation and the
+    // user enabled the toggle, debounce-retranslate changed blocks instead
+    // of refreshing from the (now-edited) original text. Reuses the existing
+    // incremental path + run-merging; translateDocument aborts any in-flight
+    // translation, so rapid edits collapse into one fresh request.
+    if (
+      getMPEConfig<boolean>('aiTranslationAutoUpdate') &&
+      this.translatedMarkdownOverrides.has(sourceUriString)
+    ) {
+      const existing = this.autoTranslateTimers.get(sourceUriString);
+      if (existing) {
+        clearTimeout(existing);
+      }
+      const timer = setTimeout(() => {
+        this.autoTranslateTimers.delete(sourceUriString);
+        void this.translateDocument(sourceUri);
+      }, 3000);
+      this.autoTranslateTimers.set(sourceUriString, timer);
+      return;
+    }
     const debounceMs = getMPEConfig<number>('liveUpdateDebounceMs') ?? 300;
 
     // Clear existing timeout for this sourceUri (proper debounce behavior)

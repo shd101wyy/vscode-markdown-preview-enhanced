@@ -47,7 +47,10 @@ type VSCodeMPEConfigKey =
   | 'd2Path'
   | 'd2Layout'
   | 'd2Theme'
-  | 'd2Sketch';
+  | 'd2Sketch'
+  | 'aiTranslationProvider'
+  | 'aiTranslationModel'
+  | 'aiTranslationAutoUpdate';
 
 type ConfigKey = keyof NotebookConfig | VSCodeMPEConfigKey;
 
