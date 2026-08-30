@@ -102,6 +102,7 @@
   "markdown-preview-enhanced.pandocArguments.description": "Args passed to pandoc command e.g. [\"--smart\", \"--filter=/bin/exe\"] Please use long argument names.",
   "markdown-preview-enhanced.latexEngine.description": "Default latex engine for Pandoc export and latex code chunk.",
   "markdown-preview-enhanced.enableScriptExecution.description": "Enables executing code chunks and importing javascript files.\n⚠️ Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled.",
+  "markdown-preview-enhanced.enablePreviewScripts.description": "Enables user-provided preview scripts: `<script src>` tags in `.crossnote/head.html` and `@import \"*.js\"` file imports. Only files inside the workspace can be loaded — inline scripts and remote URLs are never executed.\n⚠️ Please use this feature with caution: scripts run inside the preview webview, so a malicious repository could abuse whatever the preview has access to. This setting can only be changed in user settings and is ignored in untrusted workspaces.",
   "markdown-preview-enhanced.enableHTML5Embed.description": " Enables transform audio video link to to html5 embed audio video tags.",
   "markdown-preview-enhanced.HTML5EmbedUseImageSyntax.description": " Enables video/audio embed with ![]() syntax (default).",
   "markdown-preview-enhanced.HTML5EmbedUseLinkSyntax.description": "Enables video/audio embed with []() syntax.",

@@ -126,6 +126,45 @@ const WEBVIEW_MESSAGE_COMMANDS: Set<string> = new Set([
  */
 const WORKSPACE_MUTEX_MAP: Map<string, Mutex> = new Map();
 
+/**
+ * Content-Security-Policy for the preview webview.
+ *
+ * The webview used to ship without any CSP, so nothing constrained what
+ * injected content could load or connect to. This policy keeps every
+ * legitimate load path working while closing the obvious gaps:
+ *
+ * - `script-src` / `style-src`: only webview resources (`cspSource`,
+ *   i.e. localResourceRoots + the extension bundle), https CDNs (MathJax,
+ *   KaTeX fonts, mermaid zenuml module), and inline code. Inline is
+ *   required because crossnote emits its configuration (`MERMAID_CONFIG`,
+ *   MathJax setup, reveal init, …) as inline `<script>` blocks; the
+ *   executable-script attack surface is instead gated by crossnote's
+ *   script stripping + `previewScriptsEnabled`, not by CSP.
+ * - `object-src`/`form-action` `'none'`: plugins and form submissions
+ *   have no legitimate use in a preview.
+ * - other directives are left permissive on purpose — images, media and
+ *   frames come from arbitrary user markdown, and the sanitizer already
+ *   forces `sandbox=""` on every iframe.
+ */
+function buildPreviewCSP(panel: vscode.WebviewPanel): string {
+  const cspSource = panel.webview.cspSource;
+  return [
+    `script-src ${cspSource} https: 'unsafe-inline'`,
+    `style-src ${cspSource} https: data: 'unsafe-inline'`,
+    `img-src * data: blob:`,
+    `font-src ${cspSource} https: data:`,
+    `connect-src ${cspSource} https: data: blob:`,
+    `media-src * data: blob:`,
+    `frame-src https: file: data: blob:`,
+    `worker-src ${cspSource} blob:`,
+    `object-src 'none'`,
+    `form-action 'none'`,
+    // The React app appends the <base> tag at runtime from sourceUri
+    // (file:// natively, https:// in the web extension).
+    `base-uri ${cspSource} https: file:`,
+  ].join('; ');
+}
+
 export function getAllPreviewProviders(): PreviewProvider[] {
   return Array.from(WORKSPACE_PREVIEW_PROVIDER_MAP.values());
 }
@@ -495,8 +534,6 @@ export class PreviewProvider {
           enableScripts: true,
           localResourceRoots,
         };
-        // @ts-expect-error retainContextWhenHidden is not in type definitions
-        previewPanel.options.retainContextWhenHidden = true;
       } else {
         previewPanel = vscode.window.createWebviewPanel(
           'markdown-preview-enhanced',
@@ -635,8 +672,16 @@ export class PreviewProvider {
           isShowingTranslation: this.translatedMarkdownOverrides.has(
             sourceUri.toString(),
           ),
+          // Localize the webview UI (context menu, footer, etc.)
+          // following the VS Code display language; unknown locales
+          // fall back to English inside crossnote. Passed via spread
+          // because `locale` requires crossnote >= 0.9.32 — against
+          // 0.9.31 the extra property is ignored at runtime, but a
+          // plain property would fail object-literal excess-property
+          // checks against its older typings.
+          ...{ locale: vscode.env.language },
         },
-        contentSecurityPolicy: '',
+        contentSecurityPolicy: buildPreviewCSP(previewPanel),
         vscodePreviewPanel: previewPanel,
         isVSCodeWebExtension: isVSCodeWebExtension(),
         // In the web extension, this.filePath is just the path component of a

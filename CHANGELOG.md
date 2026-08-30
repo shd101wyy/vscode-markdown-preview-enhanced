@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.32](https://github.com/shd101wyy/crossnote/releases/tag/0.9.32). This activates everything shipped on the extension side ahead of the bump: the `enablePreviewScripts` opt-in (with the preview webview CSP), the preview UI translations, and the context-menu Copy/Escape/opt-out support — plus crossnote's export color-scheme following, the blockquote math fix, and the WSL "Open in Browser" fix.
+
 ### Features
 
 - **New setting `markdown-preview-enhanced.enablePreviewContextMenu`** (default `true`) — Disable it to turn off the custom right-click menu in the preview and fall back to the browser's native context menu with its usual Copy/Paste entries. Together with the companion crossnote change, the custom menu also gains a **Copy** item when text is selected and closes on **Escape**. Fixes [#2356](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2356) and [#2363](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2363). Reported by @andy-clapham and @miblooming. Requires the accompanying crossnote release; against crossnote 0.9.31 the setting has no effect.
 - **AI translation preview** — Translate the current Markdown preview into another language and switch back to the original content ([#2353](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2353) by @loorr). Translations are cached per Markdown block, so contiguous changed blocks can be retranslated after edits without retranslating the entire document. New commands set the AI translation API key (stored in VS Code SecretStorage), translate the current preview, and show the original content. New settings: `aiTranslationProvider` (provider id such as `openai`, `anthropic`, `minimax-cn`, `deepseek`), `aiTranslationModel`, and `aiTranslationAutoUpdate` (re-translate changed blocks 3 s after typing stops; off by default to avoid unattended API usage).
+- **Localize the preview webview UI** — The preview's UI widgets (context menu, footer, topbar, backlinks, in-preview markdown editor, image helper, floating actions) now follow the VS Code display language (`vscode.env.language`), covering the same ten locales as this extension's settings: English, 简体中文, 繁體中文, 日本語, 한국어, Español, Français, Nederlands, Português (Brasil) and Türkçe. The translations live in crossnote and fall back to English for anything missing. Requires the accompanying crossnote release; against crossnote 0.9.31 the webview remains English.
+- **Explicit opt-in for custom preview scripts (`markdown-preview-enhanced.enablePreviewScripts`)** — Restores an escape hatch for the script injection that [0.8.30](#0830---2026-06-08) removed ([crossnote#446](https://github.com/shd101wyy/crossnote/issues/446)). When enabled (default `false`), `<script src>` tags in `.crossnote/head.html` and `@import "*.js"` file imports load again — but only workspace-local files; inline scripts and remote URLs stay blocked. The setting is **application-scope** (user settings only — a repository's `.vscode/settings.json` cannot enable it) and is ignored in untrusted workspaces. Requires the accompanying crossnote release; against crossnote 0.9.31 the flag is a harmless no-op.
+
+### Security
+
+- **Add a Content-Security-Policy to the preview webview** — The preview webview shipped without any CSP, so nothing constrained what injected content could load or connect to. The new policy restricts scripts and styles to webview resources and https CDNs, blocks `object-src`/`form-action` entirely, and leaves images/media/frames permissive since those come from arbitrary user markdown (iframes are already forced into `sandbox=""` by the sanitizer). Inline script/style remain allowed because crossnote emits its configuration as inline blocks; the executable-script surface is gated by crossnote's script stripping plus the new opt-in flag.
+
+### Bug fixes
+
+- **Preserve Preview Only scroll position when switching tabs** — Custom-editor previews now retain their webview context while hidden, preventing a reload and scroll-position jump when returning to a rendered Markdown tab. Fixes [#2147](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2147).
 
 ## [0.8.30] - 2026-06-08
 

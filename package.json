@@ -623,6 +623,12 @@
           "default": false,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.enablePreviewScripts": {
+          "description": "%markdown-preview-enhanced.enablePreviewScripts.description%",
+          "scope": "application",
+          "default": false,
+          "type": "boolean"
+        },
         "markdown-preview-enhanced.enableHTML5Embed": {
           "description": "%markdown-preview-enhanced.enableHTML5Embed.description%",
           "default": false,
