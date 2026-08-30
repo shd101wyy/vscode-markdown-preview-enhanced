@@ -99,8 +99,12 @@ const webConfig = {
   target: 'es2020',
   format: 'cjs',
   // node-tikzjax and Node.js built-ins used in server-side code paths are not
-  // available/needed in the web extension build.
-  external: ['vscode', 'node-tikzjax', 'stream/promises', 'stream'],
+  // available/needed in the web extension build. sharp is externalized for
+  // the same reason: crossnote only reaches it through a lazy dynamic
+  // import in its Node-only image-resizing path, but bundling it pulls its
+  // ESM internals (node:crypto/os) into the browser build, which the node
+  // polyfills cannot satisfy (sharp >= 0.35 broke the web bundle).
+  external: ['vscode', 'node-tikzjax', 'stream/promises', 'stream', 'sharp'],
   plugins: [
     polyfillNode({
       polyfills: {
@@ -284,6 +288,9 @@ async function main() {
     }
   } catch (error) {
     console.error(error);
+    // A failed build must fail the command — swallowing it here made a
+    // broken web bundle look like a green build (exit code 0).
+    process.exitCode = 1;
   }
 }
 
