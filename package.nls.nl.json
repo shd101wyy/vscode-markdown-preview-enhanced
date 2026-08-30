@@ -125,5 +125,6 @@
   "markdown-preview-enhanced.alwaysShowBacklinksInPreview.description": "Altijd backlinks tonen in het voorbeeld.",
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Door deze optie in te schakelen worden onnodige UI-elementen in het voorbeeld verborgen, tenzij uw muis erboven zweeft.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "Indien ingeschakeld neemt het contextmenu in het voorbeeld de themakleuren en het lettertype van VS Code over in plaats van de standaardstijl.",
+  "markdown-preview-enhanced.enablePreviewContextMenu.description": "Toont het aangepaste rechtermuisknopmenu van de extensie in de preview. Schakel het uit om terug te vallen op het native browsermenu, met de gebruikelijke kopiëren/plakken-opties.",
   "markdown-preview-enhanced.enableImageLightbox.description": "Klik op een afbeelding in het voorbeeld om deze te bekijken in een schermvullende lightbox-overlay. Druk op Escape of klik op de achtergrond om te sluiten."
 }

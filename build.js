@@ -99,8 +99,12 @@ const webConfig = {
   target: 'es2020',
   format: 'cjs',
   // node-tikzjax and Node.js built-ins used in server-side code paths are not
-  // available/needed in the web extension build.
-  external: ['vscode', 'node-tikzjax', 'stream/promises', 'stream'],
+  // available/needed in the web extension build. sharp is externalized for
+  // the same reason: crossnote only reaches it through a lazy dynamic
+  // import in its Node-only image-resizing path, but bundling it pulls its
+  // ESM internals (node:crypto/os) into the browser build, which the node
+  // polyfills cannot satisfy (sharp >= 0.35 broke the web bundle).
+  external: ['vscode', 'node-tikzjax', 'stream/promises', 'stream', 'sharp'],
   plugins: [
     polyfillNode({
       polyfills: {
@@ -123,29 +127,68 @@ const webConfig = {
 };
 
 /**
+ * Locate a file/directory inside a dependency package across the different
+ * node_modules layouts produced by the supported package managers:
+ * - hoisted at top-level node_modules (npm / yarn classic)
+ * - nested under crossnote/node_modules (resolves through pnpm's symlink for
+ *   crossnote's dependencies, or yarn's nested install for `pnpm add ../crossnote`)
+ * - pnpm's virtual store: node_modules/.pnpm/<name>@<version>/node_modules/<name>
+ *
+ * @param {string} packageName
+ * @param {(pkgDir: string) => string} resolveWithinPackage
+ * @returns {{ found: string | undefined, tried: string[] }}
+ */
+function findInPackage(packageName, resolveWithinPackage) {
+  const tried = [];
+  const bases = [
+    join(__dirname, 'node_modules'),
+    join(__dirname, 'node_modules', 'crossnote', 'node_modules'),
+  ];
+  for (const base of bases) {
+    const candidate = resolveWithinPackage(join(base, packageName));
+    tried.push(candidate);
+    if (existsSync(candidate)) {
+      return { found: candidate, tried };
+    }
+  }
+
+  const pnpmStores = [
+    join(__dirname, 'node_modules', '.pnpm'),
+    join(__dirname, 'node_modules', 'crossnote', 'node_modules', '.pnpm'),
+  ];
+  for (const pnpmStore of pnpmStores) {
+    if (!existsSync(pnpmStore)) {
+      continue;
+    }
+    const packageDirs = readdirSync(pnpmStore).filter((d) =>
+      d.startsWith(`${packageName}@`),
+    );
+    for (const d of packageDirs) {
+      const candidate = resolveWithinPackage(
+        join(pnpmStore, d, 'node_modules', packageName),
+      );
+      tried.push(candidate);
+      if (existsSync(candidate)) {
+        return { found: candidate, tried };
+      }
+    }
+  }
+  return { found: undefined, tried };
+}
+
+/**
  * Copy node-tikzjax WASM/tex data files to out/tex/ so the bundled native
  * extension (at out/native/extension.js) can find them via
  * path.join(__dirname, '../tex') at runtime.
  */
 function copyTikzjaxTexFiles() {
-  // node-tikzjax may be hoisted to the top-level node_modules (e.g. when
-  // crossnote is installed from npm) or nested under crossnote's own
-  // node_modules (e.g. when installed via `yarn add ../crossnote`).
-  const candidates = [
-    join(__dirname, 'node_modules', 'node-tikzjax', 'tex'),
-    join(
-      __dirname,
-      'node_modules',
-      'crossnote',
-      'node_modules',
-      'node-tikzjax',
-      'tex',
-    ),
-  ];
-  const tikzjaxTexDir = candidates.find(existsSync);
+  const { found: tikzjaxTexDir, tried } = findInPackage(
+    'node-tikzjax',
+    (pkgDir) => join(pkgDir, 'tex'),
+  );
   if (!tikzjaxTexDir) {
     throw new Error(
-      `node-tikzjax tex directory not found. Tried:\n${candidates.join('\n')}`,
+      `node-tikzjax tex directory not found. Tried:\n${tried.join('\n')}`,
     );
   }
   const outTexDir = join(__dirname, 'out', 'tex');
@@ -164,53 +207,14 @@ function copyTikzjaxTexFiles() {
  * exist at the resolved path.
  */
 function copyXhrSyncWorker() {
-  // jsdom may be hoisted to the top-level node_modules (npm/yarn install) or
-  // nested under crossnote's pnpm store (local path install via yarn add ../crossnote).
-  const candidates = [
-    join(
-      __dirname,
-      'node_modules',
-      'jsdom',
-      'lib',
-      'jsdom',
-      'living',
-      'xhr',
-      'xhr-sync-worker.js',
-    ),
-  ];
-
-  // Also search the pnpm store nested under crossnote if present.
-  const crossnotePnpmDir = join(
-    __dirname,
-    'node_modules',
-    'crossnote',
-    'node_modules',
-    '.pnpm',
+  const { found: workerSrc, tried } = findInPackage('jsdom', (pkgDir) =>
+    join(pkgDir, 'lib', 'jsdom', 'living', 'xhr', 'xhr-sync-worker.js'),
   );
-  if (existsSync(crossnotePnpmDir)) {
-    const jsdomDirs = readdirSync(crossnotePnpmDir).filter((d) =>
-      d.startsWith('jsdom@'),
-    );
-    for (const d of jsdomDirs) {
-      candidates.push(
-        join(
-          crossnotePnpmDir,
-          d,
-          'node_modules',
-          'jsdom',
-          'lib',
-          'jsdom',
-          'living',
-          'xhr',
-          'xhr-sync-worker.js',
-        ),
-      );
-    }
-  }
 
-  const workerSrc = candidates.find(existsSync);
   if (!workerSrc) {
-    console.warn('Could not find jsdom xhr-sync-worker.js, skipping copy');
+    console.warn(
+      `Could not find jsdom xhr-sync-worker.js, skipping copy. Tried:\n${tried.join('\n')}`,
+    );
     return;
   }
   const outNativeDir = join(__dirname, 'out', 'native');
@@ -220,39 +224,14 @@ function copyXhrSyncWorker() {
 }
 
 function copyMarkdownYoWasm() {
-  // markdown_yo may be hoisted to the top-level node_modules (npm/yarn install)
-  // or nested under crossnote's pnpm store (local path install).
-  const candidates = [
-    join(__dirname, 'node_modules', 'markdown_yo', 'markdown_yo_wasm_api.wasm'),
-  ];
-
-  const crossnotePnpmDir = join(
-    __dirname,
-    'node_modules',
-    'crossnote',
-    'node_modules',
-    '.pnpm',
+  const { found: wasmSrc, tried } = findInPackage('markdown_yo', (pkgDir) =>
+    join(pkgDir, 'markdown_yo_wasm_api.wasm'),
   );
-  if (existsSync(crossnotePnpmDir)) {
-    const markdownYoDirs = readdirSync(crossnotePnpmDir).filter((d) =>
-      d.startsWith('markdown_yo@'),
-    );
-    for (const d of markdownYoDirs) {
-      candidates.push(
-        join(
-          crossnotePnpmDir,
-          d,
-          'node_modules',
-          'markdown_yo',
-          'markdown_yo_wasm_api.wasm',
-        ),
-      );
-    }
-  }
 
-  const wasmSrc = candidates.find(existsSync);
   if (!wasmSrc) {
-    console.warn('Could not find markdown_yo WASM, skipping copy');
+    console.warn(
+      `Could not find markdown_yo WASM, skipping copy. Tried:\n${tried.join('\n')}`,
+    );
     return;
   }
   const outNativeDir = join(__dirname, 'out', 'native');
@@ -309,6 +288,9 @@ async function main() {
     }
   } catch (error) {
     console.error(error);
+    // A failed build must fail the command — swallowing it here made a
+    // broken web bundle look like a green build (exit code 0).
+    process.exitCode = 1;
   }
 }
 

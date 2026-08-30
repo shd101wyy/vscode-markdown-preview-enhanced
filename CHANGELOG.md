@@ -7,20 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.8.31] - 2026-08-04
+### Features
 
-Updated [crossnote](https://github.com/loorr/crossnote) to [0.9.32](https://github.com/loorr/crossnote/releases/tag/0.9.32).
-
-### New features
-
-- **AI translation preview** — Translate the current Markdown preview into Chinese and switch back to the original content. Translations are cached by document and Markdown block so contiguous changed blocks can be retranslated after edits without retranslating the entire document.
-- **New AI translation commands** — Add commands to set the AI translation API key, translate the current preview, and show the original content. API keys are stored securely using VS Code SecretStorage.
-
-### New settings
-
-- `markdown-preview-enhanced.aiTranslationProvider` — Set the AI translation provider ID, such as `openai`, `anthropic`, `minimax-cn`, or `deepseek`.
-- `markdown-preview-enhanced.aiTranslationModel` — Set the model ID used by the selected provider.
-- `markdown-preview-enhanced.aiTranslationAutoUpdate` — Automatically retranslate changed blocks three seconds after typing stops while translation mode is active. Disabled by default to avoid unexpected API usage.
+- **New setting `markdown-preview-enhanced.enablePreviewContextMenu`** (default `true`) — Disable it to turn off the custom right-click menu in the preview and fall back to the browser's native context menu with its usual Copy/Paste entries. Together with the companion crossnote change, the custom menu also gains a **Copy** item when text is selected and closes on **Escape**. Fixes [#2356](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2356) and [#2363](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2363). Reported by @andy-clapham and @miblooming. Requires the accompanying crossnote release; against crossnote 0.9.31 the setting has no effect.
+- **AI translation preview** — Translate the current Markdown preview into another language and switch back to the original content ([#2353](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2353) by @loorr). Translations are cached per Markdown block, so contiguous changed blocks can be retranslated after edits without retranslating the entire document. New commands set the AI translation API key (stored in VS Code SecretStorage), translate the current preview, and show the original content. New settings: `aiTranslationProvider` (provider id such as `openai`, `anthropic`, `minimax-cn`, `deepseek`), `aiTranslationModel`, and `aiTranslationAutoUpdate` (re-translate changed blocks 3 s after typing stops; off by default to avoid unattended API usage).
 
 ## [0.8.30] - 2026-06-08
 

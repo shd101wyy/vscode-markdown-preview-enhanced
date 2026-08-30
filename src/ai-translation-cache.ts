@@ -1,118 +1,15 @@
-import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { globalConfigPath } from './utils';
 
+// Block-level translation cache (incremental translation).
+//
+// There is deliberately no whole-document cache: `translateIncrementally`
+// already assembles an unchanged document from the block cache with zero
+// API calls, so a document-level entry would duplicate that fast path
+// (see the review discussion on #2353).
+
 const CACHE_DIR_NAME = 'ai-translation-cache';
-// Bump when TRANSLATE_SYSTEM_PROMPT in ai-translator.ts changes, to invalidate
-// all cached translations produced under the old prompt.
-const SYSTEM_PROMPT_VERSION = 'translate-to-chinese-v1';
-
-function cacheDir(): string {
-  return path.join(globalConfigPath, CACHE_DIR_NAME);
-}
-
-function ensureCacheDir(): string {
-  const dir = cacheDir();
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  return dir;
-}
-
-/**
- * Compute a stable cache key for a translation request.
- * Inputs: the source markdown, the provider id, the model id, and a
- * system-prompt version tag (so changing the prompt invalidates the cache).
- */
-export function computeTranslationCacheKey(
-  markdown: string,
-  provider: string,
-  model: string,
-): string {
-  const hash = crypto
-    .createHash('sha256')
-    .update(SYSTEM_PROMPT_VERSION)
-    .update('\0')
-    .update(provider)
-    .update('\0')
-    .update(model)
-    .update('\0')
-    .update(markdown)
-    .digest('hex');
-  return hash.slice(0, 16);
-}
-
-export interface CachedTranslation {
-  /** The translated markdown (fed back into crossnote's preview pipeline). */
-  markdown: string;
-  provider: string;
-  model: string;
-  createdAt: number;
-  sourceBytes: number;
-}
-
-/** Read a cached translation. Returns undefined on miss / read error. */
-export function getCachedTranslation(
-  key: string,
-): CachedTranslation | undefined {
-  try {
-    const dir = cacheDir();
-    const mdPath = path.join(dir, `${key}.md`);
-    if (!fs.existsSync(mdPath)) {
-      return undefined;
-    }
-    const markdown = fs.readFileSync(mdPath, 'utf8');
-    let meta: Partial<CachedTranslation> = {};
-    try {
-      const metaPath = path.join(dir, `${key}.meta.json`);
-      meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-    } catch {
-      // meta is optional; ignore parse errors
-    }
-    return {
-      markdown,
-      provider: meta.provider ?? '',
-      model: meta.model ?? '',
-      createdAt: meta.createdAt ?? 0,
-      sourceBytes: meta.sourceBytes ?? 0,
-    };
-  } catch {
-    return undefined;
-  }
-}
-
-/** Write a translation to the cache. Best-effort: errors are swallowed. */
-export function setCachedTranslation(
-  key: string,
-  markdown: string,
-  provider: string,
-  model: string,
-  sourceBytes: number,
-): void {
-  try {
-    const dir = ensureCacheDir();
-    fs.writeFileSync(path.join(dir, `${key}.md`), markdown, 'utf8');
-    const meta = {
-      provider,
-      model,
-      createdAt: Date.now(),
-      sourceBytes,
-    };
-    fs.writeFileSync(
-      path.join(dir, `${key}.meta.json`),
-      JSON.stringify(meta, null, 2),
-      'utf8',
-    );
-  } catch {
-    // Cache is best-effort; never break translation on a write failure.
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Block-level cache (incremental translation)
-// ---------------------------------------------------------------------------
-
 const BLOCKS_DIR_NAME = 'blocks';
 // Soft cap on the number of cached blocks. When exceeded, the oldest blocks
 // (by lastAccess) are evicted. Tuned for "lots of small edits over time"

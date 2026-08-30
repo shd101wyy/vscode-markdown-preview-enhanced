@@ -10,7 +10,7 @@
  * dependency — so it is cheap to run on every translation request.
  */
 
-import * as crypto from 'node:crypto';
+import * as CryptoJS from 'crypto-js';
 
 /**
  * Split `markdown` into top-level blocks. Each returned string is a
@@ -157,5 +157,8 @@ function fenceMatch(line: string, fenceMarker: string): boolean {
  * Stable short hash for a block, used as the cache key. SHA-256, truncated.
  */
 export function hashBlock(block: string): string {
-  return crypto.createHash('sha256').update(block).digest('hex').slice(0, 16);
+  // crypto-js (not node:crypto): this module must also work in the web
+  // extension bundle, where the node polyfill maps node:crypto to an empty
+  // module (review on #2353).
+  return CryptoJS.SHA256(block).toString().slice(0, 16);
 }

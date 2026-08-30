@@ -6,11 +6,8 @@ import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { streamTranslateBlock, streamTranslateDocument } from './ai-translator';
 import {
-  computeTranslationCacheKey,
   getBlockTranslation,
-  getCachedTranslation,
   setBlockTranslation,
-  setCachedTranslation,
 } from './ai-translation-cache';
 import { getMPEConfig } from './config';
 import { hashBlock, splitMarkdownBlocks } from './markdown-blocks';
@@ -663,6 +660,7 @@ export class PreviewProvider {
       }
       previewPanel.webview.html = html;
     } catch (error) {
+      vscode.window.showErrorMessage(String(error));
       console.error(error);
     }
   }
@@ -1005,26 +1003,19 @@ export class PreviewProvider {
     const providerId = getMPEConfig<string>('aiTranslationProvider') ?? '';
     const modelId = getMPEConfig<string>('aiTranslationModel') ?? '';
     if (!providerId || !modelId) {
-      return;
-    }
-
-    // Fast path: whole-document cache hit (document unchanged since last
-    // translation). Falls through to the incremental path otherwise.
-    const cacheKey = computeTranslationCacheKey(markdown, providerId, modelId);
-    const cached = getCachedTranslation(cacheKey);
-    if (cached && cached.markdown) {
-      this.translatedMarkdownOverrides.set(
-        sourceUri.toString(),
-        cached.markdown,
+      // Silent no-ops make the command look broken — say what's missing
+      // (review on #2353).
+      void vscode.window.showErrorMessage(
+        'AI translation is not configured: set markdown-preview-enhanced.aiTranslationProvider and aiTranslationModel, and store an API key with the "MPE: Set AI Translation API Key" command.',
       );
-      await this.rerenderWithMarkdown(sourceUri, document, cached.markdown);
       return;
     }
 
     // Incremental path: split into blocks, reuse cached translations for
     // unchanged blocks, and only translate changed blocks (one API call
     // per changed block, concurrently). Falls back to a whole-document
-    // translation if anything goes wrong.
+    // translation if anything goes wrong. An unchanged document already
+    // assembles from the block cache with zero API calls.
     const translatedMarkdown = await this.translateIncrementally(
       sourceUri,
       document,
@@ -1036,14 +1027,6 @@ export class PreviewProvider {
       return; // aborted or failed entirely
     }
 
-    // Cache the assembled result for the whole-document fast path.
-    setCachedTranslation(
-      cacheKey,
-      translatedMarkdown,
-      providerId,
-      modelId,
-      markdown.length,
-    );
     this.translatedMarkdownOverrides.set(
       sourceUri.toString(),
       translatedMarkdown,
@@ -1076,7 +1059,11 @@ export class PreviewProvider {
     }
     // If splitting produced nothing sensible, fall back to whole-document.
     if (blocks.length === 0) {
-      return this.translateWholeFallback(sourceUri, markdown);
+      return this.translateWholeDocumentStreaming(
+        sourceUri,
+        undefined,
+        markdown,
+      );
     }
 
     // Resolve each block: cache hit → reuse, miss → translate.
@@ -1295,7 +1282,11 @@ export class PreviewProvider {
     // If every run failed, fall back to whole-document translation so the
     // user still gets a result (rather than a half-translated doc).
     if (failureCount === runCount) {
-      return this.translateWholeFallback(sourceUri, markdown);
+      return this.translateWholeDocumentStreaming(
+        sourceUri,
+        undefined,
+        markdown,
+      );
     }
 
     // Any untranslated (failed) slots fall back to the original block text so
@@ -1309,17 +1300,19 @@ export class PreviewProvider {
   }
 
   /**
-   * Whole-document streaming translation with periodic preview refresh.
-   * Used for first-time translation (no block cached) so the user sees the
-   * translation appear progressively as the stream arrives, AND the AI gets
-   * full document context for term consistency. The stream fires `onPartial`
-   * (throttled to 500ms) with the accumulated partial translation, which we
-   * render into the preview via refreshPreviewWithMarkdown. Returns the
-   * complete translated markdown, or `undefined` if aborted / failed.
+   * Whole-document streaming translation. Used for first-time translation
+   * (no block cached) so the user sees the translation appear progressively
+   * as the stream arrives, AND the AI gets full document context for term
+   * consistency — and as the fallback when block splitting or every
+   * per-block translation fails. With a `document`, the stream's `onPartial`
+   * (throttled to 500ms) renders the accumulated partial translation into
+   * the preview via refreshPreviewWithMarkdown; without one, no partial
+   * rendering happens (fallback call sites). Returns the complete translated
+   * markdown, or `undefined` if aborted / failed.
    */
   private async translateWholeDocumentStreaming(
     sourceUri: vscode.Uri,
-    document: vscode.TextDocument,
+    document: vscode.TextDocument | undefined,
     markdown: string,
   ): Promise<string | undefined> {
     this.abortControllers.get(sourceUri.toString())?.abort();
@@ -1337,17 +1330,19 @@ export class PreviewProvider {
         return streamTranslateDocument({
           markdown,
           signal: controller.signal,
-          onPartial: (partial) => {
-            // Fire-and-forget: the per-uri refresh queue serializes and the
-            // final initPreview is authoritative.
-            void this.refreshPreviewWithMarkdown(
-              sourceUri,
-              document,
-              partial,
-            ).catch(() => {
-              // best-effort
-            });
-          },
+          onPartial: document
+            ? (partial) => {
+                // Fire-and-forget: the per-uri refresh queue serializes and
+                // the final initPreview is authoritative.
+                void this.refreshPreviewWithMarkdown(
+                  sourceUri,
+                  document,
+                  partial,
+                ).catch(() => {
+                  // best-effort
+                });
+              }
+            : undefined,
         });
       },
     );
@@ -1359,47 +1354,10 @@ export class PreviewProvider {
       return undefined;
     }
     if (!result.ok || !result.markdown) {
-      return undefined;
-    }
-    return result.markdown;
-  }
-
-  /**
-   * Whole-document fallback: a single streaming translation of the entire
-   * markdown. Used when block splitting fails or every per-block translation
-   * fails. Returns the translated markdown, or `undefined` if aborted or
-   * failed.
-   */
-  private async translateWholeFallback(
-    sourceUri: vscode.Uri,
-    markdown: string,
-  ): Promise<string | undefined> {
-    this.abortControllers.get(sourceUri.toString())?.abort();
-    const controller = new AbortController();
-    this.abortControllers.set(sourceUri.toString(), controller);
-
-    const result = await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: 'Translating…',
-        cancellable: true,
-      },
-      async (_progress, token) => {
-        token.onCancellationRequested(() => controller.abort());
-        return streamTranslateDocument({
-          markdown,
-          signal: controller.signal,
-        });
-      },
-    );
-
-    if (this.abortControllers.get(sourceUri.toString()) === controller) {
-      this.abortControllers.delete(sourceUri.toString());
-    }
-    if (controller.signal.aborted) {
-      return undefined;
-    }
-    if (!result.ok || !result.markdown) {
+      // A "Translating…" notification that just closes tells the user
+      // nothing — surface the failure (review on #2353).
+      const detail = result.error ?? 'unknown error';
+      void vscode.window.showErrorMessage(`Translation failed: ${detail}`);
       return undefined;
     }
     return result.markdown;
