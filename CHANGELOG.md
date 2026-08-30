@@ -19,6 +19,10 @@ Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.32](https://
 
 - **Add a Content-Security-Policy to the preview webview** — The preview webview shipped without any CSP, so nothing constrained what injected content could load or connect to. The new policy restricts scripts and styles to webview resources and https CDNs, blocks `object-src`/`form-action` entirely, and leaves images/media/frames permissive since those come from arbitrary user markdown (iframes are already forced into `sandbox=""` by the sanitizer). Inline script/style remain allowed because crossnote emits its configuration as inline blocks; the executable-script surface is gated by crossnote's script stripping plus the new opt-in flag.
 
+### Bug fixes
+
+- **Preserve Preview Only scroll position when switching tabs** — Custom-editor previews now retain their webview context while hidden, preventing a reload and scroll-position jump when returning to a rendered Markdown tab. Fixes [#2147](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2147).
+
 ## [0.8.30] - 2026-06-08
 
 Updated [crossnote](https://github.com/shd101wyy/crossnote) to [0.9.31](https://github.com/shd101wyy/crossnote/releases/tag/0.9.31).

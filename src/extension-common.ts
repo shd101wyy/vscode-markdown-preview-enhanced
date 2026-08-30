@@ -9,6 +9,7 @@ import {
   openWikilinkTarget,
 } from './wikilink-document-link-provider';
 import { PreviewColorScheme, getMPEConfig, updateMPEConfig } from './config';
+import { customEditorProviderOptions } from './custom-editor-options';
 import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
 import NotebooksManager from './notebooks-manager';
@@ -1698,6 +1699,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.window.registerCustomEditorProvider(
       'markdown-preview-enhanced',
       new PreviewCustomEditorProvider(context),
+      customEditorProviderOptions,
     ),
   );
 
