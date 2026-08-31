@@ -127,5 +127,11 @@
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Ativar esta opção ocultará elementos de interface desnecessários na visualização, a menos que o mouse esteja sobre eles.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "Quando ativado, o menu de contexto na visualização herda as cores e a fonte do tema do VS Code em vez do estilo padrão.",
   "markdown-preview-enhanced.enablePreviewContextMenu.description": "Mostra o menu de contexto personalizado da extensão na pré-visualização. Desative-o para voltar ao menu de contexto nativo do navegador, com as entradas usuais de copiar/colar.",
-  "markdown-preview-enhanced.enableImageLightbox.description": "Clique em uma imagem na visualização para vê-la em uma sobreposição de lightbox em tela cheia. Pressione Esc ou clique no fundo para fechar."
+  "markdown-preview-enhanced.enableImageLightbox.description": "Clique em uma imagem na visualização para vê-la em uma sobreposição de lightbox em tela cheia. Pressione Esc ou clique no fundo para fechar.",
+  "markdown-preview-enhanced.aiTranslationProvider.description": "Id do provedor de IA para o recurso de tradução, ex.: \"openai\", \"anthropic\", \"minimax-cn\", \"deepseek\". Veja a lista de provedores de @earendil-works/pi-ai.",
+  "markdown-preview-enhanced.aiTranslationModel.description": "Id do modelo para tradução por IA, ex.: \"gpt-4o-mini\". Deve ser um modelo válido para o provedor escolhido.",
+  "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "Quando a pré-visualização está no modo de tradução, os blocos alterados são traduzidos novamente automaticamente 3 segundos após você parar de digitar. Desativado por padrão para evitar uso não supervisionado da API.",
+  "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:Definir chave de API de tradução por IA",
+  "markdown-preview-enhanced.translateNow.title": "MPE:Traduzir a pré-visualização atual",
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Mostrar o texto original"
 }
