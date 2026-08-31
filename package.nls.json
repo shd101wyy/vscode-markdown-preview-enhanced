@@ -131,7 +131,7 @@
   "markdown-preview-enhanced.aiTranslationProvider.description": "AI provider id for the Translate feature, e.g. \"openai\", \"anthropic\", \"minimax-cn\", \"deepseek\". See @earendil-works/pi-ai provider list.",
   "markdown-preview-enhanced.aiTranslationModel.description": "Model id for AI translation, e.g. \"gpt-4o-mini\". Must be a valid model for the chosen provider.",
   "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "When the preview is in translation mode, automatically re-translate changed blocks after you stop typing for 3 seconds. Disabled by default to avoid unattended API usage.",
-  "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE: Set AI Translation API Key",
-  "markdown-preview-enhanced.translateNow.title": "MPE: Translate Current Preview",
-  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE: Show Original Translation"
+  "markdown-preview-enhanced.setAiTranslationApiKey.title": "Markdown Preview Enhanced: Set AI Translation API Key",
+  "markdown-preview-enhanced.translateNow.title": "Markdown Preview Enhanced: Translate Current Preview",
+  "markdown-preview-enhanced.showOriginalTranslation.title": "Markdown Preview Enhanced: Show Original Translation"
 }

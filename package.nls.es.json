@@ -127,5 +127,11 @@
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Al activar esta opción se ocultarán los elementos de interfaz innecesarios en la vista previa, salvo cuando el ratón esté sobre ellos.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "Cuando está activado, el menú contextual de la vista previa hereda los colores y la fuente del tema de VS Code en lugar del estilo predeterminado.",
   "markdown-preview-enhanced.enablePreviewContextMenu.description": "Muestra el menú contextual personalizado de la extensión en la vista previa. Desactívelo para volver al menú contextual nativo del navegador, con sus habituales entradas de copiar/pegar.",
-  "markdown-preview-enhanced.enableImageLightbox.description": "Haga clic en una imagen de la vista previa para verla en una superposición de lightbox a pantalla completa. Pulse Escape o haga clic en el fondo para cerrar."
+  "markdown-preview-enhanced.enableImageLightbox.description": "Haga clic en una imagen de la vista previa para verla en una superposición de lightbox a pantalla completa. Pulse Escape o haga clic en el fondo para cerrar.",
+  "markdown-preview-enhanced.aiTranslationProvider.description": "Id del proveedor de IA para la función de traducción, p. ej. \"openai\", \"anthropic\", \"minimax-cn\", \"deepseek\". Consulte la lista de proveedores de @earendil-works/pi-ai.",
+  "markdown-preview-enhanced.aiTranslationModel.description": "Id del modelo para la traducción con IA, p. ej. \"gpt-4o-mini\". Debe ser un modelo válido para el proveedor elegido.",
+  "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "Cuando la vista previa está en modo de traducción, vuelve a traducir automáticamente los bloques modificados 3 segundos después de dejar de escribir. Desactivado por defecto para evitar un uso desatendido de la API.",
+  "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:Establecer clave de API de traducción con IA",
+  "markdown-preview-enhanced.translateNow.title": "MPE:Traducir la vista previa actual",
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Mostrar el texto original"
 }

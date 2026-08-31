@@ -127,5 +127,11 @@
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Door deze optie in te schakelen worden onnodige UI-elementen in het voorbeeld verborgen, tenzij uw muis erboven zweeft.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "Indien ingeschakeld neemt het contextmenu in het voorbeeld de themakleuren en het lettertype van VS Code over in plaats van de standaardstijl.",
   "markdown-preview-enhanced.enablePreviewContextMenu.description": "Toont het aangepaste rechtermuisknopmenu van de extensie in de preview. Schakel het uit om terug te vallen op het native browsermenu, met de gebruikelijke kopiëren/plakken-opties.",
-  "markdown-preview-enhanced.enableImageLightbox.description": "Klik op een afbeelding in het voorbeeld om deze te bekijken in een schermvullende lightbox-overlay. Druk op Escape of klik op de achtergrond om te sluiten."
+  "markdown-preview-enhanced.enableImageLightbox.description": "Klik op een afbeelding in het voorbeeld om deze te bekijken in een schermvullende lightbox-overlay. Druk op Escape of klik op de achtergrond om te sluiten.",
+  "markdown-preview-enhanced.aiTranslationProvider.description": "AI-provider-id voor de vertaalfunctie, bv. \"openai\", \"anthropic\", \"minimax-cn\", \"deepseek\". Zie de providerlijst van @earendil-works/pi-ai.",
+  "markdown-preview-enhanced.aiTranslationModel.description": "Model-id voor AI-vertaling, bv. \"gpt-4o-mini\". Moet een geldig model zijn voor de gekozen provider.",
+  "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "Als het voorbeeld in vertaalmodus staat, worden gewijzigde blokken automatisch opnieuw vertaald 3 seconden nadat u stopt met typen. Standaard uitgeschakeld om ongecontroleerd API-gebruik te voorkomen.",
+  "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:AI-vertaal-API-sleutel instellen",
+  "markdown-preview-enhanced.translateNow.title": "MPE:Huidige voorbeeld vertalen",
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Originele tekst tonen"
 }

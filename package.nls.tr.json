@@ -127,5 +127,11 @@
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Bu seçeneğin etkinleştirilmesi, fareniz üzerinde olmadığı sürece önizlemedeki gereksiz arayüz öğelerini gizler.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "Etkinleştirildiğinde, önizlemedeki bağlam menüsü varsayılan stil yerine VS Code'un tema renklerini ve yazı tipini devralır.",
   "markdown-preview-enhanced.enablePreviewContextMenu.description": "Önizlemede uzantının özel sağ tık menüsünü gösterir. Devre dışı bırakınca, alışıldık kopyala/yapıştır girdileriyle birlikte tarayıcının yerel sağ tık menüsüne dönülür.",
-  "markdown-preview-enhanced.enableImageLightbox.description": "Önizlemedeki bir görüntüye tıklayarak tam ekran lightbox katmanında görüntüleyin. Kapatmak için Escape tuşuna basın veya arka plana tıklayın."
+  "markdown-preview-enhanced.enableImageLightbox.description": "Önizlemedeki bir görüntüye tıklayarak tam ekran lightbox katmanında görüntüleyin. Kapatmak için Escape tuşuna basın veya arka plana tıklayın.",
+  "markdown-preview-enhanced.aiTranslationProvider.description": "Çeviri özelliği için AI sağlayıcı kimliği, örn. \"openai\", \"anthropic\", \"minimax-cn\", \"deepseek\". @earendil-works/pi-ai sağlayıcı listesine bakın.",
+  "markdown-preview-enhanced.aiTranslationModel.description": "AI çeviri için model kimliği, örn. \"gpt-4o-mini\". Seçilen sağlayıcı için geçerli bir model olmalıdır.",
+  "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "Önizleme çeviri modundayken, yazmayı bıraktıktan 3 saniye sonra değişen bloklar otomatik olarak yeniden çevrilir. Gözetimsiz API kullanımını önlemek için varsayılan olarak devre dışıdır.",
+  "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:AI Çeviri API Anahtarını Ayarla",
+  "markdown-preview-enhanced.translateNow.title": "MPE:Geçerli Önizlemeyi Çevir",
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Orijinal Metni Göster"
 }

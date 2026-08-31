@@ -127,5 +127,11 @@
   "markdown-preview-enhanced.enablePreviewZenMode.description": "このオプションを有効にすると、マウスを乗せていない限り、プレビュー内の不要な UI 要素が非表示になります。",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "有効にすると、プレビュー内のコンテキストメニューが既定のスタイルではなく VS Code のテーマカラーとフォントを継承します。",
   "markdown-preview-enhanced.enablePreviewContextMenu.description": "プレビューに拡張機能のカスタム右クリックメニューを表示します。無効にすると、通常のコピー/貼り付けなどの項目を備えたブラウザー標準の右クリックメニューに戻ります。",
-  "markdown-preview-enhanced.enableImageLightbox.description": "プレビュー内の画像をクリックすると、全画面のライトボックスオーバーレイで表示できます。Escape を押すか背景をクリックすると閉じます。"
+  "markdown-preview-enhanced.enableImageLightbox.description": "プレビュー内の画像をクリックすると、全画面のライトボックスオーバーレイで表示できます。Escape を押すか背景をクリックすると閉じます。",
+  "markdown-preview-enhanced.aiTranslationProvider.description": "翻訳機能で使用するAIプロバイダーのID。例: \"openai\"、\"anthropic\"、\"minimax-cn\"、\"deepseek\"。@earendil-works/pi-ai のプロバイダー一覧を参照。",
+  "markdown-preview-enhanced.aiTranslationModel.description": "AI翻訳で使用するモデルID。例: \"gpt-4o-mini\"。選択したプロバイダーで有効なモデルである必要があります。",
+  "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "プレビューが翻訳モードのとき、入力を停止してから3秒後に、変更されたブロックを自動的に再翻訳します。APIを無人で利用しないよう、既定では無効になっています。",
+  "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:AI翻訳APIキーを設定",
+  "markdown-preview-enhanced.translateNow.title": "MPE:現在のプレビューを翻訳",
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:原文を表示"
 }
