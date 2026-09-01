@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug fixes
 
 - **Fix preview crash (`TypeError: Cannot read properties of null (reading 'length')`) on callouts with a blank line under the marker** — an Obsidian-style callout whose `[!NOTE]` marker line stands alone or is followed by a blank quoted line crashed the entire preview; 0.8.32 introduced it via a crossnote callout change. Fixed in crossnote; ships when crossnote is released and the dependency pin is bumped ([#2375](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2375) reported by @GodExious).
+- **Fix footnotes rendered inside a callout** — with a callout and a footnote in the same document, an empty copy of the footnotes section was rendered inside the callout title in addition to the real one at the bottom ([#2377](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2377) reported by @chz-cn). Fixed in crossnote; ships when crossnote is released and the pin is bumped.
+- **Fix `{highlight=...}` code-block line highlighting in most themes** — the highlight band rendered _below_ the code block instead of over the highlighted lines in every code theme except `vue`/`vscode` (structural CSS was missing), and with the `vscode` theme the band's opaque selection color covered the code text. The structural rules now ship in the shared base stylesheet for all themes and exports, and the `vscode` theme band is translucent ([#2378](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2378) and [#2379](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2379) reported by @chz-cn). Fixed in crossnote; ships when crossnote is released and the pin is bumped.
 
 ## [0.8.32] - 2026-08-31
 
