@@ -5,6 +5,7 @@ import {
   PreviewTheme,
   loadConfigsInDirectory,
 } from 'crossnote';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import {
   MarkdownPreviewEnhancedConfig,
@@ -29,12 +30,20 @@ class NotebooksManager {
 
   private failedNotebookPaths: Set<string> = new Set();
 
+  /**
+   * Notebook roots that were already reported to the user as filesystem
+   * roots (see `warnIfFilesystemRoot`), so the warning shows once per
+   * root per session instead of once per `getNotebook` call.
+   */
+  private filesystemRootWarnedPaths: Set<string> = new Set();
+
   constructor(private context: vscode.ExtensionContext) {
     this.fileWatcher = new FileWatcher(this.context, this);
   }
 
   public async getNotebook(uri: vscode.Uri): Promise<Notebook> {
     const workspaceFolderUri = getWorkspaceFolderUri(uri);
+    this.warnIfFilesystemRoot(workspaceFolderUri);
 
     // Check if workspaceUri already exists in this.notebooks
     for (let i = 0; i < this.notebooks.length; i++) {
@@ -72,6 +81,29 @@ class NotebooksManager {
     this.applyPreviewScripts(notebook);
     notebook.updateConfig(await this.loadNotebookConfig(uri));
     return notebook;
+  }
+
+  /**
+   * A notebook rooted at a filesystem root (`/`, a Windows drive root,
+   * or dot-path spellings of it like `/.` — the untitled-document
+   * fallback) would recursively stat/read files across the whole
+   * machine when the wikilink/backlink/graph index is built (#2376).
+   * crossnote refuses to walk such a root; this surfaces that to the
+   * user once per root so the empty backlinks/graph aren't a mystery.
+   */
+  private warnIfFilesystemRoot(workspaceFolderUri: vscode.Uri) {
+    const resolved = path.resolve(workspaceFolderUri.fsPath);
+    if (path.parse(resolved).root !== resolved) {
+      return;
+    }
+    const key = workspaceFolderUri.toString();
+    if (this.filesystemRootWarnedPaths.has(key)) {
+      return;
+    }
+    this.filesystemRootWarnedPaths.add(key);
+    void vscode.window.showWarningMessage(
+      `Markdown Preview Enhanced: the notebook root "${workspaceFolderUri.fsPath}" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.`,
+    );
   }
 
   public async updateNotebookConfig(

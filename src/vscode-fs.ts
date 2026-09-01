@@ -60,10 +60,14 @@ export function wrapVSCodeFSAsApi(
     stat: async (path: string): Promise<FileSystemStats> => {
       const uri = getUri(path, scheme, authority);
       const stat = await vscode.workspace.fs.stat(uri);
+      // FileType bits are OR-ed together (a symlink to a directory is
+      // `Directory | SymbolicLink`), so test bits — not equality.
+      const hasType = (...types: vscode.FileType[]) =>
+        types.some((type) => (stat.type & type) !== 0);
       return {
-        isDirectory: () => stat.type === vscode.FileType.Directory,
-        isFile: () => stat.type === vscode.FileType.File,
-        isSymbolicLink: () => stat.type === vscode.FileType.SymbolicLink,
+        isDirectory: () => hasType(vscode.FileType.Directory),
+        isFile: () => hasType(vscode.FileType.File),
+        isSymbolicLink: () => hasType(vscode.FileType.SymbolicLink),
         size: stat.size,
         mtimeMs: stat.mtime,
         ctimeMs: stat.ctime,
