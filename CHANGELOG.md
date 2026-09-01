@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **New `markdown-preview-enhanced.frontMatterRenderingOption` value: `"vertical table"`** — renders front matter as a table with one key and value per row instead of one column per key, so the table stays inside the preview pane when there are many keys or long values (the layout VS Code's built-in preview uses). The setting also gained localized descriptions for all four values. Requires the companion crossnote change to take effect ([#2371](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2371) reported by @JaeyeongYang).
+
 ### Security
 
 - **Stop the note index from scanning outside the workspace** — when the resolved notebook root was the filesystem root itself (VS Code opened on `/` or a Windows drive root, a standalone Markdown file directly under it, or an untitled document whose fallback root `/.` resolves to `/`), building the wikilink/backlink/tag/graph index recursively stat'ed and read files across the whole machine; a symbolic link inside the workspace could similarly let the walk escape it. crossnote now refuses to index a filesystem-root notebook and never follows symbolic links during the walk (link entries are not indexed), and permission errors (`EACCES`/`EPERM`) encountered while walking are no longer logged as errors per directory. The extension shows a one-time warning when the notebook root is a filesystem root, since wikilinks/backlinks/graph will find nothing until a real folder is opened ([#2376](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2376) reported by @prawnsalad).

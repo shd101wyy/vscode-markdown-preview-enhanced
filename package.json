@@ -425,7 +425,14 @@
           "enum": [
             "none",
             "table",
+            "vertical table",
             "code block"
+          ],
+          "enumDescriptions": [
+            "%markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.0%",
+            "%markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.1%",
+            "%markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.2%",
+            "%markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.3%"
           ],
           "default": "none"
         },
