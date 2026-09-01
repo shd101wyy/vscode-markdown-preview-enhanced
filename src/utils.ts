@@ -51,6 +51,17 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
     }
   }
 
+  // Non-file documents (e.g. unsaved `untitled:` buffers) have no meaningful
+  // directory: `dirname(fsPath)` yields the `/.` spelling of the filesystem
+  // root, which the root guard refuses to index (#2376 — clicking backlinks
+  // on an unsaved buffer used to walk the whole machine from there).
+  // Associate them with the first workspace folder instead, so backlinks,
+  // wikilink completions and the graph view work against the current
+  // workspace; with no folder open, the root guard still refuses to index.
+  if (uri.scheme !== 'file' && workspaces && workspaces.length > 0) {
+    return workspaces[0].uri;
+  }
+
   // Return the folder of uri
   return vscode.Uri.file(path.dirname(uri.fsPath));
 }
