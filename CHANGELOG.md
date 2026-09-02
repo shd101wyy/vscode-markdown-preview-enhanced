@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.33] - 2026-09-02
+
 ### Features
 
 - **New setting `markdown-preview-enhanced.exportColorScheme`** (default `"theme"`) — 0.8.32 made HTML/browser exports follow the reader's system color scheme, so a document explicitly themed light rendered dark on a dark-OS machine (and one themed dark rendered light on a light-OS machine). Exports render in the configured `previewTheme`/`codeBlockTheme` again by default; set `"auto"` to follow the reader's system color scheme (light/dark theme pairs embedded under `prefers-color-scheme`), overridable per file with front matter `html: { export_color_scheme: auto }`. Paper exports (Chrome PDF, Prince) are not affected. Ships with [crossnote 0.9.33](https://github.com/shd101wyy/crossnote/releases/tag/0.9.33) ([#2382](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2382) reported by @dada-xiv).
