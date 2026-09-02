@@ -1,5 +1,6 @@
 import {
   CodeBlockTheme,
+  ExportColorScheme,
   FrontMatterRenderingOption,
   ImageUploader,
   KatexOptions,
@@ -31,6 +32,7 @@ type VSCodeMPEConfigKey =
   | 'enableImageLightbox'
   | 'enablePreviewContextMenu'
   | 'enablePreviewScripts'
+  | 'exportColorScheme'
   | 'imageUploader'
   | 'hideDefaultVSCodeMarkdownPreviewButtons'
   | 'liveUpdate'
@@ -81,6 +83,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly codeBlockTheme: CodeBlockTheme;
   public readonly mermaidTheme: MermaidTheme;
   public readonly previewTheme: PreviewTheme;
+  public readonly exportColorScheme: ExportColorScheme;
   public readonly revealjsTheme: RevealJsTheme;
   public readonly protocolsWhiteList: string;
   public readonly imageFolderPath: string;
@@ -220,6 +223,9 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       defaultConfig.codeBlockTheme;
     this.previewTheme =
       getMPEConfig<PreviewTheme>('previewTheme') ?? defaultConfig.previewTheme;
+    this.exportColorScheme =
+      getMPEConfig<ExportColorScheme>('exportColorScheme') ??
+      defaultConfig.exportColorScheme;
     this.revealjsTheme =
       getMPEConfig<RevealJsTheme>('revealjsTheme') ??
       defaultConfig.revealjsTheme;

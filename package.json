@@ -586,6 +586,18 @@
           "default": false,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.exportColorScheme": {
+          "type": "string",
+          "enum": [
+            "theme",
+            "auto"
+          ],
+          "default": "theme",
+          "markdownEnumDescriptions": [
+            "%markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0%",
+            "%markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1%"
+          ]
+        },
         "markdown-preview-enhanced.chromePath": {
           "description": "%markdown-preview-enhanced.chromePath.description%",
           "default": "",
@@ -933,11 +945,11 @@
     ]
   },
   "dependencies": {
+    "@earendil-works/pi-ai": "^0.83.0",
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
-    "@earendil-works/pi-ai": "^0.83.0",
     "async-mutex": "^0.4.0",
-    "crossnote": "0.9.32",
+    "crossnote": "0.9.33",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {

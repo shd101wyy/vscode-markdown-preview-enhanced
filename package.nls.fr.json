@@ -137,5 +137,8 @@
   "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "Lorsque l'aperçu est en mode traduction, les blocs modifiés sont automatiquement retraduits 3 secondes après la fin de la saisie. Désactivé par défaut pour éviter un usage non surveillé de l'API.",
   "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:Définir la clé d'API de traduction IA",
   "markdown-preview-enhanced.translateNow.title": "MPE:Traduire l'aperçu actuel",
-  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Afficher le texte original"
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Afficher le texte original",
+  "markdown-preview-enhanced.exportColorScheme.description": "Schéma de couleurs des exportations HTML et navigateur : toujours effectuer le rendu avec les thèmes `previewTheme` et `codeBlockTheme` configurés (`theme`), ou suivre le schéma de couleurs du système du lecteur en intégrant la paire de thèmes clair/sombre (`auto`). Les exportations papier (Chrome PDF, Prince) ne sont pas concernées. Remplaçable par fichier avec le front matter `html: { export_color_scheme: auto }`.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "Exporte avec le thème d'aperçu et le thème de blocs de code configurés. L'exportation est identique sur toutes les machines, même si le système du lecteur est en mode sombre.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Suit le schéma de couleurs du système du lecteur : l'exportation intègre les variantes claire et sombre des thèmes configurés et la page bascule lorsque l'OS du lecteur bascule (`prefers-color-scheme`)."
 }

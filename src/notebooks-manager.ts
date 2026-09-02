@@ -193,15 +193,9 @@ class NotebooksManager {
    * workspace `.vscode/settings.json`) can never set it. It is only ever
    * derived from the application-scope `enablePreviewScripts` user setting
    * — and requires the workspace to be trusted.
-   *
-   * The cast keeps this compiling against crossnote 0.9.31, where the
-   * property doesn't exist yet; the assignment is a harmless no-op there.
-   * TODO: assign directly once crossnote >= 0.9.32 is the minimum dependency.
    */
   private applyPreviewScripts(notebook: Notebook) {
-    (
-      notebook as Notebook & { previewScriptsEnabled?: boolean }
-    ).previewScriptsEnabled =
+    notebook.previewScriptsEnabled =
       vscode.workspace.isTrusted &&
       (getMPEConfig<boolean>('enablePreviewScripts') ?? false);
   }

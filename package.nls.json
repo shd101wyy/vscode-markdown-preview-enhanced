@@ -137,5 +137,8 @@
   "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "When the preview is in translation mode, automatically re-translate changed blocks after you stop typing for 3 seconds. Disabled by default to avoid unattended API usage.",
   "markdown-preview-enhanced.setAiTranslationApiKey.title": "Markdown Preview Enhanced: Set AI Translation API Key",
   "markdown-preview-enhanced.translateNow.title": "Markdown Preview Enhanced: Translate Current Preview",
-  "markdown-preview-enhanced.showOriginalTranslation.title": "Markdown Preview Enhanced: Show Original Translation"
+  "markdown-preview-enhanced.showOriginalTranslation.title": "Markdown Preview Enhanced: Show Original Translation",
+  "markdown-preview-enhanced.exportColorScheme.description": "How HTML and browser exports pick their color scheme: render in the configured `previewTheme` and `codeBlockTheme` on every machine (`theme`), or follow the reader's system color scheme by embedding light/dark theme pairs (`auto`). Paper exports (Chrome PDF, Prince) are not affected. Can be overridden per file with front matter `html: { export_color_scheme: auto }`.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "Export in the configured preview theme and code block theme. The export looks the same on every machine, even for readers whose system is set to dark mode.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Follow the reader's system color scheme: the export embeds both the light and dark variants of the configured themes, and the page switches when the reader's OS switches (`prefers-color-scheme`)."
 }

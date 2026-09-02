@@ -137,5 +137,8 @@
   "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "プレビューが翻訳モードのとき、入力を停止してから3秒後に、変更されたブロックを自動的に再翻訳します。APIを無人で利用しないよう、既定では無効になっています。",
   "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:AI翻訳APIキーを設定",
   "markdown-preview-enhanced.translateNow.title": "MPE:現在のプレビューを翻訳",
-  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:原文を表示"
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:原文を表示",
+  "markdown-preview-enhanced.exportColorScheme.description": "HTML とブラウザー書き出しのカラースキーム：設定した `previewTheme` と `codeBlockTheme` で常に描画する（`theme`）、または明/暗のテーマペアを埋め込んで閲覧者のシステム設定に追従する（`auto`）。紙面書き出し（Chrome PDF、Prince）には影響しません。front matter の `html: { export_color_scheme: auto }` でファイル単位の上書きが可能です。",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "設定済みのプレビューテーマとコードブロックテーマで書き出します。閲覧者のシステムがダークモードでも、書き出しの見た目は変わりません。",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "閲覧者のシステム設定に追従します。設定テーマの明/暗両バリアントを埋め込み、閲覧者の OS の明暗切り替えに応じてページも切り替わります（`prefers-color-scheme`）。"
 }
