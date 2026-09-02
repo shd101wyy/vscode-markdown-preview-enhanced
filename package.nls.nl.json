@@ -137,5 +137,8 @@
   "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "Als het voorbeeld in vertaalmodus staat, worden gewijzigde blokken automatisch opnieuw vertaald 3 seconden nadat u stopt met typen. Standaard uitgeschakeld om ongecontroleerd API-gebruik te voorkomen.",
   "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:AI-vertaal-API-sleutel instellen",
   "markdown-preview-enhanced.translateNow.title": "MPE:Huidige voorbeeld vertalen",
-  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Originele tekst tonen"
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Originele tekst tonen",
+  "markdown-preview-enhanced.exportColorScheme.description": "Kleurenschema voor HTML- en browserexport: altijd renderen met de ingestelde `previewTheme` en `codeBlockTheme` (`theme`), of het systeemkleurenschema van de lezer volgen door het licht/donker-themapaar in te bedden (`auto`). Papierexport (Chrome PDF, Prince) wordt niet beïnvloed. Per bestand te overschrijven met front matter `html: { export_color_scheme: auto }`.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "Exporteert met het ingestelde voorbeeldthema en codeblokthema. De export ziet er op elke machine hetzelfde uit, ook als het systeem van de lezer in donkermodus staat.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Volgt het systeemkleurenschema van de lezer: de export bevat zowel de lichte als de donkere variant van de ingestelde thema's en de pagina wisselt mee als het OS van de lezer wisselt (`prefers-color-scheme`)."
 }

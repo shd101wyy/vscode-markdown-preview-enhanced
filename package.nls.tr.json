@@ -137,5 +137,8 @@
   "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "Önizleme çeviri modundayken, yazmayı bıraktıktan 3 saniye sonra değişen bloklar otomatik olarak yeniden çevrilir. Gözetimsiz API kullanımını önlemek için varsayılan olarak devre dışıdır.",
   "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:AI Çeviri API Anahtarını Ayarla",
   "markdown-preview-enhanced.translateNow.title": "MPE:Geçerli Önizlemeyi Çevir",
-  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Orijinal Metni Göster"
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Orijinal Metni Göster",
+  "markdown-preview-enhanced.exportColorScheme.description": "HTML ve tarayıcı dışa aktarımlarının renk şeması: her zaman yapılandırılan `previewTheme` ve `codeBlockTheme` ile işlemek (`theme`) ya da açık/koyu tema çiftini gömerek okuyucunun sistem renk şemasını izlemek (`auto`). Kağıt dışa aktarımları (Chrome PDF, Prince) etkilenmez. Front matter `html: { export_color_scheme: auto }` ile dosya bazında geçersiz kılınabilir.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "Dışa aktarmayı yapılandırılan önizleme teması ve kod bloğu temasıyla yapar. Okuyucunun sistemi koyu modda olsa bile dışa aktarım her makinede aynı görünür.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Okuyucunun sistem renk şemasını izler: dışa aktarma, yapılandırılan temaların hem açık hem koyu varyantını gömer ve okuyucunun işletim sistemi geçtiğinde sayfa da geçer (`prefers-color-scheme`)."
 }

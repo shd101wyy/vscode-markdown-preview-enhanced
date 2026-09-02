@@ -137,5 +137,8 @@
   "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "Quando a pré-visualização está no modo de tradução, os blocos alterados são traduzidos novamente automaticamente 3 segundos após você parar de digitar. Desativado por padrão para evitar uso não supervisionado da API.",
   "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE:Definir chave de API de tradução por IA",
   "markdown-preview-enhanced.translateNow.title": "MPE:Traduzir a pré-visualização atual",
-  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Mostrar o texto original"
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Mostrar o texto original",
+  "markdown-preview-enhanced.exportColorScheme.description": "Esquema de cores das exportações HTML e navegador: renderizar sempre com os temas `previewTheme` e `codeBlockTheme` configurados (`theme`), ou seguir o esquema de cores do sistema do leitor incorporando o par de temas claro/escuro (`auto`). Exportações em papel (Chrome PDF, Prince) não são afetadas. Pode ser sobrescrito por arquivo com o front matter `html: { export_color_scheme: auto }`.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "Exporta com o tema de visualização e o tema de blocos de código configurados. A exportação tem a mesma aparência em qualquer máquina, mesmo se o sistema do leitor estiver no modo escuro.",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Segue o esquema de cores do sistema do leitor: a exportação incorpora as variantes clara e escura dos temas configurados e a página muda quando o sistema do leitor muda (`prefers-color-scheme`)."
 }

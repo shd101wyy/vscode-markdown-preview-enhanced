@@ -74,6 +74,14 @@ What the workflow does, in order:
 5. Commits the bump + changelog on a `release/vX.Y.Z` branch, tags it, pushes the branch + tag, creates/updates the GitHub Release with the `.vsix` attached (master is deprecated and not pushed to)
 6. Opens a `release/vX.Y.Z` → `develop` PR, approves it via the `RELEASE_TOKEN` secret, and auto-merges it
 
+### Changelog content
+
+The extension's `CHANGELOG.md` should carry everything users of **this** extension experience — including the user-visible changes that ship inside [crossnote](https://github.com/shd101wyy/crossnote) releases:
+
+- When a crossnote release is picked up (dependency pin bump), port its changelog entries into the extension's `[Unreleased]`, rewritten from the extension user's perspective ("the preview crashed…" rather than "markdown-it tokens…").
+- Do not duplicate: one change gets exactly one entry. If an entry exists because the extension itself changed (new setting, new command), fold the crossnote behavior it exposes into that entry instead of adding a second one — and drop entries that the `Updated crossnote to X.Y.Z` line already covers on its own.
+- Keep the crossnote issue/PR links and contributor credits (`by @author` / `Reported by @author`) when porting.
+
 ### Branch protection on `develop`
 
 - Classic branch protection: requires a PR + **1 approving review** before merging; admins (the maintainer) may merge without waiting via "Merge without waiting for requirements"

@@ -137,5 +137,8 @@
   "markdown-preview-enhanced.aiTranslationAutoUpdate.description": "预览处于翻译模式时，停止打字 3 秒后自动重新翻译变更的块。默认关闭，避免无人值守时消耗 API 额度。",
   "markdown-preview-enhanced.setAiTranslationApiKey.title": "MPE: 设置 AI 翻译 API Key",
   "markdown-preview-enhanced.translateNow.title": "MPE: 翻译当前预览",
-  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE: 显示原文"
+  "markdown-preview-enhanced.showOriginalTranslation.title": "MPE: 显示原文",
+  "markdown-preview-enhanced.exportColorScheme.description": "HTML 与浏览器导出使用的配色方案：在所有设备上都按已配置的 `previewTheme` 和 `codeBlockTheme` 渲染（`theme`），或通过内嵌明/暗两套主题来跟随阅读者的系统配色（`auto`）。纸张导出（Chrome PDF、Prince）不受影响。可通过 front matter `html: { export_color_scheme: auto }` 按文件覆盖。",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "使用已配置的预览主题和代码块主题导出。导出结果在任何设备上外观一致——即使阅读者的系统处于深色模式。",
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "跟随阅读者的系统配色：导出文件内嵌已配置主题的明、暗两个变体，页面会随阅读者操作系统的明暗切换而切换（`prefers-color-scheme`）。"
 }
