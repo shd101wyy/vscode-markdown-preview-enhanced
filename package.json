@@ -37,7 +37,7 @@
     "run-in-browser:watch": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "pnpm test:unit",
-    "test:unit": "mocha --ui tdd --reporter spec test/find-fragment-target-line.test.js test/block-id-helpers.test.js test/rank-by-closeness.test.js",
+    "test:unit": "mocha --ui tdd --reporter spec test/find-fragment-target-line.test.js test/block-id-helpers.test.js test/rank-by-closeness.test.js test/current-preview-source.test.js test/preview-source-integration.test.js",
     "vscode:prepublish": "pnpm install --frozen-lockfile && pnpm build",
     "watch": "gulp copy-files && gulp clean-out && node build.js --watch"
   },
@@ -79,6 +79,16 @@
       {
         "command": "markdown-preview-enhanced.copyBlockReference",
         "title": "%markdown-preview-enhanced.copyBlockReference.title%",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.copyCurrentSourceRelativePath",
+        "title": "%markdown-preview-enhanced.copyCurrentSourceRelativePath.title%",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.copyCurrentSourcePath",
+        "title": "%markdown-preview-enhanced.copyCurrentSourcePath.title%",
         "category": "Markdown"
       },
       {

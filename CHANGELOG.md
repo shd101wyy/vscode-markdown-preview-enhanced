@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **New commands "Copy Current Source Path" and "Copy Current Source Relative Path"** — Copy the Markdown file that the focused preview is actually rendering, as a full filesystem path/URI or as a workspace-relative path. Following a link inside the preview leaves the preview and the editor resource it was opened from out of sync (the drift behind the stale breadcrumb in [#2235](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2235)), so VS Code's built-in **Copy Path** / **Copy Relative Path** can copy a different file than the one on screen — most visibly with `"markdown-preview-enhanced.previewMode": "Previews Only"`, where the preview is the tab and no text editor is open. The commands read the source of the focused preview panel only and never guess: with no preview focused, with two previews active, or before a preview has rendered, they warn instead of copying, as does asking for a relative path outside the workspace. `file:` sources are copied as filesystem paths (Windows drive letters and UNC spellings preserved), while remote and virtual sources keep their scheme and authority.
+
 ## [0.8.33] - 2026-09-02
 
 ### Features

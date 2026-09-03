@@ -8,6 +8,8 @@
   "markdown-preview-enhanced.openLockedPreviewToTheSide.title": "Markdown Preview Enhanced: Open Locked Preview to the Side",
   "markdown-preview-enhanced.togglePreviewLock.title": "Markdown Preview Enhanced: Toggle Preview Lock",
   "markdown-preview-enhanced.copyBlockReference.title": "Markdown Preview Enhanced: Copy Block Reference",
+  "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "Markdown Preview Enhanced: Copy Current Source Relative Path",
+  "markdown-preview-enhanced.copyCurrentSourcePath.title": "Markdown Preview Enhanced: Copy Current Source Path",
   "markdown-preview-enhanced.toggleScrollSync.title": "Markdown Preview Enhanced: Toggle Scroll Sync",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "Markdown Preview Enhanced: Toggle Live Update",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "Markdown Preview Enhanced: Toggle Break On Single New Line",

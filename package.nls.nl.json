@@ -8,6 +8,8 @@
   "markdown-preview-enhanced.openLockedPreviewToTheSide.title": "MPE:Vergrendeld voorbeeld naast openen",
   "markdown-preview-enhanced.togglePreviewLock.title": "MPE:Voorbeeldvergrendeling schakelen",
   "markdown-preview-enhanced.copyBlockReference.title": "MPE:Blokverwijzing kopiëren",
+  "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "MPE:Relatief pad van huidige bron kopiëren",
+  "markdown-preview-enhanced.copyCurrentSourcePath.title": "MPE:Pad van huidige bron kopiëren",
   "markdown-preview-enhanced.toggleScrollSync.title": "MPE:Scrollsynchronisatie schakelen",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "MPE:Live update schakelen",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "MPE:Regeleinde schakelen",
