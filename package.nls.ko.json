@@ -10,6 +10,8 @@
   "markdown-preview-enhanced.copyBlockReference.title": "MPE:블록 참조 복사",
   "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "MPE:현재 소스 상대 경로 복사",
   "markdown-preview-enhanced.copyCurrentSourcePath.title": "MPE:현재 소스 경로 복사",
+  "markdown-preview-enhanced.openCurrentSourceInEditor.title": "MPE:현재 소스를 편집기에서 열기",
+  "markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview.title": "MPE:현재 소스를 편집기에서 열고 미리 보기 닫기",
   "markdown-preview-enhanced.toggleScrollSync.title": "MPE:스크롤 동기화 전환",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "MPE:실시간 업데이트 전환",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "MPE:줄바꿈 전환",

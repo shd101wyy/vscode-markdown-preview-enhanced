@@ -10,6 +10,8 @@
   "markdown-preview-enhanced.copyBlockReference.title": "Markdown Preview Enhanced: Copy Block Reference",
   "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "Markdown Preview Enhanced: Copy Current Source Relative Path",
   "markdown-preview-enhanced.copyCurrentSourcePath.title": "Markdown Preview Enhanced: Copy Current Source Path",
+  "markdown-preview-enhanced.openCurrentSourceInEditor.title": "Markdown Preview Enhanced: Open Current Source in Editor",
+  "markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview.title": "Markdown Preview Enhanced: Open Current Source in Editor and Close Preview",
   "markdown-preview-enhanced.toggleScrollSync.title": "Markdown Preview Enhanced: Toggle Scroll Sync",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "Markdown Preview Enhanced: Toggle Live Update",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "Markdown Preview Enhanced: Toggle Break On Single New Line",

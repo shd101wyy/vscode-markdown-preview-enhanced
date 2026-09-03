@@ -10,6 +10,8 @@
   "markdown-preview-enhanced.copyBlockReference.title": "MPE:Copiar referência de bloco",
   "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "MPE:Copiar caminho relativo da fonte atual",
   "markdown-preview-enhanced.copyCurrentSourcePath.title": "MPE:Copiar caminho da fonte atual",
+  "markdown-preview-enhanced.openCurrentSourceInEditor.title": "MPE:Abrir fonte atual no editor",
+  "markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview.title": "MPE:Abrir fonte atual no editor e fechar visualização",
   "markdown-preview-enhanced.toggleScrollSync.title": "MPE:Alternar sincronização de rolagem",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "MPE:Alternar atualização ao vivo",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "MPE:Alternar quebra de linha",

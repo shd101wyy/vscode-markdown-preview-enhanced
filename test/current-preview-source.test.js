@@ -7,6 +7,7 @@ const esbuild = require('esbuild');
 
 let resolveActivePreviewSource;
 let formatPreviewSourcePath;
+let isMpePreviewTabInput;
 let tmpFile;
 
 suite('current-preview-source', function () {
@@ -29,6 +30,7 @@ suite('current-preview-source', function () {
     const mod = require(tmpFile);
     resolveActivePreviewSource = mod.resolveActivePreviewSource;
     formatPreviewSourcePath = mod.formatPreviewSourcePath;
+    isMpePreviewTabInput = mod.isMpePreviewTabInput;
   });
 
   suiteTeardown(function () {
@@ -132,6 +134,40 @@ suite('current-preview-source', function () {
       formatPreviewSourcePath(fileUri('section')),
       formatPreviewSourcePath(fileUri('')),
     );
+  });
+
+  test('recognizes the exact MPE preview tab view type', function () {
+    assert.strictEqual(
+      isMpePreviewTabInput({ viewType: 'markdown-preview-enhanced' }),
+      true,
+    );
+  });
+
+  test('recognizes a preview opened as a webview panel', function () {
+    assert.strictEqual(
+      isMpePreviewTabInput({
+        viewType: 'mainThreadWebview-markdown-preview-enhanced',
+      }),
+      true,
+    );
+  });
+
+  test('rejects another webview panel tab type', function () {
+    assert.strictEqual(
+      isMpePreviewTabInput({ viewType: 'mainThreadWebview-markdown.preview' }),
+      false,
+    );
+  });
+
+  test('rejects another webview tab type', function () {
+    assert.strictEqual(
+      isMpePreviewTabInput({ viewType: 'markdown.preview' }),
+      false,
+    );
+  });
+
+  test('rejects tab inputs without a view type', function () {
+    assert.strictEqual(isMpePreviewTabInput({ uri: 'file:///a.md' }), false);
   });
 });
 

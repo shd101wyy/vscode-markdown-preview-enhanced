@@ -10,6 +10,8 @@
   "markdown-preview-enhanced.copyBlockReference.title": "MPE:ブロック参照をコピー",
   "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "MPE:現在のソースの相対パスをコピー",
   "markdown-preview-enhanced.copyCurrentSourcePath.title": "MPE:現在のソースパスをコピー",
+  "markdown-preview-enhanced.openCurrentSourceInEditor.title": "MPE:現在のソースをエディターで開く",
+  "markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview.title": "MPE:現在のソースをエディターで開いてプレビューを閉じる",
   "markdown-preview-enhanced.toggleScrollSync.title": "MPE:スクロール同期の切り替え",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "MPE:ライブ更新の切り替え",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "MPE:改行の切り替え",
