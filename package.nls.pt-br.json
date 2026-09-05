@@ -8,6 +8,8 @@
   "markdown-preview-enhanced.openLockedPreviewToTheSide.title": "MPE:Abrir visualização bloqueada lateral",
   "markdown-preview-enhanced.togglePreviewLock.title": "MPE:Alternar bloqueio da visualização",
   "markdown-preview-enhanced.copyBlockReference.title": "MPE:Copiar referência de bloco",
+  "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "MPE:Copiar caminho relativo da fonte atual",
+  "markdown-preview-enhanced.copyCurrentSourcePath.title": "MPE:Copiar caminho da fonte atual",
   "markdown-preview-enhanced.toggleScrollSync.title": "MPE:Alternar sincronização de rolagem",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "MPE:Alternar atualização ao vivo",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "MPE:Alternar quebra de linha",

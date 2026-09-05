@@ -8,6 +8,8 @@
   "markdown-preview-enhanced.openLockedPreviewToTheSide.title": "MPE:開啟鎖定的側邊預覽",
   "markdown-preview-enhanced.togglePreviewLock.title": "MPE:切換預覽鎖定",
   "markdown-preview-enhanced.copyBlockReference.title": "MPE:複製區塊引用",
+  "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "MPE:複製目前來源的相對路徑",
+  "markdown-preview-enhanced.copyCurrentSourcePath.title": "MPE:複製目前來源路徑",
   "markdown-preview-enhanced.toggleScrollSync.title": "MPE:開關預覽捲動同步",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "MPE:開關預覽即時更新",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "MPE:開關換行符換行",

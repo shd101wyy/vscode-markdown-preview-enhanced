@@ -8,6 +8,8 @@
   "markdown-preview-enhanced.openLockedPreviewToTheSide.title": "MPE:잠긴 미리보기를 옆에 열기",
   "markdown-preview-enhanced.togglePreviewLock.title": "MPE:미리보기 잠금 전환",
   "markdown-preview-enhanced.copyBlockReference.title": "MPE:블록 참조 복사",
+  "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "MPE:현재 소스 상대 경로 복사",
+  "markdown-preview-enhanced.copyCurrentSourcePath.title": "MPE:현재 소스 경로 복사",
   "markdown-preview-enhanced.toggleScrollSync.title": "MPE:스크롤 동기화 전환",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "MPE:실시간 업데이트 전환",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "MPE:줄바꿈 전환",
