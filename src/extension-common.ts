@@ -262,7 +262,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       return;
     }
 
-    const relativePath = vscode.workspace.asRelativePath(sourceUri, false);
+    const relativePath = vscode.workspace.asRelativePath(sourceUri);
     await vscode.env.clipboard.writeText(relativePath);
     vscode.window.showInformationMessage(
       `Copied relative source path: ${relativePath}`,
