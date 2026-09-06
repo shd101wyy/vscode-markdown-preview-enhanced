@@ -24,8 +24,8 @@ importers:
         specifier: ^0.4.0
         version: 0.4.1
       crossnote:
-        specifier: 0.9.33
-        version: 0.9.33(@types/node@25.9.5)
+        specifier: 0.9.34
+        version: 0.9.34(@types/node@25.9.5)
       crypto-js:
         specifier: ^4.2.0
         version: 4.2.0
@@ -1875,8 +1875,8 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
-  crossnote@0.9.33:
-    resolution: {integrity: sha512-KXaEzl3JT7L8/5O2MatApQAzM49BWry0alu+YSNqEjiM10FpBWAQuIVI5+LpvOdWXvGVLI0KtQUce3FyXtTriQ==}
+  crossnote@0.9.34:
+    resolution: {integrity: sha512-zAOk56I17GEgPgHTvVcubbkCMTsYZrTvLbYLwfXr+BAsw95an78dducMTkIMhxeq13LoU5+tmF2qlZORLNdVtg==}
     engines: {node: '>=18.0.0'}
 
   crypt@0.0.2:
@@ -2263,6 +2263,9 @@ packages:
   domhandler@5.0.3:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
+
+  dompurify@3.2.7:
+    resolution: {integrity: sha512-WhL/YuveyGXJaerVlMYGWhvQswa7myDG17P7Vu65EWC05o8vfeNbvNf4d/BOvH99+ZW+LlQsc1GDKMa1vNK6dw==}
 
   dompurify@3.4.14:
     resolution: {integrity: sha512-dVoH9z+MY+C9IilgGCk3YfFqjLi3fChm2OiKJMzh6axrJ5qwxqWaZamgmHrpv22CN/KdbZJuGEGgfQoL00LTdg==}
@@ -3635,6 +3638,11 @@ packages:
   markdown_yo@0.0.5:
     resolution: {integrity: sha512-VKWeIHJ4GZK5CyiZH7QYLF4gvnw7DeOc8Ro4kKNb94JApxZpsNMDtykQqtK4vfINLHvagmNlDSnedG1evePfdQ==}
 
+  marked@14.0.0:
+    resolution: {integrity: sha512-uIj4+faQ+MgHgwUW1l2PsPglZLOLOT1uErt06dAPtx2kjteLAkbsd/0FiYg/MGS+i7ZKLb7w2WClxHkzOOuryQ==}
+    engines: {node: '>= 18'}
+    hasBin: true
+
   marked@16.4.2:
     resolution: {integrity: sha512-TI3V8YYWvkVf3KJe1dRkpnjs68JUPyEa5vjKrp1XEEJUAOaQc+Qj+L1qWbPd0SJuAdQkFU0h73sXXqwDYxsiDA==}
     engines: {node: '>= 20'}
@@ -3809,8 +3817,8 @@ packages:
   mockdate@3.0.5:
     resolution: {integrity: sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==}
 
-  monaco-editor@0.43.0:
-    resolution: {integrity: sha512-cnoqwQi/9fml2Szamv1XbSJieGJ1Dc8tENVMD26Kcfl7xGQWp7OBKMjlwKVGYFJ3/AXJjSOGvcqK7Ry/j9BM1Q==}
+  monaco-editor@0.55.1:
+    resolution: {integrity: sha512-jz4x+TJNFHwHtwuV9vA9rMujcZRb0CEilTEwG2rRSpe/A7Jdkuj8xPKttCgOh+v/lkHy7HsZ64oj+q3xoAFl9A==}
 
   morgan@1.12.0:
     resolution: {integrity: sha512-OHpTRQwn2ezasILW8iKe+Yww1XsfWsZIpUOLF7RDb2g5GwO3trPaRwi7+8BDiJ7HFx2Kg2mfUdCBcVhwYlOz2g==}
@@ -6326,10 +6334,10 @@ snapshots:
     dependencies:
       state-local: 1.0.7
 
-  '@monaco-editor/react@4.7.0(monaco-editor@0.43.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@monaco-editor/react@4.7.0(monaco-editor@0.55.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@monaco-editor/loader': 1.7.0
-      monaco-editor: 0.43.0
+      monaco-editor: 0.55.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
@@ -7496,14 +7504,14 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  crossnote@0.9.33(@types/node@25.9.5):
+  crossnote@0.9.34(@types/node@25.9.5):
     dependencies:
       '@headlessui/react': 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@heroicons/react': 2.2.0(react@18.3.1)
       '@jitl/quickjs-singlefile-cjs-release-sync': 0.32.0
       '@mdi/js': 7.4.47
       '@mdi/react': 1.6.1
-      '@monaco-editor/react': 4.7.0(monaco-editor@0.43.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@monaco-editor/react': 4.7.0(monaco-editor@0.55.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@sanity/diff-match-patch': 3.2.0
       '@ungap/structured-clone': 1.4.0
       '@viz-js/viz': 3.29.0
@@ -7554,7 +7562,7 @@ snapshots:
       mermaid: 11.17.2
       minisearch: 6.3.0
       mkdirp: 3.0.1
-      monaco-editor: 0.43.0
+      monaco-editor: 0.55.1
       node-tikzjax: 1.0.5
       object-hash: 3.0.0
       onml: 2.1.0
@@ -7976,6 +7984,10 @@ snapshots:
   domhandler@5.0.3:
     dependencies:
       domelementtype: 2.3.0
+
+  dompurify@3.2.7:
+    optionalDependencies:
+      '@types/trusted-types': 2.0.7
 
   dompurify@3.4.14:
     optionalDependencies:
@@ -9648,6 +9660,8 @@ snapshots:
 
   markdown_yo@0.0.5: {}
 
+  marked@14.0.0: {}
+
   marked@16.4.2: {}
 
   matchdep@2.0.0:
@@ -9840,7 +9854,10 @@ snapshots:
 
   mockdate@3.0.5: {}
 
-  monaco-editor@0.43.0: {}
+  monaco-editor@0.55.1:
+    dependencies:
+      dompurify: 3.2.7
+      marked: 14.0.0
 
   morgan@1.12.0:
     dependencies:
