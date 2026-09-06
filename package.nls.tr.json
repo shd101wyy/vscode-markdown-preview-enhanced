@@ -8,6 +8,8 @@
   "markdown-preview-enhanced.openLockedPreviewToTheSide.title": "MPE:Kilitli önizlemeyi yanda aç",
   "markdown-preview-enhanced.togglePreviewLock.title": "MPE:Önizleme kilidini değiştir",
   "markdown-preview-enhanced.copyBlockReference.title": "MPE:Blok referansını kopyala",
+  "markdown-preview-enhanced.copyCurrentSourceRelativePath.title": "MPE:Geçerli kaynağın göreli yolunu kopyala",
+  "markdown-preview-enhanced.copyCurrentSourcePath.title": "MPE:Geçerli kaynağın yolunu kopyala",
   "markdown-preview-enhanced.toggleScrollSync.title": "MPE:Kaydırma senkronizasyonunu değiştir",
   "markdown-preview-enhanced.toggleLiveUpdate.title": "MPE:Canlı güncellemeyi değiştir",
   "markdown-preview-enhanced.toggleBreakOnSingleNewLine.title": "MPE:Satır sonu davranışını değiştir",

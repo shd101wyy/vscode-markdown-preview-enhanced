@@ -10,6 +10,10 @@ import {
   setBlockTranslation,
 } from './ai-translation-cache';
 import { getMPEConfig } from './config';
+import {
+  PreviewSourceState,
+  resolveActivePreviewSource,
+} from './current-preview-source';
 import { hashBlock, splitMarkdownBlocks } from './markdown-blocks';
 import NotebooksManager from './notebooks-manager';
 import {
@@ -169,6 +173,14 @@ export function getAllPreviewProviders(): PreviewProvider[] {
   return Array.from(WORKSPACE_PREVIEW_PROVIDER_MAP.values());
 }
 
+export function getActivePreviewSourceUri(): vscode.Uri | undefined {
+  return resolveActivePreviewSource(
+    getAllPreviewProviders().flatMap((provider) =>
+      provider.getPreviewSourceStates(),
+    ),
+  );
+}
+
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
 // https://github.com/Microsoft/vscode/tree/master/extensions/markdown/src
@@ -249,6 +261,9 @@ export class PreviewProvider {
    */
   private previewMaps: Map<string, Set<vscode.WebviewPanel>> = new Map();
   private previewToDocumentMap: Map<vscode.WebviewPanel, vscode.TextDocument> =
+    new Map();
+  /** The source URI whose HTML is currently installed in each preview. */
+  private previewToSourceUriMap: Map<vscode.WebviewPanel, vscode.Uri> =
     new Map();
   private initializedPreviews: Set<vscode.WebviewPanel> = new Set();
 
@@ -426,12 +441,20 @@ export class PreviewProvider {
     }
   }
 
+  public getPreviewSourceStates(): PreviewSourceState<vscode.Uri>[] {
+    return Array.from(this.initializedPreviews, (previewPanel) => ({
+      active: previewPanel.active,
+      sourceUri: this.previewToSourceUriMap.get(previewPanel),
+    }));
+  }
+
   public destroyPreview(sourceUri: Uri) {
     const previewMode = getPreviewMode();
     if (previewMode === PreviewMode.SinglePreview) {
       PreviewProvider.singlePreviewPanel = null;
       PreviewProvider.singlePreviewPanelSourceUriTarget = null;
       this.previewToDocumentMap = new Map();
+      this.previewToSourceUriMap = new Map();
       this.previewMaps = new Map();
       this.latestRenderRequestBySourceUri.clear();
     } else {
@@ -602,6 +625,7 @@ export class PreviewProvider {
         previewPanel.onDidDispose(
           () => {
             PreviewProvider.singlePreviewLocked = false;
+            this.previewToSourceUriMap.delete(previewPanel);
             this.destroyPreview(sourceUri);
             this.destroyEngine(sourceUri);
             this.initializedPreviews.delete(previewPanel);
@@ -704,6 +728,10 @@ export class PreviewProvider {
         return;
       }
       previewPanel.webview.html = html;
+      // Publish the source only after this render won the request race and its
+      // HTML was installed. Until then, the panel still represents its prior
+      // source (or has no reliably rendered source yet).
+      this.previewToSourceUriMap.set(previewPanel, sourceUri);
     } catch (error) {
       vscode.window.showErrorMessage(String(error));
       console.error(error);
@@ -729,6 +757,7 @@ export class PreviewProvider {
 
     this.previewMaps = new Map();
     this.previewToDocumentMap = new Map();
+    this.previewToSourceUriMap = new Map();
     // Clear all pending update timeouts
     this.updateTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.updateTimeouts.clear();

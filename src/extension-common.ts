@@ -10,12 +10,17 @@ import {
   openWikilinkTarget,
 } from './wikilink-document-link-provider';
 import { PreviewColorScheme, getMPEConfig, updateMPEConfig } from './config';
+import { formatPreviewSourcePath } from './current-preview-source';
 import { customEditorProviderOptions } from './custom-editor-options';
 import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
 import NotebooksManager from './notebooks-manager';
 import { PreviewCustomEditorProvider } from './preview-custom-editor-provider';
-import { PreviewProvider, getPreviewUri } from './preview-provider';
+import {
+  PreviewProvider,
+  getActivePreviewSourceUri,
+  getPreviewUri,
+} from './preview-provider';
 import { GraphViewProvider } from './graph-view-provider';
 import {
   createMissingMarkdownNote,
@@ -228,6 +233,51 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const ref = `[[${noteName}#^${blockId}]]`;
     await vscode.env.clipboard.writeText(ref);
     vscode.window.showInformationMessage(`Copied block reference: ${ref}`);
+  }
+
+  /**
+   * Resolve the source of the focused preview, warning the user when it cannot
+   * be determined.
+   */
+  function resolveCurrentPreviewSourceOrWarn(): vscode.Uri | undefined {
+    const sourceUri = getActivePreviewSourceUri();
+    if (!sourceUri) {
+      vscode.window.showWarningMessage(
+        'Focus the Markdown Preview Enhanced preview whose source you want to copy, then run this command again.',
+      );
+      return undefined;
+    }
+    return sourceUri;
+  }
+
+  async function copyCurrentSourceRelativePath() {
+    const sourceUri = resolveCurrentPreviewSourceOrWarn();
+    if (!sourceUri) {
+      return;
+    }
+    if (!vscode.workspace.getWorkspaceFolder(sourceUri)) {
+      vscode.window.showWarningMessage(
+        'The source of the focused Markdown preview is outside the workspace, so it has no workspace-relative path.',
+      );
+      return;
+    }
+
+    const relativePath = vscode.workspace.asRelativePath(sourceUri);
+    await vscode.env.clipboard.writeText(relativePath);
+    vscode.window.showInformationMessage(
+      `Copied relative source path: ${relativePath}`,
+    );
+  }
+
+  async function copyCurrentSourcePath() {
+    const sourceUri = resolveCurrentPreviewSourceOrWarn();
+    if (!sourceUri) {
+      return;
+    }
+
+    const sourcePath = formatPreviewSourcePath(sourceUri);
+    await vscode.env.clipboard.writeText(sourcePath);
+    vscode.window.showInformationMessage(`Copied source path: ${sourcePath}`);
   }
 
   function generateUniqueBlockId(text: string): string {
@@ -1318,6 +1368,17 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'markdown-preview-enhanced.togglePreviewLock',
       togglePreviewLock,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.copyCurrentSourceRelativePath',
+      copyCurrentSourceRelativePath,
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.copyCurrentSourcePath',
+      copyCurrentSourcePath,
     ),
   );
 
