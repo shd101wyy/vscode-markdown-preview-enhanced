@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug fixes
+
+- **Restore extension activation on Node.js 18-based VS Code releases** — pin crossnote's HTML parser to the compatible `cheerio` 1.0.0 release instead of resolving `cheerio` 1.2.0 / `undici` 7, which failed with `ReferenceError: File is not defined` before commands were registered. The extension now declares VS Code 1.86 as its minimum supported version, matching its Node.js 18.17 runtime requirement.
+
 ## [0.8.34] - 2026-09-06
 
 ### Features
