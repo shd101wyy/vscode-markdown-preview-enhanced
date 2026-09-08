@@ -83,9 +83,9 @@ What the workflow does, in order:
 
 The extension's `CHANGELOG.md` should carry everything users of **this** extension experience — including the user-visible changes that ship inside [crossnote](https://github.com/shd101wyy/crossnote) releases:
 
-- When a crossnote release is picked up (dependency pin bump), port its changelog entries into the extension's `[Unreleased]`, rewritten from the extension user's perspective ("the preview crashed…" rather than "markdown-it tokens…").
-- Do not duplicate: one change gets exactly one entry. If an entry exists because the extension itself changed (new setting, new command), fold the crossnote behavior it exposes into that entry instead of adding a second one — and drop entries that the `Updated crossnote to X.Y.Z` line already covers on its own.
-- Keep the crossnote issue/PR links and contributor credits (`by @author` / `Reported by @author`) when porting.
+- When a crossnote release is picked up (dependency pin bump), copy its changelog entries into the extension's `[Unreleased]` **verbatim** — same bold lead, same body wording, same links — under an umbrella line naming the crossnote release (e.g. "The following entries are taken verbatim from crossnote X.Y.Z"). Do not rewrite or paraphrase them.
+- Remove duplicates: omit a crossnote entry whose content an extension-specific entry already covers, and keep extension-specific entries (new commands, settings, `engines.vscode` changes) separate and unique to this repo. Extension-only context (e.g. linking the extension issue a crossnote fix resolves) belongs in the umbrella line, not inside the copied entries.
+- Verbatim copying preserves the crossnote issue/PR links and contributor credits (`by @author` / `Reported by @author`) automatically — never strip them. Note the release tag has no `v` prefix: `…/crossnote/releases/tag/0.9.35`.
 
 ### Branch protection on `develop`
 
