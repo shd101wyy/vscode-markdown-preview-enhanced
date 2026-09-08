@@ -522,6 +522,13 @@ export class PreviewProvider {
       } else {
         previewPanel = PreviewProvider.singlePreviewPanel;
         PreviewProvider.singlePreviewPanelSourceUriTarget = sourceUri;
+        // The panel already exists, so reusing it below never brings it to the
+        // foreground the way createWebviewPanel does for a brand-new panel.
+        // Honor preserveFocus so `openPreview` (preserveFocus=false) focuses
+        // the preview again, while side/locked previews keep the editor focus.
+        if (!viewOptions.preserveFocus) {
+          previewPanel.reveal();
+        }
       }
     } else if (previews && previews.length > 0 && !webviewPanel) {
       await Promise.all(
@@ -536,6 +543,11 @@ export class PreviewProvider {
           }),
         ),
       );
+      // Same reuse caveat as above: after refreshing the existing previews,
+      // surface the first one when the caller asked for focus.
+      if (!viewOptions.preserveFocus) {
+        previews[0].reveal();
+      }
       return;
     } else {
       const buildDir = utility.getCrossnoteBuildDirectory();
