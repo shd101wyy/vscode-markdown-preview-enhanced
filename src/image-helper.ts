@@ -21,7 +21,9 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
   let imageFileName = path.basename(imageFilePath);
   const projectDirectoryPath = getWorkspaceFolderUri(uri).fsPath;
   if (!projectDirectoryPath) {
-    return vscode.window.showErrorMessage('Cannot find workspace');
+    return vscode.window.showErrorMessage(
+      vscode.l10n.t('Cannot find workspace'),
+    );
   }
 
   let assetDirectoryPath: string;
@@ -92,7 +94,10 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
           }
 
           vscode.window.showInformationMessage(
-            `Image ${imageFileName} has been copied to folder ${assetDirectoryPath}`,
+            vscode.l10n.t('Image {name} has been copied to folder {folder}', {
+              name: imageFileName,
+              folder: assetDirectoryPath,
+            }),
           );
 
           let url = `${imageFolderPath}/${imageFileName}`;

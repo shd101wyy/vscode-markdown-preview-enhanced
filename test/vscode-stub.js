@@ -66,6 +66,17 @@ const VSCODE_STUB_SOURCE = `
   module.exports = {
     Uri,
     ViewColumn: { One: 1, Two: 2, Beside: -2 },
+    // Mirror vscode.l10n.t without a bundle: the source string is the
+    // English text, with {name} placeholders substituted from the args
+    // record (tests assert on the interpolated result).
+    l10n: {
+      t(message, args) {
+        if (!args || typeof args !== 'object') {
+          return message;
+        }
+        return message.replace(/\{(\w+)\}/g, (_, key) => String(args[key]));
+      },
+    },
     window: {
       createWebviewPanel: () => {
         throw new Error('createWebviewPanel is not stubbed; pass a webviewPanel instead');

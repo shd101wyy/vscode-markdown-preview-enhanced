@@ -102,7 +102,10 @@ class NotebooksManager {
     }
     this.filesystemRootWarnedPaths.add(key);
     void vscode.window.showWarningMessage(
-      `Markdown Preview Enhanced: the notebook root "${workspaceFolderUri.fsPath}" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.`,
+      vscode.l10n.t(
+        'Markdown Preview Enhanced: the notebook root "{root}" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.',
+        { root: workspaceFolderUri.fsPath },
+      ),
     );
   }
 

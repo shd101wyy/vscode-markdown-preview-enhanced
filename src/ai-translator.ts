@@ -57,7 +57,9 @@ export async function promptAndStoreApiKey(): Promise<boolean> {
     return false;
   }
   await setAiApiKey(key);
-  vscode.window.showInformationMessage('AI translation API key saved.');
+  vscode.window.showInformationMessage(
+    vscode.l10n.t('AI translation API key saved.'),
+  );
   return true;
 }
 

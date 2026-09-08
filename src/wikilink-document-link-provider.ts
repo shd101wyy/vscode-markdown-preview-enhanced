@@ -133,7 +133,9 @@ export async function openWikilinkTarget(
   );
   if (!targetUri) {
     vscode.window.showErrorMessage(
-      `Could not resolve wikilink: [[${wikilinkBody}]]`,
+      vscode.l10n.t('Could not resolve wikilink: [[{wikilink}]]', {
+        wikilink: wikilinkBody,
+      }),
     );
     return;
   }
@@ -148,7 +150,9 @@ export async function openWikilinkTarget(
     doc = await vscode.workspace.openTextDocument(targetUri);
   } catch (error) {
     vscode.window.showErrorMessage(
-      `Could not open file: ${path.basename(targetUri.fsPath)}`,
+      vscode.l10n.t('Could not open file: {name}', {
+        name: path.basename(targetUri.fsPath),
+      }),
     );
     console.error('openWikilinkTarget: openTextDocument failed', error);
     return;
