@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.35] - 2026-09-08
+
 ### Features
 
 - **Extension messages are now localizable (`vscode.l10n`)** — the ~43 user-facing strings shown via `vscode.window.show*Message` (export notifications, copy/warning prompts, activation failure, tag and wikilink errors, …) are routed through the standard `l10n` API with a new `l10n/bundle.l10n.json` source bundle and translated bundles for **every supported locale** (`az` — continuing [#2395](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2395) by @jamalkamaladdin — plus `zh-cn`, `zh-tw`, `ja`, `ko`, `es`, `fr`, `nl`, `pt-br`, `tr`); a new test enforces that every bundle ships the exact key set and `{placeholder}` set of the source bundle and that each `package.nls` locale has an `l10n` counterpart, so drift fails CI instead of silently falling back to English. `package.nls.az.json` also now keeps the backtick example identifiers (`#tag-name`, `#parent/child`, `[[Note]]`) in English, matching every other locale (review nits on #2395). The filesystem-root warning ([#2396](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2396)) gains a localized **Open Folder…** action button (desktop only) so drive-root workspaces can be replaced with a real folder in one click. This adopts the `l10n` API (VS Code ≥ 1.73), so `engines.vscode` moves to `^1.82.0` — the floor already required by the bundled crossnote runtime (cheerio 1.0.0 needs the Node 18.15+ extension host of VS Code ≥ 1.82; on 1.70–1.81 the extension cannot activate at all).
