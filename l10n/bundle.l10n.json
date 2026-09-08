@@ -37,6 +37,7 @@
   "Please open preview first.": "Please open preview first.",
   "AI translation API key saved.": "AI translation API key saved.",
   "Cannot find workspace": "Cannot find workspace",
+  "Open Folder…": "Open Folder…",
   "Image {name} has been copied to folder {folder}": "Image {name} has been copied to folder {folder}",
   "Could not resolve wikilink: [[{wikilink}]]": "Could not resolve wikilink: [[{wikilink}]]",
   "Could not open file: {name}": "Could not open file: {name}",

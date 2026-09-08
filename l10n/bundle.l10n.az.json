@@ -37,6 +37,7 @@
   "Please open preview first.": "Əvvəlcə ön baxışı açın.",
   "AI translation API key saved.": "AI tərcümə API açarı saxlanıldı.",
   "Cannot find workspace": "İş sahəsi tapılmır",
+  "Open Folder…": "Qovluq aç…",
   "Image {name} has been copied to folder {folder}": "{name} şəkli {folder} qovluğuna kopyalandı",
   "Could not resolve wikilink: [[{wikilink}]]": "Viki keçidi həll edilə bilmədi: [[{wikilink}]]",
   "Could not open file: {name}": "Fayl açıla bilmədi: {name}",
