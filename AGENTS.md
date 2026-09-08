@@ -75,8 +75,8 @@ What the workflow does, in order:
 1. Runs `pnpm run check:all`, `pnpm test`, and `pnpm run build`
 2. Bumps `package.json` (`npm version <level>`)
 3. Rewrites `CHANGELOG.md`: renames `## [Unreleased]` to `## [X.Y.Z] - <today>` and prepends a fresh empty `## [Unreleased]` section — **write changelog entries under `[Unreleased]` before dispatching a release**
-4. Publishes to the Visual Studio Marketplace (tolerated failure — re-run after fixing `VS_MARKETPLACE_TOKEN`; `skipDuplicate` keeps re-runs safe) and Open VSX
-5. Commits the bump + changelog on a `release/vX.Y.Z` branch, tags it, pushes the branch + tag, creates/updates the GitHub Release with the `.vsix` attached (master is deprecated and not pushed to)
+4. Packages the `.vsix` once, then publishes it to the Visual Studio Marketplace (up to **3 attempts** around vsce's ~3-minute request timeout — the gallery's server-side validation step stalls for hours at a time; "version already exists" counts as success so recovery re-runs stay green; a failure after all attempts is **tolerated** and surfaces as an `::error` annotation, not a failed run) and Open VSX (`skipDuplicate` keeps re-runs safe). To retry a failed Marketplace publish once the gallery recovers: `gh run rerun <run-id>` — re-runs reuse the original ref and inputs (same version), skip already-published targets, and skip the tag/release/PR bookkeeping that the first attempt already completed. Do **not** dispatch a fresh run to retry a publish — it would bump a new version.
+5. Commits the bump + changelog on a `release/vX.Y.Z` branch, tags it, pushes the branch + tag (idempotent: skipped when the tag already exists), creates/updates the GitHub Release with the `.vsix` attached (master is deprecated and not pushed to)
 6. Opens a `release/vX.Y.Z` → `develop` PR, approves it via the `RELEASE_TOKEN` secret, and auto-merges it
 
 ### Changelog content

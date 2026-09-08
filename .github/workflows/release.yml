@@ -79,62 +79,100 @@ jobs:
           version: ${{ steps.bump.outputs.new-version }}
           path: "CHANGELOG.md"
 
+      # Packaged once, published to both registries from the same file — byte
+      # identical on the Marketplace and Open VSX. vsce runs the
+      # `vscode:prepublish` script (frozen install + build) again here; that
+      # is slower but keeps packaging independent of the steps above.
+      - name: Package the extension
+        id: package
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.new-version }}
+        run: |
+          VSIX="markdown-preview-enhanced-${NEW_VERSION}.vsix"
+          npx --yes @vscode/vsce@3.9.2 package --out "$VSIX"
+          echo "vsixPath=$VSIX" >> "$GITHUB_OUTPUT"
+
+      # The gallery publish regularly times out inside vsce's ~3-minute
+      # request budget while the Marketplace's server-side validation step is
+      # slow (observed for hours on 2026-09-08). Retry the publish instead of
+      # failing once, and treat "version already exists" as success — a
+      # previous attempt may have completed server-side despite the client
+      # timeout, and recovery re-runs must stay green.
       - name: Publish extension to Visual Studio Marketplace
-        id: create_vsix
-        # A marketplace publish failure (e.g. an expired/missing
-        # VS_MARKETPLACE_TOKEN) must not fail the workflow: the vsix is still
-        # packaged (vsixPath is set before publishing), so Open VSX, the
-        # GitHub release, and the vsix attachment all proceed. Update the
-        # VS_MARKETPLACE_TOKEN secret and re-run this workflow to retry the
-        # publish; skipDuplicate makes re-runs safe for already-published
-        # versions.
+        id: marketplace_publish
         continue-on-error: true
-        uses: HaaLeo/publish-vscode-extension@v1
+        uses: nick-fields/retry@v3
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.new-version }}
+          VSIX: ${{ steps.package.outputs.vsixPath }}
+          VS_MARKETPLACE_TOKEN: ${{ secrets.VS_MARKETPLACE_TOKEN }}
         with:
-          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
-          registryUrl: https://marketplace.visualstudio.com
-          dependencies: false
-          skipDuplicate: true
+          max_attempts: 3
+          timeout_minutes: 10
+          retry_wait_seconds: 90
+          command: |
+            if curl -sf -X POST 'https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery' \
+                 -H 'Content-Type: application/json' \
+                 -H 'Accept: application/json;api-version=7.2-preview.1' \
+                 -d '{"filters":[{"criteria":[{"filterType":7,"value":"shd101wyy.markdown-preview-enhanced"}]}],"flags":215}' \
+                 | grep -q "\"version\":\"$NEW_VERSION\""; then
+              echo "$NEW_VERSION is already published to the Marketplace — skipping."
+              exit 0
+            fi
+            npx --yes @vscode/vsce@3.9.2 publish --packagePath "$VSIX" -p "$VS_MARKETPLACE_TOKEN"
 
       - name: Publish extension to Open VSX
         uses: HaaLeo/publish-vscode-extension@v1
         with:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           registryUrl: https://open-vsx.org
-          extensionFile: ${{ steps.create_vsix.outputs.vsixPath }}
+          extensionFile: ${{ steps.package.outputs.vsixPath }}
           dependencies: false
           # Keeps workflow re-runs green when the version is already published.
           skipDuplicate: true
 
-      - name: Warn about Visual Studio Marketplace publish failure
-        if: steps.create_vsix.outcome == 'failure'
+      # ::error (not ::warning) so a tolerated publish failure cannot hide in
+      # a green-looking run — continue-on-error marks the step itself green at
+      # the job level, the annotation is the only visible trace.
+      - name: Report Marketplace publish failure
+        if: steps.marketplace_publish.outcome == 'failure'
         run: |
-          echo "::warning::Publishing to the Visual Studio Marketplace failed (often caused by an invalid or missing VS_MARKETPLACE_TOKEN). Everything else succeeded."
-          echo "::warning::To retry: update the VS_MARKETPLACE_TOKEN secret, then re-run this workflow. Already-published versions are skipped (skipDuplicate)."
+          echo "::error::Publishing to the Visual Studio Marketplace failed after 3 attempts (usually the gallery's server-side validation timing out). Everything else succeeded — Open VSX and the GitHub Release are live."
+          echo "::error::To retry once the Marketplace recovers: re-run this workflow run. Already-published versions are detected and skipped, and re-runs stay green."
 
+      # Idempotent across re-runs: on a publish-retry re-run the tag (and the
+      # release branch/PR from the first attempt) already exist — skip the
+      # bookkeeping instead of failing on the existing tag.
       - name: Commit, tag and push the release branch
+        id: release_branch
         env:
           NEW_VERSION: ${{ steps.bump.outputs.new-version }}
         run: |
           git add package.json CHANGELOG.md
           git commit -m "$NEW_VERSION"
-          git tag "$NEW_VERSION"
-          # master is branch-protected and slated for deprecation — the
-          # release commit lives on release/v<version> and merges back to
-          # develop via the PR below; a direct push to master is both
-          # rejected (GH006) and unnecessary.
-          git push origin "HEAD:refs/heads/release/v$NEW_VERSION"
-          git push origin "refs/tags/$NEW_VERSION"
+          if git rev-parse -q --verify "refs/tags/$NEW_VERSION" >/dev/null; then
+            echo "tag $NEW_VERSION already exists — publish retry, skipping branch/tag push"
+            echo "first_run=false" >> "$GITHUB_OUTPUT"
+          else
+            # master is branch-protected and slated for deprecation — the
+            # release commit lives on release/v<version> and merges back to
+            # develop via the PR below; a direct push to master is both
+            # rejected (GH006) and unnecessary.
+            git tag "$NEW_VERSION"
+            git push origin "HEAD:refs/heads/release/v$NEW_VERSION"
+            git push origin "refs/tags/$NEW_VERSION"
+            echo "first_run=true" >> "$GITHUB_OUTPUT"
+          fi
 
       # Idempotent across workflow re-runs: an existing release is kept and
       # only the vsix asset is (re-)uploaded, so retrying a marketplace
-      # publish after updating VS_MARKETPLACE_TOKEN stays green.
+      # publish stays green.
       - name: Create or update GitHub Release
-        if: steps.create_vsix.outputs.vsixPath != ''
+        if: steps.package.outputs.vsixPath != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEW_VERSION: ${{ steps.bump.outputs.new-version }}
-          VSIX_PATH: ${{ steps.create_vsix.outputs.vsixPath }}
+          VSIX_PATH: ${{ steps.package.outputs.vsixPath }}
           RELEASE_NOTES: ${{ steps.changelog_reader.outputs.changes }}
         run: |
           echo "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.md"
@@ -146,7 +184,10 @@ jobs:
           fi
           gh release upload "$NEW_VERSION" "$VSIX_PATH" --clobber
 
+      # Only on a first run: a publish-retry re-run reuses the tag, release
+      # and PR that the original attempt already created and merged.
       - name: Open auto-merge PR back to develop
+        if: steps.release_branch.outputs.first_run == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEW_VERSION: ${{ steps.bump.outputs.new-version }}
@@ -160,6 +201,7 @@ jobs:
       # develop requires 1 approving review; the bot can't approve its own PR,
       # so RELEASE_TOKEN (a PAT of the maintainer) supplies the approval
       - name: Approve and auto-merge the release PR
+        if: steps.release_branch.outputs.first_run == 'true'
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           NEW_VERSION: ${{ steps.bump.outputs.new-version }}
