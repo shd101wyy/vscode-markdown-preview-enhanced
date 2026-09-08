@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug fixes
 
+- **Re-running the preview command now focuses the existing preview panel** — when a preview for the file was already open, `markdown-preview-enhanced.openPreview` and its keybinding only refreshed the content without revealing the panel; the reused panel (and the first matching one in multiple-preview mode) is now revealed and focused exactly like a freshly opened one, while side and locked previews keep the editor focused ([#2397](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2397) by @Li-Mingshuang).
+
 The following entries are taken verbatim from [crossnote 0.9.35](https://github.com/shd101wyy/crossnote/releases/tag/0.9.35), which this release picks up; the first one is the fix for the extension failing to activate with `File is not defined` on VS Code versions with a Node 18 extension host (e.g. [#2394](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2394)).
 
 - **Keep Crossnote loadable on its supported Node.js 18 runtime** — pin Cheerio to 1.0.0 instead of allowing its prerelease range to resolve to Node.js 20-only releases that fail with `ReferenceError: File is not defined`. The declared minimum is now Node.js 18.17, matching Cheerio's runtime requirement ([#493](https://github.com/shd101wyy/crossnote/issues/493) reported by @qiyu-lu).
