@@ -40,8 +40,8 @@ importers:
         specifier: ^25.6.0
         version: 25.9.5
       '@types/vscode':
-        specifier: 1.70.0
-        version: 1.70.0
+        specifier: 1.82.0
+        version: 1.82.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^8
         version: 8.68.0(@typescript-eslint/parser@8.68.0(eslint@10.9.1(jiti@1.21.7))(typescript@5.9.3))(eslint@10.9.1(jiti@1.21.7))(typescript@5.9.3)
@@ -1086,8 +1086,8 @@ packages:
   '@types/vfile@3.0.2':
     resolution: {integrity: sha512-b3nLFGaGkJ9rzOcuXRfHkZMdjsawuDD0ENL9fzTophtBg8FJHSGbH7daXkEpcwy3v7Xol3pAvsmlYyFhR4pqJw==}
 
-  '@types/vscode@1.70.0':
-    resolution: {integrity: sha512-3/9Fz0F2eBgwciazc94Ien+9u1elnjFg9YAhvAb3qDy/WeFWD9VrOPU7CIytryOVUdbxus8uzL4VZYONA0gDtA==}
+  '@types/vscode@1.82.0':
+    resolution: {integrity: sha512-VSHV+VnpF8DEm8LNrn8OJ8VuUNcBzN3tMvKrNpbhhfuVjFm82+6v44AbDhLvVFgCzn6vs94EJNTp7w8S6+Q1Rw==}
 
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
@@ -6615,7 +6615,7 @@ snapshots:
       '@types/unist': 3.0.3
       '@types/vfile-message': 2.0.0
 
-  '@types/vscode@1.70.0': {}
+  '@types/vscode@1.82.0': {}
 
   '@types/yauzl@2.10.3':
     dependencies:

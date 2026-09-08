@@ -122,7 +122,9 @@ export class GraphViewProvider {
             });
           } catch {
             vscode.window.showErrorMessage(
-              `Could not open file: ${relFilePath}`,
+              vscode.l10n.t('Could not open file: {name}', {
+                name: relFilePath,
+              }),
             );
           }
         } else if (message.command === 'saveSetting') {

@@ -24,6 +24,7 @@
   "packageManager": "pnpm@10.28.0",
   "main": "./out/native/extension.js",
   "browser": "./out/web/extension.js",
+  "l10n": "l10n/bundle.l10n.json",
   "scripts": {
     "build": "gulp copy-files && gulp clean-out && node build.js",
     "check:all": "pnpm check:eslint && pnpm check:prettier",
@@ -966,7 +967,7 @@
     "@eslint/js": "^10",
     "@types/mocha": "^5.2.5",
     "@types/node": "^25.6.0",
-    "@types/vscode": "1.70.0",
+    "@types/vscode": "1.82.0",
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
     "@vscode/test-web": "^0.0.80",
@@ -988,7 +989,7 @@
     "webpack-cli": "^5.1.4"
   },
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.82.0"
   },
   "pnpm": {
     "overrides": {

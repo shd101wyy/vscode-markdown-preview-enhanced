@@ -1092,7 +1092,9 @@ export class PreviewProvider {
       // Silent no-ops make the command look broken — say what's missing
       // (review on #2353).
       void vscode.window.showErrorMessage(
-        'AI translation is not configured: set markdown-preview-enhanced.aiTranslationProvider and aiTranslationModel, and store an API key with the "MPE: Set AI Translation API Key" command.',
+        vscode.l10n.t(
+          'AI translation is not configured: set markdown-preview-enhanced.aiTranslationProvider and aiTranslationModel, and store an API key with the "MPE: Set AI Translation API Key" command.',
+        ),
       );
       return;
     }
@@ -1443,7 +1445,9 @@ export class PreviewProvider {
       // A "Translating…" notification that just closes tells the user
       // nothing — surface the failure (review on #2353).
       const detail = result.error ?? 'unknown error';
-      void vscode.window.showErrorMessage(`Translation failed: ${detail}`);
+      void vscode.window.showErrorMessage(
+        vscode.l10n.t('Translation failed: {detail}', { detail }),
+      );
       return undefined;
     }
     return result.markdown;
@@ -1607,7 +1611,9 @@ export class PreviewProvider {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       if (isVSCodeWebExtension()) {
-        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+        vscode.window.showErrorMessage(
+          vscode.l10n.t('Not supported in MPE web extension.'),
+        );
       } else {
         engine.openInBrowser({}).catch((error) => {
           vscode.window.showErrorMessage(String(error));
@@ -1623,7 +1629,10 @@ export class PreviewProvider {
         .htmlExport({ offline })
         .then((dest) => {
           vscode.window.showInformationMessage(
-            `File ${path.basename(dest)} was created at path: ${dest}`,
+            vscode.l10n.t('File {name} was created at path: {path}', {
+              name: path.basename(dest),
+              path: dest,
+            }),
           );
         })
         .catch((error) => {
@@ -1636,7 +1645,9 @@ export class PreviewProvider {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       if (isVSCodeWebExtension()) {
-        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+        vscode.window.showErrorMessage(
+          vscode.l10n.t('Not supported in MPE web extension.'),
+        );
       } else {
         engine
           .chromeExport({ fileType: type, openFileAfterGeneration: true })
@@ -1656,7 +1667,9 @@ export class PreviewProvider {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       if (isVSCodeWebExtension()) {
-        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+        vscode.window.showErrorMessage(
+          vscode.l10n.t('Not supported in MPE web extension.'),
+        );
       } else {
         engine
           .princeExport({ openFileAfterGeneration: true })
@@ -1664,14 +1677,17 @@ export class PreviewProvider {
             if (dest.endsWith('?print-pdf')) {
               // presentation pdf
               vscode.window.showInformationMessage(
-                `Please copy and open the link: { ${dest.replace(
-                  /_/g,
-                  '\\_',
-                )} } in Chrome then Print as Pdf.`,
+                vscode.l10n.t(
+                  'Please copy and open the link: {link} in Chrome then Print as Pdf.',
+                  { link: dest.replace(/_/g, '\\_') },
+                ),
               );
             } else {
               vscode.window.showInformationMessage(
-                `File ${path.basename(dest)} was created at path: ${dest}`,
+                vscode.l10n.t('File {name} was created at path: {path}', {
+                  name: path.basename(dest),
+                  path: dest,
+                }),
               );
             }
           })
@@ -1686,13 +1702,18 @@ export class PreviewProvider {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       if (isVSCodeWebExtension()) {
-        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+        vscode.window.showErrorMessage(
+          vscode.l10n.t('Not supported in MPE web extension.'),
+        );
       } else {
         engine
           .eBookExport({ fileType, runAllCodeChunks: false })
           .then((dest) => {
             vscode.window.showInformationMessage(
-              `eBook ${path.basename(dest)} was created as path: ${dest}`,
+              vscode.l10n.t('eBook {name} was created as path: {path}', {
+                name: path.basename(dest),
+                path: dest,
+              }),
             );
           })
           .catch((error) => {
@@ -1706,13 +1727,18 @@ export class PreviewProvider {
     const engine = this.getEngine(sourceUri);
     if (engine) {
       if (isVSCodeWebExtension()) {
-        vscode.window.showErrorMessage(`Not supported in MPE web extension.`);
+        vscode.window.showErrorMessage(
+          vscode.l10n.t('Not supported in MPE web extension.'),
+        );
       } else {
         engine
           .pandocExport({ openFileAfterGeneration: true })
           .then((dest) => {
             vscode.window.showInformationMessage(
-              `Document ${path.basename(dest)} was created as path: ${dest}`,
+              vscode.l10n.t('Document {name} was created as path: {path}', {
+                name: path.basename(dest),
+                path: dest,
+              }),
             );
           })
           .catch((error) => {
@@ -1826,9 +1852,13 @@ export class PreviewProvider {
 
   public async openImageHelper(sourceUri: Uri) {
     if (sourceUri.scheme === 'markdown-preview-enhanced') {
-      return vscode.window.showWarningMessage('Please focus a markdown file.');
+      return vscode.window.showWarningMessage(
+        vscode.l10n.t('Please focus a markdown file.'),
+      );
     } else if (!this.isPreviewOn(sourceUri)) {
-      return vscode.window.showWarningMessage('Please open preview first.');
+      return vscode.window.showWarningMessage(
+        vscode.l10n.t('Please open preview first.'),
+      );
     } else {
       return await this.postMessageToPreview(sourceUri, {
         command: 'openImageHelper',

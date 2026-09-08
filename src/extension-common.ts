@@ -98,7 +98,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     } catch (error) {
       console.error('[MPE] openPreviewToTheSide failed:', error);
       vscode.window.showErrorMessage(
-        `MPE Preview failed: ${error instanceof Error ? error.message : String(error)}`,
+        vscode.l10n.t('MPE Preview failed: {message}', {
+          message: error instanceof Error ? error.message : String(error),
+        }),
       );
     }
   }
@@ -148,7 +150,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     } catch (error) {
       console.error('[MPE] openLockedPreviewToTheSide failed:', error);
       vscode.window.showErrorMessage(
-        `MPE Preview failed: ${error instanceof Error ? error.message : String(error)}`,
+        vscode.l10n.t('MPE Preview failed: {message}', {
+          message: error instanceof Error ? error.message : String(error),
+        }),
       );
     }
   }
@@ -164,8 +168,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const locked = previewProvider.toggleSinglePreviewLock();
     vscode.window.showInformationMessage(
       locked
-        ? 'Preview is locked to the current file.'
-        : 'Preview is unlocked and will follow the active editor.',
+        ? vscode.l10n.t('Preview is locked to the current file.')
+        : vscode.l10n.t(
+            'Preview is unlocked and will follow the active editor.',
+          ),
     );
   }
 
@@ -178,12 +184,12 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   async function copyBlockReference() {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      vscode.window.showWarningMessage('No active editor.');
+      vscode.window.showWarningMessage(vscode.l10n.t('No active editor.'));
       return;
     }
     if (!isMarkdownFile(editor.document)) {
       vscode.window.showWarningMessage(
-        'Block references only work in Markdown files.',
+        vscode.l10n.t('Block references only work in Markdown files.'),
       );
       return;
     }
@@ -192,19 +198,23 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const lineText = doc.lineAt(cursorLineNo).text;
     if (!lineText.trim()) {
       vscode.window.showWarningMessage(
-        'Place the cursor on the paragraph or list item you want to reference.',
+        vscode.l10n.t(
+          'Place the cursor on the paragraph or list item you want to reference.',
+        ),
       );
       return;
     }
     if (/^\s*#{1,6}\s/.test(lineText)) {
       vscode.window.showWarningMessage(
-        'Headings already have anchor IDs. Use [[note#Heading]] to link to a heading.',
+        vscode.l10n.t(
+          'Headings already have anchor IDs. Use [[note#Heading]] to link to a heading.',
+        ),
       );
       return;
     }
     if (isInFencedBlock(doc, cursorLineNo)) {
       vscode.window.showWarningMessage(
-        'Cannot place a block ID inside a code fence.',
+        vscode.l10n.t('Cannot place a block ID inside a code fence.'),
       );
       return;
     }
@@ -221,7 +231,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         edit.insert(doc.lineAt(cursorLineNo).range.end, ` ^${blockId}`);
       });
       if (!ok) {
-        vscode.window.showErrorMessage('Failed to insert block ID.');
+        vscode.window.showErrorMessage(
+          vscode.l10n.t('Failed to insert block ID.'),
+        );
         return;
       }
     }
@@ -232,7 +244,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     );
     const ref = `[[${noteName}#^${blockId}]]`;
     await vscode.env.clipboard.writeText(ref);
-    vscode.window.showInformationMessage(`Copied block reference: ${ref}`);
+    vscode.window.showInformationMessage(
+      vscode.l10n.t('Copied block reference: {ref}', { ref }),
+    );
   }
 
   /**
@@ -243,7 +257,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const sourceUri = getActivePreviewSourceUri();
     if (!sourceUri) {
       vscode.window.showWarningMessage(
-        'Focus the Markdown Preview Enhanced preview whose source you want to copy, then run this command again.',
+        vscode.l10n.t(
+          'Focus the Markdown Preview Enhanced preview whose source you want to copy, then run this command again.',
+        ),
       );
       return undefined;
     }
@@ -257,7 +273,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     }
     if (!vscode.workspace.getWorkspaceFolder(sourceUri)) {
       vscode.window.showWarningMessage(
-        'The source of the focused Markdown preview is outside the workspace, so it has no workspace-relative path.',
+        vscode.l10n.t(
+          'The source of the focused Markdown preview is outside the workspace, so it has no workspace-relative path.',
+        ),
       );
       return;
     }
@@ -265,7 +283,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const relativePath = vscode.workspace.asRelativePath(sourceUri);
     await vscode.env.clipboard.writeText(relativePath);
     vscode.window.showInformationMessage(
-      `Copied relative source path: ${relativePath}`,
+      vscode.l10n.t('Copied relative source path: {path}', {
+        path: relativePath,
+      }),
     );
   }
 
@@ -277,7 +297,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
     const sourcePath = formatPreviewSourcePath(sourceUri);
     await vscode.env.clipboard.writeText(sourcePath);
-    vscode.window.showInformationMessage(`Copied source path: ${sourcePath}`);
+    vscode.window.showInformationMessage(
+      vscode.l10n.t('Copied source path: {path}', { path: sourcePath }),
+    );
   }
 
   function generateUniqueBlockId(text: string): string {
@@ -327,9 +349,13 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const scrollSync = !getMPEConfig<boolean>('scrollSync');
     await updateMPEConfig('scrollSync', scrollSync, true);
     if (scrollSync) {
-      vscode.window.showInformationMessage('Scroll Sync is enabled');
+      vscode.window.showInformationMessage(
+        vscode.l10n.t('Scroll Sync is enabled'),
+      );
     } else {
-      vscode.window.showInformationMessage('Scroll Sync is disabled');
+      vscode.window.showInformationMessage(
+        vscode.l10n.t('Scroll Sync is disabled'),
+      );
     }
   }
 
@@ -337,9 +363,13 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const liveUpdate = !getMPEConfig<boolean>('liveUpdate');
     await updateMPEConfig('liveUpdate', liveUpdate, true);
     if (liveUpdate) {
-      vscode.window.showInformationMessage('Live Update is enabled');
+      vscode.window.showInformationMessage(
+        vscode.l10n.t('Live Update is enabled'),
+      );
     } else {
-      vscode.window.showInformationMessage('Live Update is disabled');
+      vscode.window.showInformationMessage(
+        vscode.l10n.t('Live Update is disabled'),
+      );
     }
   }
 
@@ -348,11 +378,11 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     updateMPEConfig('breakOnSingleNewLine', breakOnSingleNewLine, true);
     if (breakOnSingleNewLine) {
       vscode.window.showInformationMessage(
-        'Break On Single New Line is enabled',
+        vscode.l10n.t('Break On Single New Line is enabled'),
       );
     } else {
       vscode.window.showInformationMessage(
-        'Break On Single New Line is disabled',
+        vscode.l10n.t('Break On Single New Line is disabled'),
       );
     }
   }
@@ -667,7 +697,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const currentWorkingDirectory = getCurrentWorkingDirectory();
     if (!currentWorkingDirectory) {
       return vscode.window.showErrorMessage(
-        'Please open a folder before customizing CSS',
+        vscode.l10n.t('Please open a folder before customizing CSS'),
       );
     }
     const styleLessFile = vscode.Uri.joinPath(
@@ -682,7 +712,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const currentWorkingDirectory = getCurrentWorkingDirectory();
     if (!currentWorkingDirectory) {
       return vscode.window.showErrorMessage(
-        'Please open a folder before customizing config script',
+        vscode.l10n.t('Please open a folder before customizing config script'),
       );
     }
 
@@ -698,7 +728,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const currentWorkingDirectory = getCurrentWorkingDirectory();
     if (!currentWorkingDirectory) {
       return vscode.window.showErrorMessage(
-        'Please open a folder before extending parser',
+        vscode.l10n.t('Please open a folder before extending parser'),
       );
     }
 
@@ -714,7 +744,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     const currentWorkingDirectory = getCurrentWorkingDirectory();
     if (!currentWorkingDirectory) {
       return vscode.window.showErrorMessage(
-        'Please open a folder before customizing preview html head',
+        vscode.l10n.t(
+          'Please open a folder before customizing preview html head',
+        ),
       );
     }
 
@@ -936,14 +968,19 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     } catch (error) {
       console.error('[MPE] clickTag lookup failed:', error);
       vscode.window.showErrorMessage(
-        `MPE: failed to look up tag #${tag}: ${error instanceof Error ? error.message : String(error)}`,
+        vscode.l10n.t('MPE: failed to look up tag #{tag}: {message}', {
+          tag,
+          message: error instanceof Error ? error.message : String(error),
+        }),
       );
       return;
     }
 
     const filePaths = Object.keys(notes);
     if (filePaths.length === 0) {
-      vscode.window.showInformationMessage(`No notes mention #${tag}.`);
+      vscode.window.showInformationMessage(
+        vscode.l10n.t('No notes mention #{tag}.', { tag }),
+      );
       return;
     }
 
@@ -1773,7 +1810,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-          vscode.window.showWarningMessage('Open a markdown file first.');
+          vscode.window.showWarningMessage(
+            vscode.l10n.t('Open a markdown file first.'),
+          );
           return;
         }
         const previewProvider = await getPreviewContentProvider(
@@ -1787,7 +1826,9 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-          vscode.window.showWarningMessage('Open a markdown file first.');
+          vscode.window.showWarningMessage(
+            vscode.l10n.t('Open a markdown file first.'),
+          );
           return;
         }
         const previewProvider = await getPreviewContentProvider(
