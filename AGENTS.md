@@ -27,6 +27,11 @@ This is the **VS Code extension** for Markdown Preview Enhanced. It wraps the [c
 - Package manager: **pnpm** (not npm or yarn), pinned via the `packageManager` field in `package.json`
 - **nix shell**: the dev environment (node, pnpm, vsce, playwright browsers) is provided by `flake.nix` → `shell.nix`. With direnv (`use flake` in `.envrc`) the tools are available automatically; otherwise prefix commands with `nix develop -c` (e.g. `nix develop -c pnpm build`).
 
+### Runtime Support
+
+- **`engines.vscode` floor is `^1.82.0`** (decided 2026-09-08, after [crossnote#493](https://github.com/shd101wyy/crossnote/issues/493) / [crossnote#494](https://github.com/shd101wyy/crossnote/pull/494)) — VS Code 1.82 is the first release whose extension host runs Node 18 (Electron 25 → Node 18.15.0). Older VS Codes run Node 16, where the bundled cheerio cannot load at all (`ReadableStream is not defined`). Use `^1.82.0`, not a higher floor such as `^1.86.0`: VS Code 1.82–1.85 sit below cheerio's declared Node minimum (18.17) but were verified working, and crossnote's full test suite passes on Node 18.15.0.
+- **cheerio must resolve to exactly `1.0.0`** — never widen crossnote's pin back to a `^` range. A floating `^1.0.0-rc.12` resolved to cheerio 1.2.0 (requires Node ≥ 20.18) in extension 0.8.32+ and crashed activation with `ReferenceError: File is not defined`. See crossnote's `AGENTS.md` → "Runtime Support" for the VS Code/Electron/Node mapping and the full evidence.
+
 ### Build & Lint
 
 - Build: `pnpm build`
