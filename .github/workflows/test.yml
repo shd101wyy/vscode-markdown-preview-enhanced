@@ -32,13 +32,24 @@ jobs:
       - name: 'Build and test'
         run: |
           pnpm install --frozen-lockfile
-          npm install -g @vscode/vsce@2.32.0
           pnpm run check:all
           # Build before test: test/native-runtime-compat.test.js loads the
           # bundle from out/native/ to guard the shipped artifact against
           # Node-20-only dependencies (#2394).
           pnpm run build
           pnpm test
+      # vsce needs the Node 20 runtime (its bundled undici touches the `File`
+      # global at load — 2.32.0 crashes on Node 18 with "File is not defined"
+      # despite engines claiming >= 16 — and 3.x declares engines >= 20), so
+      # packaging runs on Node 20. Everything above gates the extension
+      # itself on Node 18, the runtime of the VS Code extension host.
+      - name: 'Install nodejs 20 for vsce'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - name: 'Package the vsix'
+        run: |
+          npm install -g @vscode/vsce@3.9.2
           # --no-dependencies: vsce's built-in dependency check runs
           # `npm list`, which fails on pnpm's symlinked node_modules layout.
           # The extension is fully bundled by esbuild, so runtime

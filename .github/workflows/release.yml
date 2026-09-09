@@ -82,6 +82,17 @@ jobs:
           version: ${{ steps.bump.outputs.new-version }}
           path: "CHANGELOG.md"
 
+      # vsce needs the Node 20 runtime (its bundled undici touches the `File`
+      # global at load — 2.32.0 crashes on Node 18 with "File is not defined"
+      # despite engines claiming >= 16 — and 3.x declares engines >= 20), so
+      # packaging and publishing run on Node 20. The lint/test/build steps
+      # above gated the extension itself on Node 18, the runtime of the
+      # VS Code extension host.
+      - name: Install nodejs 20 for vsce
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
       # Packaged once, published to both registries from the same file — byte
       # identical on the Marketplace and Open VSX. vsce runs the
       # `vscode:prepublish` script (frozen install + build) again here; that
@@ -92,10 +103,7 @@ jobs:
           NEW_VERSION: ${{ steps.bump.outputs.new-version }}
         run: |
           VSIX="markdown-preview-enhanced-${NEW_VERSION}.vsix"
-          # 2.32.0 is the last vsce line whose engines allow Node 18 (3.x needs
-          # >= 20); the release job itself now runs on Node 18, matching the
-          # extension host.
-          npx --yes @vscode/vsce@2.32.0 package --out "$VSIX"
+          npx --yes @vscode/vsce@3.9.2 package --out "$VSIX"
           echo "vsixPath=$VSIX" >> "$GITHUB_OUTPUT"
 
       # The gallery publish regularly times out inside vsce's ~3-minute
@@ -125,10 +133,7 @@ jobs:
               echo "$NEW_VERSION is already published to the Marketplace — skipping."
               exit 0
             fi
-            # 2.32.0 is the last vsce line whose engines allow Node 18 (3.x
-            # needs >= 20); the release job itself now runs on Node 18,
-            # matching the extension host.
-            npx --yes @vscode/vsce@2.32.0 publish --packagePath "$VSIX" -p "$VS_MARKETPLACE_TOKEN"
+            npx --yes @vscode/vsce@3.9.2 publish --packagePath "$VSIX" -p "$VS_MARKETPLACE_TOKEN"
 
       - name: Publish extension to Open VSX
         uses: HaaLeo/publish-vscode-extension@v1
