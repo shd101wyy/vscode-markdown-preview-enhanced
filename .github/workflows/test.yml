@@ -18,17 +18,21 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: 'Install nodejs 20'
-        uses: actions/setup-node@v2
-        with:
-          node-version: '20'
       - name: 'Install pnpm'
         uses: pnpm/action-setup@v4
         # The pnpm version is read from the packageManager field in package.json
+      - name: 'Install nodejs'
+        # Node 18: the runtime of the VS Code extension host this extension
+        # must load on (see the Runtime Support note in AGENTS.md). Read from
+        # .tool-versions to stay in sync with the nix dev shell.
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .tool-versions
+          cache: pnpm
       - name: 'Build and test'
         run: |
           pnpm install --frozen-lockfile
-          npm install -g @vscode/vsce
+          npm install -g @vscode/vsce@2.32.0
           pnpm run check:all
           # Build before test: test/native-runtime-compat.test.js loads the
           # bundle from out/native/ to guard the shipped artifact against

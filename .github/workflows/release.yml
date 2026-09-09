@@ -28,10 +28,13 @@ jobs:
           # full history so we can push the release branch and tag
           fetch-depth: 0
 
-      - name: Install nodejs 20
+      - name: Install nodejs
+        # Node 18: the runtime of the VS Code extension host this extension
+        # must load on (see the Runtime Support note in AGENTS.md). Read from
+        # .tool-versions to stay in sync with the nix dev shell.
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version-file: .tool-versions
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -89,7 +92,10 @@ jobs:
           NEW_VERSION: ${{ steps.bump.outputs.new-version }}
         run: |
           VSIX="markdown-preview-enhanced-${NEW_VERSION}.vsix"
-          npx --yes @vscode/vsce@3.9.2 package --out "$VSIX"
+          # 2.32.0 is the last vsce line whose engines allow Node 18 (3.x needs
+          # >= 20); the release job itself now runs on Node 18, matching the
+          # extension host.
+          npx --yes @vscode/vsce@2.32.0 package --out "$VSIX"
           echo "vsixPath=$VSIX" >> "$GITHUB_OUTPUT"
 
       # The gallery publish regularly times out inside vsce's ~3-minute
@@ -119,7 +125,10 @@ jobs:
               echo "$NEW_VERSION is already published to the Marketplace — skipping."
               exit 0
             fi
-            npx --yes @vscode/vsce@3.9.2 publish --packagePath "$VSIX" -p "$VS_MARKETPLACE_TOKEN"
+            # 2.32.0 is the last vsce line whose engines allow Node 18 (3.x
+            # needs >= 20); the release job itself now runs on Node 18,
+            # matching the extension host.
+            npx --yes @vscode/vsce@2.32.0 publish --packagePath "$VSIX" -p "$VS_MARKETPLACE_TOKEN"
 
       - name: Publish extension to Open VSX
         uses: HaaLeo/publish-vscode-extension@v1
