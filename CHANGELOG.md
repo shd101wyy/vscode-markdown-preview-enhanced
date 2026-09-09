@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Improvements
+
+- **CI now guards the shipped bundle against Node-20-only dependencies** — extensions 0.8.32–0.8.34 bundled cheerio 1.2.0 and failed to activate with `ReferenceError: File is not defined` on VS Code versions whose extension host runs Node 18 ([#2394](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2394)). crossnote 0.9.35 pinned cheerio back to 1.0.0; a new unit test now loads `out/native/extension.js` in a `File`-less child process (and CI builds before running the tests) so a future dependency bump that reintroduces Node-20-only module-scope code fails CI instead of shipping.
+
+### Documentation
+
+- The README gains a **Getting Started** section explaining that the preview opens manually — right-click → _Markdown Preview Enhanced: Open Preview to the Side_, <kbd>ctrl-k v</kbd>, or the Command Palette — and that opening an entire drive as the workspace disables note indexing with a warning, the two points raised in [#2396](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2396).
+
 ## [0.8.35] - 2026-09-08
 
 ### Features
