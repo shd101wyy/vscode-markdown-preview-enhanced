@@ -9,6 +9,7 @@ import {
   startCrossnoteServer,
   stopCrossnoteServer,
 } from './crossnote-server';
+import { buildAndSaveWiki } from './crossnote-wiki';
 import { initExtensionCommon } from './extension-common';
 import { PreviewProvider } from './preview-provider';
 import { globalConfigPath } from './utils';
@@ -143,6 +144,10 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'markdown-preview-enhanced.stopCrossnoteServer',
       () => stopCrossnoteServer(),
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.buildStandaloneWiki',
+      () => buildAndSaveWiki(context),
     ),
     { dispose: disposeCrossnoteServer },
   );

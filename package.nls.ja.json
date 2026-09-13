@@ -145,5 +145,6 @@
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "閲覧者のシステム設定に追従します。設定テーマの明/暗両バリアントを埋め込み、閲覧者の OS の明暗切り替えに応じてページも切り替わります（`prefers-color-scheme`）。",
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:crossnoteサーバーを起動",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:crossnoteサーバーを停止",
-  "markdown-preview-enhanced.crossnoteServePort.description": "「crossnoteサーバーを起動」コマンドで起動したcrossnoteサーバーが使用するポートです。使用中の場合は自動的に増加します。"
+  "markdown-preview-enhanced.crossnoteServePort.description": "「crossnoteサーバーを起動」コマンドで起動したcrossnoteサーバーが使用するポートです。使用中の場合は自動的に増加します。",
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:スタンドアロンwiki（HTML）をビルド"
 }

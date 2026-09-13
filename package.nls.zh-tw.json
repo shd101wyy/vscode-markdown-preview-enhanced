@@ -145,5 +145,6 @@
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "跟隨閱讀者的系統配色：匯出檔案內嵌已設定主題的明、暗兩個變體，頁面會隨閱讀者作業系統的明暗切換而切換（`prefers-color-scheme`）。",
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:啟動 crossnote 伺服器",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:停止 crossnote 伺服器",
-  "markdown-preview-enhanced.crossnoteServePort.description": "「啟動 crossnote 伺服器」命令所啟動的 crossnote 伺服器使用的連接埠（被佔用時自動遞增）。"
+  "markdown-preview-enhanced.crossnoteServePort.description": "「啟動 crossnote 伺服器」命令所啟動的 crossnote 伺服器使用的連接埠（被佔用時自動遞增）。",
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:建置單檔 Wiki（HTML）"
 }

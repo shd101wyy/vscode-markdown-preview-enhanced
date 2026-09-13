@@ -145,5 +145,6 @@
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Oxucunun sistem rəng sxemini izlə: ixrac konfiqurasiya edilmiş temaların həm açıq, həm də tünd variantlarını daxil edir və oxucunun ƏS-i keçdikdə səhifə də keçir (`prefers-color-scheme`).",
   "markdown-preview-enhanced.startCrossnoteServer.title": "Markdown Preview Enhanced: crossnote serverini başlat",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "Markdown Preview Enhanced: crossnote serverini dayandır",
-  "markdown-preview-enhanced.crossnoteServePort.description": "\"crossnote serverini başlat\" əmri ilə başladılmış crossnote serveri tərəfindən istifadə olunan port. Məşğul olduqda avtomatik artır."
+  "markdown-preview-enhanced.crossnoteServePort.description": "\"crossnote serverini başlat\" əmri ilə başladılmış crossnote serveri tərəfindən istifadə olunan port. Məşğul olduqda avtomatik artır.",
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "Markdown Preview Enhanced: Standalone wiki (HTML) qur"
 }

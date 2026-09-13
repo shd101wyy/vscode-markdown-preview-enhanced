@@ -145,5 +145,6 @@
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Follow the reader's system color scheme: the export embeds both the light and dark variants of the configured themes, and the page switches when the reader's OS switches (`prefers-color-scheme`).",
   "markdown-preview-enhanced.startCrossnoteServer.title": "Markdown Preview Enhanced: Start crossnote Server",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "Markdown Preview Enhanced: Stop crossnote Server",
-  "markdown-preview-enhanced.crossnoteServePort.description": "Port used by the crossnote server started via the Start crossnote Server command. Auto-increments when busy."
+  "markdown-preview-enhanced.crossnoteServePort.description": "Port used by the crossnote server started via the Start crossnote Server command. Auto-increments when busy.",
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "Markdown Preview Enhanced: Build standalone Wiki (HTML)"
 }

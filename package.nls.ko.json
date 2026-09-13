@@ -145,5 +145,6 @@
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "읽는 사람의 시스템 색 구성표를 따릅니다. 설정된 테마의 밝은/어두운 변형을 모두 포함하고, 읽는 사람의 OS가 전환되면 페이지도 전환됩니다(`prefers-color-scheme`).",
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:crossnote 서버 시작",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:crossnote 서버 중지",
-  "markdown-preview-enhanced.crossnoteServePort.description": "'crossnote 서버 시작' 명령으로 시작한 crossnote 서버가 사용하는 포트입니다. 사용 중인 경우 자동으로 증가합니다."
+  "markdown-preview-enhanced.crossnoteServePort.description": "'crossnote 서버 시작' 명령으로 시작한 crossnote 서버가 사용하는 포트입니다. 사용 중인 경우 자동으로 증가합니다.",
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:단독 위키(HTML) 빌드"
 }
