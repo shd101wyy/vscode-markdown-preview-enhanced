@@ -4,6 +4,11 @@ import { utility } from 'crossnote';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import {
+  disposeCrossnoteServer,
+  startCrossnoteServer,
+  stopCrossnoteServer,
+} from './crossnote-server';
 import { initExtensionCommon } from './extension-common';
 import { PreviewProvider } from './preview-provider';
 import { globalConfigPath } from './utils';
@@ -124,5 +129,21 @@ export async function activate(context: vscode.ExtensionContext) {
       '_crossnote.showUploadedImageHistory',
       showUploadedImages,
     ),
+  );
+
+  // The crossnote serve child process (spawns out/native/crossnote-serve.js
+  // for the current workspace's folders). Registered here, not in
+  // extension-common, because the web extension cannot spawn processes — the
+  // commands are hidden there via their `enablement` in package.json.
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.startCrossnoteServer',
+      () => startCrossnoteServer(context),
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.stopCrossnoteServer',
+      () => stopCrossnoteServer(),
+    ),
+    { dispose: disposeCrossnoteServer },
   );
 }
