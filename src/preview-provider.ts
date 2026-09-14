@@ -89,6 +89,7 @@ const WEBVIEW_MESSAGE_COMMANDS: Set<string> = new Set([
   'clickTagA',
   'clickTaskListCheckbox',
   'eBookExport',
+  'exportStandaloneWiki',
   'graphViewReady',
   'htmlExport',
   'insertImageUrl',

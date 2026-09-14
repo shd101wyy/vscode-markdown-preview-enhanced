@@ -201,6 +201,12 @@
         "title": "%markdown-preview-enhanced.stopCrossnoteServer.title%",
         "category": "Markdown",
         "enablement": "markdown-preview-enhanced.crossnoteServerRunning && !isWeb"
+      },
+      {
+        "command": "markdown-preview-enhanced.buildStandaloneWiki",
+        "title": "%markdown-preview-enhanced.buildStandaloneWiki.title%",
+        "category": "Markdown",
+        "enablement": "!isWeb"
       }
     ],
     "configuration": {

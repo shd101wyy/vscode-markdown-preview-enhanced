@@ -145,5 +145,6 @@
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Sigue el esquema de color del sistema del lector: la exportación incrusta las variantes clara y oscura de los temas configurados y la página cambia cuando el sistema operativo del lector cambia (`prefers-color-scheme`).",
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:Iniciar el servidor crossnote",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:Detener el servidor crossnote",
-  "markdown-preview-enhanced.crossnoteServePort.description": "Puerto que usa el servidor crossnote iniciado con el comando Iniciar el servidor crossnote. Se incrementa automáticamente si está ocupado."
+  "markdown-preview-enhanced.crossnoteServePort.description": "Puerto que usa el servidor crossnote iniciado con el comando Iniciar el servidor crossnote. Se incrementa automáticamente si está ocupado.",
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Crear wiki autónoma (HTML)"
 }

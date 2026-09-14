@@ -4,6 +4,7 @@
  * - ./node_modules/crossnote/out/dependencies/. to ./crossnote/dependencies/
  * - ./node_modules/crossnote/out/styles/.       to ./crossnote/styles/
  * - ./node_modules/crossnote/out/webview/.      to ./crossnote/webview/
+ * - ./node_modules/crossnote/out/wiki-app/.     to ./crossnote/wiki-app/
  */
 const gulp = require('gulp');
 const fs = require('fs');
@@ -32,6 +33,9 @@ gulp.task('copy-files', (cb) => {
   gulp
     .src('./node_modules/crossnote/out/webview/**/*', { encoding: false })
     .pipe(gulp.dest('./crossnote/webview/'));
+  gulp
+    .src('./node_modules/crossnote/out/wiki-app/**/*', { encoding: false })
+    .pipe(gulp.dest('./crossnote/wiki-app/'));
 
   console.log('Copy files done.');
 
