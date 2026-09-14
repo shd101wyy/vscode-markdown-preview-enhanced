@@ -68,6 +68,33 @@ const nativeConfig = {
   plugins: [xhrSyncWorkerExternalPlugin],
 };
 
+// The `crossnote serve` CLI bundle spawned by the extension's Start/Stop
+// Crossnote Server commands. It requires a crossnote dependency that exports
+// `./cli`; against older versions (before the serve CLI existed) the bundle
+// is skipped so the build stays green, and the command explains at runtime.
+let serveCliAvailable = false;
+try {
+  require.resolve('crossnote/cli');
+  serveCliAvailable = true;
+} catch {
+  serveCliAvailable = false;
+}
+
+/**
+ * @type {import('esbuild').BuildOptions}
+ */
+const serveCliConfig = {
+  entryPoints: ['./src/crossnote-serve-cli.ts'],
+  bundle: true,
+  minify: true,
+  platform: 'node', // For CJS
+  outfile: './out/native/crossnote-serve.js',
+  target: 'node16',
+  format: 'cjs',
+  external: ['vscode'],
+  plugins: [xhrSyncWorkerExternalPlugin],
+};
+
 // FIX:
 const defaultDocument = {
   readyState: 'ready',
@@ -266,7 +293,21 @@ async function main() {
         plugins: [esbuildProblemMatcherPlugin, ...(webConfig.plugins ?? [])],
       });
 
-      await Promise.all([nativeContext.watch(), webContext.watch()]);
+      await Promise.all([
+        nativeContext.watch(),
+        webContext.watch(),
+        ...(serveCliAvailable
+          ? [
+              (
+                await context({
+                  ...serveCliConfig,
+                  sourcemap: true,
+                  minify: false,
+                })
+              ).watch(),
+            ]
+          : []),
+      ]);
     } else if (process.argv.includes('--web-dev')) {
       // Single web-only dev build (IS_VSCODE_WEB_EXTENSION_DEV_MODE=true, no watch)
       await build({
@@ -281,7 +322,16 @@ async function main() {
       console.log('[web-dev] Web extension built in dev mode');
     } else {
       // Build mode
-      await Promise.all([build(nativeConfig), build(webConfig)]);
+      await Promise.all([
+        build(nativeConfig),
+        build(webConfig),
+        ...(serveCliAvailable ? [build(serveCliConfig)] : []),
+      ]);
+      if (!serveCliAvailable) {
+        console.log(
+          'Skipped the crossnote serve CLI bundle (crossnote without a ./cli export)',
+        );
+      }
       copyTikzjaxTexFiles();
       copyXhrSyncWorker();
       copyMarkdownYoWasm();

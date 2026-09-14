@@ -38,7 +38,7 @@
     "run-in-browser:watch": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "pnpm test:unit",
-    "test:unit": "mocha --ui tdd --reporter spec test/find-fragment-target-line.test.js test/block-id-helpers.test.js test/rank-by-closeness.test.js test/current-preview-source.test.js test/preview-source-integration.test.js test/l10n-bundles.test.js",
+    "test:unit": "mocha --ui tdd --reporter spec test/find-fragment-target-line.test.js test/block-id-helpers.test.js test/rank-by-closeness.test.js test/current-preview-source.test.js test/preview-source-integration.test.js test/l10n-bundles.test.js test/crossnote-serve-output.test.js",
     "vscode:prepublish": "pnpm install --frozen-lockfile && pnpm build",
     "watch": "gulp copy-files && gulp clean-out && node build.js --watch"
   },
@@ -189,12 +189,31 @@
       {
         "command": "markdown-preview-enhanced.showOriginalTranslation",
         "title": "%markdown-preview-enhanced.showOriginalTranslation.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.startCrossnoteServer",
+        "title": "%markdown-preview-enhanced.startCrossnoteServer.title%",
+        "category": "Markdown",
+        "enablement": "!isWeb"
+      },
+      {
+        "command": "markdown-preview-enhanced.stopCrossnoteServer",
+        "title": "%markdown-preview-enhanced.stopCrossnoteServer.title%",
+        "category": "Markdown",
+        "enablement": "markdown-preview-enhanced.crossnoteServerRunning && !isWeb"
       }
     ],
     "configuration": {
       "type": "object",
       "title": "Markdown Preview Enhanced",
       "properties": {
+        "markdown-preview-enhanced.crossnoteServePort": {
+          "description": "%markdown-preview-enhanced.crossnoteServePort.description%",
+          "default": 3000,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 65535
+        },
         "markdown-preview-enhanced.configPath": {
           "markdownDescription": "%markdown-preview-enhanced.configPath.markdownDescription%",
           "default": "",
@@ -960,7 +979,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "0.9.35",
+    "crossnote": "0.9.36",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {

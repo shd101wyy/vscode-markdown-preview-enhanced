@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **Start/Stop crossnote Server commands** — `Markdown: Start crossnote Server` runs the `crossnote serve` CLI as a child process for the folders of the current workspace (multi-root workspaces serve every folder, exactly like the CLI), loading config the same way the extension does, and offers the server URL in an "Open in browser" notification. `Markdown: Stop crossnote Server` stops it. The port defaults to 3000 (auto-increments when busy) and is configurable via `markdown-preview-enhanced.crossnoteServePort`. The server runs in its own process because crossnote's serve server mutates process-global state (build directory, the file-URL mapper) that the extension host's own previews rely on. The CLI is bundled at build time from the `crossnote/cli` export; a build against a crossnote without it skips the bundle and the commands explain at runtime. Desktop only — the web extension cannot spawn processes.
+
 ## [0.8.35] - 2026-09-08
 
 ### Features
