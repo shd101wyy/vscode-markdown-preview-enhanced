@@ -90,10 +90,25 @@ class NotebooksManager {
    * machine when the wikilink/backlink/graph index is built (#2376).
    * crossnote refuses to walk such a root; this surfaces that to the
    * user once per root so the empty backlinks/graph aren't a mystery.
+   *
+   * Only warned about when the root is an actual workspace folder, i.e.
+   * the user deliberately opened a drive root as their workspace. When
+   * no folder is open, `getWorkspaceFolderUri` falls back to the file's
+   * own directory — a drive-root parent is just an artifact of where
+   * the standalone file lives, and nagging about it on every markdown
+   * file activation spams notifications for people who never asked for
+   * note indexing (#2413). Indexing is still refused either way; only
+   * the notification is skipped.
    */
   private warnIfFilesystemRoot(workspaceFolderUri: vscode.Uri) {
     const resolved = path.resolve(workspaceFolderUri.fsPath);
     if (path.parse(resolved).root !== resolved) {
+      return;
+    }
+    const isRealWorkspaceFolder = (
+      vscode.workspace.workspaceFolders ?? []
+    ).some((folder) => folder.uri.toString() === workspaceFolderUri.toString());
+    if (!isRealWorkspaceFolder) {
       return;
     }
     const key = workspaceFolderUri.toString();

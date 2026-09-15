@@ -82,7 +82,10 @@ const VSCODE_STUB_SOURCE = `
         throw new Error('createWebviewPanel is not stubbed; pass a webviewPanel instead');
       },
       showErrorMessage: noop,
-      showWarningMessage: (message) => recorder.warnings.push(message),
+      showWarningMessage: (message) => {
+        recorder.warnings.push(message);
+        return Promise.resolve(undefined);
+      },
       showInformationMessage: noop,
       showQuickPick: async () => undefined,
       showInputBox: async () => undefined,
@@ -104,7 +107,9 @@ const VSCODE_STUB_SOURCE = `
       tabGroups: { all: [], onDidChangeTabs: event, close: async () => true },
     },
     workspace: {
-      workspaceFolders: [],
+      get workspaceFolders() {
+        return globalThis.__vscodeStubWorkspaceFolders ?? [];
+      },
       textDocuments: [],
       getConfiguration: () => ({ get: () => undefined, update: async () => {} }),
       getWorkspaceFolder: (uri) => globalThis.__vscodeStubWorkspaceFolder(uri),
@@ -213,6 +218,7 @@ function stubPlugin() {
 
 globalThis.__vscodeStubRecorder = recorder;
 globalThis.__vscodeStubWorkspaceFolder = () => undefined;
+globalThis.__vscodeStubWorkspaceFolders = [];
 globalThis.__vscodeStubRelativePath = (uri) => String(uri);
 globalThis.__crossnoteStubEngine = () => ({
   generateHTMLTemplateForPreview: async () => '<html></html>',
@@ -223,6 +229,9 @@ module.exports = {
   stubPlugin,
   setWorkspaceFolderResolver(fn) {
     globalThis.__vscodeStubWorkspaceFolder = fn;
+  },
+  setWorkspaceFolders(folders) {
+    globalThis.__vscodeStubWorkspaceFolders = folders;
   },
   setRelativePathResolver(fn) {
     globalThis.__vscodeStubRelativePath = fn;
