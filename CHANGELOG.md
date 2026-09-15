@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Start/Stop crossnote Server commands** — `Markdown: Start crossnote Server` runs the `crossnote serve` CLI as a child process for the folders of the current workspace (multi-root workspaces serve every folder, exactly like the CLI), loading config the same way the extension does, and offers the server URL in an "Open in browser" notification. `Markdown: Stop crossnote Server` stops it. The port defaults to 3000 (auto-increments when busy) and is configurable via `markdown-preview-enhanced.crossnoteServePort`. The server runs in its own process because crossnote's serve server mutates process-global state (build directory, the file-URL mapper) that the extension host's own previews rely on. The CLI is bundled at build time from the `crossnote/cli` export; a build against a crossnote without it skips the bundle and the commands explain at runtime. Desktop only — the web extension cannot spawn processes.
 
+### Improvements
+
+- **CI now guards the shipped bundle against Node-20-only dependencies** — extensions 0.8.32–0.8.34 bundled cheerio 1.2.0 and failed to activate with `ReferenceError: File is not defined` on VS Code versions whose extension host runs Node 18 ([#2394](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2394)). crossnote 0.9.35 pinned cheerio back to 1.0.0; a new unit test now loads `out/native/extension.js` in a `File`-less child process (and CI builds before running the tests) so a future dependency bump that reintroduces Node-20-only module-scope code fails CI instead of shipping.
+- **Development and CI are pinned to Node.js 18** — the runtime of the VS Code extension host the extension supports (`engines.vscode` ≥ 1.82), mirroring crossnote's equivalent change. The nix dev shell brings `nodejs_18` from a pinned nixpkgs-24.11 import, both GitHub workflows install the version declared in `.tool-versions` (18.17.1), and Node-18-incompatible dev tooling is held back: eslint at the 9.x line and lint-staged at 15.x. The vsce packaging/publishing steps run on Node 20 instead, since every released vsce line fails to load on Node 18 (its bundled undici references the `File` global).
+
+### Documentation
+
+- The README gains a **Getting Started** section explaining that the preview opens manually — right-click → _Markdown Preview Enhanced: Open Preview to the Side_, <kbd>ctrl-k v</kbd>, or the Command Palette — and that opening an entire drive as the workspace disables note indexing with a warning, the two points raised in [#2396](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2396).
+
 ## [0.8.35] - 2026-09-08
 
 ### Features

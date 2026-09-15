@@ -33,6 +33,14 @@ Feel free to ask questions, post issues, submit pull request, and request new fe
 
 For more information about this project and how to use this extension, please check out our documentation ⬇︎
 
+## Getting Started
+
+1. Open a project folder with **File → Open Folder…** (opening an entire drive as the workspace skips note indexing — wikilinks, backlinks, tags and the graph — with a warning).
+2. Open a Markdown file (`.md`).
+3. Open the preview — it does **not** start on its own: right-click the editor and choose **Markdown Preview Enhanced: Open Preview to the Side**, press <kbd>ctrl-k v</kbd> (<kbd>cmd-k v</kbd> on macOS), or run **Markdown Preview Enhanced: Open Preview** from the Command Palette.
+
+See the [Keybindings](#keybindings) table below for more shortcuts.
+
 ## Privacy
 
 **This extension does not collect, transmit, or share your data with any external service.** The core preview, scroll sync, math typesetting, diagram rendering, and all editor features run entirely on your local machine. No telemetry, no tracking, no phone-home.
