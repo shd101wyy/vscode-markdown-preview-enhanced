@@ -142,5 +142,9 @@
   "markdown-preview-enhanced.showOriginalTranslation.title": "Markdown Preview Enhanced: Orijinal mətni göstər",
   "markdown-preview-enhanced.exportColorScheme.description": "HTML və brauzer ixraclarının rəng sxemini necə seçdiyi: hər maşında konfiqurasiya edilmiş `previewTheme` və `codeBlockTheme` ilə render etmək (`theme`), ya da açıq/tünd tema cütlərini daxil edərək oxucunun sistem rəng sxemini izləmək (`auto`). Kağız ixracları (Chrome PDF, Prince) bundan təsirlənmir. Hər fayl üçün front matter-də `html: { export_color_scheme: auto }` ilə ayrıca təyin edilə bilər.",
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "Konfiqurasiya edilmiş önbaxış teması və kod bloku teması ilə ixrac et. İxrac, sistemi tünd rejimə təyin edilmiş oxucular üçün belə hər maşında eyni görünür.",
-  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Oxucunun sistem rəng sxemini izlə: ixrac konfiqurasiya edilmiş temaların həm açıq, həm də tünd variantlarını daxil edir və oxucunun ƏS-i keçdikdə səhifə də keçir (`prefers-color-scheme`)."
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Oxucunun sistem rəng sxemini izlə: ixrac konfiqurasiya edilmiş temaların həm açıq, həm də tünd variantlarını daxil edir və oxucunun ƏS-i keçdikdə səhifə də keçir (`prefers-color-scheme`).",
+  "markdown-preview-enhanced.startCrossnoteServer.title": "Markdown Preview Enhanced: crossnote serverini başlat",
+  "markdown-preview-enhanced.stopCrossnoteServer.title": "Markdown Preview Enhanced: crossnote serverini dayandır",
+  "markdown-preview-enhanced.crossnoteServePort.description": "\"crossnote serverini başlat\" əmri ilə başladılmış crossnote serveri tərəfindən istifadə olunan port. Məşğul olduqda avtomatik artır.",
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "Markdown Preview Enhanced: Standalone wiki (HTML) qur"
 }

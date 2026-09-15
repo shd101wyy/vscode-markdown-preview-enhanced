@@ -11,6 +11,7 @@ import {
 } from './wikilink-document-link-provider';
 import { PreviewColorScheme, getMPEConfig, updateMPEConfig } from './config';
 import { formatPreviewSourcePath } from './current-preview-source';
+import { buildAndSaveWiki } from './crossnote-wiki';
 import { customEditorProviderOptions } from './custom-editor-options';
 import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
@@ -1649,6 +1650,16 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('_crossnote.htmlExport', htmlExport),
+  );
+
+  // The preview context menu's "Export standalone HTML (wiki)" item. The
+  // argument is the previewed note; the wiki itself covers the whole
+  // workspace, which the save dialog defaults next to.
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.exportStandaloneWiki',
+      (uri: string) => buildAndSaveWiki(context, vscode.Uri.parse(uri)),
+    ),
   );
 
   context.subscriptions.push(

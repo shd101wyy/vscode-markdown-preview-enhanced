@@ -142,5 +142,9 @@
   "markdown-preview-enhanced.showOriginalTranslation.title": "MPE:Originele tekst tonen",
   "markdown-preview-enhanced.exportColorScheme.description": "Kleurenschema voor HTML- en browserexport: altijd renderen met de ingestelde `previewTheme` en `codeBlockTheme` (`theme`), of het systeemkleurenschema van de lezer volgen door het licht/donker-themapaar in te bedden (`auto`). Papierexport (Chrome PDF, Prince) wordt niet beïnvloed. Per bestand te overschrijven met front matter `html: { export_color_scheme: auto }`.",
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "Exporteert met het ingestelde voorbeeldthema en codeblokthema. De export ziet er op elke machine hetzelfde uit, ook als het systeem van de lezer in donkermodus staat.",
-  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Volgt het systeemkleurenschema van de lezer: de export bevat zowel de lichte als de donkere variant van de ingestelde thema's en de pagina wisselt mee als het OS van de lezer wisselt (`prefers-color-scheme`)."
+  "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Volgt het systeemkleurenschema van de lezer: de export bevat zowel de lichte als de donkere variant van de ingestelde thema's en de pagina wisselt mee als het OS van de lezer wisselt (`prefers-color-scheme`).",
+  "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:crossnote-server starten",
+  "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:crossnote-server stoppen",
+  "markdown-preview-enhanced.crossnoteServePort.description": "Poort die wordt gebruikt door de crossnote-server die via de opdracht crossnote-server starten is gestart. Wordt automatisch verhoogd wanneer bezet.",
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Standalone wiki (HTML) bouwen"
 }
