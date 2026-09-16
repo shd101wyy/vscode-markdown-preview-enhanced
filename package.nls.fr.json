@@ -143,8 +143,8 @@
   "markdown-preview-enhanced.exportColorScheme.description": "Schéma de couleurs des exportations HTML et navigateur : toujours effectuer le rendu avec les thèmes `previewTheme` et `codeBlockTheme` configurés (`theme`), ou suivre le schéma de couleurs du système du lecteur en intégrant la paire de thèmes clair/sombre (`auto`). Les exportations papier (Chrome PDF, Prince) ne sont pas concernées. Remplaçable par fichier avec le front matter `html: { export_color_scheme: auto }`.",
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "Exporte avec le thème d'aperçu et le thème de blocs de code configurés. L'exportation est identique sur toutes les machines, même si le système du lecteur est en mode sombre.",
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Suit le schéma de couleurs du système du lecteur : l'exportation intègre les variantes claire et sombre des thèmes configurés et la page bascule lorsque l'OS du lecteur bascule (`prefers-color-scheme`).",
-  "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:Démarrer le serveur crossnote",
-  "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:Arrêter le serveur crossnote",
+  "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:Démarrer le serveur Crossnote",
+  "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:Arrêter le serveur Crossnote",
   "markdown-preview-enhanced.crossnoteServePort.description": "Port utilisé par le serveur crossnote démarré via la commande Démarrer le serveur crossnote. Incrémenté automatiquement s'il est occupé.",
   "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Construire un wiki autonome (HTML)"
 }

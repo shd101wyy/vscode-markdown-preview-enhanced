@@ -143,8 +143,8 @@
   "markdown-preview-enhanced.exportColorScheme.description": "HTML 與瀏覽器匯出使用的配色方案：在所有裝置上都按已設定的 `previewTheme` 和 `codeBlockTheme` 渲染（`theme`），或透過內嵌明/暗兩套主題來跟隨閱讀者的系統配色（`auto`）。紙本匯出（Chrome PDF、Prince）不受影響。可透過 front matter `html: { export_color_scheme: auto }` 依檔案覆寫。",
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "使用已設定的預覽主題和程式碼區塊主題匯出。匯出結果在任何裝置上外觀一致——即使閱讀者的系統處於深色模式。",
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "跟隨閱讀者的系統配色：匯出檔案內嵌已設定主題的明、暗兩個變體，頁面會隨閱讀者作業系統的明暗切換而切換（`prefers-color-scheme`）。",
-  "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:啟動 crossnote 伺服器",
-  "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:停止 crossnote 伺服器",
+  "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:啟動 Crossnote 伺服器",
+  "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:停止 Crossnote 伺服器",
   "markdown-preview-enhanced.crossnoteServePort.description": "「啟動 crossnote 伺服器」命令所啟動的 crossnote 伺服器使用的連接埠（被佔用時自動遞增）。",
   "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:建置單檔 Wiki（HTML）"
 }

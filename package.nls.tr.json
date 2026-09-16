@@ -143,8 +143,8 @@
   "markdown-preview-enhanced.exportColorScheme.description": "HTML ve tarayıcı dışa aktarımlarının renk şeması: her zaman yapılandırılan `previewTheme` ve `codeBlockTheme` ile işlemek (`theme`) ya da açık/koyu tema çiftini gömerek okuyucunun sistem renk şemasını izlemek (`auto`). Kağıt dışa aktarımları (Chrome PDF, Prince) etkilenmez. Front matter `html: { export_color_scheme: auto }` ile dosya bazında geçersiz kılınabilir.",
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.0": "Dışa aktarmayı yapılandırılan önizleme teması ve kod bloğu temasıyla yapar. Okuyucunun sistemi koyu modda olsa bile dışa aktarım her makinede aynı görünür.",
   "markdown-preview-enhanced.exportColorScheme.markdownEnumDescriptions.1": "Okuyucunun sistem renk şemasını izler: dışa aktarma, yapılandırılan temaların hem açık hem koyu varyantını gömer ve okuyucunun işletim sistemi geçtiğinde sayfa da geçer (`prefers-color-scheme`).",
-  "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:crossnote sunucusunu başlat",
-  "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:crossnote sunucusunu durdur",
+  "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:Crossnote sunucusunu başlat",
+  "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:Crossnote sunucusunu durdur",
   "markdown-preview-enhanced.crossnoteServePort.description": "\"crossnote sunucusunu başlat\" komutuyla başlatılan crossnote sunucusunun kullandığı port. Meşgulken otomatik olarak artar.",
   "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Bağımsız wiki (HTML) oluştur"
 }
