@@ -52,7 +52,6 @@
       {
         "command": "markdown-preview-enhanced.openPreviewToTheSide",
         "title": "%markdown-preview-enhanced.openPreviewToTheSide.title%",
-        "category": "Markdown",
         "icon": {
           "light": "./media/preview-right-light.svg",
           "dark": "./media/preview-right-dark.svg"
@@ -61,7 +60,6 @@
       {
         "command": "markdown-preview-enhanced.openPreview",
         "title": "%markdown-preview-enhanced.openPreview.title%",
-        "category": "Markdown",
         "icon": {
           "light": "./media/preview-right-light.svg",
           "dark": "./media/preview-right-dark.svg"
@@ -69,28 +67,23 @@
       },
       {
         "command": "markdown-preview-enhanced.openLockedPreviewToTheSide",
-        "title": "%markdown-preview-enhanced.openLockedPreviewToTheSide.title%",
-        "category": "Markdown"
+        "title": "%markdown-preview-enhanced.openLockedPreviewToTheSide.title%"
       },
       {
         "command": "markdown-preview-enhanced.togglePreviewLock",
-        "title": "%markdown-preview-enhanced.togglePreviewLock.title%",
-        "category": "Markdown"
+        "title": "%markdown-preview-enhanced.togglePreviewLock.title%"
       },
       {
         "command": "markdown-preview-enhanced.copyBlockReference",
-        "title": "%markdown-preview-enhanced.copyBlockReference.title%",
-        "category": "Markdown"
+        "title": "%markdown-preview-enhanced.copyBlockReference.title%"
       },
       {
         "command": "markdown-preview-enhanced.copyCurrentSourceRelativePath",
-        "title": "%markdown-preview-enhanced.copyCurrentSourceRelativePath.title%",
-        "category": "Markdown"
+        "title": "%markdown-preview-enhanced.copyCurrentSourceRelativePath.title%"
       },
       {
         "command": "markdown-preview-enhanced.copyCurrentSourcePath",
-        "title": "%markdown-preview-enhanced.copyCurrentSourcePath.title%",
-        "category": "Markdown"
+        "title": "%markdown-preview-enhanced.copyCurrentSourcePath.title%"
       },
       {
         "command": "markdown-preview-enhanced.toggleScrollSync",
@@ -193,19 +186,16 @@
       {
         "command": "markdown-preview-enhanced.startCrossnoteServer",
         "title": "%markdown-preview-enhanced.startCrossnoteServer.title%",
-        "category": "Markdown",
         "enablement": "!isWeb"
       },
       {
         "command": "markdown-preview-enhanced.stopCrossnoteServer",
         "title": "%markdown-preview-enhanced.stopCrossnoteServer.title%",
-        "category": "Markdown",
         "enablement": "markdown-preview-enhanced.crossnoteServerRunning && !isWeb"
       },
       {
         "command": "markdown-preview-enhanced.buildStandaloneWiki",
         "title": "%markdown-preview-enhanced.buildStandaloneWiki.title%",
-        "category": "Markdown",
         "enablement": "!isWeb"
       }
     ],
@@ -948,6 +938,11 @@
         {
           "command": "markdown-preview-enhanced.openGraphView",
           "when": "editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
+          "group": "markdown-preview-enhanced"
+        },
+        {
+          "command": "markdown-preview-enhanced.startCrossnoteServer",
+          "when": "editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
           "group": "markdown-preview-enhanced"
         }
       ],

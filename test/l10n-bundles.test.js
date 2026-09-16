@@ -99,3 +99,48 @@ suite('l10n bundles', () => {
     }
   });
 });
+
+/**
+ * package.nls integrity: every package.nls.<locale>.json must ship the exact
+ * same key set as package.nls.json (the source) with non-empty values — a
+ * missing key makes VS Code fall back to English for that string, and an
+ * untranslated key added by a new command would otherwise go unnoticed.
+ */
+suite('package.nls locales', () => {
+  const root = path.join(__dirname, '..');
+  const source = JSON.parse(
+    fs.readFileSync(path.join(root, 'package.nls.json'), 'utf8'),
+  );
+  const sourceKeys = Object.keys(source).sort();
+  const localeFiles = fs
+    .readdirSync(root)
+    .filter((name) => /^package\.nls\..+\.json$/.test(name))
+    .sort();
+
+  test('source package.nls.json has no empty values', () => {
+    for (const [key, value] of Object.entries(source)) {
+      assert.ok(
+        typeof value === 'string' && value.trim().length > 0,
+        `package.nls.json has an empty value for ${key}`,
+      );
+    }
+  });
+
+  test('every locale ships the exact key set of the source, non-empty', () => {
+    assert.ok(localeFiles.length > 0, 'no package.nls.<locale>.json found');
+    for (const name of localeFiles) {
+      const locale = JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
+      assert.deepStrictEqual(
+        Object.keys(locale).sort(),
+        sourceKeys,
+        `${name} must ship the same keys as package.nls.json`,
+      );
+      for (const [key, value] of Object.entries(locale)) {
+        assert.ok(
+          typeof value === 'string' && value.trim().length > 0,
+          `${name} has an empty translation for ${key}`,
+        );
+      }
+    }
+  });
+});
