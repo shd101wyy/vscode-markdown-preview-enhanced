@@ -934,6 +934,11 @@
           "command": "markdown-preview-enhanced.startCrossnoteServer",
           "when": "resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
           "group": "markdown-preview-enhanced"
+        },
+        {
+          "command": "markdown-preview-enhanced.stopCrossnoteServer",
+          "when": "resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
+          "group": "markdown-preview-enhanced"
         }
       ],
       "editor/context": [
@@ -950,6 +955,11 @@
         {
           "command": "markdown-preview-enhanced.startCrossnoteServer",
           "when": "editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
+          "group": "markdown-preview-enhanced"
+        },
+        {
+          "command": "markdown-preview-enhanced.stopCrossnoteServer",
+          "when": "editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
           "group": "markdown-preview-enhanced"
         }
       ],
