@@ -929,6 +929,13 @@
       }
     ],
     "menus": {
+      "explorer/context": [
+        {
+          "command": "markdown-preview-enhanced.startCrossnoteServer",
+          "when": "resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
+          "group": "markdown-preview-enhanced"
+        }
+      ],
       "editor/context": [
         {
           "command": "markdown-preview-enhanced.openPreviewToTheSide",

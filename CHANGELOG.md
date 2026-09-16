@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-- **Start crossnote Server in the editor context menu** — right-clicking inside a markdown editor now offers _Markdown Preview Enhanced: Start crossnote Server_ next to the existing _Open Preview to the Side_ and _Open Graph View_ entries, so the wiki server is one click away without the command palette. Hidden in the web extension (the server needs to spawn a process); the title reuses the existing command translation, so it is localized in all ten supported languages.
+- **Start crossnote Server in the context menus** — right-clicking inside a markdown editor now offers _Markdown Preview Enhanced: Start crossnote Server_ next to the existing _Open Preview to the Side_ and _Open Graph View_ entries, and right-clicking a `.md`/`.qmd`/… file in the Explorer offers it too, so the wiki server is one click away without the command palette. Hidden in the web extension (the server needs to spawn a process); the title reuses the existing command translation, so it is localized in all ten supported languages.
 
 ### Bug fixes
 
