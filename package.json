@@ -87,13 +87,11 @@
       },
       {
         "command": "markdown-preview-enhanced.openCurrentSourceInEditor",
-        "title": "%markdown-preview-enhanced.openCurrentSourceInEditor.title%",
-        "category": "Markdown"
+        "title": "%markdown-preview-enhanced.openCurrentSourceInEditor.title%"
       },
       {
         "command": "markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview",
-        "title": "%markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview.title%",
-        "category": "Markdown"
+        "title": "%markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview.title%"
       },
       {
         "command": "markdown-preview-enhanced.toggleScrollSync",
