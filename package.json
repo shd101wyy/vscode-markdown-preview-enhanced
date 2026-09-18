@@ -86,6 +86,16 @@
         "title": "%markdown-preview-enhanced.copyCurrentSourcePath.title%"
       },
       {
+        "command": "markdown-preview-enhanced.openCurrentSourceInEditor",
+        "title": "%markdown-preview-enhanced.openCurrentSourceInEditor.title%",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview",
+        "title": "%markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview.title%",
+        "category": "Markdown"
+      },
+      {
         "command": "markdown-preview-enhanced.toggleScrollSync",
         "title": "%markdown-preview-enhanced.toggleScrollSync.title%"
       },
