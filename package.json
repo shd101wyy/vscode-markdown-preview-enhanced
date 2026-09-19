@@ -87,13 +87,11 @@
       },
       {
         "command": "markdown-preview-enhanced.openCurrentSourceInEditor",
-        "title": "%markdown-preview-enhanced.openCurrentSourceInEditor.title%",
-        "category": "Markdown"
+        "title": "%markdown-preview-enhanced.openCurrentSourceInEditor.title%"
       },
       {
         "command": "markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview",
-        "title": "%markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview.title%",
-        "category": "Markdown"
+        "title": "%markdown-preview-enhanced.openCurrentSourceInEditorAndClosePreview.title%"
       },
       {
         "command": "markdown-preview-enhanced.toggleScrollSync",
@@ -1007,7 +1005,7 @@
     "@types/crypto-js": "^4.1.2",
     "@types/vfile": "^3.0.2",
     "async-mutex": "^0.4.0",
-    "crossnote": "0.9.36",
+    "crossnote": "0.9.37",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {
