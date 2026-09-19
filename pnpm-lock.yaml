@@ -24,8 +24,8 @@ importers:
         specifier: ^0.4.0
         version: 0.4.1
       crossnote:
-        specifier: 0.9.36
-        version: 0.9.36
+        specifier: 0.9.37
+        version: 0.9.37
       crypto-js:
         specifier: ^4.2.0
         version: 4.2.0
@@ -1870,8 +1870,8 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
-  crossnote@0.9.36:
-    resolution: {integrity: sha512-vegWs5vFWOvyv7m3CLoakxVnJPatJCfPcNdyLRwrSVEK9aybZ8VPT8GYUPDtWzU825KhwdbaBA9UJC6TS993vw==}
+  crossnote@0.9.37:
+    resolution: {integrity: sha512-VKi7YF0RqSD9Zz4vLcQZJ1/nhLM260tGTNGxuQjEDsfcwPMKIUHp/WEMvPor2/UteCS3fSvNLtExIem9h9xGLw==}
     engines: {node: '>=18.17.0'}
     hasBin: true
 
@@ -7568,7 +7568,7 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  crossnote@0.9.36:
+  crossnote@0.9.37:
     dependencies:
       '@headlessui/react': 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@heroicons/react': 2.2.0(react@18.3.1)
