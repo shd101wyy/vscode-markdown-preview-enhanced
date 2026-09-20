@@ -107,7 +107,12 @@ jobs:
           NEW_VERSION: ${{ steps.bump.outputs.new-version }}
         run: |
           VSIX="markdown-preview-enhanced-${NEW_VERSION}.vsix"
-          npx --yes @vscode/vsce@3.9.2 package --out "$VSIX"
+          # --no-dependencies: vsce's built-in dependency check runs
+          # `npm list`, which fails on pnpm's symlinked node_modules layout
+          # (same reason test.yml passes it). The extension is fully
+          # bundled by esbuild, so runtime dependencies don't need to be
+          # analyzed.
+          npx --yes @vscode/vsce@3.9.2 package --no-dependencies --out "$VSIX"
           echo "vsixPath=$VSIX" >> "$GITHUB_OUTPUT"
 
       # The gallery publish regularly times out inside vsce's ~3-minute
