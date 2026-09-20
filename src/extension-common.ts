@@ -1075,6 +1075,11 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     return vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
   }
 
+  async function openCrossnote() {
+    const url = 'https://github.com/shd101wyy/crossnote';
+    vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+  }
+
   async function openIssues() {
     const url =
       'https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues';
@@ -1818,6 +1823,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       '_crossnote.openDocumentation',
       openDocumentation,
     ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('_crossnote.openCrossnote', openCrossnote),
   );
 
   context.subscriptions.push(
