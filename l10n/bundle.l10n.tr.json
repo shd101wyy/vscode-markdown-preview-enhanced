@@ -44,5 +44,21 @@
   "Could not open file: {name}": "Dosya açılamadı: {name}",
   "Markdown Preview Enhanced: the notebook root \"{root}\" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced: not defteri kökü \"{root}\" bir dosya sistemi kökü olduğu için notlar dizinlenmez (viki bağlantıları, geri bağlantılar, etiketler ve graf görünümü hiçbir şey bulamaz). Not dizinlemeyi etkinleştirmek için çalışma alanınız olarak belirli bir klasör açın.",
   "Markdown Preview Enhanced failed to activate: {message}": "Markdown Preview Enhanced etkinleştirilemedi: {message}",
-  "Open Folder…": "Klasör aç…"
+  "Open Folder…": "Klasör aç…",
+  "Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.": "Bağımsız wiki'yi oluşturmak daha yeni bir crossnote bağımlılığı gerektiriyor. Lütfen uzantıyı güncelleyin.",
+  "Open a folder first: the standalone wiki covers the folders of the current workspace.": "Önce bir klasör açın: bağımsız wiki, geçerli çalışma alanının klasörlerini kapsar.",
+  "Save the standalone wiki": "Bağımsız wiki'yi kaydet",
+  "Building the standalone wiki…": "Bağımsız wiki oluşturuluyor…",
+  "Standalone wiki saved ({noteCount} notes).": "Bağımsız wiki kaydedildi ({noteCount} not).",
+  "Open": "Aç",
+  "Building the standalone wiki failed: {message}": "Bağımsız wiki oluşturulamadı: {message}",
+  "The crossnote server is still starting…": "crossnote sunucusu hâlâ başlıyor…",
+  "crossnote server is running at {url}": "crossnote sunucusu {url} adresinde çalışıyor",
+  "Open in browser": "Tarayıcıda aç",
+  "Open a folder first: the crossnote server serves the folders of the current workspace.": "Önce bir klasör açın: crossnote sunucusu geçerli çalışma alanının klasörlerini sunar.",
+  "This version of Markdown Preview Enhanced was built without the crossnote serve CLI; please update the extension.": "Markdown Preview Enhanced'in bu sürümü crossnote serve CLI olmadan derlendi; lütfen uzantıyı güncelleyin.",
+  "Failed to start the crossnote server: {message}": "crossnote sunucusu başlatılamadı: {message}",
+  "The crossnote server exited early (code {code}).{detail}": "crossnote sunucusu erken çıktı (kod {code}).{detail}",
+  "crossnote server stopped": "crossnote sunucusu durduruldu",
+  "The crossnote server is not running.": "crossnote sunucusu çalışmıyor."
 }

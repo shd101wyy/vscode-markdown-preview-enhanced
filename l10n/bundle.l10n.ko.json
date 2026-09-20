@@ -44,5 +44,21 @@
   "Could not open file: {name}": "파일을 열 수 없습니다: {name}",
   "Markdown Preview Enhanced: the notebook root \"{root}\" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced: 노트북 루트 \"{root}\"이(가) 파일 시스템 루트라서 노트가 색인되지 않습니다(위키 링크, 백링크, 태그, 그래프 뷰에서 아무것도 찾을 수 없음). 노트 색인을 사용하려면 구체적인 폴더를 작업 영역으로 여세요.",
   "Markdown Preview Enhanced failed to activate: {message}": "Markdown Preview Enhanced 활성화 실패: {message}",
-  "Open Folder…": "폴더 열기…"
+  "Open Folder…": "폴더 열기…",
+  "Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.": "독립형 Wiki 빌드에는 최신 crossnote 종속성이 필요합니다. 확장을 업데이트해 주세요.",
+  "Open a folder first: the standalone wiki covers the folders of the current workspace.": "먼저 폴더를 열어 주세요: 독립형 Wiki는 현재 작업 영역의 폴더를 대상으로 합니다.",
+  "Save the standalone wiki": "독립형 Wiki 저장",
+  "Building the standalone wiki…": "독립형 Wiki 빌드 중…",
+  "Standalone wiki saved ({noteCount} notes).": "독립형 Wiki가 저장되었습니다({noteCount}개 노트).",
+  "Open": "열기",
+  "Building the standalone wiki failed: {message}": "독립형 Wiki 빌드 실패: {message}",
+  "The crossnote server is still starting…": "crossnote 서버가 아직 시작 중입니다…",
+  "crossnote server is running at {url}": "crossnote 서버가 {url}에서 실행 중입니다",
+  "Open in browser": "브라우저에서 열기",
+  "Open a folder first: the crossnote server serves the folders of the current workspace.": "먼저 폴더를 열어 주세요: crossnote 서버는 현재 작업 영역의 폴더를 서비스합니다.",
+  "This version of Markdown Preview Enhanced was built without the crossnote serve CLI; please update the extension.": "이 버전의 Markdown Preview Enhanced는 crossnote serve CLI 없이 빌드되었습니다. 확장을 업데이트해 주세요.",
+  "Failed to start the crossnote server: {message}": "crossnote 서버 시작 실패: {message}",
+  "The crossnote server exited early (code {code}).{detail}": "crossnote 서버가 조기에 종료되었습니다(코드 {code}). {detail}",
+  "crossnote server stopped": "crossnote 서버가 중지되었습니다",
+  "The crossnote server is not running.": "crossnote 서버가 실행 중이 아닙니다."
 }

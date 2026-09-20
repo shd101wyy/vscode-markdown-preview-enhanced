@@ -44,5 +44,21 @@
   "Could not open file: {name}": "无法打开文件：{name}",
   "Markdown Preview Enhanced: the notebook root \"{root}\" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced：笔记本根目录“{root}”是文件系统根目录，因此笔记不会被索引（Wiki 链接、反向链接、标签和关系图将无法找到任何内容）。请打开一个具体的文件夹作为工作区以启用笔记索引。",
   "Markdown Preview Enhanced failed to activate: {message}": "Markdown Preview Enhanced 激活失败：{message}",
-  "Open Folder…": "打开文件夹…"
+  "Open Folder…": "打开文件夹…",
+  "Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.": "构建独立 Wiki 需要更新版本的 crossnote 依赖。请更新扩展。",
+  "Open a folder first: the standalone wiki covers the folders of the current workspace.": "请先打开文件夹：独立 Wiki 覆盖当前工作区的所有文件夹。",
+  "Save the standalone wiki": "保存独立 Wiki",
+  "Building the standalone wiki…": "正在构建独立 Wiki…",
+  "Standalone wiki saved ({noteCount} notes).": "独立 Wiki 已保存（{noteCount} 条笔记）。",
+  "Open": "打开",
+  "Building the standalone wiki failed: {message}": "构建独立 Wiki 失败：{message}",
+  "The crossnote server is still starting…": "crossnote 服务器仍在启动中…",
+  "crossnote server is running at {url}": "crossnote 服务器运行于 {url}",
+  "Open in browser": "在浏览器中打开",
+  "Open a folder first: the crossnote server serves the folders of the current workspace.": "请先打开文件夹：crossnote 服务器服务于当前工作区的文件夹。",
+  "This version of Markdown Preview Enhanced was built without the crossnote serve CLI; please update the extension.": "此版本的 Markdown Preview Enhanced 构建时未包含 crossnote serve CLI；请更新扩展。",
+  "Failed to start the crossnote server: {message}": "启动 crossnote 服务器失败：{message}",
+  "The crossnote server exited early (code {code}).{detail}": "crossnote 服务器提前退出（代码 {code}）。{detail}",
+  "crossnote server stopped": "crossnote 服务器已停止",
+  "The crossnote server is not running.": "crossnote 服务器未在运行。"
 }

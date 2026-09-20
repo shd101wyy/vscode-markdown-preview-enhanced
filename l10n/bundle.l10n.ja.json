@@ -44,5 +44,21 @@
   "Could not open file: {name}": "ファイルを開けませんでした：{name}",
   "Markdown Preview Enhanced: the notebook root \"{root}\" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced：ノートブックのルート \"{root}\" はファイルシステムのルートであるため、ノートは索引化されません（Wiki リンク・バックリンク・タグ・グラフビューは何も見つかりません）。ノートの索引化を有効にするには、特定のフォルダーをワークスペースとして開いてください。",
   "Markdown Preview Enhanced failed to activate: {message}": "Markdown Preview Enhanced のアクティブ化に失敗しました：{message}",
-  "Open Folder…": "フォルダーを開く…"
+  "Open Folder…": "フォルダーを開く…",
+  "Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.": "スタンドアロン Wiki のビルドには新しい crossnote 依存関係が必要です。拡張機能を更新してください。",
+  "Open a folder first: the standalone wiki covers the folders of the current workspace.": "まずフォルダーを開いてください。スタンドアロン Wiki は現在のワークスペースのフォルダーを対象とします。",
+  "Save the standalone wiki": "スタンドアロン Wiki の保存",
+  "Building the standalone wiki…": "スタンドアロン Wiki をビルドしています…",
+  "Standalone wiki saved ({noteCount} notes).": "スタンドアロン Wiki を保存しました（{noteCount} 件のノート）。",
+  "Open": "開く",
+  "Building the standalone wiki failed: {message}": "スタンドアロン Wiki のビルドに失敗しました：{message}",
+  "The crossnote server is still starting…": "crossnote サーバーはまだ起動中です…",
+  "crossnote server is running at {url}": "crossnote サーバーは {url} で実行中です",
+  "Open in browser": "ブラウザーで開く",
+  "Open a folder first: the crossnote server serves the folders of the current workspace.": "まずフォルダーを開いてください。crossnote サーバーは現在のワークスペースのフォルダーを提供します。",
+  "This version of Markdown Preview Enhanced was built without the crossnote serve CLI; please update the extension.": "このバージョンの Markdown Preview Enhanced は crossnote serve CLI なしでビルドされています。拡張機能を更新してください。",
+  "Failed to start the crossnote server: {message}": "crossnote サーバーの起動に失敗しました：{message}",
+  "The crossnote server exited early (code {code}).{detail}": "crossnote サーバーが早期に終了しました（コード {code}）。{detail}",
+  "crossnote server stopped": "crossnote サーバーが停止しました",
+  "The crossnote server is not running.": "crossnote サーバーは実行されていません。"
 }

@@ -95,6 +95,7 @@ const WEBVIEW_MESSAGE_COMMANDS: Set<string> = new Set([
   'insertImageUrl',
   'markdownExport',
   'openChangelog',
+  'openCrossnote',
   'openDocumentation',
   'openExternalEditor',
   'openFile',

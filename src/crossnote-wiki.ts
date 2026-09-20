@@ -104,7 +104,9 @@ export async function buildAndSaveWiki(
 ): Promise<void> {
   if (!isBuildWikiSupported()) {
     vscode.window.showErrorMessage(
-      'Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.',
+      vscode.l10n.t(
+        'Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.',
+      ),
     );
     return;
   }
@@ -112,7 +114,9 @@ export async function buildAndSaveWiki(
   const directories = wikiDirectories(sourceUri);
   if (directories.length === 0) {
     vscode.window.showWarningMessage(
-      'Open a folder first: the standalone wiki covers the folders of the current workspace.',
+      vscode.l10n.t(
+        'Open a folder first: the standalone wiki covers the folders of the current workspace.',
+      ),
     );
     return;
   }
@@ -120,34 +124,43 @@ export async function buildAndSaveWiki(
   const target = await vscode.window.showSaveDialog({
     defaultUri,
     filters: { HTML: ['html'] },
-    title: 'Save the standalone wiki',
+    title: vscode.l10n.t('Save the standalone wiki'),
   });
   if (!target) {
     return;
   }
 
   try {
-    await vscode.window.withProgress(
+    // The progress task ends when the file is written — the "saved" message
+    // is shown after it, so the progress notification closes first instead
+    // of waiting for the user to dismiss the message.
+    const noteCount = await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: 'Building the standalone wiki…',
+        title: vscode.l10n.t('Building the standalone wiki…'),
         cancellable: false,
       },
       async () => {
         const { html, noteCount } = await buildWikiHTML(context, sourceUri);
         await fs.promises.writeFile(target.fsPath, html, 'utf-8');
-        const selection = await vscode.window.showInformationMessage(
-          `Standalone wiki saved (${noteCount} notes).`,
-          'Open',
-        );
-        if (selection === 'Open') {
-          void vscode.env.openExternal(target);
-        }
+        return noteCount;
       },
     );
+    const openItem = vscode.l10n.t('Open');
+    const selection = await vscode.window.showInformationMessage(
+      vscode.l10n.t('Standalone wiki saved ({noteCount} notes).', {
+        noteCount,
+      }),
+      openItem,
+    );
+    if (selection === openItem) {
+      void vscode.env.openExternal(target);
+    }
   } catch (error) {
     vscode.window.showErrorMessage(
-      `Building the standalone wiki failed: ${String(error)}`,
+      vscode.l10n.t('Building the standalone wiki failed: {message}', {
+        message: String(error),
+      }),
     );
   }
 }
