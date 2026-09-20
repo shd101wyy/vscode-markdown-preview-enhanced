@@ -31,15 +31,16 @@ export function getCrossnoteServerUrl(): string | null {
 async function showRunningMessage(): Promise<void> {
   if (!serverUrl) {
     vscode.window.showInformationMessage(
-      'The crossnote server is still starting…',
+      vscode.l10n.t('The crossnote server is still starting…'),
     );
     return;
   }
+  const openItem = vscode.l10n.t('Open in browser');
   const selection = await vscode.window.showInformationMessage(
-    `crossnote server is running at ${serverUrl}`,
-    'Open in browser',
+    vscode.l10n.t('crossnote server is running at {url}', { url: serverUrl }),
+    openItem,
   );
-  if (selection === 'Open in browser') {
+  if (selection === openItem) {
     void vscode.env.openExternal(vscode.Uri.parse(serverUrl));
   }
 }
@@ -63,7 +64,9 @@ export async function startCrossnoteServer(
   const folders = vscode.workspace.workspaceFolders;
   if (!folders || folders.length === 0) {
     vscode.window.showWarningMessage(
-      'Open a folder first: the crossnote server serves the folders of the current workspace.',
+      vscode.l10n.t(
+        'Open a folder first: the crossnote server serves the folders of the current workspace.',
+      ),
     );
     return;
   }
@@ -78,7 +81,9 @@ export async function startCrossnoteServer(
   );
   if (!fs.existsSync(cliBundlePath)) {
     vscode.window.showErrorMessage(
-      'This version of Markdown Preview Enhanced was built without the crossnote serve CLI; please update the extension.',
+      vscode.l10n.t(
+        'This version of Markdown Preview Enhanced was built without the crossnote serve CLI; please update the extension.',
+      ),
     );
     return;
   }
@@ -142,7 +147,9 @@ export async function startCrossnoteServer(
     clearTimeout(startupTimer);
     cleanup();
     vscode.window.showErrorMessage(
-      `Failed to start the crossnote server: ${error.message}`,
+      vscode.l10n.t('Failed to start the crossnote server: {message}', {
+        message: error.message,
+      }),
     );
   });
   child.on('exit', (code) => {
@@ -151,12 +158,19 @@ export async function startCrossnoteServer(
     cleanup();
     if (url === null && code !== 0) {
       vscode.window.showErrorMessage(
-        `The crossnote server exited early (code ${code}).${
-          stderrTail ? `\n${stderrTail}` : ''
-        }`,
+        vscode.l10n.t(
+          'The crossnote server exited early (code {code}).{detail}',
+          {
+            code,
+            detail: stderrTail ? `\n${stderrTail}` : '',
+          },
+        ),
       );
     } else if (url !== null) {
-      vscode.window.setStatusBarMessage('crossnote server stopped', 4000);
+      vscode.window.setStatusBarMessage(
+        vscode.l10n.t('crossnote server stopped'),
+        4000,
+      );
     }
   });
 }
@@ -164,7 +178,7 @@ export async function startCrossnoteServer(
 export function stopCrossnoteServer(): void {
   if (!isCrossnoteServerRunning()) {
     vscode.window.showInformationMessage(
-      'The crossnote server is not running.',
+      vscode.l10n.t('The crossnote server is not running.'),
     );
     return;
   }

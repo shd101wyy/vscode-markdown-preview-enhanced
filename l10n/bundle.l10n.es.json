@@ -44,5 +44,21 @@
   "Could not open file: {name}": "No se pudo abrir el archivo: {name}",
   "Markdown Preview Enhanced: the notebook root \"{root}\" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced: la raíz del bloc de notas \"{root}\" es una raíz del sistema de archivos, por lo que las notas no se indexan (wikilinks, retroenlaces, etiquetas y la vista de grafos no encontrarán nada). Abra una carpeta específica como área de trabajo para habilitar la indexación de notas.",
   "Markdown Preview Enhanced failed to activate: {message}": "Markdown Preview Enhanced no se pudo activar: {message}",
-  "Open Folder…": "Abrir carpeta…"
+  "Open Folder…": "Abrir carpeta…",
+  "Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.": "Crear la wiki independiente requiere una dependencia crossnote más reciente. Actualiza la extensión.",
+  "Open a folder first: the standalone wiki covers the folders of the current workspace.": "Abre primero una carpeta: la wiki independiente cubre las carpetas del espacio de trabajo actual.",
+  "Save the standalone wiki": "Guardar la wiki independiente",
+  "Building the standalone wiki…": "Creando la wiki independiente…",
+  "Standalone wiki saved ({noteCount} notes).": "Wiki independiente guardada ({noteCount} notas).",
+  "Open": "Abrir",
+  "Building the standalone wiki failed: {message}": "Error al crear la wiki independiente: {message}",
+  "The crossnote server is still starting…": "El servidor crossnote aún se está iniciando…",
+  "crossnote server is running at {url}": "El servidor crossnote se está ejecutando en {url}",
+  "Open in browser": "Abrir en el navegador",
+  "Open a folder first: the crossnote server serves the folders of the current workspace.": "Abre primero una carpeta: el servidor crossnote sirve las carpetas del espacio de trabajo actual.",
+  "This version of Markdown Preview Enhanced was built without the crossnote serve CLI; please update the extension.": "Esta versión de Markdown Preview Enhanced se compiló sin la CLI de crossnote serve; actualiza la extensión.",
+  "Failed to start the crossnote server: {message}": "Error al iniciar el servidor crossnote: {message}",
+  "The crossnote server exited early (code {code}).{detail}": "El servidor crossnote terminó antes de tiempo (código {code}).{detail}",
+  "crossnote server stopped": "Servidor crossnote detenido",
+  "The crossnote server is not running.": "El servidor crossnote no se está ejecutando."
 }
