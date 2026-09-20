@@ -48,11 +48,13 @@ jobs:
       - name: Lint
         run: pnpm run check:all
 
-      - name: Test
-        run: pnpm test
-
+      # Build before test, like test.yml: the native runtime compatibility
+      # test loads the bundle from out/native/.
       - name: Build
         run: pnpm run build
+
+      - name: Test
+        run: pnpm test
 
       - name: Bump version
         id: bump
