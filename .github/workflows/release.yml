@@ -37,7 +37,9 @@ jobs:
           node-version-file: .tool-versions
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        # v4 like test.yml: v6's self-installer needs `import.meta.resolve`
+        # (Node >= 20.6) but runs under the Node 18 pin above.
+        uses: pnpm/action-setup@v4
         # The pnpm version is read from the packageManager field in package.json
 
       - name: Install dependencies
