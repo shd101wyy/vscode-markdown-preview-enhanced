@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.36] - 2026-09-20
+
 ### Features
 
 - **Start/Stop crossnote Server in the context menus** — right-clicking inside a markdown editor now offers _Markdown Preview Enhanced: Start Crossnote Server_ next to the existing _Open Preview to the Side_ and _Open Graph View_ entries, and both context menus (editor and Explorer right-click on a `.md`/`.qmd`/… file) also offer _Markdown Preview Enhanced: Stop Crossnote Server_ while a server is actually running, so the wiki server is startable and stoppable in one click without the command palette. Both entries are hidden in the web extension (the server needs to spawn a process); Stop only appears while the `crossnoteServerRunning` context key is set, so it adds no clutter when nothing runs. The product name is capitalized as _Crossnote_ in the titles, consistent with the project branding, and the titles are localized in all ten supported languages.
