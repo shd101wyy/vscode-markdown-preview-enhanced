@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.37] - 2026-09-25
+
 ### Bug fixes
 
 - **A hand-added `"*.md": "markdown-preview-enhanced"` editor association survives restarts** — on every activation (and every `markdown-preview-enhanced.*` setting change) the extension synced `workbench.editorAssociations` to `previewMode`, and outside _Previews Only_ that meant deleting every markdown pattern mapped to `markdown-preview-enhanced` from the user settings — including one the user had added by hand to open markdown files in the preview custom editor while keeping the regular preview mode, so the entry was gone after each VS Code restart ([#2429](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2429) reported by @Andrea79, fixed in [#2431](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2431) by @Waynting). The extension now remembers which patterns it wrote itself for _Previews Only_ and only ever removes those; a manually added association is left alone, and one whose value the user has since changed is not touched either. Switching away from _Previews Only_ still removes the associations that mode added. Setups that are in _Previews Only_ when this version first starts are adopted, so switching away later still cleans up after the older version.
