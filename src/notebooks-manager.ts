@@ -11,6 +11,10 @@ import {
   PreviewColorScheme,
   getMPEConfig,
 } from './config';
+import {
+  OWNED_EDITOR_ASSOCIATIONS_KEY,
+  computeEditorAssociations,
+} from './editor-associations';
 import FileWatcher from './file-watcher';
 import { getAllPreviewProviders } from './preview-provider';
 import {
@@ -266,36 +270,27 @@ class NotebooksManager {
     const markdownFileExtensions = getMPEConfig<string[]>(
       'markdownFileExtensions',
     ) ?? ['.md'];
-    const editorAssociations =
+    const current =
       workbenchConfig.get<{ [key: string]: string }>('editorAssociations') ??
       {};
-    let newEditorAssociations = { ...editorAssociations };
-    if (previewMode === PreviewMode.PreviewsOnly) {
-      const associations: { [key: string]: string } = {};
-      markdownFileExtensions.forEach((ext) => {
-        associations[`*${ext}`] = 'markdown-preview-enhanced';
-      });
-      // Add associations to editorAssociations
-      newEditorAssociations = { ...editorAssociations, ...associations };
-    } else {
-      // delete associations from editorAssociations if exists and value is 'markdown-preview-enhanced'
-      markdownFileExtensions.forEach((ext) => {
-        if (editorAssociations[`*${ext}`] === 'markdown-preview-enhanced') {
-          delete newEditorAssociations[`*${ext}`];
-        }
-      });
-    }
+    const { associations, owned, changed } = computeEditorAssociations({
+      current,
+      previewsOnly: previewMode === PreviewMode.PreviewsOnly,
+      markdownFileExtensions,
+      owned: this.context.globalState.get<string[]>(
+        OWNED_EDITOR_ASSOCIATIONS_KEY,
+        [],
+      ),
+    });
 
-    if (
-      JSON.stringify(newEditorAssociations) !==
-      JSON.stringify(editorAssociations)
-    ) {
+    if (changed) {
       await workbenchConfig.update(
         'editorAssociations',
-        newEditorAssociations,
+        associations,
         vscode.ConfigurationTarget.Global,
       );
     }
+    await this.context.globalState.update(OWNED_EDITOR_ASSOCIATIONS_KEY, owned);
   }
 
   public async updateAllNotebooksConfig() {
