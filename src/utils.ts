@@ -66,6 +66,38 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
   return vscode.Uri.file(path.dirname(uri.fsPath));
 }
 
+/**
+ * Why the note index must refuse to walk a notebook root, if it must.
+ *
+ * - `'filesystem-root'`: `/`, a Windows drive root, or dot-path
+ *   spellings like `/.` — indexing would stat/read across the whole
+ *   machine (vscode-mpe#2376).
+ * - `'home-directory'`: the user's home directory. The dirname fallback
+ *   above produces it for a markdown file opened directly from `~`, and
+ *   walking `~` recursively stats/reads everything under it — on macOS
+ *   `~/Library` alone spans Mail, Messages and iCloud data (#2376
+ *   again; the runtime refusal ships in crossnote, this mirrors it
+ *   host-side).
+ *
+ * The home comparison is case-insensitive on Windows: VS Code and
+ * vscode-uri disagree on drive-letter case (`c:\` vs `C:\`), and an
+ * exact match would silently no-op.
+ */
+export function notebookIndexingRefusalReason(
+  fsPath: string,
+): 'filesystem-root' | 'home-directory' | undefined {
+  const resolved = path.resolve(fsPath);
+  if (path.parse(resolved).root === resolved) {
+    return 'filesystem-root';
+  }
+  const home = path.resolve(os.homedir());
+  const isHomeDirectory =
+    process.platform === 'win32'
+      ? resolved.toLowerCase() === home.toLowerCase()
+      : resolved === home;
+  return isHomeDirectory ? 'home-directory' : undefined;
+}
+
 function getGlobalConfigPath(): string {
   const configPath = getMPEConfig<string>('configPath');
   if (typeof configPath === 'string' && configPath && configPath !== '') {

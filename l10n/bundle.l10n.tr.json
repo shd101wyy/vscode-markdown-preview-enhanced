@@ -43,6 +43,7 @@
   "Could not resolve wikilink: [[{wikilink}]]": "Viki bağlantısı çözümlenemedi: [[{wikilink}]]",
   "Could not open file: {name}": "Dosya açılamadı: {name}",
   "Markdown Preview Enhanced: the notebook root \"{root}\" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced: not defteri kökü \"{root}\" bir dosya sistemi kökü olduğu için notlar dizinlenmez (viki bağlantıları, geri bağlantılar, etiketler ve graf görünümü hiçbir şey bulamaz). Not dizinlemeyi etkinleştirmek için çalışma alanınız olarak belirli bir klasör açın.",
+  "Markdown Preview Enhanced: the notebook root \"{root}\" is the home directory, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced: not defteri kökü \"{root}\" bir ev dizini olduğu için notlar dizinlenmez (viki bağlantıları, geri bağlantılar, etiketler ve graf görünümü hiçbir şey bulamaz). Not dizinlemeyi etkinleştirmek için çalışma alanınız olarak belirli bir klasör açın.",
   "Markdown Preview Enhanced failed to activate: {message}": "Markdown Preview Enhanced etkinleştirilemedi: {message}",
   "Open Folder…": "Klasör aç…",
   "Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.": "Bağımsız wiki'yi oluşturmak daha yeni bir crossnote bağımlılığı gerektiriyor. Lütfen uzantıyı güncelleyin.",

@@ -43,6 +43,7 @@
   "Could not resolve wikilink: [[{wikilink}]]": "위키 링크를 해석할 수 없습니다: [[{wikilink}]]",
   "Could not open file: {name}": "파일을 열 수 없습니다: {name}",
   "Markdown Preview Enhanced: the notebook root \"{root}\" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced: 노트북 루트 \"{root}\"이(가) 파일 시스템 루트라서 노트가 색인되지 않습니다(위키 링크, 백링크, 태그, 그래프 뷰에서 아무것도 찾을 수 없음). 노트 색인을 사용하려면 구체적인 폴더를 작업 영역으로 여세요.",
+  "Markdown Preview Enhanced: the notebook root \"{root}\" is the home directory, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced: 노트북 루트 \"{root}\"이(가) 홈 디렉터리라서 노트가 색인되지 않습니다(위키 링크, 백링크, 태그, 그래프 뷰에서 아무것도 찾을 수 없음). 노트 색인을 사용하려면 구체적인 폴더를 작업 영역으로 여세요.",
   "Markdown Preview Enhanced failed to activate: {message}": "Markdown Preview Enhanced 활성화 실패: {message}",
   "Open Folder…": "폴더 열기…",
   "Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.": "독립형 Wiki 빌드에는 최신 crossnote 종속성이 필요합니다. 확장을 업데이트해 주세요.",
