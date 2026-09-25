@@ -2,7 +2,11 @@ import { constructGraphView, GraphViewData } from 'crossnote';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import NotebooksManager from './notebooks-manager';
-import { createMissingMarkdownNote, getWorkspaceFolderUri } from './utils';
+import {
+  createMissingMarkdownNote,
+  getWorkspaceFolderUri,
+  notebookIndexingRefusalReason,
+} from './utils';
 
 export class GraphViewProvider {
   static notebooksManager: NotebooksManager;
@@ -175,22 +179,30 @@ export class GraphViewProvider {
       const notebook =
         await GraphViewProvider.notebooksManager.getNotebook(uri);
 
-      // Ensure the reference map is populated before building the graph
-      if (forceRefresh) {
-        // Incremental refresh: walk + stat, only re-process files
-        // whose on-disk mtime is newer than the stamped value.  On a
-        // warm cache (watcher kept us in sync) this is mostly the
-        // walk cost; on a cold cache it does the same work as the
-        // full `refreshNotes`.
-        await notebook.refreshNotesIncremental({
-          dir: '.',
-          includeSubdirectories: true,
-        });
-      } else {
-        await notebook.refreshNotesIfNotLoaded({
-          dir: '.',
-          includeSubdirectories: true,
-        });
+      // Ensure the reference map is populated before building the graph.
+      // A refused root (filesystem root, home directory — #2376) is never
+      // walked; the graph renders from the empty index instead. Skipped
+      // here too so the refusal holds on the currently-pinned crossnote.
+      const rootRefused = notebookIndexingRefusalReason(
+        getWorkspaceFolderUri(uri).fsPath,
+      );
+      if (!rootRefused) {
+        if (forceRefresh) {
+          // Incremental refresh: walk + stat, only re-process files
+          // whose on-disk mtime is newer than the stamped value.  On a
+          // warm cache (watcher kept us in sync) this is mostly the
+          // walk cost; on a cold cache it does the same work as the
+          // full `refreshNotes`.
+          await notebook.refreshNotesIncremental({
+            dir: '.',
+            includeSubdirectories: true,
+          });
+        } else {
+          await notebook.refreshNotesIfNotLoaded({
+            dir: '.',
+            includeSubdirectories: true,
+          });
+        }
       }
 
       const graphData: GraphViewData = constructGraphView(notebook);

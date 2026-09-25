@@ -5,7 +5,6 @@ import {
   PreviewTheme,
   loadConfigsInDirectory,
 } from 'crossnote';
-import * as path from 'path';
 import * as vscode from 'vscode';
 import {
   MarkdownPreviewEnhancedConfig,
@@ -18,6 +17,7 @@ import {
   getWorkspaceFolderUri,
   globalConfigPath,
   isVSCodeWebExtension,
+  notebookIndexingRefusalReason,
 } from './utils';
 import { wrapVSCodeFSAsApi } from './vscode-fs';
 
@@ -31,11 +31,12 @@ class NotebooksManager {
   private failedNotebookPaths: Set<string> = new Set();
 
   /**
-   * Notebook roots that were already reported to the user as filesystem
-   * roots (see `warnIfFilesystemRoot`), so the warning shows once per
-   * root per session instead of once per `getNotebook` call.
+   * Notebook roots that were already reported to the user as refused
+   * for note indexing (see `warnIfNotebookRootRefused`), so the
+   * warning shows once per root per session instead of once per
+   * `getNotebook` call.
    */
-  private filesystemRootWarnedPaths: Set<string> = new Set();
+  private refusedRootWarnedPaths: Set<string> = new Set();
 
   constructor(private context: vscode.ExtensionContext) {
     this.fileWatcher = new FileWatcher(this.context, this);
@@ -43,7 +44,7 @@ class NotebooksManager {
 
   public async getNotebook(uri: vscode.Uri): Promise<Notebook> {
     const workspaceFolderUri = getWorkspaceFolderUri(uri);
-    this.warnIfFilesystemRoot(workspaceFolderUri);
+    this.warnIfNotebookRootRefused(workspaceFolderUri);
 
     // Check if workspaceUri already exists in this.notebooks
     for (let i = 0; i < this.notebooks.length; i++) {
@@ -84,50 +85,66 @@ class NotebooksManager {
   }
 
   /**
-   * A notebook rooted at a filesystem root (`/`, a Windows drive root,
-   * or dot-path spellings of it like `/.` — the untitled-document
-   * fallback) would recursively stat/read files across the whole
-   * machine when the wikilink/backlink/graph index is built (#2376).
-   * crossnote refuses to walk such a root; this surfaces that to the
-   * user once per root so the empty backlinks/graph aren't a mystery.
+   * A notebook root the index refuses to walk — a filesystem root
+   * (`/`, a Windows drive root, or dot-path spellings like `/.` — the
+   * untitled-document fallback) or the user's home directory (the
+   * dirname fallback for a markdown file opened directly from `~`) —
+   * would recursively stat/read files far beyond any workspace when the
+   * wikilink/backlink/graph index is built (#2376).  crossnote refuses
+   * to walk such a root; this surfaces that to the user once per root
+   * so the empty backlinks/graph aren't a mystery.
    *
-   * Only warned about when the root is an actual workspace folder, i.e.
-   * the user deliberately opened a drive root as their workspace. When
-   * no folder is open, `getWorkspaceFolderUri` falls back to the file's
-   * own directory — a drive-root parent is just an artifact of where
-   * the standalone file lives, and nagging about it on every markdown
-   * file activation spams notifications for people who never asked for
-   * note indexing (#2413). Indexing is still refused either way; only
-   * the notification is skipped.
+   * Filesystem roots are only warned about when the root is an actual
+   * workspace folder, i.e. the user deliberately opened a drive root as
+   * their workspace. When no folder is open, `getWorkspaceFolderUri`
+   * falls back to the file's own directory — a drive-root parent is
+   * just an artifact of where the standalone file lives, and nagging
+   * about it on every markdown file activation spams notifications for
+   * people who never asked for note indexing (#2413). Indexing is still
+   * refused either way; only the notification is skipped.
+   *
+   * The home directory is different: it is never an artifact of a
+   * common file location (a loose markdown file directly in `~` is
+   * rare), and the walk it would trigger is exactly the #2376
+   * filesystem scan, so the warning fires for it in both cases — once
+   * per root per session.
    */
-  private warnIfFilesystemRoot(workspaceFolderUri: vscode.Uri) {
-    const resolved = path.resolve(workspaceFolderUri.fsPath);
-    if (path.parse(resolved).root !== resolved) {
+  private warnIfNotebookRootRefused(workspaceFolderUri: vscode.Uri) {
+    const reason = notebookIndexingRefusalReason(workspaceFolderUri.fsPath);
+    if (!reason) {
       return;
     }
-    const isRealWorkspaceFolder = (
-      vscode.workspace.workspaceFolders ?? []
-    ).some((folder) => folder.uri.toString() === workspaceFolderUri.toString());
-    if (!isRealWorkspaceFolder) {
-      return;
+    if (reason === 'filesystem-root') {
+      const isRealWorkspaceFolder = (
+        vscode.workspace.workspaceFolders ?? []
+      ).some(
+        (folder) => folder.uri.toString() === workspaceFolderUri.toString(),
+      );
+      if (!isRealWorkspaceFolder) {
+        return;
+      }
     }
     const key = workspaceFolderUri.toString();
-    if (this.filesystemRootWarnedPaths.has(key)) {
+    if (this.refusedRootWarnedPaths.has(key)) {
       return;
     }
-    this.filesystemRootWarnedPaths.add(key);
+    this.refusedRootWarnedPaths.add(key);
     // Offer the one-click way out; opening a local folder is desktop-only.
     const openFolderItem = isVSCodeWebExtension()
       ? undefined
       : vscode.l10n.t('Open Folder…');
+    const message =
+      reason === 'filesystem-root'
+        ? vscode.l10n.t(
+            'Markdown Preview Enhanced: the notebook root "{root}" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.',
+            { root: workspaceFolderUri.fsPath },
+          )
+        : vscode.l10n.t(
+            'Markdown Preview Enhanced: the notebook root "{root}" is the home directory, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.',
+            { root: workspaceFolderUri.fsPath },
+          );
     void vscode.window
-      .showWarningMessage(
-        vscode.l10n.t(
-          'Markdown Preview Enhanced: the notebook root "{root}" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.',
-          { root: workspaceFolderUri.fsPath },
-        ),
-        ...(openFolderItem ? [openFolderItem] : []),
-      )
+      .showWarningMessage(message, ...(openFolderItem ? [openFolderItem] : []))
       .then((selected) => {
         if (selected === openFolderItem) {
           void vscode.commands.executeCommand(
@@ -370,12 +387,25 @@ class NotebooksManager {
 
   public async refreshNoteRelations(_noteFilePath: string) {}
 
-  public async getNoteBacklinks(
-    noteUri: vscode.Uri,
+  /**
+   * Build the note index for `notebook` (backlinks, tags, wikilink
+   * completion, graph) unless its root is one the index must refuse —
+   * a filesystem root or the home directory (#2376). Returns whether
+   * indexing proceeded, so callers can skip dependent work (starting
+   * the file watcher) without changing their return shape.
+   *
+   * crossnote refuses such roots engine-side (0.9.40+); skipping here
+   * too means the refusal also holds on the currently-pinned crossnote.
+   */
+  private async loadNoteIndexIfAllowed(
+    notebook: Notebook,
+    uri: vscode.Uri,
     forceRefreshingNotes: boolean = false,
-  ) {
-    const notebook = await this.getNotebook(noteUri);
-
+  ): Promise<boolean> {
+    // Same resolution that created the notebook inside getNotebook.
+    if (notebookIndexingRefusalReason(getWorkspaceFolderUri(uri).fsPath)) {
+      return false;
+    }
     if (forceRefreshingNotes) {
       // User clicked "refresh backlinks": walk the workspace and
       // re-tokenize only files whose on-disk mtime has advanced past
@@ -394,6 +424,15 @@ class NotebooksManager {
       });
     }
     this.fileWatcher.startFileWatcher();
+    return true;
+  }
+
+  public async getNoteBacklinks(
+    noteUri: vscode.Uri,
+    forceRefreshingNotes: boolean = false,
+  ) {
+    const notebook = await this.getNotebook(noteUri);
+    await this.loadNoteIndexIfAllowed(notebook, noteUri, forceRefreshingNotes);
     const backlinks = await notebook.getNoteBacklinks(noteUri.fsPath);
     return backlinks.map((backlink) => {
       return {
@@ -412,11 +451,7 @@ class NotebooksManager {
    */
   public async getNotesReferringToTag(contextUri: vscode.Uri, tag: string) {
     const notebook = await this.getNotebook(contextUri);
-    await notebook.refreshNotesIfNotLoaded({
-      dir: '.',
-      includeSubdirectories: true,
-    });
-    this.fileWatcher.startFileWatcher();
+    await this.loadNoteIndexIfAllowed(notebook, contextUri);
     return notebook.getNotesReferringToTag(tag);
   }
 
@@ -427,11 +462,7 @@ class NotebooksManager {
    */
   public async getAllTags(contextUri: vscode.Uri): Promise<string[]> {
     const notebook = await this.getNotebook(contextUri);
-    await notebook.refreshNotesIfNotLoaded({
-      dir: '.',
-      includeSubdirectories: true,
-    });
-    this.fileWatcher.startFileWatcher();
+    await this.loadNoteIndexIfAllowed(notebook, contextUri);
     return notebook.getAllTags();
   }
 
@@ -450,11 +481,7 @@ class NotebooksManager {
     contextUri: vscode.Uri,
   ): Promise<Array<{ uri: vscode.Uri; relativePath: string }>> {
     const notebook = await this.getNotebook(contextUri);
-    await notebook.refreshNotesIfNotLoaded({
-      dir: '.',
-      includeSubdirectories: true,
-    });
-    this.fileWatcher.startFileWatcher();
+    await this.loadNoteIndexIfAllowed(notebook, contextUri);
     const root = vscode.Uri.parse(notebook.notebookPath.toString());
     return Object.keys(notebook.notes).map((relativePath) => ({
       uri: vscode.Uri.joinPath(root, relativePath),

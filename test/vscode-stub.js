@@ -172,9 +172,21 @@ const CROSSNOTE_STUB_SOURCE = `
     Notebook: {
       init: async ({ notebookPath, fs }) => ({
         notebookPath,
+        notes: {},
         config: {},
         fs: { ...fs, exists: async () => false },
         updateConfig: () => {},
+        refreshNotesIfNotLoaded: async () => {
+          globalThis.__vscodeStubNotebookRefreshes.push('ifNotLoaded');
+          return {};
+        },
+        refreshNotesIncremental: async () => {
+          globalThis.__vscodeStubNotebookRefreshes.push('incremental');
+          return {};
+        },
+        getNoteBacklinks: async () => [],
+        getNotesReferringToTag: async () => ({}),
+        getAllTags: async () => [],
         getNoteMarkdownEngine: () => globalThis.__crossnoteStubEngine(),
         clearAllNoteMarkdownEngineCaches: () => {},
       }),
@@ -220,6 +232,7 @@ globalThis.__vscodeStubRecorder = recorder;
 globalThis.__vscodeStubWorkspaceFolder = () => undefined;
 globalThis.__vscodeStubWorkspaceFolders = [];
 globalThis.__vscodeStubRelativePath = (uri) => String(uri);
+globalThis.__vscodeStubNotebookRefreshes = [];
 globalThis.__crossnoteStubEngine = () => ({
   generateHTMLTemplateForPreview: async () => '<html></html>',
 });

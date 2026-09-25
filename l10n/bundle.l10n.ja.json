@@ -43,6 +43,7 @@
   "Could not resolve wikilink: [[{wikilink}]]": "Wiki リンクを解決できませんでした：[[{wikilink}]]",
   "Could not open file: {name}": "ファイルを開けませんでした：{name}",
   "Markdown Preview Enhanced: the notebook root \"{root}\" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced：ノートブックのルート \"{root}\" はファイルシステムのルートであるため、ノートは索引化されません（Wiki リンク・バックリンク・タグ・グラフビューは何も見つかりません）。ノートの索引化を有効にするには、特定のフォルダーをワークスペースとして開いてください。",
+  "Markdown Preview Enhanced: the notebook root \"{root}\" is the home directory, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced：ノートブックのルート \"{root}\" はホームディレクトリであるため、ノートは索引化されません（Wiki リンク・バックリンク・タグ・グラフビューは何も見つかりません）。ノートの索引化を有効にするには、特定のフォルダーをワークスペースとして開いてください。",
   "Markdown Preview Enhanced failed to activate: {message}": "Markdown Preview Enhanced のアクティブ化に失敗しました：{message}",
   "Open Folder…": "フォルダーを開く…",
   "Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.": "スタンドアロン Wiki のビルドには新しい crossnote 依存関係が必要です。拡張機能を更新してください。",

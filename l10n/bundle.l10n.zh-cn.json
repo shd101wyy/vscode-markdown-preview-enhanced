@@ -43,6 +43,7 @@
   "Could not resolve wikilink: [[{wikilink}]]": "无法解析 Wiki 链接：[[{wikilink}]]",
   "Could not open file: {name}": "无法打开文件：{name}",
   "Markdown Preview Enhanced: the notebook root \"{root}\" is a filesystem root, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced：笔记本根目录“{root}”是文件系统根目录，因此笔记不会被索引（Wiki 链接、反向链接、标签和关系图将无法找到任何内容）。请打开一个具体的文件夹作为工作区以启用笔记索引。",
+  "Markdown Preview Enhanced: the notebook root \"{root}\" is the home directory, so notes are not indexed (wikilinks, backlinks, tags and the graph view will find nothing). Open a specific folder as your workspace to enable note indexing.": "Markdown Preview Enhanced：笔记本根目录“{root}”是用户主目录，因此笔记不会被索引（Wiki 链接、反向链接、标签和关系图将无法找到任何内容）。请打开一个具体的文件夹作为工作区以启用笔记索引。",
   "Markdown Preview Enhanced failed to activate: {message}": "Markdown Preview Enhanced 激活失败：{message}",
   "Open Folder…": "打开文件夹…",
   "Build Standalone Wiki requires a newer crossnote dependency. Please update the extension.": "构建独立 Wiki 需要更新版本的 crossnote 依赖。请更新扩展。",

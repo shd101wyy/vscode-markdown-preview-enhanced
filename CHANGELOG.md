@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug fixes
+
+- **Note indexing refuses the home directory as a notebook root, and says so** — the no-workspace fallback of `getWorkspaceFolderUri` resolves a markdown file that lives outside every workspace folder to its parent directory, so a loose file opened directly from `~` made the note index (backlinks, tags, wikilink completion, the graph view — reachable without any preview open, e.g. by typing `[` / `#`) recursively stat and read everything under the home directory. On macOS that walks `~/Library` (Mail, Messages, iCloud data) — the [#2376](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2376) filesystem scan, again, one directory lower. The home directory is now refused exactly like filesystem-root notebooks: the index build is skipped extension-side (so the refusal holds on the currently pinned crossnote, not only from crossnote 0.9.40 on) and a once-per-root notification explains why notes are not indexed, localized in all ten languages and offering _Open Folder…_. Unlike drive roots it also warns when no folder is open: a markdown file directly in `~` is rare, and the walk it would trigger is exactly what #2376 reported (reported by @prawnsalad; the runtime refusal and an oversized-walk warning land in crossnote via [shd101wyy/crossnote#514](https://github.com/shd101wyy/crossnote/pull/514)).
+
 ## [0.8.36] - 2026-09-20
 
 ### Features
