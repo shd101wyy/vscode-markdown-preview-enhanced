@@ -56,6 +56,16 @@ jobs:
           # dependencies don't need to be analyzed.
           vsce package --no-dependencies
           ls -lah *.vsix
+      # Keep the packaged vsix downloadable from the run page for one day,
+      # so the exact build CI validated can be smoke-tested (e.g. installed
+      # from the vsix into a VS Code instance) without waiting for a release.
+      - name: 'Upload the vsix artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: markdown-preview-enhanced-vsix
+          path: '*.vsix'
+          retention-days: 1
+          if-no-files-found: error
       - name: Dry run publish to Visual Studio Marketplace
         id: dry_run_vsix
         uses: HaaLeo/publish-vscode-extension@v1
