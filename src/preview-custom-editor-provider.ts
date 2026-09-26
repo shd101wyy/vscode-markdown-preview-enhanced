@@ -25,6 +25,11 @@ export class PreviewCustomEditorProvider
           preserveFocus: true,
         },
         webviewPanel,
+        // The panel is managed by VS Code and pinned to this document — it
+        // must not be reused as (or redirected to) the shared single-preview
+        // panel, so each custom editor tab renders its own document
+        // (vscode-mpe#2433).
+        isCustomEditor: true,
       });
     } catch (error) {
       console.error(error);

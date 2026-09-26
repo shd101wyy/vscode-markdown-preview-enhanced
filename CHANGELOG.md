@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug fixes
+
+- **Opening a second markdown document as the preview custom editor renders into its own tab** — with markdown files associated to the preview custom editor (a hand-added `"*.md": "markdown-preview-enhanced"` entry in `workbench.editorAssociations`, or any other way of opening two files as custom editors) while `previewMode` is the default _Single Preview_, the second document's tab stayed completely blank and the first tab, still open in the background, was re-titled and rendered the second document's content instead of its own. Custom editor panels are created and managed by VS Code, one per document — but the extension registered the first one as the shared "single preview" panel, so every subsequent open reused that panel and the render output for the new document was written into the old tab. Custom editor panels are now tracked as their own class, pinned to the document they were resolved for and never retargeted through the single-preview machinery: each tab renders its own file, live updates and refreshes reach the right panel, closing one tab no longer unregisters the others, and _Close All Previews_ also closes them ([#2433](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2433) reported by @Andrea79).
+
 ## [0.8.37] - 2026-09-25
 
 ### Bug fixes
