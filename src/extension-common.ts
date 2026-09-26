@@ -1362,6 +1362,12 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
           if (previewProvider.isPreviewOn(sourceUri)) {
             if (
               previewMode === PreviewMode.SinglePreview &&
+              // Only the shared single-preview panel follows the active
+              // editor. Custom editor panels are pinned to their documents —
+              // when they are the only previews open there is nothing to
+              // switch, and re-initializing them here would reload their
+              // webview on every editor switch (vscode-mpe#2433).
+              previewProvider.hasSinglePreviewPanel() &&
               !previewProvider.previewHasTheSameSingleSourceUri(sourceUri)
             ) {
               // Don't switch a locked preview to a different file

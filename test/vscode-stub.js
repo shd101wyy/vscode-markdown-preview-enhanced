@@ -11,10 +11,12 @@ const recorder = {
   commands: new Map(),
   clipboard: { text: null },
   warnings: [],
+  activeEditorHandlers: [],
   reset() {
     this.commands = new Map();
     this.clipboard = { text: null };
     this.warnings = [];
+    this.activeEditorHandlers = [];
   },
 };
 
@@ -94,7 +96,10 @@ const VSCODE_STUB_SOURCE = `
       registerWebviewPanelSerializer: () => disposable,
       registerCustomEditorProvider: () => disposable,
       withProgress: async (_options, task) => task({ report: noop }, { isCancellationRequested: false }),
-      onDidChangeActiveTextEditor: event,
+      onDidChangeActiveTextEditor: (handler) => {
+        recorder.activeEditorHandlers.push(handler);
+        return disposable;
+      },
       onDidChangeTextEditorSelection: event,
       onDidChangeTextEditorVisibleRanges: event,
       onDidChangeTextEditorViewColumn: event,
@@ -111,7 +116,10 @@ const VSCODE_STUB_SOURCE = `
         return globalThis.__vscodeStubWorkspaceFolders ?? [];
       },
       textDocuments: [],
-      getConfiguration: () => ({ get: () => undefined, update: async () => {} }),
+      getConfiguration: () => ({
+        get: (section) => (globalThis.__vscodeStubConfiguration ?? {})[section],
+        update: async () => {},
+      }),
       getWorkspaceFolder: (uri) => globalThis.__vscodeStubWorkspaceFolder(uri),
       asRelativePath: (uri) => globalThis.__vscodeStubRelativePath(uri),
       openTextDocument: async () => ({ getText: () => '', uri: Uri.file('/ws/a.md') }),
@@ -233,6 +241,7 @@ globalThis.__vscodeStubWorkspaceFolder = () => undefined;
 globalThis.__vscodeStubWorkspaceFolders = [];
 globalThis.__vscodeStubRelativePath = (uri) => String(uri);
 globalThis.__vscodeStubNotebookRefreshes = [];
+globalThis.__vscodeStubConfiguration = {};
 globalThis.__crossnoteStubEngine = () => ({
   generateHTMLTemplateForPreview: async () => '<html></html>',
 });
@@ -251,5 +260,8 @@ module.exports = {
   },
   setMarkdownEngine(fn) {
     globalThis.__crossnoteStubEngine = fn;
+  },
+  setConfiguration(config) {
+    globalThis.__vscodeStubConfiguration = config;
   },
 };

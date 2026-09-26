@@ -269,6 +269,15 @@ export class PreviewProvider {
     new Map();
   private initializedPreviews: Set<vscode.WebviewPanel> = new Set();
 
+  /**
+   * Panels owned by VS Code custom editors (`resolveCustomTextEditor`).
+   * Each is pinned to the document it was resolved for, so unlike the shared
+   * single-preview panel it must never be retargeted to another file:
+   * opening a second document as a custom editor has to render into the new
+   * panel, not into the previously-active one (vscode-mpe#2433).
+   */
+  private customEditorPanels: Set<vscode.WebviewPanel> = new Set();
+
   private static singlePreviewPanel: vscode.WebviewPanel | null;
   private static singlePreviewPanelSourceUriTarget: Uri | null;
   public static notebooksManager: NotebooksManager | null = null;
@@ -296,8 +305,20 @@ export class PreviewProvider {
     if (getPreviewMode() !== PreviewMode.SinglePreview) {
       return true;
     }
+    // Custom editor panels are pinned to their documents and update
+    // independently of the single-preview target.
+    const registered = this.previewMaps.get(sourceUri.toString());
+    if (registered) {
+      for (const panel of registered) {
+        if (this.customEditorPanels.has(panel)) {
+          return true;
+        }
+      }
+    }
     const target = PreviewProvider.singlePreviewPanelSourceUriTarget;
-    return !!target && target.fsPath === sourceUri.fsPath;
+    // When no single preview exists at all (e.g. only custom editors are
+    // open), nothing excludes this source.
+    return !target || target.fsPath === sourceUri.fsPath;
   }
 
   /**
@@ -384,9 +405,25 @@ export class PreviewProvider {
 
     // refresh iframes
     if (getPreviewMode() === PreviewMode.SinglePreview) {
-      this.refreshPreviewPanel(
-        PreviewProvider.singlePreviewPanelSourceUriTarget,
-      );
+      const sourceUriStrings: string[] = [];
+      const target = PreviewProvider.singlePreviewPanelSourceUriTarget;
+      if (target) {
+        sourceUriStrings.push(target.toString());
+      }
+      // Custom editor panels are pinned to their documents and independent
+      // of the single-preview target — refresh each of them too.
+      for (const panel of this.customEditorPanels) {
+        const document = this.previewToDocumentMap.get(panel);
+        if (document?.uri) {
+          const sourceUriString = document.uri.toString();
+          if (!sourceUriStrings.includes(sourceUriString)) {
+            sourceUriStrings.push(sourceUriString);
+          }
+        }
+      }
+      sourceUriStrings.forEach((sourceUriString) => {
+        this.refreshPreviewPanel(vscode.Uri.parse(sourceUriString));
+      });
     } else {
       for (const [sourceUriString] of this.previewMaps) {
         this.refreshPreviewPanel(vscode.Uri.parse(sourceUriString));
@@ -419,6 +456,14 @@ export class PreviewProvider {
       getPreviewMode() === PreviewMode.SinglePreview &&
       PreviewProvider.singlePreviewPanel
     ) {
+      // Panels registered for this source: custom editor panels are pinned
+      // to it, and the shared panel was registered when it took this source
+      // as its target (older sources keep their stale registration, which
+      // preserves the previous resolve-to-the-shared-panel behavior).
+      const registered = this.previewMaps.get(sourceUri.toString());
+      if (registered && registered.size > 0) {
+        return Array.from(registered);
+      }
       return [PreviewProvider.singlePreviewPanel];
     } else {
       const previews = this.previewMaps.get(sourceUri.toString());
@@ -436,7 +481,12 @@ export class PreviewProvider {
    */
   public isPreviewOn(sourceUri: Uri) {
     if (getPreviewMode() === PreviewMode.SinglePreview) {
-      return !!PreviewProvider.singlePreviewPanel;
+      if (PreviewProvider.singlePreviewPanel) {
+        return true;
+      }
+      // Custom editors act as previews even without a shared panel.
+      const registered = this.previewMaps.get(sourceUri.toString());
+      return !!registered && registered.size > 0;
     } else {
       const previews = this.getPreviews(sourceUri);
       return previews && previews.length > 0;
@@ -450,24 +500,47 @@ export class PreviewProvider {
     }));
   }
 
-  public destroyPreview(sourceUri: Uri) {
-    const previewMode = getPreviewMode();
-    if (previewMode === PreviewMode.SinglePreview) {
-      PreviewProvider.singlePreviewPanel = null;
-      PreviewProvider.singlePreviewPanelSourceUriTarget = null;
-      this.previewToDocumentMap = new Map();
-      this.previewToSourceUriMap = new Map();
-      this.previewMaps = new Map();
-      this.latestRenderRequestBySourceUri.clear();
-    } else {
-      const previews = this.getPreviews(sourceUri);
-      if (previews) {
-        previews.forEach((preview) => {
-          this.previewToDocumentMap.delete(preview);
-          this.deletePreviewFromMap(sourceUri, preview);
-        });
+  public destroyPreview(sourceUri: Uri, panel?: vscode.WebviewPanel) {
+    if (panel) {
+      // A specific panel was disposed. Remove exactly its registrations so
+      // other panels for the same or different sources (e.g. custom editor
+      // tabs) survive; only when the disposed panel WAS the shared
+      // single-preview panel is the single-preview state torn down.
+      if (panel === PreviewProvider.singlePreviewPanel) {
+        PreviewProvider.singlePreviewPanel = null;
+        PreviewProvider.singlePreviewPanelSourceUriTarget = null;
+        this.latestRenderRequestBySourceUri.clear();
       }
-      this.latestRenderRequestBySourceUri.delete(sourceUri.toString());
+      this.previewToDocumentMap.delete(panel);
+      for (const [key, panels] of this.previewMaps) {
+        panels.delete(panel);
+        if (panels.size === 0) {
+          this.previewMaps.delete(key);
+        }
+      }
+      const remaining = this.previewMaps.get(sourceUri.toString());
+      if (!remaining || remaining.size === 0) {
+        this.latestRenderRequestBySourceUri.delete(sourceUri.toString());
+      }
+    } else {
+      const previewMode = getPreviewMode();
+      if (previewMode === PreviewMode.SinglePreview) {
+        PreviewProvider.singlePreviewPanel = null;
+        PreviewProvider.singlePreviewPanelSourceUriTarget = null;
+        this.previewToDocumentMap = new Map();
+        this.previewToSourceUriMap = new Map();
+        this.previewMaps = new Map();
+        this.latestRenderRequestBySourceUri.clear();
+      } else {
+        const previews = this.getPreviews(sourceUri);
+        if (previews) {
+          previews.forEach((preview) => {
+            this.previewToDocumentMap.delete(preview);
+            this.deletePreviewFromMap(sourceUri, preview);
+          });
+        }
+        this.latestRenderRequestBySourceUri.delete(sourceUri.toString());
+      }
     }
     this.clearAutoTranslateTimer(sourceUri.toString());
   }
@@ -488,6 +561,7 @@ export class PreviewProvider {
     cursorLine,
     viewOptions,
     inputStringOverride,
+    isCustomEditor,
   }: {
     sourceUri: vscode.Uri;
     document: vscode.TextDocument;
@@ -495,13 +569,21 @@ export class PreviewProvider {
     cursorLine?: number;
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus?: boolean };
     inputStringOverride?: string;
+    /** The panel was provided by a VS Code custom editor (pinned per doc). */
+    isCustomEditor?: boolean;
   }): Promise<void> {
     const previewMode = getPreviewMode();
     let previewPanel: vscode.WebviewPanel;
     const previews = this.getPreviews(sourceUri);
     if (
       previewMode === PreviewMode.SinglePreview &&
-      PreviewProvider.singlePreviewPanel
+      PreviewProvider.singlePreviewPanel &&
+      // A custom editor (or an explicit refresh target) brings its own panel,
+      // pinned to its document — initialize it directly instead of
+      // retargeting the shared single-preview panel, which would render the
+      // new document into the old tab and leave the new one blank
+      // (vscode-mpe#2433).
+      !webviewPanel
     ) {
       const oldResourceRoot = PreviewProvider.singlePreviewPanelSourceUriTarget
         ? getWorkspaceFolderUri(
@@ -571,6 +653,9 @@ export class PreviewProvider {
           enableScripts: true,
           localResourceRoots,
         };
+        if (isCustomEditor) {
+          this.customEditorPanels.add(previewPanel);
+        }
       } else {
         previewPanel = vscode.window.createWebviewPanel(
           'markdown-preview-enhanced',
@@ -616,9 +701,12 @@ export class PreviewProvider {
             // `sourceUri` goes stale after a switch — compare against the
             // panel's current target instead so legitimate `updateMarkdown`
             // edits are not dropped (and an attacker still can only write to
-            // the file the preview currently represents).
+            // the file the preview currently represents).  Custom editor
+            // panels are pinned to their document, so their closure never
+            // goes stale.
             const expectedSourceUri =
-              getPreviewMode() === PreviewMode.SinglePreview
+              getPreviewMode() === PreviewMode.SinglePreview &&
+              !this.customEditorPanels.has(previewPanel)
                 ? PreviewProvider.singlePreviewPanelSourceUriTarget
                 : sourceUri;
             if (
@@ -638,9 +726,12 @@ export class PreviewProvider {
         // unregister previewPanel.
         previewPanel.onDidDispose(
           () => {
-            PreviewProvider.singlePreviewLocked = false;
+            if (previewPanel === PreviewProvider.singlePreviewPanel) {
+              PreviewProvider.singlePreviewLocked = false;
+            }
+            this.customEditorPanels.delete(previewPanel);
             this.previewToSourceUriMap.delete(previewPanel);
-            this.destroyPreview(sourceUri);
+            this.destroyPreview(sourceUri, previewPanel);
             this.destroyEngine(sourceUri);
             this.initializedPreviews.delete(previewPanel);
           },
@@ -649,7 +740,13 @@ export class PreviewProvider {
         );
       }
 
-      if (previewMode === PreviewMode.SinglePreview) {
+      if (
+        previewMode === PreviewMode.SinglePreview &&
+        // A custom editor panel must not become the shared single-preview
+        // panel: the next custom editor open would then be redirected into
+        // it (vscode-mpe#2433).
+        !this.customEditorPanels.has(previewPanel)
+      ) {
         PreviewProvider.singlePreviewPanel = previewPanel;
         PreviewProvider.singlePreviewPanelSourceUriTarget = sourceUri;
       }
@@ -760,6 +857,8 @@ export class PreviewProvider {
       if (PreviewProvider.singlePreviewPanel) {
         PreviewProvider.singlePreviewPanel.dispose();
       }
+      // Custom editor tabs are per-document previews — close them too.
+      this.customEditorPanels.forEach((panel) => panel.dispose());
     } else {
       for (const [sourceUriString] of this.previewMaps) {
         const previews = this.previewMaps.get(sourceUriString);
@@ -772,6 +871,7 @@ export class PreviewProvider {
     this.previewMaps = new Map();
     this.previewToDocumentMap = new Map();
     this.previewToSourceUriMap = new Map();
+    this.customEditorPanels = new Set();
     // Clear all pending update timeouts
     this.updateTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.updateTimeouts.clear();
@@ -821,6 +921,15 @@ export class PreviewProvider {
    */
   public isSinglePreviewLocked(): boolean {
     return PreviewProvider.singlePreviewLocked;
+  }
+
+  /**
+   * Returns true while the shared single-preview panel exists. Custom editor
+   * panels don't count: they are pinned per document, so there is nothing to
+   * switch when they are the only previews open.
+   */
+  public hasSinglePreviewPanel(): boolean {
+    return !!PreviewProvider.singlePreviewPanel;
   }
 
   /**
@@ -1038,6 +1147,10 @@ export class PreviewProvider {
         sourceUri,
         document,
         inputStringOverride,
+        // Refresh the exact panel found above: in single-preview mode,
+        // omitting the panel would redirect a custom editor's refresh into
+        // the shared single-preview panel.
+        webviewPanel: previewPanel,
         viewOptions: {
           viewColumn: previewPanel.viewColumn ?? vscode.ViewColumn.One,
           preserveFocus: true,
@@ -1507,6 +1620,9 @@ export class PreviewProvider {
       sourceUri,
       document,
       inputStringOverride: markdown,
+      // Re-render into the existing panel (a custom editor panel must not be
+      // swapped for the shared single-preview panel here).
+      webviewPanel: previewPanel,
       viewOptions: {
         viewColumn: previewPanel.viewColumn ?? vscode.ViewColumn.Active,
         preserveFocus: true,
