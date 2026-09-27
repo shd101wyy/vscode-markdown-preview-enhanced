@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.39] - 2026-09-27
+
 ### Picked up from crossnote 0.9.41
 
 The extension now pins crossnote 0.9.41.
