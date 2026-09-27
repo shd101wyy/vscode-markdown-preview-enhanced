@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Picked up from crossnote 0.9.41
+
+The extension now pins crossnote 0.9.41.
+
+- **WaveDrom diagram labels can no longer inject live SVG event handlers (XSS)** — crossnote's earlier fix for WaveDrom code execution (vscode-mpe#2315) made the diagram source inert strict JSON, but valid-but-malicious _data_ passed through: WaveDrom interprets an array-valued signal label as an SVG element description, so `name: ["image", {href: "missing.png", onerror: "alert(1)"}]` had the client-side renderer build a real `<image onerror=…>` element — _after_ sanitization had finished. Opening an exported HTML file executed the handler with code chunks disabled, and a hosted export ran the script in the site's origin; the preview was equally reachable. Reportedly a bypass of CVE-2026-11422; reported by @avrlab233 ([GHSA-xgfr-fvr6-h5qv](https://github.com/shd101wyy/crossnote/security/advisories/GHSA-xgfr-fvr6-h5qv), fixed in [shd101wyy/crossnote#518](https://github.com/shd101wyy/crossnote/pull/518)). The diagram data is now sanitized before any renderer sees it: event-handler attributes and `javascript:`/`vbscript:`/`data:text/html` URLs are stripped, elements that could execute script, embed an HTML document, or retarget attributes via SMIL animation are dropped, and — because WaveDrom's markup library emits attribute values and label text without XML escaping — quotes and angle brackets in those positions are escaped, closing the attribute-value and text-injection breakouts found while reviewing the fix. Benign label elements (like `["image", {href: "icon.png"}]`) render exactly as before, an image-label href containing `&` now renders instead of failing XML parsing, and every render path (preview, presentation, HTML export) is covered.
+
 ## [0.8.38] - 2026-09-26
 
 ### Bug fixes
