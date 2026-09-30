@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug fixes
+
+- **Images and imports under a folder whose name contains `#` or `?` load in the preview** — the webview URL mapper turned the `%23` and `%3F` that `asWebviewUri` produces back into `#` and `?`, because crossnote used to pass `?cache-buster` suffixes inside the file path. A `#` in a workspace or folder name therefore cut the image URL short. crossnote now passes clean file paths and appends the query itself ([crossnote#522](https://github.com/shd101wyy/crossnote/pull/522)), so the mapper keeps them encoded. Needs a crossnote release that includes crossnote#522 ([#2328](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2328) reported by @ahoy123).
+
 ## [0.8.39] - 2026-09-27
 
 ### Picked up from crossnote 0.9.41
