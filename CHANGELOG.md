@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **The global config directory's `head.html` can load the scripts beside it** — crossnote 0.9.36 added `Notebook.trustedScriptRoots`, the host-set list of directories whose `head.html` scripts may load besides the notebook's own ([crossnote#446](https://github.com/shd101wyy/crossnote/issues/446), [shd101wyy/crossnote#499](https://github.com/shd101wyy/crossnote/pull/499)), but nothing here ever filled it, so the feature was unreachable from VS Code: with `markdown-preview-enhanced.enablePreviewScripts` on, a `<script src>` in the _global_ config directory's `head.html` was still dropped, because the file beside it lives outside every workspace — exactly the directory whose whole point is behaviour the user wants in every preview. The extension now names that directory as a trusted root wherever it decides whether preview scripts run at all, so the roots are empty whenever the opt-in is off or the workspace is untrusted. The root is taken from the **user-scope** value of `configPath` only: that setting is window-scoped, so a repository's `.vscode/settings.json` could otherwise name any directory on disk as trusted, extending script loading beyond the repository (whose own scripts already load under the opt-in). Everything crossnote already enforced is unchanged — each candidate must be an existing file contained (realpath, symlinks included) in the notebook directory or a named root, and inline scripts, URL-scheme sources, the `@import "*.js"` channel and every export path stay blocked.
+
 ## [0.8.39] - 2026-09-27
 
 ### Picked up from crossnote 0.9.41
