@@ -63,7 +63,26 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
   }
 
   // Return the folder of uri
-  return vscode.Uri.file(path.dirname(uri.fsPath));
+  const documentDir = vscode.Uri.file(path.dirname(uri.fsPath));
+
+  // A file opened from outside every workspace folder (e.g. `code ~/doc.md`
+  // over an existing workspace window) would take its own directory as the
+  // notebook root. When that directory is one the note index must refuse —
+  // the home directory or a filesystem root — index against the first
+  // workspace folder instead, same as untitled buffers above: the workspace
+  // is the folder the user actually opened, and its wikilinks/backlinks/
+  // graph keep working rather than being silently refused (#2444). With no
+  // folder open the refused root still applies — walking `~` or a drive
+  // root is exactly the #2376 scan. Resource loading is unaffected: the
+  // preview adds the document's own directory to the webview's
+  // localResourceRoots, so images beside such a file still render.
+  if (workspaces && workspaces.length > 0) {
+    if (notebookIndexingRefusalReason(documentDir.fsPath)) {
+      return workspaces[0].uri;
+    }
+  }
+
+  return documentDir;
 }
 
 /**

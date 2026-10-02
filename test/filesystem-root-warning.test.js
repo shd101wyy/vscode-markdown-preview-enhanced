@@ -137,6 +137,42 @@ suite('notebook-root refusal warning', function () {
     assert.deepStrictEqual(recorder.warnings, []);
   });
 
+  test('indexes against the workspace when a standalone file sits in a refused root (#2444)', async function () {
+    // `code ~/doc.md` over a window whose workspace is elsewhere: the
+    // dirname fallback would root the notebook at `~` (or a drive root),
+    // which the index refuses — so the workspace is used instead and no
+    // home-directory warning fires.
+    const folder = { uri: bundle.Uri.file('/ws'), index: 0, name: 'ws' };
+    setWorkspaceFolders([folder]);
+    setWorkspaceFolderResolver((uri) =>
+      uri.fsPath.startsWith('/ws') ? folder : undefined,
+    );
+
+    const manager = new bundle.NotebooksManager(makeExtensionContext());
+    await manager.getNoteBacklinks(
+      bundle.Uri.file(path.join(os.homedir(), 'a.md')),
+    );
+    await manager.getNoteBacklinks(bundle.Uri.file('/outside.md'));
+
+    // One notebook rooted at the workspace, actually indexed (both files
+    // map to it), and no refusal warning for either refused dirname.
+    assert.deepStrictEqual(stubNotebookRefreshes(), [
+      'ifNotLoaded',
+      'ifNotLoaded',
+    ]);
+    assert.deepStrictEqual(recorder.warnings, []);
+  });
+
+  test('still warns for a standalone file in the home directory with no workspace open', async function () {
+    // No folder is open — there is no workspace to fall back to, so the
+    // home-directory refusal (and its one-time warning) still applies.
+    const manager = new bundle.NotebooksManager(makeExtensionContext());
+    await manager.getNotebook(bundle.Uri.file(path.join(os.homedir(), 'a.md')));
+
+    assert.strictEqual(recorder.warnings.length, 1);
+    assert.match(recorder.warnings[0], /is the home directory/);
+  });
+
   test('refusal reason: filesystem root, home directory, or undefined', function () {
     const driveRoot = path.parse(path.resolve('/')).root;
     assert.strictEqual(
