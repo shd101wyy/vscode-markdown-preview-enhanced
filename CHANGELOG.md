@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug fixes
+
+- **A file opened outside the workspace no longer collapses the notebook root to `$HOME`** — opening a markdown file that lives outside every workspace folder (e.g. `code ~/doc.md` while a workspace window is open) rooted the notebook at the file's own directory, so a file directly in `~` (or under a drive root) hit the home-directory/filesystem-root index refusal: wikilinks, backlinks, tags and the graph found nothing and a warning toast suggested opening a folder even though one was open. Such files are now indexed against the first open workspace folder — the same association unsaved buffers already get — and only fall back to the document directory (or the refusal, with its warning) when no folder is open. Images beside the out-of-workspace file keep rendering: the preview adds the document's own directory to the webview's `localResourceRoots` ([#2444](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2444) reported by @F1LT3R).
+
 ## [0.8.39] - 2026-09-27
 
 ### Picked up from crossnote 0.9.41
