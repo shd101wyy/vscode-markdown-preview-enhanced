@@ -99,8 +99,14 @@ export function notebookIndexingRefusalReason(
 }
 
 function resolveGlobalConfigPath(configPath: string | undefined): string {
-  if (typeof configPath === 'string' && configPath && configPath !== '') {
-    return configPath.replace(/^~/, os.homedir());
+  if (typeof configPath === 'string' && configPath !== '') {
+    // path.join so a leading `~` expands to platform separators: a plain
+    // string replace keeps the setting's forward slash on Windows and
+    // produces a mixed-separator path (`C:\Users\…/x`), which breaks
+    // path-equality assertions (and looks odd in logs).
+    return configPath.replace(/^~(.*)$/, (_, rest: string) =>
+      rest ? path.join(os.homedir(), rest) : os.homedir(),
+    );
   }
 
   if (process.platform === 'win32') {

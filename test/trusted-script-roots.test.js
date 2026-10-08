@@ -118,7 +118,9 @@ suite('trusted script roots', function () {
       global: { enablePreviewScripts: true, configPath: '~/mpe-config' },
     });
     assert.deepStrictEqual(await rootsFor(), [
-      path.join(os.homedir(), '/mpe-config'),
+      // resolveGlobalConfigPath expands `~` with path.join, so the root
+      // uses platform separators on every OS.
+      path.join(os.homedir(), 'mpe-config'),
     ]);
   });
 
