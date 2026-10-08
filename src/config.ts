@@ -355,6 +355,19 @@ export function getMPEConfig<T>(section: ConfigKey) {
   return config.get<T>(section);
 }
 
+/**
+ * The per-scope values of a setting (default, user, workspace, folder),
+ * rather than the single merged value `getMPEConfig` returns.
+ *
+ * Needed where the workspace must not influence the outcome: a repository
+ * ships its own `.vscode/settings.json`, so those values are as untrusted as
+ * the rest of its content.
+ */
+export function inspectMPEConfig<T>(section: ConfigKey) {
+  const config = vscode.workspace.getConfiguration('markdown-preview-enhanced');
+  return config.inspect<T>(section);
+}
+
 export function updateMPEConfig<T>(
   section: ConfigKey,
   value: T,
