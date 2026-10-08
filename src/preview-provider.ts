@@ -647,6 +647,16 @@ export class PreviewProvider {
       if (workspaceUri) {
         localResourceRoots.push(workspaceUri);
       }
+      // The previewed file may live outside its notebook root — an
+      // out-of-workspace file whose fallback root is the workspace itself
+      // (its own directory is home / a filesystem root, #2444), or any
+      // document-dir fallback. Its own directory must stay loadable so
+      // relative images beside it keep rendering.
+      if (sourceUri.scheme === 'file') {
+        localResourceRoots.push(
+          vscode.Uri.file(path.dirname(sourceUri.fsPath)),
+        );
+      }
 
       if (webviewPanel) {
         previewPanel = webviewPanel;
