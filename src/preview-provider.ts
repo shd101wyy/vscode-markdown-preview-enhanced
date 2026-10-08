@@ -55,11 +55,12 @@ utility.useExternalAddFileProtocolFunction((filePath, preview) => {
     if (urlMatch) {
       return `${urlMatch[1]}://${urlMatch[2]}`;
     }
+    // crossnote passes a real file path and re-attaches any `?query` or
+    // `#fragment` itself (crossnote#522), so `?` and `#` here are part of a
+    // file or folder name and must stay encoded (vscode-mpe#2328).
     return preview.webview
       .asWebviewUri(vscode.Uri.file(filePath))
-      .toString(true)
-      .replace(/%3F/gi, '?')
-      .replace(/%23/g, '#');
+      .toString(true);
   } else {
     if (!filePath.startsWith('file://')) {
       filePath = 'file:///' + filePath;
