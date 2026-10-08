@@ -18,6 +18,7 @@ import {
 import FileWatcher from './file-watcher';
 import { getAllPreviewProviders } from './preview-provider';
 import {
+  getUserScopeGlobalConfigPath,
   getWorkspaceFolderUri,
   globalConfigPath,
   isVSCodeWebExtension,
@@ -245,11 +246,23 @@ class NotebooksManager {
    * workspace `.vscode/settings.json`) can never set it. It is only ever
    * derived from the application-scope `enablePreviewScripts` user setting
    * — and requires the workspace to be trusted.
+   *
+   * `trustedScriptRoots` is the same kind of flag: the directories whose
+   * `head.html` scripts crossnote may load, besides the notebook's own. The
+   * global config directory is the one that matters — its `head.html` exists
+   * to apply to every preview, but the scripts beside it live outside every
+   * workspace, so without this they can never load. It is taken from the
+   * user-scope `configPath` only, so a repository cannot extend the trust to
+   * a directory outside itself, and it is empty whenever preview scripts are
+   * off.
    */
   private applyPreviewScripts(notebook: Notebook) {
     notebook.previewScriptsEnabled =
       vscode.workspace.isTrusted &&
       (getMPEConfig<boolean>('enablePreviewScripts') ?? false);
+    notebook.trustedScriptRoots = notebook.previewScriptsEnabled
+      ? [getUserScopeGlobalConfigPath()]
+      : [];
   }
 
   public setSystemColorScheme(colorScheme: 'light' | 'dark') {

@@ -3,7 +3,7 @@ import { PreviewMode } from 'crossnote';
 import * as os from 'os';
 import * as vscode from 'vscode';
 import * as packageJSON from '../package.json';
-import { getMPEConfig } from './config';
+import { getMPEConfig, inspectMPEConfig } from './config';
 
 /**
  * Format pathString if it is on Windows. Convert `c:\` like string to `C:\`
@@ -98,10 +98,15 @@ export function notebookIndexingRefusalReason(
   return isHomeDirectory ? 'home-directory' : undefined;
 }
 
-function getGlobalConfigPath(): string {
-  const configPath = getMPEConfig<string>('configPath');
-  if (typeof configPath === 'string' && configPath && configPath !== '') {
-    return configPath.replace(/^~/, os.homedir());
+function resolveGlobalConfigPath(configPath: string | undefined): string {
+  if (typeof configPath === 'string' && configPath !== '') {
+    // path.join so a leading `~` expands to platform separators: a plain
+    // string replace keeps the setting's forward slash on Windows and
+    // produces a mixed-separator path (`C:\Users\…/x`), which breaks
+    // path-equality assertions (and looks odd in logs).
+    return configPath.replace(/^~(.*)$/, (_, rest: string) =>
+      rest ? path.join(os.homedir(), rest) : os.homedir(),
+    );
   }
 
   if (process.platform === 'win32') {
@@ -117,7 +122,28 @@ function getGlobalConfigPath(): string {
     }
   }
 }
+function getGlobalConfigPath(): string {
+  return resolveGlobalConfigPath(getMPEConfig<string>('configPath'));
+}
 export const globalConfigPath = getGlobalConfigPath();
+
+/**
+ * The global config directory as the *user's own* settings name it, ignoring
+ * any `configPath` override from the workspace or a workspace folder.
+ *
+ * `configPath` is window-scoped, so a repository's `.vscode/settings.json`
+ * can point it at any directory on disk. That is harmless while the
+ * directory only supplies CSS and templates, but it must not decide which
+ * directories may supply preview *scripts*: a repository's own scripts
+ * already load once the user opts in, and honouring its `configPath` here
+ * would let it extend that trust to directories outside itself. Hence the
+ * user-scope value only.
+ */
+export function getUserScopeGlobalConfigPath(): string {
+  return resolveGlobalConfigPath(
+    inspectMPEConfig<string>('configPath')?.globalValue,
+  );
+}
 
 /**
  * Obsidian-style "follow link to a missing note": if `fileUri`

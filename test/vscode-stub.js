@@ -115,9 +115,17 @@ const VSCODE_STUB_SOURCE = `
       get workspaceFolders() {
         return globalThis.__vscodeStubWorkspaceFolders ?? [];
       },
+      get isTrusted() {
+        return globalThis.__vscodeStubIsTrusted !== false;
+      },
       textDocuments: [],
       getConfiguration: () => ({
         get: (section) => (globalThis.__vscodeStubConfiguration ?? {})[section],
+        inspect: (section) => ({
+          key: section,
+          globalValue: (globalThis.__vscodeStubConfigurationScopes?.global ?? {})[section],
+          workspaceValue: (globalThis.__vscodeStubConfigurationScopes?.workspace ?? {})[section],
+        }),
         update: async () => {},
       }),
       getWorkspaceFolder: (uri) => globalThis.__vscodeStubWorkspaceFolder(uri),
@@ -242,6 +250,8 @@ globalThis.__vscodeStubWorkspaceFolders = [];
 globalThis.__vscodeStubRelativePath = (uri) => String(uri);
 globalThis.__vscodeStubNotebookRefreshes = [];
 globalThis.__vscodeStubConfiguration = {};
+globalThis.__vscodeStubConfigurationScopes = { global: {}, workspace: {} };
+globalThis.__vscodeStubIsTrusted = true;
 globalThis.__crossnoteStubEngine = () => ({
   generateHTMLTemplateForPreview: async () => '<html></html>',
 });
@@ -263,5 +273,17 @@ module.exports = {
   },
   setConfiguration(config) {
     globalThis.__vscodeStubConfiguration = config;
+  },
+  /**
+   * Settings as VS Code would report them per scope. The merged view `get()`
+   * returns follows, workspace over user, so a test cannot set the two out of
+   * step with each other.
+   */
+  setConfigurationScopes({ global = {}, workspace = {} } = {}) {
+    globalThis.__vscodeStubConfigurationScopes = { global, workspace };
+    globalThis.__vscodeStubConfiguration = { ...global, ...workspace };
+  },
+  setWorkspaceTrusted(trusted) {
+    globalThis.__vscodeStubIsTrusted = trusted;
   },
 };
