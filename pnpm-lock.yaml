@@ -7,6 +7,11 @@ settings:
 overrides:
   less: 4.2.2
 
+patchedDependencies:
+  crossnote@0.9.42:
+    hash: dbed56bdb3e76aebbf01291f873fa23b20b2ed7c826c9e896e3b54a067393f9e
+    path: patches/crossnote@0.9.42.patch
+
 importers:
 
   .:
@@ -25,7 +30,7 @@ importers:
         version: 0.4.1
       crossnote:
         specifier: 0.9.42
-        version: 0.9.42
+        version: 0.9.42(patch_hash=dbed56bdb3e76aebbf01291f873fa23b20b2ed7c826c9e896e3b54a067393f9e)
       crypto-js:
         specifier: ^4.2.0
         version: 4.2.0
@@ -7609,7 +7614,7 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  crossnote@0.9.42:
+  crossnote@0.9.42(patch_hash=dbed56bdb3e76aebbf01291f873fa23b20b2ed7c826c9e896e3b54a067393f9e):
     dependencies:
       '@headlessui/react': 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@heroicons/react': 2.2.0(react@18.3.1)

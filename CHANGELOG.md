@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug fixes
+
+- **Chrome PDF and image exports wait for Mermaid diagrams to finish rendering** — exporting a document with multiple diagrams could capture incomplete layouts or raw Mermaid source because page load completed before asynchronous diagram rendering. Exports now wait for all diagrams, report rendering failures, and close Chrome on failure. The existing extra export delay setting is still respected.
+
 ## [0.8.40] - 2026-10-09
 
 ### Picked up from crossnote 0.9.42
