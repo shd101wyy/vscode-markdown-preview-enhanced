@@ -39,6 +39,8 @@
   "markdown-preview-enhanced.markdownParser.enumDescriptions.2": "高性能レンダラー（実験的）。既定では WASM を使用し、markdownYoBinaryPath を設定した場合はネイティブバイナリを使用します。トークンベースの処理には引き続き markdown-it が使用されます。",
   "markdown-preview-enhanced.breakOnSingleNewLine.description": "Markdown では、単一の改行文字は生成される HTML では改行になりません。GitHub Flavored Markdown ではそうではありません。このオプションを有効にすると、Markdown ソースの単一の改行が、レンダリングされた HTML で改行として挿入されます。",
   "markdown-preview-enhanced.scrollSync.description": "自動スクロール同期。現在、部分的にサポートされています。",
+  "markdown-preview-enhanced.clickPreviewToRevealSource.description": "プレビューのテキストをクリックすると、そのテキストが同じ高さに来るようにエディターをスクロールし、カーソルをそこへ移動します。プレビューでテキストを選択すると、エディターでも同じテキストが選択されます。リンク、チェックボックス、ボタンは通常どおり動作します。変更後はプレビューを開き直してください。",
+  "markdown-preview-enhanced.highlightEditorSelectionInPreview.description": "エディターで選択したテキストをプレビューでも強調表示します。",
   "markdown-preview-enhanced.liveUpdate.description": "ソースバッファーを保存しなくても、ソースの内容の変更に合わせてプレビューを再レンダリングします。無効にすると、バッファーがディスクに保存されたときにのみプレビューが再レンダリングされます。",
   "markdown-preview-enhanced.liveUpdateDebounceMs.description": "ライブ更新のデバウンス時間（ミリ秒）。値を大きくすると CPU 使用率は下がりますが、応答が遅く感じられる場合があります。値を小さくすると反応は速くなりますが、パフォーマンスに影響する場合があります。",
   "markdown-preview-enhanced.previewMode.markdownDescription": "- **Single Preview**: すべてのエディターに対して 1 つのプレビューのみが表示されます。\n- **Multiple Previews**: 複数のプレビューが表示されます。各エディターが独自のプレビューを持ちます。\n- **Previews Only**: エディターは表示されず、プレビューのみが表示されます。プレビュー内のエディターで Markdown を編集できます。\n\n変更後に再起動が必要です。",
