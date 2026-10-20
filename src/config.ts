@@ -44,6 +44,8 @@ type VSCodeMPEConfigKey =
   | 'qiniuDomain'
   | 'qiniuSecretKey'
   | 'scrollSync'
+  | 'clickPreviewToRevealSource'
+  | 'highlightEditorSelectionInPreview'
   | 'disableAutoPreviewForUriSchemes'
   | 'disableAutoPreviewForFilePatterns'
   | 'd2Path'

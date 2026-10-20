@@ -39,6 +39,8 @@
   "markdown-preview-enhanced.markdownParser.enumDescriptions.2": "고성능 렌더러(실험적). 기본적으로 WASM을 사용하며, markdownYoBinaryPath가 설정된 경우 네이티브 바이너리를 사용합니다. 토큰 기반 작업에는 여전히 markdown-it이 사용됩니다.",
   "markdown-preview-enhanced.breakOnSingleNewLine.description": "Markdown에서는 단일 줄바꿈 문자가 생성된 HTML에서 줄바꿈을 일으키지 않습니다. GitHub Flavored Markdown에서는 그렇지 않습니다. 이 옵션을 활성화하면 Markdown 소스의 단일 줄바꿈이 렌더링된 HTML에서 줄바꿈으로 삽입됩니다.",
   "markdown-preview-enhanced.scrollSync.description": "자동 스크롤 동기화. 현재 부분적으로 지원됩니다.",
+  "markdown-preview-enhanced.clickPreviewToRevealSource.description": "미리 보기의 텍스트를 클릭하면 해당 텍스트가 같은 높이에 오도록 편집기를 스크롤하고 커서를 그 위치로 옮깁니다. 미리 보기에서 텍스트를 선택하면 편집기에서도 같은 텍스트가 선택됩니다. 링크, 체크박스, 버튼은 기존 동작을 유지합니다. 변경한 후 미리 보기를 다시 여세요.",
+  "markdown-preview-enhanced.highlightEditorSelectionInPreview.description": "편집기에서 선택한 텍스트를 미리 보기에서도 강조 표시합니다.",
   "markdown-preview-enhanced.liveUpdate.description": "소스 버퍼를 저장하지 않아도 소스 내용이 변경될 때 미리 보기를 다시 렌더링합니다. 비활성화하면 버퍼가 디스크에 저장될 때만 미리 보기가 다시 렌더링됩니다.",
   "markdown-preview-enhanced.liveUpdateDebounceMs.description": "라이브 업데이트의 디바운스 시간(밀리초). 값이 클수록 CPU 사용량이 줄지만 응답이 느리게 느껴질 수 있습니다. 값이 작을수록 반응이 즉각적이지만 성능에 영향을 줄 수 있습니다.",
   "markdown-preview-enhanced.previewMode.markdownDescription": "- **Single Preview**: 모든 편집기에 대해 하나의 미리 보기만 표시됩니다.\n- **Multiple Previews**: 여러 미리 보기가 표시됩니다. 각 편집기가 자체 미리 보기를 가집니다.\n- **Previews Only**: 편집기가 표시되지 않고 미리 보기만 표시됩니다. 미리 보기 내 편집기를 사용하여 Markdown을 편집할 수 있습니다.\n\n변경 후 재시작이 필요합니다.",
