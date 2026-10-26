@@ -900,81 +900,81 @@
         "command": "markdown-preview-enhanced.openPreviewToTheSide",
         "key": "ctrl+k v",
         "mac": "cmd+k v",
-        "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
+        "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
       },
       {
         "command": "markdown-preview-enhanced.openPreview",
         "key": "ctrl+shift+v",
         "mac": "cmd+shift+v",
-        "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
+        "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
       },
       {
         "command": "markdown-preview-enhanced.openLockedPreviewToTheSide",
         "key": "ctrl+k shift+l",
         "mac": "cmd+k shift+l",
-        "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
+        "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
       },
       {
         "command": "markdown-preview-enhanced.togglePreviewLock",
         "key": "ctrl+k ctrl+shift+l",
         "mac": "cmd+k cmd+shift+l",
-        "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
+        "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
       },
       {
         "command": "markdown-preview-enhanced.runAllCodeChunks",
         "key": "ctrl+shift+enter",
-        "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
+        "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
       },
       {
         "command": "markdown-preview-enhanced.runCodeChunk",
         "key": "shift+enter",
-        "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
+        "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
       },
       {
         "command": "markdown-preview-enhanced.syncPreview",
         "key": "ctrl+shift+s",
-        "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
+        "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/"
       }
     ],
     "menus": {
       "explorer/context": [
         {
           "command": "markdown-preview-enhanced.startCrossnoteServer",
-          "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
+          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
           "group": "markdown-preview-enhanced"
         },
         {
           "command": "markdown-preview-enhanced.stopCrossnoteServer",
-          "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
+          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
           "group": "markdown-preview-enhanced"
         }
       ],
       "editor/context": [
         {
           "command": "markdown-preview-enhanced.openPreviewToTheSide",
-          "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
+          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
           "group": "markdown-preview-enhanced"
         },
         {
           "command": "markdown-preview-enhanced.openGraphView",
-          "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
+          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
           "group": "markdown-preview-enhanced"
         },
         {
           "command": "markdown-preview-enhanced.startCrossnoteServer",
-          "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
+          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
           "group": "markdown-preview-enhanced"
         },
         {
           "command": "markdown-preview-enhanced.stopCrossnoteServer",
-          "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
+          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
           "group": "markdown-preview-enhanced"
         }
       ],
       "editor/title": [
         {
           "command": "markdown-preview-enhanced.openPreviewToTheSide",
-          "when": "resourceExtname =~ /^\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/i || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
+          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
           "group": "navigation"
         }
       ]
