@@ -37,7 +37,13 @@ For more information about this project and how to use this extension, please ch
 
 1. Open a project folder with **File → Open Folder…** (opening an entire drive as the workspace skips note indexing — wikilinks, backlinks, tags and the graph — with a warning).
 2. Open a Markdown file (`.md`).
-3. Open the preview — it does **not** start on its own: right-click the editor and choose **Markdown Preview Enhanced: Open Preview to the Side**, press <kbd>ctrl-k v</kbd> (<kbd>cmd-k v</kbd> on macOS), or run **Markdown Preview Enhanced: Open Preview** from the Command Palette.
+3. Open the preview — it does **not** start on its own. Use any of:
+   - the **Open Preview to the Side** icon in the editor title bar (same place as VS Code / Cursor’s Preview control)
+   - right-click → **Markdown Preview Enhanced: Open Preview to the Side**
+   - <kbd>ctrl-k v</kbd> (<kbd>cmd-k v</kbd> on macOS)
+   - Command Palette → **Markdown Preview Enhanced: Open Preview**
+
+The title-bar button and shortcuts also match by **file extension** (`.md`, `.markdown`, …), so they still appear when the editor language id is not `markdown` (for example some Cursor Markdown editor modes).
 
 See the [Keybindings](#keybindings) table below for more shortcuts.
 
