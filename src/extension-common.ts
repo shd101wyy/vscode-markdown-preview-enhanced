@@ -18,6 +18,7 @@ import { buildAndSaveWiki } from './crossnote-wiki';
 import { customEditorProviderOptions } from './custom-editor-options';
 import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
+import { toggleTaskCheckboxLine } from './task-checkbox';
 import NotebooksManager from './notebooks-manager';
 import { PreviewCustomEditorProvider } from './preview-custom-editor-provider';
 import {
@@ -672,30 +673,59 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     });
   }
 
-  function clickTaskListCheckbox(uri: string, dataLine: number) {
+  async function clickTaskListCheckbox(
+    uri: string,
+    dataLine: number,
+    offset?: number,
+  ) {
+    if (
+      typeof uri !== 'string' ||
+      !Number.isInteger(dataLine) ||
+      dataLine < 0
+    ) {
+      return;
+    }
+    const checkboxOffset = Number.isInteger(offset) ? offset : undefined;
     const sourceUri = vscode.Uri.parse(uri);
-    const visibleTextEditors = vscode.window.visibleTextEditors;
-    for (let i = 0; i < visibleTextEditors.length; i++) {
-      const editor = visibleTextEditors[i];
-      if (editor.document.uri.fsPath === sourceUri.fsPath) {
-        editor.edit((edit) => {
-          let line = editor.document.lineAt(dataLine).text;
-          if (line.match(/\[ \]/)) {
-            line = line.replace('[ ]', '[x]');
-          } else {
-            line = line.replace(/\[[xX]\]/, '[ ]');
-          }
-          edit.replace(
-            new vscode.Range(
-              new vscode.Position(dataLine, 0),
-              new vscode.Position(dataLine, line.length),
-            ),
-            line,
-          );
-        });
-        break;
+    const matches = (candidate: vscode.Uri) =>
+      candidate.toString() === sourceUri.toString() ||
+      candidate.fsPath === sourceUri.fsPath;
+
+    const editor = vscode.window.visibleTextEditors.find((item) =>
+      matches(item.document.uri),
+    );
+    let document =
+      editor?.document ??
+      vscode.workspace.textDocuments.find((item) => matches(item.uri));
+    if (!document) {
+      try {
+        document = await vscode.workspace.openTextDocument(sourceUri);
+      } catch {
+        return;
       }
     }
+    if (dataLine >= document.lineCount) {
+      return;
+    }
+
+    const original = document.lineAt(dataLine).text;
+    const next = toggleTaskCheckboxLine(original, checkboxOffset);
+    if (next === undefined || next === original) {
+      return;
+    }
+    const range = new vscode.Range(
+      new vscode.Position(dataLine, 0),
+      new vscode.Position(dataLine, original.length),
+    );
+    if (editor && editor.document === document) {
+      await editor.edit((edit) => {
+        edit.replace(range, next);
+      });
+      return;
+    }
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(document.uri, range, next);
+    await vscode.workspace.applyEdit(edit);
   }
 
   function setPreviewTheme(_uri: string, theme: string) {

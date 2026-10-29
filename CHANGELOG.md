@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **Checkboxes in tables, and anywhere else on a line, update that checkbox in the source** — `[ ]`, `[x]`, and `[X]` render as checkboxes wherever they appear in the preview, including several in one table cell, the same way [Obsidian's Table Checkbox Renderer](https://community.obsidian.md/plugins/table-checkbox-renderer) does. Clicking one writes `[x]` or clears it back to `[ ]`, and the edit hits that occurrence rather than the first marker on the line. Markers inside code, math, links, images, wikilinks, HTML, and front matter stay as text. Other bracket markers such as `[/]` and `[-]` are left as text: they are not task markers in that plugin or in GitHub-flavored markdown, and a single character in brackets is common in ordinary prose.
+
 ## [0.8.40] - 2026-10-09
 
 ### Picked up from crossnote 0.9.42
