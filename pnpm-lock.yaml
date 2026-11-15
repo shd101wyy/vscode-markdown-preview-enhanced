@@ -84,6 +84,9 @@ importers:
       prettier-plugin-packagejson:
         specifier: ^3.0.2
         version: 3.0.2(prettier@3.9.6)
+      punycode:
+        specifier: 2.3.1
+        version: 2.3.1
       ts-loader:
         specifier: ^9.4.4
         version: 9.6.2(loader-utils@3.3.1)(typescript@5.9.3)(webpack@5.110.1)
