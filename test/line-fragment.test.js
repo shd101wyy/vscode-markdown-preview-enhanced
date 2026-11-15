@@ -34,7 +34,7 @@ suite('parseLineFragment', function () {
   });
 
   suiteTeardown(function () {
-    if (tmpFile) {
+    if (tmpFile && fs.existsSync(tmpFile)) {
       fs.unlinkSync(tmpFile);
     }
   });
@@ -48,6 +48,8 @@ suite('parseLineFragment', function () {
     // bare shorthand from vscode-mpe#2453
     ['100', { startLine: 99, endLine: 99 }],
     ['100-104', { startLine: 99, endLine: 103 }],
+    // mixed forms
+    ['100-L104', { startLine: 99, endLine: 103 }],
     // clamping
     ['L0', { startLine: 0, endLine: 0 }],
     ['L1', { startLine: 0, endLine: 0 }],
