@@ -23,6 +23,7 @@ import {
 } from './editor-screen-position';
 import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
+import { parseLineFragment } from './line-fragment';
 import { toggleTaskCheckboxLine } from './task-checkbox';
 import NotebooksManager from './notebooks-manager';
 import { PreviewCustomEditorProvider } from './preview-custom-editor-provider';
@@ -940,15 +941,12 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       const openFilePath = decodeURI(href);
       const fileUri = vscode.Uri.parse(openFilePath);
 
-      // determine from link fragment to which line to jump
-      let line = -1;
-      const found = fileUri.fragment.match(/^L(\d+)/);
-      if (found) {
-        line = parseInt(found[1], 10);
-        if (line > 0) {
-          line = line - 1;
-        }
-      }
+      // determine from link fragment to which line (or line range) to
+      // jump.  Line references take precedence over heading/block-id
+      // fragments: a heading id that is all digits is vanishingly rare,
+      // while `[note](file.ts#L100)`-style links are common.
+      const lineTarget = parseLineFragment(fileUri.fragment);
+      const line = lineTarget ? lineTarget.startLine : -1;
 
       // find if there is already opened such file
       // and remember in which view column it is
@@ -1024,13 +1022,32 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
           const editor = await vscode.window.showTextDocument(document, {
             viewColumn: col,
           });
-          // if there was line fragment, jump to line
-          if (line >= 0) {
+          // if there was a line fragment, jump to it.  A range
+          // (`#L100-L104`) selects the whole lines; a single line puts
+          // the cursor at its start.
+          if (lineTarget) {
+            const lastLine = Math.min(
+              lineTarget.endLine,
+              editor.document.lineCount - 1,
+            );
             let viewPos = vscode.TextEditorRevealType.InCenter;
-            if (editor.selection.active.line === line) {
+            if (editor.selection.active.line === lineTarget.startLine) {
               viewPos = vscode.TextEditorRevealType.InCenterIfOutsideViewport;
             }
-            const sel = new vscode.Selection(line, 0, line, 0);
+            const sel =
+              lastLine > lineTarget.startLine
+                ? new vscode.Selection(
+                    lineTarget.startLine,
+                    0,
+                    lastLine,
+                    editor.document.lineAt(lastLine).text.length,
+                  )
+                : new vscode.Selection(
+                    lineTarget.startLine,
+                    0,
+                    lineTarget.startLine,
+                    0,
+                  );
             editor.selection = sel;
             editor.revealRange(sel, viewPos);
           } else if (fileUri.fragment) {
