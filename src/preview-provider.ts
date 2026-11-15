@@ -110,10 +110,12 @@ const WEBVIEW_MESSAGE_COMMANDS: Set<string> = new Set([
   'princeExport',
   'refreshPreview',
   'revealLine',
+  'revealSourcePosition',
   'restoreOriginal',
   'runAllCodeChunks',
   'runCodeChunk',
   'saveSetting',
+  'selectSourceRange',
   'setCodeBlockTheme',
   'setImageUploader',
   'setPreviewTheme',
@@ -831,6 +833,9 @@ export class PreviewProvider {
           cursorLine: initialLine,
           isVSCode: true,
           scrollSync: getMPEConfig<boolean>('scrollSync'),
+          clickToRevealSource: getMPEConfig<boolean>(
+            'clickPreviewToRevealSource',
+          ),
           imageUploader: getMPEConfig<ImageUploader>('imageUploader'),
           // v2 translation: tell the webview whether it's currently showing
           // the translated markdown, so the context-menu item can toggle

@@ -39,6 +39,8 @@
   "markdown-preview-enhanced.markdownParser.enumDescriptions.2": "高效能渲染器（實驗性）。預設使用 WASM，設定 markdownYoBinaryPath 時使用原生二進位。基於 token 的操作仍使用 markdown-it。",
   "markdown-preview-enhanced.breakOnSingleNewLine.description": "在 Markdown 中，單一換行字元不會在產生的 HTML 中產生換行。但在 GitHub Flavored Markdown 中並非如此。啟用此選項可讓 Markdown 原始碼中的單一換行在產生的 HTML 中產生換行。",
   "markdown-preview-enhanced.scrollSync.description": "自動捲動同步。目前已部分支援。",
+  "markdown-preview-enhanced.clickPreviewToRevealSource.description": "點擊預覽中的文字時，編輯器會捲動到讓該文字處於相同高度的位置，並把游標移到那裡；在預覽中選取文字會在編輯器中選取相同的文字。連結、核取方塊和按鈕保持原有行為。變更後請重新開啟預覽。",
+  "markdown-preview-enhanced.highlightEditorSelectionInPreview.description": "在預覽中同時醒目提示編輯器中選取的文字。",
   "markdown-preview-enhanced.liveUpdate.description": "在原始內容變更時即時重新渲染預覽，無需儲存原始緩衝區。若停用，則僅在緩衝區儲存到磁碟時才重新渲染預覽。",
   "markdown-preview-enhanced.liveUpdateDebounceMs.description": "即時更新的去抖動時間（毫秒）。較高的值可降低 CPU 佔用，但回應可能變慢；較低的值回饋更及時，但可能影響效能。",
   "markdown-preview-enhanced.previewMode.markdownDescription": "- **Single Preview**：所有編輯器只顯示一個預覽。\n- **Multiple Previews**：顯示多個預覽，每個編輯器擁有各自的預覽。\n- **Previews Only**：不顯示編輯器，只顯示預覽。你可以使用預覽內的編輯器來編輯 Markdown。\n\n變更後需要重新啟動。",
