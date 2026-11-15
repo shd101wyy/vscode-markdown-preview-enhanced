@@ -67,6 +67,7 @@ export async function promptAndStoreApiKey(): Promise<boolean> {
 // (esbuild) handles it correctly. PoC-verified.
 type PiModels = {
   getModel(provider: string, id: string): { api: string } | undefined;
+  getModels(provider: string): { id: string }[];
   stream(
     model: { api: string },
     context: { systemPrompt?: string; messages: unknown[] },
@@ -178,7 +179,19 @@ async function resolveTranslationRequest(): Promise<
   }
   const model = models.getModel(providerId, modelId);
   if (!model) {
-    return { error: `Model not found: ${providerId}/${modelId}` };
+    // The model list comes from pi-ai's generated catalog, which may lag a
+    // provider's current API model names (e.g. it listed only
+    // `deepseek-v4-*` when DeepSeek's docs advertised `deepseek-chat`).
+    // Spell out what is actually available so the setting is easy to fix.
+    const known = models
+      .getModels(providerId)
+      .map((entry) => entry.id)
+      .join(', ');
+    return {
+      error: `Model not found: ${providerId}/${modelId}${
+        known ? `. Available models: ${known}` : ''
+      }`,
+    };
   }
   return { models, model, apiKey };
 }
