@@ -53,6 +53,15 @@ const xhrSyncWorkerExternalPlugin = {
   },
 };
 
+// `tr46@0.0.3` (via whatwg-url@5 <- node-fetch@2 <- cross-fetch <- crossnote)
+// requires the deprecated `punycode` core module, which prints
+// DEP0040 on every extension-host startup since Node 21. Alias it to the
+// frozen npm package of the same code so the bundles stop touching the
+// builtin (vscode-mpe#2460).
+const nativeAliases = {
+  punycode: require.resolve('punycode/'),
+};
+
 /**
  * @type {import('esbuild').BuildOptions}
  */
@@ -65,6 +74,7 @@ const nativeConfig = {
   target: 'node16',
   format: 'cjs',
   external: ['vscode'],
+  alias: nativeAliases,
   plugins: [xhrSyncWorkerExternalPlugin],
 };
 
@@ -92,6 +102,7 @@ const serveCliConfig = {
   target: 'node16',
   format: 'cjs',
   external: ['vscode'],
+  alias: nativeAliases,
   plugins: [xhrSyncWorkerExternalPlugin],
 };
 
