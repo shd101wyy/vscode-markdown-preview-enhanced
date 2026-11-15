@@ -16,6 +16,11 @@ import {
 } from './current-preview-source';
 import { buildAndSaveWiki } from './crossnote-wiki';
 import { customEditorProviderOptions } from './custom-editor-options';
+import {
+  getCenterPosition,
+  getScreenRatio,
+  getTopPositionForRatio,
+} from './editor-screen-position';
 import { findFragmentTargetLine } from './find-fragment-target-line';
 import { pasteImageFile, uploadImageFile } from './image-helper';
 import NotebooksManager from './notebooks-manager';
@@ -38,6 +43,11 @@ import {
 import * as path from 'path';
 
 let editorScrollDelay = Date.now();
+// Cursor moves made on the preview's behalf are not synced back to it.
+let selectionSyncDelay = Date.now();
+// Sources whose preview shows a selection: the editor's, highlighted, or
+// one made in the preview itself. The next editor selection change clears it.
+const previewsWithSelection = new Set<string>();
 
 // hide default vscode markdown preview buttons if necessary
 const hideDefaultVSCodeMarkdownPreviewButtons = vscode.workspace
@@ -664,11 +674,52 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     }
 
     const sourceUri = textEditor.document.uri;
+    const cursor = textEditor.selections[0].active;
+    const topRatio = getScreenRatio(textEditor, cursor);
     const previewProvider = await getPreviewContentProvider(sourceUri);
     previewProvider.postMessageToPreview(sourceUri, {
       command: 'changeTextEditorSelection',
-      line: textEditor.selections[0].active.line,
+      line: cursor.line,
+      ...(topRatio === undefined
+        ? {}
+        : { character: cursor.character, topRatio }),
       forced: true,
+    });
+  }
+
+  /**
+   * Mirrors the editor's selection as a highlight in its preview, or clears
+   * the highlight once nothing is selected.
+   */
+  async function highlightSelectionInPreview(textEditor: vscode.TextEditor) {
+    const sourceUri = textEditor.document.uri;
+    const key = sourceUri.toString();
+    const selection = textEditor.selection;
+    const enabled =
+      getMPEConfig<boolean>('highlightEditorSelectionInPreview') ?? true;
+    if (!enabled || selection.isEmpty) {
+      if (!previewsWithSelection.delete(key)) {
+        return;
+      }
+    } else {
+      previewsWithSelection.add(key);
+    }
+    const previewProvider = await getPreviewContentProvider(sourceUri);
+    previewProvider.postMessageToPreview(sourceUri, {
+      command: 'highlightSourceSelection',
+      selection:
+        enabled && !selection.isEmpty
+          ? {
+              start: {
+                line: selection.start.line,
+                character: selection.start.character,
+              },
+              end: {
+                line: selection.end.line,
+                character: selection.end.character,
+              },
+            }
+          : null,
     });
   }
 
@@ -1246,6 +1297,28 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         if (previewMode === PreviewMode.PreviewsOnly) {
           return;
         }
+        if (Date.now() < selectionSyncDelay) {
+          return;
+        }
+
+        await highlightSelectionInPreview(event.textEditor);
+
+        const cursor = event.selections[0].active;
+        // Where the cursor's row is on screen, counting wrapped rows; the
+        // preview puts the same text at the same height.
+        const screenRatio = getScreenRatio(event.textEditor, cursor);
+        if (screenRatio !== undefined) {
+          const previewProvider = await getPreviewContentProvider(
+            event.textEditor.document.uri,
+          );
+          previewProvider.postMessageToPreview(event.textEditor.document.uri, {
+            command: 'changeTextEditorSelection',
+            line: cursor.line,
+            character: cursor.character,
+            topRatio: screenRatio,
+          });
+          return;
+        }
 
         const firstVisibleScreenRow = getTopVisibleLine(event.textEditor);
         const lastVisibleScreenRow = getBottomVisibleLine(event.textEditor);
@@ -1258,7 +1331,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         }
 
         const topRatio =
-          (event.selections[0].active.line - firstVisibleScreenRow) /
+          (cursor.line - firstVisibleScreenRow) /
           (lastVisibleScreenRow - firstVisibleScreenRow);
 
         const previewProvider = await getPreviewContentProvider(
@@ -1266,7 +1339,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
         );
         previewProvider.postMessageToPreview(event.textEditor.document.uri, {
           command: 'changeTextEditorSelection',
-          line: event.selections[0].active.line,
+          line: cursor.line,
           topRatio,
         });
       }
@@ -1294,21 +1367,40 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
             return;
           }
 
+          const previewProvider = await getPreviewContentProvider(sourceUri);
+          const atTop = topLine === 0;
+          const atBottom =
+            Math.floor(bottomLine) === textEditor.document.lineCount - 1;
+
+          // Align the preview to the text in the middle of the editor.
+          const center =
+            atTop || atBottom ? undefined : getCenterPosition(textEditor);
+          if (center) {
+            previewProvider.postMessageToPreview(sourceUri, {
+              command: 'changeTextEditorSelection',
+              line: center.position.line,
+              character: center.position.character,
+              topRatio: center.ratio,
+            });
+            return;
+          }
+
           let midLine;
-          if (topLine === 0) {
+          let topRatio;
+          if (atTop) {
             midLine = 0;
-          } else if (
-            Math.floor(bottomLine) ===
-            textEditor.document.lineCount - 1
-          ) {
+          } else if (atBottom) {
             midLine = bottomLine;
           } else {
             midLine = Math.floor((topLine + bottomLine) / 2);
+            // Where that line is in the editor, so the preview puts it at
+            // the same height instead of its default.
+            topRatio = (midLine - topLine) / (bottomLine - topLine);
           }
-          const previewProvider = await getPreviewContentProvider(sourceUri);
           previewProvider.postMessageToPreview(sourceUri, {
             command: 'changeTextEditorSelection',
             line: midLine,
+            topRatio,
           });
         }
       }
@@ -1672,6 +1764,20 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
+      '_crossnote.revealSourcePosition',
+      revealSourcePosition,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      '_crossnote.selectSourceRange',
+      selectSourceRange,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
       '_crossnote.insertImageUrl',
       insertImageUrl,
     ),
@@ -1997,6 +2103,108 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       }
     }),
   );
+}
+
+/**
+ * Scrolls the editor so the source position lands `screenRatio` of the way
+ * down it (0 = top, 1 = bottom), matching where the preview shows it.
+ * With `moveCursor`, also puts the cursor there; focus stays in the preview.
+ */
+function revealSourcePosition(
+  uri: string,
+  line: number,
+  character: number,
+  screenRatio: number,
+  moveCursor: boolean,
+) {
+  revealSourceRange(uri, line, character, line, character, screenRatio, {
+    select: moveCursor,
+  });
+}
+
+/**
+ * Selects a source range in the editor, matching a selection made in the
+ * preview, and scrolls so its start lands `screenRatio` of the way down.
+ */
+function selectSourceRange(
+  uri: string,
+  startLine: number,
+  startCharacter: number,
+  endLine: number,
+  endCharacter: number,
+  screenRatio: number,
+) {
+  revealSourceRange(
+    uri,
+    startLine,
+    startCharacter,
+    endLine,
+    endCharacter,
+    screenRatio,
+    { select: true },
+  );
+}
+
+function revealSourceRange(
+  uri: string,
+  startLine: number,
+  startCharacter: number,
+  endLine: number,
+  endCharacter: number,
+  screenRatio: number,
+  { select }: { select: boolean },
+) {
+  if (
+    ![startLine, startCharacter, endLine, endCharacter, screenRatio].every(
+      Number.isFinite,
+    )
+  ) {
+    return;
+  }
+  const sourceUri = vscode.Uri.parse(uri);
+  const ratio = Math.min(Math.max(screenRatio, 0), 1);
+  const toPosition = (line: number, character: number) =>
+    new vscode.Position(
+      Math.max(Math.floor(line), 0),
+      Math.max(Math.floor(character), 0),
+    );
+
+  vscode.window.visibleTextEditors
+    .filter(
+      (editor) =>
+        isMarkdownFile(editor.document) &&
+        editor.document.uri.fsPath === sourceUri.fsPath,
+    )
+    .forEach((editor) => {
+      const start = editor.document.validatePosition(
+        toPosition(startLine, startCharacter),
+      );
+      const end = editor.document.validatePosition(
+        toPosition(endLine, endCharacter),
+      );
+      editorScrollDelay = Date.now() + 500;
+      if (select) {
+        selectionSyncDelay = Date.now() + 500;
+        editor.selection = new vscode.Selection(start, end);
+        if (!start.isEqual(end)) {
+          // The preview now shows its own selection of this text.
+          previewsWithSelection.add(editor.document.uri.toString());
+        }
+      }
+      const top = getTopPositionForRatio(editor, start, ratio);
+      if (top) {
+        editor.revealRange(
+          new vscode.Range(top, top),
+          vscode.TextEditorRevealType.AtTop,
+        );
+      } else {
+        editor.revealRange(
+          new vscode.Range(start, start),
+          vscode.TextEditorRevealType.InCenter,
+        );
+      }
+      editorScrollDelay = Date.now() + 500;
+    });
 }
 
 function revealLine(uri: string, line: number) {

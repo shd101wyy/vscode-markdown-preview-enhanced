@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **The preview lines up with the editor at the same height, even with word wrap** — moving the cursor used to place the preview by counting source lines, so with `editor.wordWrap` on, where one line can fill many rows, the cursor's height on screen was misjudged; scrolling the editor sent its middle line without its position, so the preview put that line 37 % down instead of in the middle. The extension now works out the editor's wrapped rows itself — VS Code does not expose them — by laying out each visible line the way the editor's monospace wrapping does, using `editor.wordWrapColumn` when `editor.wordWrap` is `wordWrapColumn`, and otherwise inferring the column from where the viewport's rows start. It sends the cursor's line, column and height, and the preview puts that exact text at the same height (needs crossnote's text-level scroll sync) ([#2450](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2450) by @theoryshaw; [#745](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/745)).
+- **Click the preview to jump to the source** — the new `markdown-preview-enhanced.clickPreviewToRevealSource` setting (off by default) makes a click on text in the preview scroll the editor so that text sits at the same height, and moves the cursor there; selecting text in the preview selects the same text in the editor. Focus stays in the preview, and links, checkboxes, buttons, text selection and double clicks keep their usual behavior ([#2450](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2450) by @theoryshaw; [#588](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/588)).
+- **The editor selection is highlighted in the preview** — on by default; turn it off with `markdown-preview-enhanced.highlightEditorSelectionInPreview` ([#2450](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2450) by @theoryshaw).
+
 ## [0.8.40] - 2026-10-09
 
 ### Picked up from crossnote 0.9.42
