@@ -940,12 +940,12 @@
       "explorer/context": [
         {
           "command": "markdown-preview-enhanced.startCrossnoteServer",
-          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
+          "when": "(resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/) && !isWeb",
           "group": "markdown-preview-enhanced"
         },
         {
           "command": "markdown-preview-enhanced.stopCrossnoteServer",
-          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
+          "when": "(resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/) && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
           "group": "markdown-preview-enhanced"
         }
       ],
@@ -962,12 +962,12 @@
         },
         {
           "command": "markdown-preview-enhanced.startCrossnoteServer",
-          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && !isWeb",
+          "when": "(resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/) && !isWeb",
           "group": "markdown-preview-enhanced"
         },
         {
           "command": "markdown-preview-enhanced.stopCrossnoteServer",
-          "when": "resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/ && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
+          "when": "(resourceExtname == .md || resourceExtname == .markdown || resourceExtname == .mdown || resourceExtname == .mkdn || resourceExtname == .mkd || resourceExtname == .rmd || resourceExtname == .qmd || resourceExtname == .mdx || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/) && markdown-preview-enhanced.crossnoteServerRunning && !isWeb",
           "group": "markdown-preview-enhanced"
         }
       ],
