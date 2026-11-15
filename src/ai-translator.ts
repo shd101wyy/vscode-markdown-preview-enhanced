@@ -183,13 +183,23 @@ async function resolveTranslationRequest(): Promise<
     // provider's current API model names (e.g. it listed only
     // `deepseek-v4-*` when DeepSeek's docs advertised `deepseek-chat`).
     // Spell out what is actually available so the setting is easy to fix.
-    const known = models
-      .getModels(providerId)
-      .map((entry) => entry.id)
-      .join(', ');
+    const ids = models.getModels(providerId).map((entry) => entry.id);
+    // Some catalogs are huge (openrouter ships 300+ ids); cap what goes
+    // into the toast and log the full list for copy-paste instead.
+    const MAX_IDS_IN_ERROR = 20;
+    const shown = ids.slice(0, MAX_IDS_IN_ERROR);
+    if (ids.length > MAX_IDS_IN_ERROR) {
+      log(`all ${ids.length} models for ${providerId}: ${ids.join(', ')}`);
+    }
     return {
       error: `Model not found: ${providerId}/${modelId}${
-        known ? `. Available models: ${known}` : ''
+        ids.length
+          ? `. Available models: ${shown.join(', ')}${
+              ids.length > MAX_IDS_IN_ERROR
+                ? `, … and ${ids.length - MAX_IDS_IN_ERROR} more (see the MPE AI Translation output channel)`
+                : ''
+            }`
+          : ''
       }`,
     };
   }

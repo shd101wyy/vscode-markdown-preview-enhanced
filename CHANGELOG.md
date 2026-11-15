@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug fixes
 
-- **AI translation "Model not found" errors now name the available models** — the model list comes from pi-ai's generated catalog, which can lag a provider's current API names (it listed only `deepseek-v4-flash`/`deepseek-v4-pro` when DeepSeek's docs advertised `deepseek-chat`), and the old `Model not found: deepseek/deepseek-chat` message looked like the extension was mangling the model id. The error now appends the provider's known model ids so the fix is one paste away ([#2462](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2462) reported by @ricehull).
+- **AI translation "Model not found" errors now name the available models** — the model list comes from pi-ai's generated catalog, which can lag a provider's current API names (it listed only `deepseek-v4-flash`/`deepseek-v4-pro` when DeepSeek's docs advertised `deepseek-chat`), and the old `Model not found: deepseek/deepseek-chat` message looked like the extension was mangling the model id. The error now appends the provider's known model ids (capped at 20 — openrouter alone ships 300+, and the rest go to the MPE AI Translation output channel) so the fix is one paste away ([#2462](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2462) reported by @ricehull).
 
 ## [0.8.40] - 2026-10-09
 
