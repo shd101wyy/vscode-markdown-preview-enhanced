@@ -15,6 +15,7 @@ import {
   resolveActivePreviewSource,
 } from './current-preview-source';
 import { hashBlock, splitMarkdownBlocks } from './markdown-blocks';
+import { renderTaskCheckboxes } from './task-checkbox';
 import NotebooksManager from './notebooks-manager';
 import {
   getCrossnoteVersion,
@@ -778,7 +779,10 @@ export class PreviewProvider {
       initialLine = cursorLine;
     }
 
-    const inputString = inputStringOverride ?? document.getText() ?? '';
+    const inputString = this.previewMarkdown(
+      sourceUri,
+      inputStringOverride ?? document.getText() ?? '',
+    );
     const engine = this.getEngine(sourceUri);
     try {
       // Tag this request so we can detect if a newer initPreview overtook us
@@ -786,8 +790,24 @@ export class PreviewProvider {
       const initRequestId = ++this.initRequestSeq;
       this.latestInitRequestByPreview.set(previewPanel, initRequestId);
 
+      // Checkboxes anywhere on a line (table cells included). The script
+      // has to run before the preview bundle so both share acquireVsCodeApi.
+      const taskCheckboxCssUri = previewPanel.webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          this.context.extensionUri,
+          'media',
+          'task-checkbox.css',
+        ),
+      );
+      const taskCheckboxJsUri = previewPanel.webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          this.context.extensionUri,
+          'media',
+          'task-checkbox.js',
+        ),
+      );
+      let head = `<link rel="stylesheet" href="${taskCheckboxCssUri}"><script src="${taskCheckboxJsUri}"></script>`;
       // Build lightbox head injection when enabled
-      let head = '';
       if (getMPEConfig<boolean>('enableImageLightbox') ?? true) {
         const lightboxCssUri = previewPanel.webview.asWebviewUri(
           vscode.Uri.joinPath(
@@ -803,7 +823,7 @@ export class PreviewProvider {
             'lightbox.js',
           ),
         );
-        head = `<link rel="stylesheet" href="${lightboxCssUri}"><script defer src="${lightboxJsUri}"></script>`;
+        head += `<link rel="stylesheet" href="${lightboxCssUri}"><script defer src="${lightboxJsUri}"></script>`;
       }
 
       const html = await engine.generateHTMLTemplateForPreview({
@@ -977,6 +997,21 @@ export class PreviewProvider {
     }
   }
 
+  /**
+   * Markdown actually sent to the preview renderer. Task markers become
+   * checkbox inputs. A translation is left alone: its offsets would not
+   * match the source document a click edits.
+   */
+  private previewMarkdown(sourceUri: Uri, markdown: string): string {
+    const translation = this.translatedMarkdownOverrides.get(
+      sourceUri.toString(),
+    );
+    if (translation !== undefined && markdown === translation) {
+      return markdown;
+    }
+    return renderTaskCheckboxes(markdown);
+  }
+
   public updateMarkdown(sourceUri: Uri, triggeredBySave?: boolean) {
     // Don't update if single-preview is pointing at a different file
     if (!this.isSinglePreviewTarget(sourceUri)) {
@@ -1041,6 +1076,7 @@ export class PreviewProvider {
       if (translationOverride !== undefined) {
         text = translationOverride;
       }
+      text = this.previewMarkdown(sourceUri, text);
       await this.postMessageToPreview(sourceUri, {
         command: 'startParsingMarkdown',
       });
