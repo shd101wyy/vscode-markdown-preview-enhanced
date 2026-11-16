@@ -80,7 +80,10 @@ const VSCODE_STUB_SOURCE = `
       },
     },
     window: {
-      createWebviewPanel: () => {
+      createWebviewPanel: (...args) => {
+        if (globalThis.__vscodeStubCreateWebviewPanel) {
+          return globalThis.__vscodeStubCreateWebviewPanel(...args);
+        }
         throw new Error('createWebviewPanel is not stubbed; pass a webviewPanel instead');
       },
       showErrorMessage: noop,
@@ -107,7 +110,9 @@ const VSCODE_STUB_SOURCE = `
       onDidChangeActiveColorTheme: event,
       onDidChangeWindowState: event,
       visibleTextEditors: [],
-      activeTextEditor: undefined,
+      get activeTextEditor() {
+        return globalThis.__vscodeStubActiveTextEditor;
+      },
       activeColorTheme: { kind: 1 },
       tabGroups: { all: [], onDidChangeTabs: event, close: async () => true },
     },
@@ -252,6 +257,8 @@ globalThis.__vscodeStubNotebookRefreshes = [];
 globalThis.__vscodeStubConfiguration = {};
 globalThis.__vscodeStubConfigurationScopes = { global: {}, workspace: {} };
 globalThis.__vscodeStubIsTrusted = true;
+globalThis.__vscodeStubActiveTextEditor = undefined;
+globalThis.__vscodeStubCreateWebviewPanel = undefined;
 globalThis.__crossnoteStubEngine = () => ({
   generateHTMLTemplateForPreview: async () => '<html></html>',
 });
@@ -285,5 +292,11 @@ module.exports = {
   },
   setWorkspaceTrusted(trusted) {
     globalThis.__vscodeStubIsTrusted = trusted;
+  },
+  setActiveTextEditor(editor) {
+    globalThis.__vscodeStubActiveTextEditor = editor;
+  },
+  setCreateWebviewPanel(fn) {
+    globalThis.__vscodeStubCreateWebviewPanel = fn;
   },
 };

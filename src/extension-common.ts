@@ -1455,103 +1455,110 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   );
 
   /**
-   * Open preview automatically if the `automaticallyShowPreviewOfMarkdownBeingEdited` is on.
+   * Open preview automatically if `automaticallyShowPreviewOfMarkdownBeingEdited`
+   * is on, and switch single-preview to follow the active editor.
    */
-  context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(async (editor) => {
-      // Check if editor and document exist
-      if (editor && editor.document && editor.document.uri) {
-        // Get the list of schemes to exclude from the configuration
-        const exclusionSchemes =
-          getMPEConfig<string[]>('disableAutoPreviewForUriSchemes') ?? [];
+  async function handleActiveTextEditorChange(
+    editor: vscode.TextEditor | undefined,
+  ) {
+    // Check if editor and document exist
+    if (editor && editor.document && editor.document.uri) {
+      // Get the list of schemes to exclude from the configuration
+      const exclusionSchemes =
+        getMPEConfig<string[]>('disableAutoPreviewForUriSchemes') ?? [];
 
-        // Check if the current document's scheme should be excluded
-        for (const scheme of exclusionSchemes) {
-          if (editor.document.uri.scheme.startsWith(scheme)) {
-            return; // Don't trigger preview if scheme matches exclusion list
-          }
-        }
-
-        // Original check: Proceed only if it's considered a Markdown file
-        if (isMarkdownFile(editor.document)) {
-          // Check if the file matches any exclusion pattern
-          const exclusionPatterns = (
-            getMPEConfig<string[]>('disableAutoPreviewForFilePatterns') ?? []
-          ).filter((p): p is string => typeof p === 'string');
-          const fileName = path.basename(editor.document.fileName);
-          const excluded = exclusionPatterns.some((pattern) => {
-            // Simple wildcard matching: convert "*.note.md" to a regex
-            const escaped = pattern
-              .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-              .replace(/\*/g, '.*');
-            return new RegExp(`^${escaped}$`, 'i').test(fileName);
-          });
-
-          const sourceUri = editor.document.uri;
-          const automaticallyShowPreviewOfMarkdownBeingEdited =
-            getMPEConfig<boolean>(
-              'automaticallyShowPreviewOfMarkdownBeingEdited',
-            );
-          const previewMode = getPreviewMode();
-          /**
-           * Is using single preview and the preview is on.
-           * When we switched text ed()tor, update preview to that text editor.
-           */
-          const previewProvider = await getPreviewContentProvider(sourceUri);
-          if (previewProvider.isPreviewOn(sourceUri)) {
-            if (
-              previewMode === PreviewMode.SinglePreview &&
-              // Only the shared single-preview panel follows the active
-              // editor. Custom editor panels are pinned to their documents —
-              // when they are the only previews open there is nothing to
-              // switch, and re-initializing them here would reload their
-              // webview on every editor switch (vscode-mpe#2433).
-              previewProvider.hasSinglePreviewPanel() &&
-              !previewProvider.previewHasTheSameSingleSourceUri(sourceUri)
-            ) {
-              // Don't switch a locked preview to a different file
-              if (previewProvider.isSinglePreviewLocked()) {
-                return;
-              }
-              // Skip auto-switching single preview to an excluded file
-              if (!excluded) {
-                await previewProvider.initPreview({
-                  sourceUri,
-                  document: editor.document,
-                  cursorLine: getEditorActiveCursorLine(editor),
-                  viewOptions: {
-                    viewColumn:
-                      previewProvider.getPreviews(sourceUri)?.[0]?.viewColumn ??
-                      vscode.ViewColumn.One,
-                    preserveFocus: true,
-                  },
-                });
-              }
-            } else if (
-              previewMode === PreviewMode.MultiplePreviews &&
-              automaticallyShowPreviewOfMarkdownBeingEdited
-            ) {
-              // Only surface an already-open preview when the user has opted
-              // into auto-showing previews. Otherwise switching between
-              // markdown files force-reveals the matching preview tab to the
-              // front of its group on every switch, disrupting the editor
-              // layout (the preview is revealed with `preserveFocus`, so the
-              // cursor stays put, but the tab still jumps). Fixes #2286.
-              const previews = previewProvider.getPreviews(sourceUri);
-              if (previews && previews.length > 0) {
-                previews[0].reveal(/*vscode.ViewColumn.Two*/ undefined, true);
-              }
-            }
-            // NOTE: For PreviewMode.PreviewsOnly, we don't need to do anything.
-          } else if (automaticallyShowPreviewOfMarkdownBeingEdited) {
-            // Skip auto-opening preview for an excluded file
-            if (!excluded) {
-              openPreviewToTheSide(sourceUri);
-            }
-          }
+      // Check if the current document's scheme should be excluded
+      for (const scheme of exclusionSchemes) {
+        if (editor.document.uri.scheme.startsWith(scheme)) {
+          return; // Don't trigger preview if scheme matches exclusion list
         }
       }
-    }),
+
+      // Original check: Proceed only if it's considered a Markdown file
+      if (isMarkdownFile(editor.document)) {
+        // Check if the file matches any exclusion pattern
+        const exclusionPatterns = (
+          getMPEConfig<string[]>('disableAutoPreviewForFilePatterns') ?? []
+        ).filter((p): p is string => typeof p === 'string');
+        const fileName = path.basename(editor.document.fileName);
+        const excluded = exclusionPatterns.some((pattern) => {
+          // Simple wildcard matching: convert "*.note.md" to a regex
+          const escaped = pattern
+            .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+            .replace(/\*/g, '.*');
+          return new RegExp(`^${escaped}$`, 'i').test(fileName);
+        });
+
+        const sourceUri = editor.document.uri;
+        const automaticallyShowPreviewOfMarkdownBeingEdited =
+          getMPEConfig<boolean>(
+            'automaticallyShowPreviewOfMarkdownBeingEdited',
+          );
+        const previewMode = getPreviewMode();
+        /**
+         * Is using single preview and the preview is on.
+         * When we switched text ed()tor, update preview to that text editor.
+         */
+        const previewProvider = await getPreviewContentProvider(sourceUri);
+        if (previewProvider.isPreviewOn(sourceUri)) {
+          if (
+            previewMode === PreviewMode.SinglePreview &&
+            // Only the shared single-preview panel follows the active
+            // editor. Custom editor panels are pinned to their documents —
+            // when they are the only previews open there is nothing to
+            // switch, and re-initializing them here would reload their
+            // webview on every editor switch (vscode-mpe#2433).
+            previewProvider.hasSinglePreviewPanel() &&
+            !previewProvider.previewHasTheSameSingleSourceUri(sourceUri)
+          ) {
+            // Don't switch a locked preview to a different file
+            if (previewProvider.isSinglePreviewLocked()) {
+              return;
+            }
+            // Skip auto-switching single preview to an excluded file
+            if (!excluded) {
+              await previewProvider.initPreview({
+                sourceUri,
+                document: editor.document,
+                cursorLine: getEditorActiveCursorLine(editor),
+                viewOptions: {
+                  viewColumn:
+                    previewProvider.getPreviews(sourceUri)?.[0]?.viewColumn ??
+                    vscode.ViewColumn.One,
+                  preserveFocus: true,
+                },
+              });
+            }
+          } else if (
+            previewMode === PreviewMode.MultiplePreviews &&
+            automaticallyShowPreviewOfMarkdownBeingEdited
+          ) {
+            // Only surface an already-open preview when the user has opted
+            // into auto-showing previews. Otherwise switching between
+            // markdown files force-reveals the matching preview tab to the
+            // front of its group on every switch, disrupting the editor
+            // layout (the preview is revealed with `preserveFocus`, so the
+            // cursor stays put, but the tab still jumps). Fixes #2286.
+            const previews = previewProvider.getPreviews(sourceUri);
+            if (previews && previews.length > 0) {
+              previews[0].reveal(/*vscode.ViewColumn.Two*/ undefined, true);
+            }
+          }
+          // NOTE: For PreviewMode.PreviewsOnly, we don't need to do anything.
+        } else if (
+          automaticallyShowPreviewOfMarkdownBeingEdited &&
+          !excluded &&
+          vscode.window.activeTextEditor?.document.uri.toString() ===
+            sourceUri.toString()
+        ) {
+          await openPreviewToTheSide(sourceUri);
+        }
+      }
+    }
+  }
+
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(handleActiveTextEditorChange),
   );
 
   // Changed editor color theme
@@ -2150,6 +2157,11 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       }
     }),
   );
+
+  // If a Markdown file was already active before activation completed (e.g.
+  // opening a .md file directly on cold launch), run the auto-preview check
+  // once so automaticallyShowPreviewOfMarkdownBeingEdited still triggers.
+  await handleActiveTextEditorChange(vscode.window.activeTextEditor);
 }
 
 /**
