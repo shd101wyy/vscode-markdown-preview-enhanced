@@ -108,19 +108,22 @@ export async function openWikilinkTarget(
 
   // Split out heading / block fragments from the link target — same
   // rules `WikilinkHoverProvider.provideHover` uses, so the hover
-  // tooltip and the click destination agree.
-  const blockIdx = wikilinkBody.indexOf('^');
-  const hashIdx = wikilinkBody.indexOf('#');
-  let noteName = wikilinkBody.trim();
+  // tooltip and the click destination agree.  Trim the body once, up
+  // front: `[[ #Heading ]]` must not resolve as a note named `" "`,
+  // and its trailing space must not end up in the fragment.
+  const body = wikilinkBody.trim();
+  const blockIdx = body.indexOf('^');
+  const hashIdx = body.indexOf('#');
+  let noteName = body;
   let fragment = '';
   if (blockIdx !== -1 || hashIdx !== -1) {
     const splitAt =
       hashIdx !== -1 && (blockIdx === -1 || hashIdx < blockIdx)
         ? hashIdx
         : blockIdx;
-    noteName = wikilinkBody.slice(0, splitAt).trim();
-    fragment = wikilinkBody.slice(splitAt + (splitAt === hashIdx ? 1 : 0));
-    if (splitAt === blockIdx && fragment[0] !== '^') {
+    noteName = body.slice(0, splitAt).trim();
+    fragment = body.slice(splitAt + (splitAt === hashIdx ? 1 : 0)).trim();
+    if (splitAt === blockIdx && fragment && fragment[0] !== '^') {
       fragment = '^' + fragment;
     }
   }

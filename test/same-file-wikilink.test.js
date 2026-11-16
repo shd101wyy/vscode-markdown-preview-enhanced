@@ -84,6 +84,36 @@ suite('same-file wikilink navigation', function () {
     assert.strictEqual(shownEditors[1].selection.active.line, 2);
   });
 
+  test('trims spaces around same-file heading and block wikilinks', async function () {
+    const openedUris = [];
+    const receivedFragments = [];
+
+    globalThis.__vscodeStubOpenTextDocument = async (uri) => {
+      openedUris.push(uri.toString());
+      return {
+        uri,
+        getText: () => '# Heading\n\nTarget paragraph ^my-block\n',
+      };
+    };
+    globalThis.__vscodeStubShowTextDocument = async (_doc, editor) => editor;
+    globalThis.__crossnoteStubFindFragmentTargetLine = (_text, fragment) => {
+      receivedFragments.push(fragment);
+      return fragment === '^my-block' ? 2 : 0;
+    };
+
+    // `[[ #Heading ]]`: the space before `#` must not become a note
+    // name, and the space after the heading must not stay in the
+    // fragment.
+    await bundle.openWikilinkTarget('file:///ws/note.md', ' #Heading ');
+    await bundle.openWikilinkTarget('file:///ws/note.md', ' #^my-block ');
+
+    assert.deepStrictEqual(openedUris, [
+      'file:///ws/note.md',
+      'file:///ws/note.md',
+    ]);
+    assert.deepStrictEqual(receivedFragments, ['Heading', '^my-block']);
+  });
+
   test('ignores empty wikilink body without note or fragment', async function () {
     let opened = false;
     globalThis.__vscodeStubOpenTextDocument = async () => {
