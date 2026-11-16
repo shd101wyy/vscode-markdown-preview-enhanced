@@ -111,7 +111,7 @@ export async function openWikilinkTarget(
   // tooltip and the click destination agree.
   const blockIdx = wikilinkBody.indexOf('^');
   const hashIdx = wikilinkBody.indexOf('#');
-  let noteName = wikilinkBody;
+  let noteName = wikilinkBody.trim();
   let fragment = '';
   if (blockIdx !== -1 || hashIdx !== -1) {
     const splitAt =
@@ -124,13 +124,11 @@ export async function openWikilinkTarget(
       fragment = '^' + fragment;
     }
   }
-  if (!noteName) return;
+  if (!noteName && !fragment) return;
 
-  const targetUri = await resolveWikilinkUri(
-    sourceUri,
-    noteName,
-    notebooksManager,
-  );
+  const targetUri = noteName
+    ? await resolveWikilinkUri(sourceUri, noteName, notebooksManager)
+    : sourceUri;
   if (!targetUri) {
     vscode.window.showErrorMessage(
       vscode.l10n.t('Could not resolve wikilink: [[{wikilink}]]', {
@@ -143,7 +141,11 @@ export async function openWikilinkTarget(
   // Obsidian-style click-to-create: write a stub if the file
   // doesn't exist and the extension matches `markdownFileExtensions`.
   // Returns false (no-op) for non-markdown URIs and existing files.
-  await createMissingMarkdownNote(targetUri);
+  // Same-file links (`[[#Heading]]` / `[[#^block]]`) already point at
+  // the current document.
+  if (noteName) {
+    await createMissingMarkdownNote(targetUri);
+  }
 
   let doc: vscode.TextDocument;
   try {
