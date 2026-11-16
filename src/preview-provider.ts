@@ -1326,7 +1326,10 @@ export class PreviewProvider {
     const translated: string[] = new Array(blocks.length);
     const toTranslate: { index: number; block: string }[] = [];
     for (let i = 0; i < blocks.length; i++) {
-      const cachedBlock = getBlockTranslation(hashes[i]);
+      // Pass the current provider/model: the key is the source block only, so
+      // a hit from another model must not be reused (see
+      // getBlockTranslation).
+      const cachedBlock = getBlockTranslation(hashes[i], providerId, modelId);
       if (cachedBlock !== undefined) {
         translated[i] = cachedBlock;
       } else {
