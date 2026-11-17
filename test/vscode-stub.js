@@ -89,6 +89,17 @@ const VSCODE_STUB_SOURCE = `
         return Promise.resolve(undefined);
       },
       showInformationMessage: noop,
+      showTextDocument: async (doc) => {
+        const editor = {
+          document: doc,
+          selection: undefined,
+          revealRange: noop,
+        };
+        if (globalThis.__vscodeStubShowTextDocument) {
+          return globalThis.__vscodeStubShowTextDocument(doc, editor);
+        }
+        return editor;
+      },
       showQuickPick: async () => undefined,
       showInputBox: async () => undefined,
       createOutputChannel: () => ({ appendLine: noop, show: noop, dispose: noop }),
@@ -130,7 +141,12 @@ const VSCODE_STUB_SOURCE = `
       }),
       getWorkspaceFolder: (uri) => globalThis.__vscodeStubWorkspaceFolder(uri),
       asRelativePath: (uri) => globalThis.__vscodeStubRelativePath(uri),
-      openTextDocument: async () => ({ getText: () => '', uri: Uri.file('/ws/a.md') }),
+      openTextDocument: async (uri) => {
+        if (globalThis.__vscodeStubOpenTextDocument) {
+          return globalThis.__vscodeStubOpenTextDocument(uri);
+        }
+        return { getText: () => '', uri: Uri.file('/ws/a.md') };
+      },
       applyEdit: async () => true,
       registerTextDocumentContentProvider: () => disposable,
       createFileSystemWatcher: () => ({ onDidCreate: event, onDidChange: event, onDidDelete: event, dispose: noop }),
@@ -170,7 +186,19 @@ const VSCODE_STUB_SOURCE = `
     },
     Position: class { constructor(line, character) { this.line = line; this.character = character; } },
     Range: class { constructor(start, end) { this.start = start; this.end = end; } },
-    Selection: class { constructor(anchor, active) { this.anchor = anchor; this.active = active; } },
+    Selection: class {
+      constructor(anchorOrLine, activeOrChar, activeLine, activeCharacter) {
+        if (typeof anchorOrLine === 'number') {
+          this.anchor = { line: anchorOrLine, character: activeOrChar };
+          this.active = { line: activeLine, character: activeCharacter };
+        } else {
+          this.anchor = anchorOrLine;
+          this.active = activeOrChar;
+        }
+      }
+    },
+    DocumentLink: class { constructor(range, target) { this.range = range; this.target = target; } },
+    TextEditorRevealType: { Default: 0, InCenter: 1, InCenterIfOutsideViewport: 2, AtTop: 3 },
     EventEmitter: class { constructor() { this.event = event; } fire() {} dispose() {} },
     Disposable: class { static from() { return disposable; } dispose() {} },
     WorkspaceEdit: class { insert() {} replace() {} delete() {} },
@@ -223,6 +251,18 @@ const CROSSNOTE_STUB_SOURCE = `
     ImageUploader: {},
     getDefaultNotebookConfig: () => ({}),
     loadConfigsInDirectory: async () => ({}),
+    matter: (text) => {
+      if (globalThis.__crossnoteStubMatter) {
+        return globalThis.__crossnoteStubMatter(text);
+      }
+      return { content: text };
+    },
+    findFragmentTargetLine: (text, fragment) => {
+      if (globalThis.__crossnoteStubFindFragmentTargetLine) {
+        return globalThis.__crossnoteStubFindFragmentTargetLine(text, fragment);
+      }
+      return -1;
+    },
   };
 `;
 
