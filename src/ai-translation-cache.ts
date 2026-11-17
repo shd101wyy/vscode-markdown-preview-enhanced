@@ -37,30 +37,58 @@ interface BlockMeta {
 /**
  * Read a cached translated block. Returns undefined on miss / read error.
  * Touches `lastAccess` on hit (best-effort) for LRU eviction.
+ *
+ * A block's cache key is its source text, so it says nothing about which
+ * provider or model produced the translation. The entry therefore only
+ * counts as a hit for the provider and model that wrote it: reusing it
+ * after either setting changes would keep showing the previous model's
+ * translation for every unchanged block, with only the edited blocks
+ * coming from the newly selected model. A mismatch is a normal miss — the
+ * block is re-translated and the entry is overwritten in place, so the
+ * stale pair never accumulates on disk.
+ *
+ * An entry with missing or unreadable metadata is treated as a hit: it can
+ * only come from an older cache version, and rejecting it would re-translate
+ * the whole document once for no gain.
  */
-export function getBlockTranslation(blockHash: string): string | undefined {
+export function getBlockTranslation(
+  blockHash: string,
+  provider: string,
+  model: string,
+): string | undefined {
   try {
     const dir = blocksDir();
     const mdPath = path.join(dir, `${blockHash}.md`);
     if (!fs.existsSync(mdPath)) {
       return undefined;
     }
+    const metaPath = path.join(dir, `${blockHash}.meta.json`);
+    let meta: BlockMeta | undefined;
+    try {
+      meta = JSON.parse(fs.readFileSync(metaPath, 'utf8')) as BlockMeta;
+    } catch {
+      // meta missing/invalid — legacy entry, usable with any model
+      meta = undefined;
+    }
+    if (meta && (meta.provider !== provider || meta.model !== model)) {
+      return undefined;
+    }
     const markdown = fs.readFileSync(mdPath, 'utf8');
     // Best-effort lastAccess bump — never block a hit on a meta write failure.
     try {
-      const metaPath = path.join(dir, `${blockHash}.meta.json`);
-      let meta: BlockMeta = {
-        provider: '',
-        model: '',
-        lastAccess: Date.now(),
-      };
-      try {
-        meta = { ...meta, ...JSON.parse(fs.readFileSync(metaPath, 'utf8')) };
-      } catch {
-        // meta missing/invalid — keep defaults
-      }
-      meta.lastAccess = Date.now();
-      fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf8');
+      fs.writeFileSync(
+        metaPath,
+        JSON.stringify(
+          {
+            provider,
+            model,
+            lastAccess: Date.now(),
+          },
+          null,
+          2,
+        ),
+        'utf8',
+      );
     } catch {
       // ignore
     }
