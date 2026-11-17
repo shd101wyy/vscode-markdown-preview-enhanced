@@ -6,6 +6,15 @@ import { getMPEConfig } from './config';
 import { getWorkspaceFolderUri, isMarkdownFile } from './utils';
 
 /**
+ * Strip the file extension for image alt text while keeping dotfiles and
+ * extensionless names intact (`lastIndexOf('.') === -1` must not slice `-1`).
+ */
+export function stripImageExtension(fileName: string): string {
+  const lastDotOffset = fileName.lastIndexOf('.');
+  return lastDotOffset > 0 ? fileName.slice(0, lastDotOffset) : fileName;
+}
+
+/**
  * Copy ans paste image at imageFilePath to config.imageForlderPath.
  * Then insert markdown image url to markdown file.
  * @param uri
@@ -52,7 +61,10 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
         editor.document.uri.fsPath === uri.fsPath,
     )
     .forEach((editor) => {
-      fs.mkdir(assetDirectoryPath, (_error) => {
+      fs.mkdir(assetDirectoryPath, { recursive: true }, (mkdirError) => {
+        if (mkdirError) {
+          return vscode.window.showErrorMessage(mkdirError.toString());
+        }
         fs.stat(destPath, (err, _stat) => {
           if (err === null) {
             // file existed
@@ -81,14 +93,7 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
               fs.createWriteStream(destPath),
             );
 
-            if (imageFileName.lastIndexOf('.')) {
-              description = imageFileName.slice(
-                0,
-                imageFileName.lastIndexOf('.'),
-              );
-            } else {
-              description = imageFileName;
-            }
+            description = stripImageExtension(imageFileName);
           } else {
             return vscode.window.showErrorMessage(err.toString());
           }
@@ -145,12 +150,7 @@ function setUploadedImageURL(
   hint: string,
   curPos: vscode.Position,
 ) {
-  let description;
-  if (imageFileName.lastIndexOf('.')) {
-    description = imageFileName.slice(0, imageFileName.lastIndexOf('.'));
-  } else {
-    description = imageFileName;
-  }
+  const description = stripImageExtension(imageFileName);
 
   const withStr = `![${description}](${url})`;
 
