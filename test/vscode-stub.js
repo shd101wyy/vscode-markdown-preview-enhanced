@@ -9,14 +9,29 @@
 
 const recorder = {
   commands: new Map(),
+  executedCommands: [],
+  webviewViewProviders: new Map(),
   clipboard: { text: null },
   warnings: [],
   activeEditorHandlers: [],
+  tabChangeHandlers: [],
+  closeDocumentHandlers: [],
+  configurationChangeHandlers: [],
+  createdPanels: [],
+  shownDocuments: [],
   reset() {
     this.commands = new Map();
+    this.executedCommands = [];
+    this.webviewViewProviders = new Map();
     this.clipboard = { text: null };
     this.warnings = [];
     this.activeEditorHandlers = [];
+    this.tabChangeHandlers = [];
+    this.closeDocumentHandlers = [];
+    this.configurationChangeHandlers = [];
+    this.createdPanels = [];
+    this.shownDocuments = [];
+    globalThis.__vscodeStubVersion = '1.107.0';
   },
 };
 
@@ -65,8 +80,42 @@ const VSCODE_STUB_SOURCE = `
     }
   }
 
+  function createMockWebviewPanel(viewType, title, showOptions) {
+    const disposeHandlers = [];
+    const panel = {
+      viewType,
+      title,
+      viewColumn: typeof showOptions === 'number' ? showOptions : (showOptions?.viewColumn ?? 1),
+      active: !(showOptions && showOptions.preserveFocus),
+      iconPath: null,
+      options: {},
+      webview: {
+        html: '',
+        options: {},
+        cspSource: 'vscode-webview://mock',
+        asWebviewUri: (uri) => uri,
+        onDidReceiveMessage: () => disposable,
+        postMessage: async () => true,
+      },
+      reveal: noop,
+      onDidDispose(handler) {
+        disposeHandlers.push(handler);
+        return disposable;
+      },
+      dispose() {
+        disposeHandlers.forEach((handler) => handler());
+        disposeHandlers.length = 0;
+      },
+    };
+    recorder.createdPanels.push(panel);
+    return panel;
+  }
+
   module.exports = {
     Uri,
+    get version() {
+      return globalThis.__vscodeStubVersion ?? '1.107.0';
+    },
     ViewColumn: { One: 1, Two: 2, Beside: -2 },
     // Mirror vscode.l10n.t without a bundle: the source string is the
     // English text, with {name} placeholders substituted from the args
@@ -80,19 +129,22 @@ const VSCODE_STUB_SOURCE = `
       },
     },
     window: {
-      createWebviewPanel: () => {
-        throw new Error('createWebviewPanel is not stubbed; pass a webviewPanel instead');
-      },
+      createWebviewPanel: createMockWebviewPanel,
       showErrorMessage: noop,
       showWarningMessage: (message) => {
         recorder.warnings.push(message);
         return Promise.resolve(undefined);
       },
       showInformationMessage: noop,
-      showTextDocument: async (doc) => {
+      showQuickPick: async () => undefined,
+      showInputBox: async () => undefined,
+      showTextDocument: async (doc, options) => {
+        recorder.shownDocuments.push({ doc, options });
         const editor = {
           document: doc,
           selection: undefined,
+          selections: [{ active: { line: 0 } }],
+          visibleRanges: [],
           revealRange: noop,
         };
         if (globalThis.__vscodeStubShowTextDocument) {
@@ -100,11 +152,13 @@ const VSCODE_STUB_SOURCE = `
         }
         return editor;
       },
-      showQuickPick: async () => undefined,
-      showInputBox: async () => undefined,
       createOutputChannel: () => ({ appendLine: noop, show: noop, dispose: noop }),
       createStatusBarItem: () => ({ show: noop, hide: noop, dispose: noop, text: '' }),
       registerWebviewPanelSerializer: () => disposable,
+      registerWebviewViewProvider: (viewId, provider, options) => {
+        recorder.webviewViewProviders.set(viewId, { provider, options });
+        return disposable;
+      },
       registerCustomEditorProvider: () => disposable,
       withProgress: async (_options, task) => task({ report: noop }, { isCancellationRequested: false }),
       onDidChangeActiveTextEditor: (handler) => {
@@ -117,10 +171,26 @@ const VSCODE_STUB_SOURCE = `
       onDidChangeVisibleTextEditors: event,
       onDidChangeActiveColorTheme: event,
       onDidChangeWindowState: event,
-      visibleTextEditors: [],
-      activeTextEditor: undefined,
+      get visibleTextEditors() {
+        return globalThis.__vscodeStubVisibleTextEditors ?? [];
+      },
+      get activeTextEditor() {
+        return globalThis.__vscodeStubActiveTextEditor;
+      },
+      set activeTextEditor(editor) {
+        globalThis.__vscodeStubActiveTextEditor = editor;
+      },
       activeColorTheme: { kind: 1 },
-      tabGroups: { all: [], onDidChangeTabs: event, close: async () => true },
+      tabGroups: {
+        get all() {
+          return globalThis.__vscodeStubTabGroups ?? [];
+        },
+        onDidChangeTabs: (handler) => {
+          recorder.tabChangeHandlers.push(handler);
+          return disposable;
+        },
+        close: async () => true,
+      },
     },
     workspace: {
       get workspaceFolders() {
@@ -145,17 +215,23 @@ const VSCODE_STUB_SOURCE = `
         if (globalThis.__vscodeStubOpenTextDocument) {
           return globalThis.__vscodeStubOpenTextDocument(uri);
         }
-        return { getText: () => '', uri: Uri.file('/ws/a.md') };
+        return { getText: () => '', uri: uri || Uri.file('/ws/a.md') };
       },
       applyEdit: async () => true,
       registerTextDocumentContentProvider: () => disposable,
       createFileSystemWatcher: () => ({ onDidCreate: event, onDidChange: event, onDidDelete: event, dispose: noop }),
       findFiles: async () => [],
       fs: { readFile: async () => new Uint8Array(), writeFile: async () => {}, stat: async () => ({}) },
-      onDidChangeConfiguration: event,
+      onDidChangeConfiguration: (handler) => {
+        recorder.configurationChangeHandlers.push(handler);
+        return disposable;
+      },
       onDidSaveTextDocument: event,
       onDidChangeTextDocument: event,
-      onDidCloseTextDocument: event,
+      onDidCloseTextDocument: (handler) => {
+        recorder.closeDocumentHandlers.push(handler);
+        return disposable;
+      },
       onDidOpenTextDocument: event,
       onDidChangeWorkspaceFolders: event,
       onDidCreateFiles: event,
@@ -163,7 +239,12 @@ const VSCODE_STUB_SOURCE = `
       onDidRenameFiles: event,
     },
     commands: {
-      executeCommand: async () => {},
+      executeCommand: async (id, ...args) => {
+        recorder.executedCommands.push({ id, args });
+        if (globalThis.__vscodeStubExecuteCommand) {
+          return globalThis.__vscodeStubExecuteCommand(id, ...args);
+        }
+      },
       registerCommand: (id, handler) => {
         recorder.commands.set(id, handler);
         return disposable;
@@ -206,8 +287,9 @@ const VSCODE_STUB_SOURCE = `
     ColorThemeKind: { Light: 1, Dark: 2 },
     ProgressLocation: { Notification: 15 },
     StatusBarAlignment: { Left: 1, Right: 2 },
-    TabInputCustom: class {},
-    TabInputText: class {},
+    TabInputCustom: class { constructor(uri, viewType) { this.uri = uri; this.viewType = viewType; } },
+    TabInputText: class { constructor(uri) { this.uri = uri; } },
+    TabInputTextDiff: class { constructor(original, modified) { this.original = original; this.modified = modified; } },
   };
 `;
 
@@ -292,6 +374,12 @@ globalThis.__vscodeStubNotebookRefreshes = [];
 globalThis.__vscodeStubConfiguration = {};
 globalThis.__vscodeStubConfigurationScopes = { global: {}, workspace: {} };
 globalThis.__vscodeStubIsTrusted = true;
+globalThis.__vscodeStubActiveTextEditor = undefined;
+globalThis.__vscodeStubVisibleTextEditors = [];
+globalThis.__vscodeStubTabGroups = [];
+globalThis.__vscodeStubOpenTextDocument = undefined;
+globalThis.__vscodeStubExecuteCommand = undefined;
+globalThis.__vscodeStubVersion = '1.107.0';
 globalThis.__crossnoteStubEngine = () => ({
   generateHTMLTemplateForPreview: async () => '<html></html>',
 });
@@ -325,5 +413,20 @@ module.exports = {
   },
   setWorkspaceTrusted(trusted) {
     globalThis.__vscodeStubIsTrusted = trusted;
+  },
+  setActiveTextEditor(editor) {
+    globalThis.__vscodeStubActiveTextEditor = editor;
+  },
+  setVisibleTextEditors(editors) {
+    globalThis.__vscodeStubVisibleTextEditors = editors;
+  },
+  setTabGroups(groups) {
+    globalThis.__vscodeStubTabGroups = groups;
+  },
+  setOpenTextDocumentResolver(fn) {
+    globalThis.__vscodeStubOpenTextDocument = fn;
+  },
+  setExecuteCommandHandler(fn) {
+    globalThis.__vscodeStubExecuteCommand = fn;
   },
 };

@@ -136,6 +136,47 @@ const WEBVIEW_MESSAGE_COMMANDS: Set<string> = new Set([
  */
 const WORKSPACE_MUTEX_MAP: Map<string, Mutex> = new Map();
 
+export type PreviewSurface = vscode.WebviewPanel | vscode.WebviewView;
+
+export function isWebviewPanel(
+  surface: PreviewSurface,
+): surface is vscode.WebviewPanel {
+  return 'active' in surface || 'reveal' in surface;
+}
+
+/**
+ * Crossnote's type declarations expect `vscode.WebviewPanel` even though
+ * `addFileProtocol` only accesses `surface.webview.asWebviewUri(...)` at runtime.
+ */
+function asCrossnoteWebviewPanel(surface: PreviewSurface): vscode.WebviewPanel {
+  return surface as unknown as vscode.WebviewPanel;
+}
+
+export function dispatchPreviewWebviewMessage(
+  message: unknown,
+  getExpectedSourceUri: () => vscode.Uri | null | undefined,
+): void {
+  const msg = message as { command?: unknown; args?: unknown } | null;
+  const command = msg?.command;
+  const args = msg?.args;
+  if (typeof command !== 'string' || !WEBVIEW_MESSAGE_COMMANDS.has(command)) {
+    return;
+  }
+  if (!Array.isArray(args)) {
+    return;
+  }
+  const expectedSourceUri = getExpectedSourceUri();
+  if (
+    command === 'updateMarkdown' &&
+    (typeof args[0] !== 'string' ||
+      !expectedSourceUri ||
+      Uri.parse(args[0]).toString() !== expectedSourceUri.toString())
+  ) {
+    return;
+  }
+  vscode.commands.executeCommand(`_crossnote.${command}`, ...args);
+}
+
 /**
  * Content-Security-Policy for the preview webview.
  *
@@ -156,8 +197,8 @@ const WORKSPACE_MUTEX_MAP: Map<string, Mutex> = new Map();
  *   frames come from arbitrary user markdown, and the sanitizer already
  *   forces `sandbox=""` on every iframe.
  */
-function buildPreviewCSP(panel: vscode.WebviewPanel): string {
-  const cspSource = panel.webview.cspSource;
+function buildPreviewCSP(surface: PreviewSurface): string {
+  const cspSource = surface.webview.cspSource;
   return [
     `script-src ${cspSource} https: 'unsafe-inline'`,
     `style-src ${cspSource} https: data: 'unsafe-inline'`,
@@ -205,7 +246,7 @@ export class PreviewProvider {
    * already taken over (e.g. user switched files before rendering completed).
    */
   private initRequestSeq = 0;
-  private latestInitRequestByPreview: WeakMap<vscode.WebviewPanel, number> =
+  private latestInitRequestByPreview: WeakMap<PreviewSurface, number> =
     new WeakMap();
 
   /**
@@ -265,13 +306,12 @@ export class PreviewProvider {
    * The key is sourceUri.toString()
    * value is Preview (vscode.Webview) object
    */
-  private previewMaps: Map<string, Set<vscode.WebviewPanel>> = new Map();
-  private previewToDocumentMap: Map<vscode.WebviewPanel, vscode.TextDocument> =
+  private previewMaps: Map<string, Set<PreviewSurface>> = new Map();
+  private previewToDocumentMap: Map<PreviewSurface, vscode.TextDocument> =
     new Map();
   /** The source URI whose HTML is currently installed in each preview. */
-  private previewToSourceUriMap: Map<vscode.WebviewPanel, vscode.Uri> =
-    new Map();
-  private initializedPreviews: Set<vscode.WebviewPanel> = new Set();
+  private previewToSourceUriMap: Map<PreviewSurface, vscode.Uri> = new Map();
+  private initializedPreviews: Set<PreviewSurface> = new Set();
 
   /**
    * Panels owned by VS Code custom editors (`resolveCustomTextEditor`).
@@ -281,6 +321,7 @@ export class PreviewProvider {
    * panel, not into the previously-active one (vscode-mpe#2433).
    */
   private customEditorPanels: Set<vscode.WebviewPanel> = new Set();
+  private sidePanelViews: Set<vscode.WebviewView> = new Set();
 
   private static singlePreviewPanel: vscode.WebviewPanel | null;
   private static singlePreviewPanelSourceUriTarget: Uri | null;
@@ -301,6 +342,13 @@ export class PreviewProvider {
     // Please use `init` method to initialize this class.
   }
 
+  private isPinnedSurface(surface: PreviewSurface): boolean {
+    return (
+      (isWebviewPanel(surface) && this.customEditorPanels.has(surface)) ||
+      (!isWebviewPanel(surface) && this.sidePanelViews.has(surface))
+    );
+  }
+
   /**
    * Returns true if sourceUri is the current target for the single preview panel,
    * or if we are NOT in single-preview mode (multiple-previews always allowed).
@@ -309,12 +357,12 @@ export class PreviewProvider {
     if (getPreviewMode() !== PreviewMode.SinglePreview) {
       return true;
     }
-    // Custom editor panels are pinned to their documents and update
-    // independently of the single-preview target.
+    // Custom editor panels and Side Panel views update independently of the
+    // shared single-preview editor tab target.
     const registered = this.previewMaps.get(sourceUri.toString());
     if (registered) {
-      for (const panel of registered) {
-        if (this.customEditorPanels.has(panel)) {
+      for (const surface of registered) {
+        if (this.isPinnedSurface(surface)) {
           return true;
         }
       }
@@ -414,10 +462,13 @@ export class PreviewProvider {
       if (target) {
         sourceUriStrings.push(target.toString());
       }
-      // Custom editor panels are pinned to their documents and independent
-      // of the single-preview target — refresh each of them too.
-      for (const panel of this.customEditorPanels) {
-        const document = this.previewToDocumentMap.get(panel);
+      // Custom editor panels and Side Panel views are independent of the
+      // shared single-preview editor tab target — refresh each of them too.
+      for (const surface of [
+        ...this.customEditorPanels,
+        ...this.sidePanelViews,
+      ]) {
+        const document = this.previewToDocumentMap.get(surface);
         if (document?.uri) {
           const sourceUriString = document.uri.toString();
           if (!sourceUriStrings.includes(sourceUriString)) {
@@ -435,38 +486,42 @@ export class PreviewProvider {
     }
   }
 
-  private addPreviewToMap(sourceUri: Uri, previewPanel: vscode.WebviewPanel) {
+  private addPreviewToMap(sourceUri: Uri, previewSurface: PreviewSurface) {
     let previews = this.previewMaps.get(sourceUri.toString());
     if (!previews) {
       previews = new Set();
       this.previewMaps.set(sourceUri.toString(), previews);
     }
-    previews.add(previewPanel);
+    previews.add(previewSurface);
   }
 
-  private deletePreviewFromMap(
-    sourceUri: Uri,
-    previewPanel: vscode.WebviewPanel,
-  ) {
-    this.previewMaps.get(sourceUri.toString())?.delete(previewPanel);
+  private deletePreviewFromMap(sourceUri: Uri, previewSurface: PreviewSurface) {
+    this.previewMaps.get(sourceUri.toString())?.delete(previewSurface);
   }
 
   /**
    * return markdown previews of sourceUri
    * @param sourceUri
    */
-  public getPreviews(sourceUri: Uri): vscode.WebviewPanel[] | null | undefined {
+  public getPreviews(sourceUri: Uri): PreviewSurface[] | null | undefined {
     if (
       getPreviewMode() === PreviewMode.SinglePreview &&
       PreviewProvider.singlePreviewPanel
     ) {
-      // Panels registered for this source: custom editor panels are pinned
-      // to it, and the shared panel was registered when it took this source
-      // as its target (older sources keep their stale registration, which
-      // preserves the previous resolve-to-the-shared-panel behavior).
+      // Surfaces registered for this source: custom editor panels and Side Panel
+      // views are pinned to their current document, while the shared single-preview
+      // panel belongs only to `singlePreviewPanelSourceUriTarget`.
       const registered = this.previewMaps.get(sourceUri.toString());
       if (registered && registered.size > 0) {
-        return Array.from(registered);
+        const sameSingleSource =
+          this.previewHasTheSameSingleSourceUri(sourceUri);
+        const activeSurfaces = Array.from(registered).filter(
+          (surface) =>
+            surface !== PreviewProvider.singlePreviewPanel || sameSingleSource,
+        );
+        if (activeSurfaces.length > 0) {
+          return activeSurfaces;
+        }
       }
       return [PreviewProvider.singlePreviewPanel];
     } else {
@@ -479,6 +534,15 @@ export class PreviewProvider {
     }
   }
 
+  public getPanelPreviews(sourceUri: Uri): vscode.WebviewPanel[] | null {
+    const previews = this.getPreviews(sourceUri);
+    if (!previews) {
+      return null;
+    }
+    const panels = previews.filter(isWebviewPanel);
+    return panels.length > 0 ? panels : null;
+  }
+
   /**
    * check if the markdown preview is on for the textEditor
    * @param textEditor
@@ -488,7 +552,7 @@ export class PreviewProvider {
       if (PreviewProvider.singlePreviewPanel) {
         return true;
       }
-      // Custom editors act as previews even without a shared panel.
+      // Custom editors and Side Panel views act as previews even without a shared panel.
       const registered = this.previewMaps.get(sourceUri.toString());
       return !!registered && registered.size > 0;
     } else {
@@ -497,19 +561,40 @@ export class PreviewProvider {
     }
   }
 
+  public isPanelPreviewOn(sourceUri: Uri): boolean {
+    if (getPreviewMode() === PreviewMode.SinglePreview) {
+      if (PreviewProvider.singlePreviewPanel) {
+        return true;
+      }
+      const registered = this.previewMaps.get(sourceUri.toString());
+      if (!registered) {
+        return false;
+      }
+      for (const surface of registered) {
+        if (isWebviewPanel(surface)) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      const panels = this.getPanelPreviews(sourceUri);
+      return !!(panels && panels.length > 0);
+    }
+  }
+
   public getPreviewSourceStates(): PreviewSourceState<vscode.Uri>[] {
-    return Array.from(this.initializedPreviews, (previewPanel) => ({
-      active: previewPanel.active,
-      sourceUri: this.previewToSourceUriMap.get(previewPanel),
+    return Array.from(this.initializedPreviews, (surface) => ({
+      active: isWebviewPanel(surface) ? surface.active : surface.visible,
+      sourceUri: this.previewToSourceUriMap.get(surface),
     }));
   }
 
-  public destroyPreview(sourceUri: Uri, panel?: vscode.WebviewPanel) {
+  public destroyPreview(sourceUri: Uri, panel?: PreviewSurface) {
     if (panel) {
-      // A specific panel was disposed. Remove exactly its registrations so
-      // other panels for the same or different sources (e.g. custom editor
-      // tabs) survive; only when the disposed panel WAS the shared
-      // single-preview panel is the single-preview state torn down.
+      // A specific surface was disposed. Remove exactly its registrations so
+      // other surfaces for the same or different sources survive; only when
+      // the disposed surface WAS the shared single-preview panel is the
+      // single-preview state torn down.
       if (panel === PreviewProvider.singlePreviewPanel) {
         PreviewProvider.singlePreviewPanel = null;
         PreviewProvider.singlePreviewPanelSourceUriTarget = null;
@@ -549,6 +634,24 @@ export class PreviewProvider {
     this.clearAutoTranslateTimer(sourceUri.toString());
   }
 
+  public detachSidePanelView(webviewView: vscode.WebviewView): void {
+    const previousUri = this.previewToSourceUriMap.get(webviewView);
+    this.sidePanelViews.delete(webviewView);
+    this.initializedPreviews.delete(webviewView);
+    this.previewToDocumentMap.delete(webviewView);
+    this.previewToSourceUriMap.delete(webviewView);
+    for (const [key, surfaces] of this.previewMaps) {
+      surfaces.delete(webviewView);
+      if (surfaces.size === 0) {
+        this.previewMaps.delete(key);
+        this.latestRenderRequestBySourceUri.delete(key);
+      }
+    }
+    if (previousUri) {
+      this.clearAutoTranslateTimer(previousUri.toString());
+    }
+  }
+
   /**
    * TODO: Free memory
    */
@@ -556,6 +659,170 @@ export class PreviewProvider {
 
   private getEngine(sourceUri: Uri) {
     return this.notebook.getNoteMarkdownEngine(sourceUri.fsPath);
+  }
+
+  private buildLocalResourceRoots(sourceUri: vscode.Uri): vscode.Uri[] {
+    const buildDir = utility.getCrossnoteBuildDirectory();
+    const localResourceRoots = [
+      vscode.Uri.file(this.context.extensionPath),
+      // Skip CDN/HTTP URLs — only add file-system paths to localResourceRoots
+      ...(buildDir.startsWith('http') ? [] : [vscode.Uri.file(buildDir)]),
+      vscode.Uri.file(globalConfigPath),
+      vscode.Uri.file(tmpdir()),
+    ];
+    const workspaceUri = getWorkspaceFolderUri(sourceUri);
+    if (workspaceUri) {
+      localResourceRoots.push(workspaceUri);
+    }
+    // The previewed file may live outside its notebook root — an
+    // out-of-workspace file whose fallback root is the workspace itself
+    // (its own directory is home / a filesystem root, #2444), or any
+    // document-dir fallback. Its own directory must stay loadable so
+    // relative images beside it keep rendering.
+    if (sourceUri.scheme === 'file') {
+      localResourceRoots.push(vscode.Uri.file(path.dirname(sourceUri.fsPath)));
+    }
+    return localResourceRoots;
+  }
+
+  private async renderSurfaceHtml({
+    surface,
+    sourceUri,
+    document,
+    cursorLine,
+    inputStringOverride,
+  }: {
+    surface: PreviewSurface;
+    sourceUri: vscode.Uri;
+    document: vscode.TextDocument;
+    cursorLine?: number;
+    inputStringOverride?: string;
+  }): Promise<void> {
+    let initialLine: number | undefined;
+    if (document.uri.fsPath === sourceUri.fsPath) {
+      initialLine = cursorLine;
+    }
+
+    const inputString = this.previewMarkdown(
+      sourceUri,
+      inputStringOverride ?? document.getText() ?? '',
+    );
+    const engine = this.getEngine(sourceUri);
+    try {
+      // Tag this request so we can detect if a newer render overtook us
+      // before the (potentially slow) HTML generation finishes.
+      const initRequestId = ++this.initRequestSeq;
+      this.latestInitRequestByPreview.set(surface, initRequestId);
+
+      // Checkboxes anywhere on a line (table cells included). The script
+      // has to run before the preview bundle so both share acquireVsCodeApi.
+      const taskCheckboxCssUri = surface.webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          this.context.extensionUri,
+          'media',
+          'task-checkbox.css',
+        ),
+      );
+      const taskCheckboxJsUri = surface.webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          this.context.extensionUri,
+          'media',
+          'task-checkbox.js',
+        ),
+      );
+      let head = `<link rel="stylesheet" href="${taskCheckboxCssUri}"><script src="${taskCheckboxJsUri}"></script>`;
+      // Build lightbox head injection when enabled
+      if (getMPEConfig<boolean>('enableImageLightbox') ?? true) {
+        const lightboxCssUri = surface.webview.asWebviewUri(
+          vscode.Uri.joinPath(
+            this.context.extensionUri,
+            'media',
+            'lightbox.css',
+          ),
+        );
+        const lightboxJsUri = surface.webview.asWebviewUri(
+          vscode.Uri.joinPath(
+            this.context.extensionUri,
+            'media',
+            'lightbox.js',
+          ),
+        );
+        head += `<link rel="stylesheet" href="${lightboxCssUri}"><script defer src="${lightboxJsUri}"></script>`;
+      }
+
+      const html = await engine.generateHTMLTemplateForPreview({
+        inputString,
+        config: {
+          sourceUri: sourceUri.toString(),
+          cursorLine: initialLine,
+          isVSCode: true,
+          scrollSync: getMPEConfig<boolean>('scrollSync'),
+          clickToRevealSource: getMPEConfig<boolean>(
+            'clickPreviewToRevealSource',
+          ),
+          imageUploader: getMPEConfig<ImageUploader>('imageUploader'),
+          isShowingTranslation: this.translatedMarkdownOverrides.has(
+            sourceUri.toString(),
+          ),
+          ...{ locale: vscode.env.language },
+        },
+        contentSecurityPolicy: buildPreviewCSP(surface),
+        vscodePreviewPanel: asCrossnoteWebviewPanel(surface),
+        isVSCodeWebExtension: isVSCodeWebExtension(),
+        head,
+      });
+
+      // Discard stale result if a newer render took over, surface was disposed,
+      // or (in single-preview mode) this URI is no longer the target.
+      if (
+        this.latestInitRequestByPreview.get(surface) !== initRequestId ||
+        !this.initializedPreviews.has(surface) ||
+        !this.isSinglePreviewTarget(sourceUri)
+      ) {
+        return;
+      }
+      surface.webview.html = html;
+      // Publish the source only after this render won the request race and its
+      // HTML was installed.
+      this.previewToSourceUriMap.set(surface, sourceUri);
+    } catch (error) {
+      vscode.window.showErrorMessage(String(error));
+      console.error(error);
+    }
+  }
+
+  public async initSidePanelPreview({
+    webviewView,
+    sourceUri,
+    document,
+    cursorLine,
+    inputStringOverride,
+  }: {
+    webviewView: vscode.WebviewView;
+    sourceUri: vscode.Uri;
+    document: vscode.TextDocument;
+    cursorLine?: number;
+    inputStringOverride?: string;
+  }): Promise<void> {
+    this.detachSidePanelView(webviewView);
+
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: this.buildLocalResourceRoots(sourceUri),
+    };
+
+    this.sidePanelViews.add(webviewView);
+    this.initializedPreviews.add(webviewView);
+    this.addPreviewToMap(sourceUri, webviewView);
+    this.previewToDocumentMap.set(webviewView, document);
+
+    await this.renderSurfaceHtml({
+      surface: webviewView,
+      sourceUri,
+      document,
+      cursorLine,
+      inputStringOverride,
+    });
   }
 
   public async initPreview({
@@ -578,7 +845,7 @@ export class PreviewProvider {
   }): Promise<void> {
     const previewMode = getPreviewMode();
     let previewPanel: vscode.WebviewPanel;
-    const previews = this.getPreviews(sourceUri);
+    const previews = this.getPanelPreviews(sourceUri);
     if (
       previewMode === PreviewMode.SinglePreview &&
       PreviewProvider.singlePreviewPanel &&
@@ -638,28 +905,7 @@ export class PreviewProvider {
       }
       return;
     } else {
-      const buildDir = utility.getCrossnoteBuildDirectory();
-      const localResourceRoots = [
-        vscode.Uri.file(this.context.extensionPath),
-        // Skip CDN/HTTP URLs — only add file-system paths to localResourceRoots
-        ...(buildDir.startsWith('http') ? [] : [vscode.Uri.file(buildDir)]),
-        vscode.Uri.file(globalConfigPath),
-        vscode.Uri.file(tmpdir()),
-      ];
-      const workspaceUri = getWorkspaceFolderUri(sourceUri);
-      if (workspaceUri) {
-        localResourceRoots.push(workspaceUri);
-      }
-      // The previewed file may live outside its notebook root — an
-      // out-of-workspace file whose fallback root is the workspace itself
-      // (its own directory is home / a filesystem root, #2444), or any
-      // document-dir fallback. Its own directory must stay loadable so
-      // relative images beside it keep rendering.
-      if (sourceUri.scheme === 'file') {
-        localResourceRoots.push(
-          vscode.Uri.file(path.dirname(sourceUri.fsPath)),
-        );
-      }
+      const localResourceRoots = this.buildLocalResourceRoots(sourceUri);
 
       if (webviewPanel) {
         previewPanel = webviewPanel;
@@ -699,39 +945,12 @@ export class PreviewProvider {
         // register previewPanel message events.
         previewPanel.webview.onDidReceiveMessage(
           (message) => {
-            const command = message?.command;
-            const args = message?.args;
-            if (
-              typeof command !== 'string' ||
-              !WEBVIEW_MESSAGE_COMMANDS.has(command)
-            ) {
-              return;
-            }
-            if (!Array.isArray(args)) {
-              return;
-            }
-            // The handler is registered once per webview panel.  In single
-            // preview mode the panel is reused across files, so the closure's
-            // `sourceUri` goes stale after a switch — compare against the
-            // panel's current target instead so legitimate `updateMarkdown`
-            // edits are not dropped (and an attacker still can only write to
-            // the file the preview currently represents).  Custom editor
-            // panels are pinned to their document, so their closure never
-            // goes stale.
-            const expectedSourceUri =
+            dispatchPreviewWebviewMessage(message, () =>
               getPreviewMode() === PreviewMode.SinglePreview &&
               !this.customEditorPanels.has(previewPanel)
                 ? PreviewProvider.singlePreviewPanelSourceUriTarget
-                : sourceUri;
-            if (
-              command === 'updateMarkdown' &&
-              (typeof args[0] !== 'string' ||
-                !expectedSourceUri ||
-                Uri.parse(args[0]).toString() !== expectedSourceUri.toString())
-            ) {
-              return;
-            }
-            vscode.commands.executeCommand(`_crossnote.${command}`, ...args);
+                : sourceUri,
+            );
           },
           null,
           this.context.subscriptions,
@@ -773,122 +992,32 @@ export class PreviewProvider {
     // set title
     previewPanel.title = `Preview ${path.basename(sourceUri.fsPath)}`;
 
-    // init markdown engine.
-    let initialLine: number | undefined;
-    if (document.uri.fsPath === sourceUri.fsPath) {
-      initialLine = cursorLine;
-    }
-
-    const inputString = this.previewMarkdown(
+    await this.renderSurfaceHtml({
+      surface: previewPanel,
       sourceUri,
-      inputStringOverride ?? document.getText() ?? '',
-    );
-    const engine = this.getEngine(sourceUri);
-    try {
-      // Tag this request so we can detect if a newer initPreview overtook us
-      // before the (potentially slow) HTML generation finishes.
-      const initRequestId = ++this.initRequestSeq;
-      this.latestInitRequestByPreview.set(previewPanel, initRequestId);
-
-      // Checkboxes anywhere on a line (table cells included). The script
-      // has to run before the preview bundle so both share acquireVsCodeApi.
-      const taskCheckboxCssUri = previewPanel.webview.asWebviewUri(
-        vscode.Uri.joinPath(
-          this.context.extensionUri,
-          'media',
-          'task-checkbox.css',
-        ),
-      );
-      const taskCheckboxJsUri = previewPanel.webview.asWebviewUri(
-        vscode.Uri.joinPath(
-          this.context.extensionUri,
-          'media',
-          'task-checkbox.js',
-        ),
-      );
-      let head = `<link rel="stylesheet" href="${taskCheckboxCssUri}"><script src="${taskCheckboxJsUri}"></script>`;
-      // Build lightbox head injection when enabled
-      if (getMPEConfig<boolean>('enableImageLightbox') ?? true) {
-        const lightboxCssUri = previewPanel.webview.asWebviewUri(
-          vscode.Uri.joinPath(
-            this.context.extensionUri,
-            'media',
-            'lightbox.css',
-          ),
-        );
-        const lightboxJsUri = previewPanel.webview.asWebviewUri(
-          vscode.Uri.joinPath(
-            this.context.extensionUri,
-            'media',
-            'lightbox.js',
-          ),
-        );
-        head += `<link rel="stylesheet" href="${lightboxCssUri}"><script defer src="${lightboxJsUri}"></script>`;
-      }
-
-      const html = await engine.generateHTMLTemplateForPreview({
-        inputString,
-        config: {
-          sourceUri: sourceUri.toString(),
-          cursorLine: initialLine,
-          isVSCode: true,
-          scrollSync: getMPEConfig<boolean>('scrollSync'),
-          clickToRevealSource: getMPEConfig<boolean>(
-            'clickPreviewToRevealSource',
-          ),
-          imageUploader: getMPEConfig<ImageUploader>('imageUploader'),
-          // v2 translation: tell the webview whether it's currently showing
-          // the translated markdown, so the context-menu item can toggle
-          // between "Translate" and "Show Original".
-          isShowingTranslation: this.translatedMarkdownOverrides.has(
-            sourceUri.toString(),
-          ),
-          // Localize the webview UI (context menu, footer, etc.)
-          // following the VS Code display language; unknown locales
-          // fall back to English inside crossnote. Passed via spread
-          // because `locale` requires crossnote >= 0.9.32 — against
-          // 0.9.31 the extra property is ignored at runtime, but a
-          // plain property would fail object-literal excess-property
-          // checks against its older typings.
-          ...{ locale: vscode.env.language },
-        },
-        contentSecurityPolicy: buildPreviewCSP(previewPanel),
-        vscodePreviewPanel: previewPanel,
-        isVSCodeWebExtension: isVSCodeWebExtension(),
-        // In the web extension, this.filePath is just the path component of a
-        // virtual URI (e.g. '/LICENSE.md'), so the default <base> tag would be
-        // malformed. The React webview already appends the correct <base> tag at
-        // runtime using the full sourceUri, so we can safely omit it here.
-        // For the native extension the default base tag is harmless, but we keep
-        // consistent behaviour and let React own it in both cases.
-        head,
-      });
-
-      // If a newer initPreview call has taken over this panel, or the panel was
-      // disposed, or (in single-preview mode) this URI is no longer the target,
-      // discard this stale result.
-      if (
-        this.latestInitRequestByPreview.get(previewPanel) !== initRequestId ||
-        !this.initializedPreviews.has(previewPanel) ||
-        !this.isSinglePreviewTarget(sourceUri)
-      ) {
-        return;
-      }
-      previewPanel.webview.html = html;
-      // Publish the source only after this render won the request race and its
-      // HTML was installed. Until then, the panel still represents its prior
-      // source (or has no reliably rendered source yet).
-      this.previewToSourceUriMap.set(previewPanel, sourceUri);
-    } catch (error) {
-      vscode.window.showErrorMessage(String(error));
-      console.error(error);
-    }
+      document,
+      cursorLine,
+      inputStringOverride,
+    });
   }
 
   /**
    * Close all previews.
    */
   public closeAllPreviews(previewMode: PreviewMode) {
+    const preservedSidePanelEntries: Array<{
+      view: vscode.WebviewView;
+      document: vscode.TextDocument;
+      sourceUri: vscode.Uri;
+    }> = [];
+    for (const view of this.sidePanelViews) {
+      const document = this.previewToDocumentMap.get(view);
+      const sourceUri = this.previewToSourceUriMap.get(view);
+      if (document && sourceUri) {
+        preservedSidePanelEntries.push({ view, document, sourceUri });
+      }
+    }
+
     if (previewMode === PreviewMode.SinglePreview) {
       if (PreviewProvider.singlePreviewPanel) {
         PreviewProvider.singlePreviewPanel.dispose();
@@ -899,7 +1028,11 @@ export class PreviewProvider {
       for (const [sourceUriString] of this.previewMaps) {
         const previews = this.previewMaps.get(sourceUriString);
         if (previews) {
-          previews.forEach((preview) => preview.dispose());
+          previews.forEach((preview) => {
+            if (isWebviewPanel(preview)) {
+              preview.dispose();
+            }
+          });
         }
       }
     }
@@ -908,6 +1041,7 @@ export class PreviewProvider {
     this.previewToDocumentMap = new Map();
     this.previewToSourceUriMap = new Map();
     this.customEditorPanels = new Set();
+    this.sidePanelViews = new Set();
     // Clear all pending update timeouts
     this.updateTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.updateTimeouts.clear();
@@ -917,6 +1051,16 @@ export class PreviewProvider {
     // this.engineMaps = {};
     PreviewProvider.singlePreviewPanel = null;
     PreviewProvider.singlePreviewPanelSourceUriTarget = null;
+
+    // Re-attach Side Panel views (which are owned by the workbench and not
+    // disposed by previewMode changes) so subsequent refreshes keep working.
+    for (const { view, document, sourceUri } of preservedSidePanelEntries) {
+      this.sidePanelViews.add(view);
+      this.initializedPreviews.add(view);
+      this.addPreviewToMap(sourceUri, view);
+      this.previewToDocumentMap.set(view, document);
+      this.previewToSourceUriMap.set(view, sourceUri);
+    }
   }
 
   public async postMessageToPreview(
@@ -1100,7 +1244,7 @@ export class PreviewProvider {
             useRelativeFilePath: false,
             hideFrontMatter: false,
             triggeredBySave,
-            vscodePreviewPanel: preview,
+            vscodePreviewPanel: asCrossnoteWebviewPanel(preview),
           });
 
           // Discard if a newer render has taken over for this sourceUri or the
@@ -1170,9 +1314,9 @@ export class PreviewProvider {
       return;
     }
 
-    for (const [previewPanel, document] of this.previewToDocumentMap) {
+    for (const [surface, document] of Array.from(this.previewToDocumentMap)) {
       if (
-        !previewPanel ||
+        !surface ||
         !isMarkdownFile(document) ||
         !document.uri ||
         document.uri.fsPath !== sourceUri.fsPath
@@ -1195,19 +1339,28 @@ export class PreviewProvider {
         }
       }
 
-      await this.initPreview({
-        sourceUri,
-        document,
-        inputStringOverride,
-        // Refresh the exact panel found above: in single-preview mode,
-        // omitting the panel would redirect a custom editor's refresh into
-        // the shared single-preview panel.
-        webviewPanel: previewPanel,
-        viewOptions: {
-          viewColumn: previewPanel.viewColumn ?? vscode.ViewColumn.One,
-          preserveFocus: true,
-        },
-      });
+      if (isWebviewPanel(surface)) {
+        await this.initPreview({
+          sourceUri,
+          document,
+          inputStringOverride,
+          // Refresh the exact panel found above: in single-preview mode,
+          // omitting the panel would redirect a custom editor's refresh into
+          // the shared single-preview panel.
+          webviewPanel: surface,
+          viewOptions: {
+            viewColumn: surface.viewColumn ?? vscode.ViewColumn.One,
+            preserveFocus: true,
+          },
+        });
+      } else {
+        await this.initSidePanelPreview({
+          webviewView: surface,
+          sourceUri,
+          document,
+          inputStringOverride,
+        });
+      }
     }
   }
 
@@ -1666,23 +1819,33 @@ export class PreviewProvider {
     document: vscode.TextDocument,
     markdown: string,
   ): Promise<void> {
-    const panels = this.getPreviews(sourceUri);
-    if (!panels || panels.length === 0) {
+    const surfaces = this.getPreviews(sourceUri);
+    if (!surfaces || surfaces.length === 0) {
       return;
     }
-    const previewPanel = panels[0];
-    await this.initPreview({
-      sourceUri,
-      document,
-      inputStringOverride: markdown,
-      // Re-render into the existing panel (a custom editor panel must not be
-      // swapped for the shared single-preview panel here).
-      webviewPanel: previewPanel,
-      viewOptions: {
-        viewColumn: previewPanel.viewColumn ?? vscode.ViewColumn.Active,
-        preserveFocus: true,
-      },
-    });
+    for (const surface of surfaces) {
+      if (isWebviewPanel(surface)) {
+        await this.initPreview({
+          sourceUri,
+          document,
+          inputStringOverride: markdown,
+          // Re-render into the existing panel (a custom editor panel must not be
+          // swapped for the shared single-preview panel here).
+          webviewPanel: surface,
+          viewOptions: {
+            viewColumn: surface.viewColumn ?? vscode.ViewColumn.Active,
+            preserveFocus: true,
+          },
+        });
+      } else {
+        await this.initSidePanelPreview({
+          webviewView: surface,
+          sourceUri,
+          document,
+          inputStringOverride: markdown,
+        });
+      }
+    }
   }
 
   /**
@@ -1726,7 +1889,7 @@ export class PreviewProvider {
           isForPreview: true,
           useRelativeFilePath: false,
           hideFrontMatter: false,
-          vscodePreviewPanel: preview,
+          vscodePreviewPanel: asCrossnoteWebviewPanel(preview),
         });
         // Aborted translation? Stop refreshing.
         if (

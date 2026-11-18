@@ -150,5 +150,15 @@
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:Crossnote sunucusunu başlat",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:Crossnote sunucusunu durdur",
   "markdown-preview-enhanced.crossnoteServePort.description": "\"crossnote sunucusunu başlat\" komutuyla başlatılan crossnote sunucusunun kullandığı port. Meşgulken otomatik olarak artar.",
-  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Bağımsız wiki (HTML) oluştur"
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Bağımsız wiki (HTML) oluştur",
+  "markdown-preview-enhanced.sidePanelContainer.title": "Markdown Önizlemesi",
+  "markdown-preview-enhanced.sidePanelView.name": "Markdown Önizlemesi",
+  "markdown-preview-enhanced.automaticallyShowPreviewInSidePanel.description": "Bir Markdown belgesi açıldığında veya odaklanıldığında yan panelde Markdown önizlemesini otomatik olarak göster ve güncelle.",
+  "markdown-preview-enhanced.openPreviewInSidePanel.title": "MPE:Önizlemeyi yan panelde aç",
+  "markdown-preview-enhanced.toggleSidePanelPreviewLock.title": "MPE:Yan panel önizleme kilidini değiştir",
+  "markdown-preview-enhanced.lockSidePanelPreview.title": "Yan panel önizlemesini kilitle",
+  "markdown-preview-enhanced.unlockSidePanelPreview.title": "Yan panel önizlemesinin kilidini aç",
+  "markdown-preview-enhanced.refreshSidePanelPreview.title": "Yan panel önizlemesini yenile",
+  "markdown-preview-enhanced.openSidePanelSourceInEditor.title": "Kaynak dosyayı düzenleyicide aç",
+  "markdown-preview-enhanced.popOutSidePanelPreviewToEditor.title": "Önizlemeyi düzenleyici sekmesinde aç"
 }

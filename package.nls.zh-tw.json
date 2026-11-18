@@ -150,5 +150,15 @@
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:啟動 Crossnote 伺服器",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:停止 Crossnote 伺服器",
   "markdown-preview-enhanced.crossnoteServePort.description": "「啟動 crossnote 伺服器」命令所啟動的 crossnote 伺服器使用的連接埠（被佔用時自動遞增）。",
-  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:建置單檔 Wiki（HTML）"
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:建置單檔 Wiki（HTML）",
+  "markdown-preview-enhanced.sidePanelContainer.title": "Markdown 預覽",
+  "markdown-preview-enhanced.sidePanelView.name": "Markdown 預覽",
+  "markdown-preview-enhanced.automaticallyShowPreviewInSidePanel.description": "開啟或聚焦 Markdown 文件時，在側邊面板中自動顯示並更新 Markdown 預覽。",
+  "markdown-preview-enhanced.openPreviewInSidePanel.title": "MPE:在側邊面板中開啟預覽",
+  "markdown-preview-enhanced.toggleSidePanelPreviewLock.title": "MPE:切換側邊面板預覽鎖定",
+  "markdown-preview-enhanced.lockSidePanelPreview.title": "鎖定側邊面板預覽",
+  "markdown-preview-enhanced.unlockSidePanelPreview.title": "解鎖側邊面板預覽",
+  "markdown-preview-enhanced.refreshSidePanelPreview.title": "重新整理側邊面板預覽",
+  "markdown-preview-enhanced.openSidePanelSourceInEditor.title": "在編輯器中開啟來源檔案",
+  "markdown-preview-enhanced.popOutSidePanelPreviewToEditor.title": "在編輯器分頁中開啟預覽"
 }

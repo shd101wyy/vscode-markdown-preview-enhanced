@@ -150,5 +150,15 @@
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:Iniciar el servidor Crossnote",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:Detener el servidor Crossnote",
   "markdown-preview-enhanced.crossnoteServePort.description": "Puerto que usa el servidor crossnote iniciado con el comando Iniciar el servidor crossnote. Se incrementa automáticamente si está ocupado.",
-  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Crear wiki autónoma (HTML)"
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Crear wiki autónoma (HTML)",
+  "markdown-preview-enhanced.sidePanelContainer.title": "Vista previa Markdown",
+  "markdown-preview-enhanced.sidePanelView.name": "Vista previa Markdown",
+  "markdown-preview-enhanced.automaticallyShowPreviewInSidePanel.description": "Mostrar y actualizar automáticamente la vista previa de Markdown en el panel lateral al abrir o enfocar un documento Markdown.",
+  "markdown-preview-enhanced.openPreviewInSidePanel.title": "MPE:Abrir vista previa en el panel lateral",
+  "markdown-preview-enhanced.toggleSidePanelPreviewLock.title": "MPE:Alternar bloqueo de vista previa en panel lateral",
+  "markdown-preview-enhanced.lockSidePanelPreview.title": "Bloquear vista previa del panel lateral",
+  "markdown-preview-enhanced.unlockSidePanelPreview.title": "Desbloquear vista previa del panel lateral",
+  "markdown-preview-enhanced.refreshSidePanelPreview.title": "Actualizar vista previa del panel lateral",
+  "markdown-preview-enhanced.openSidePanelSourceInEditor.title": "Abrir archivo fuente en el editor",
+  "markdown-preview-enhanced.popOutSidePanelPreviewToEditor.title": "Abrir vista previa en pestaña del editor"
 }

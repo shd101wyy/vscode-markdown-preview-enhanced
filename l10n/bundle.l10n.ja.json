@@ -61,5 +61,9 @@
   "Failed to start the crossnote server: {message}": "crossnote サーバーの起動に失敗しました：{message}",
   "The crossnote server exited early (code {code}).{detail}": "crossnote サーバーが早期に終了しました（コード {code}）。{detail}",
   "crossnote server stopped": "crossnote サーバーが停止しました",
-  "The crossnote server is not running.": "crossnote サーバーは実行されていません。"
+  "The crossnote server is not running.": "crossnote サーバーは実行されていません。",
+  "Side Panel preview is locked to the current file.": "サイドパネルプレビューは現在のファイルにロックされています。",
+  "Side Panel preview is unlocked and will follow the active editor.": "サイドパネルプレビューのロックが解除され、アクティブなエディターに追従します。",
+  "No Markdown preview open": "開いている Markdown プレビューはありません",
+  "Open a Markdown document or run \"Open Preview in Side Panel\" to view it here.": "ここに表示するには Markdown ドキュメントを開くか「サイドパネルでプレビューを開く」を実行してください。"
 }
