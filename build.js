@@ -194,12 +194,14 @@ function findInPackage(packageName, resolveWithinPackage) {
     join(__dirname, 'node_modules', '.pnpm'),
     join(__dirname, 'node_modules', 'crossnote', 'node_modules', '.pnpm'),
   ];
+  // pnpm encodes a scoped package's directory as `@scope+name@version`.
+  const storePrefix = `${packageName.replace('/', '+')}@`;
   for (const pnpmStore of pnpmStores) {
     if (!existsSync(pnpmStore)) {
       continue;
     }
     const packageDirs = readdirSync(pnpmStore).filter((d) =>
-      d.startsWith(`${packageName}@`),
+      d.startsWith(storePrefix),
     );
     for (const d of packageDirs) {
       const candidate = resolveWithinPackage(
@@ -262,20 +264,25 @@ function copyXhrSyncWorker() {
 }
 
 function copyMarkdownYoWasm() {
-  const { found: wasmSrc, tried } = findInPackage('markdown_yo', (pkgDir) =>
-    join(pkgDir, 'markdown_yo_wasm_api.wasm'),
+  // The package was renamed markdown_yo → @shd101wyy/markdown-yo, and the
+  // WASM file with it. The emscripten glue bundled into out/native resolves
+  // `__dirname + 'markdown-yo-wasm-api.wasm'`, so the file must sit next to
+  // the bundle under that name.
+  const { found: wasmSrc, tried } = findInPackage(
+    '@shd101wyy/markdown-yo',
+    (pkgDir) => join(pkgDir, 'markdown-yo-wasm-api.wasm'),
   );
 
   if (!wasmSrc) {
     console.warn(
-      `Could not find markdown_yo WASM, skipping copy. Tried:\n${tried.join('\n')}`,
+      `Could not find markdown-yo WASM, skipping copy. Tried:\n${tried.join('\n')}`,
     );
     return;
   }
   const outNativeDir = join(__dirname, 'out', 'native');
   mkdirSync(outNativeDir, { recursive: true });
-  cpSync(wasmSrc, join(outNativeDir, 'markdown_yo_wasm_api.wasm'));
-  console.log('Copied markdown_yo WASM to out/native/');
+  cpSync(wasmSrc, join(outNativeDir, 'markdown-yo-wasm-api.wasm'));
+  console.log('Copied markdown-yo WASM to out/native/');
 }
 
 async function main() {
