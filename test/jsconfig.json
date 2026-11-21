@@ -1,0 +1,14 @@
+{
+  // Editor support for the plain-JS mocha suites (IntelliSense for
+  // assert/mocha/node APIs). The tests deliberately stay JavaScript: each
+  // suite esbuild-bundles the TypeScript source against the vscode and
+  // crossnote stubs at runtime and requires the fresh bundle, so the code
+  // under test is untyped either way and a runner-level transpile step
+  // would add nothing. checkJs stays off — the root tsconfig's tsc gate
+  // covers src/.
+  "compilerOptions": {
+    "checkJs": false,
+    "types": ["node", "mocha"]
+  },
+  "include": ["*.js"]
+}
