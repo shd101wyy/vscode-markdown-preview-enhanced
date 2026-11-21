@@ -194,12 +194,14 @@ function findInPackage(packageName, resolveWithinPackage) {
     join(__dirname, 'node_modules', '.pnpm'),
     join(__dirname, 'node_modules', 'crossnote', 'node_modules', '.pnpm'),
   ];
+  // pnpm encodes a scoped package's directory as `@scope+name@version`.
+  const storePrefix = `${packageName.replace('/', '+')}@`;
   for (const pnpmStore of pnpmStores) {
     if (!existsSync(pnpmStore)) {
       continue;
     }
     const packageDirs = readdirSync(pnpmStore).filter((d) =>
-      d.startsWith(`${packageName}@`),
+      d.startsWith(storePrefix),
     );
     for (const d of packageDirs) {
       const candidate = resolveWithinPackage(
@@ -250,10 +252,13 @@ function copyXhrSyncWorker() {
   );
 
   if (!workerSrc) {
-    console.warn(
-      `Could not find jsdom xhr-sync-worker.js, skipping copy. Tried:\n${tried.join('\n')}`,
+    // jsdom require.resolve()s this file at module load — the bundled
+    // extension needs it the way it needs its own bundle. A missing file
+    // means node_modules changed shape, which a pinned lockfile never
+    // does silently: fail the build instead of shipping a broken tikz.
+    throw new Error(
+      `jsdom xhr-sync-worker.js not found. Tried:\n${tried.join('\n')}`,
     );
-    return;
   }
   const outNativeDir = join(__dirname, 'out', 'native');
   mkdirSync(outNativeDir, { recursive: true });
@@ -262,20 +267,27 @@ function copyXhrSyncWorker() {
 }
 
 function copyMarkdownYoWasm() {
-  const { found: wasmSrc, tried } = findInPackage('markdown_yo', (pkgDir) =>
-    join(pkgDir, 'markdown_yo_wasm_api.wasm'),
+  // The package was renamed markdown_yo → @shd101wyy/markdown-yo, and the
+  // WASM file with it. The emscripten glue bundled into out/native resolves
+  // `__dirname + 'markdown-yo-wasm-api.wasm'`, so the file must sit next to
+  // the bundle under that name.
+  const { found: wasmSrc, tried } = findInPackage(
+    '@shd101wyy/markdown-yo',
+    (pkgDir) => join(pkgDir, 'markdown-yo-wasm-api.wasm'),
   );
 
   if (!wasmSrc) {
-    console.warn(
-      `Could not find markdown_yo WASM, skipping copy. Tried:\n${tried.join('\n')}`,
-    );
-    return;
+    // The emscripten glue in the bundle loads this wasm from __dirname, so
+    // shipping without it means markdownParser: 'markdown-yo' silently runs
+    // on its markdown-it fallback. crossnote is pinned exact, so a missing
+    // file is always a build bug — fail instead of warn-and-skip (that is
+    // how the rename to @shd101wyy/markdown-yo shipped without the WASM).
+    throw new Error(`markdown-yo WASM not found. Tried:\n${tried.join('\n')}`);
   }
   const outNativeDir = join(__dirname, 'out', 'native');
   mkdirSync(outNativeDir, { recursive: true });
-  cpSync(wasmSrc, join(outNativeDir, 'markdown_yo_wasm_api.wasm'));
-  console.log('Copied markdown_yo WASM to out/native/');
+  cpSync(wasmSrc, join(outNativeDir, 'markdown-yo-wasm-api.wasm'));
+  console.log('Copied markdown-yo WASM to out/native/');
 }
 
 async function main() {
