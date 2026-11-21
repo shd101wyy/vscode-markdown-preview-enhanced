@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.41] - 2026-11-21
+
 ### Features
 
 - **Markdown preview in the Secondary Side Bar, with optional auto-open** — adds a docked Side Panel preview (`viewsContainers.secondarySidebar` on VS Code >= 1.106, with an Activity Bar fallback container on VS Code 1.82–1.105) opened via `Markdown Preview Enhanced: Open Preview in Side Panel` in the Command Palette, editor title bar, editor context menu, and Explorer context menu. Enabling the new `markdown-preview-enhanced.automaticallyShowPreviewInSidePanel` setting (off by default) automatically opens and updates the Side Panel preview with `preserveFocus: true` when opening or focusing a Markdown file (including an already-active editor at activation), honours `disableAutoPreviewForUriSchemes` and `disableAutoPreviewForFilePatterns`, and suppresses opening a duplicate split-editor preview tab when `automaticallyShowPreviewOfMarkdownBeingEdited` is also enabled. Switching to non-Markdown files keeps the last preview visible, closing the source tab switches to an active Markdown editor or clears to an empty-state placeholder unless locked, and Side Panel title actions provide **Lock**/**Unlock**, **Refresh**, **Open Source File**, and **Open Preview in Editor Tab** across all ten localized bundles ([#2476](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2476) by @wahabtobibello).
