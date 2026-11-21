@@ -19,8 +19,12 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
     const result = await esbuild.build({
       stdin: {
         contents:
+          "import * as vscode from 'vscode';" +
           "export { openWikilinkTarget } from './src/wikilink-document-link-provider';" +
-          "export { wikilinkTargetHalf } from './src/wikilink-helpers';",
+          "export { wikilinkTargetHalf } from './src/wikilink-helpers';" +
+          "export { WikilinkHoverProvider } from './src/wikilink-hover-provider';" +
+          'export const stubUri = (p) => vscode.Uri.file(p);' +
+          'export const stubPosition = (line, character) => new vscode.Position(line, character);',
         resolveDir: path.join(__dirname, '..'),
         loader: 'ts',
       },
@@ -51,6 +55,7 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
     globalThis.__vscodeStubOpenTextDocument = undefined;
     globalThis.__vscodeStubShowTextDocument = undefined;
     globalThis.__crossnoteStubFindFragmentTargetLine = undefined;
+    globalThis.__vscodeStubFsReadFile = undefined;
   });
 
   // A real crossnote Notebook supplies processWikilink/resolveWikilink,
@@ -77,6 +82,9 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
     assert.strictEqual(bundle.wikilinkTargetHalf('Note', false), 'Note');
     assert.strictEqual(bundle.wikilinkTargetHalf('Note|Alias', false), 'Note');
     assert.strictEqual(bundle.wikilinkTargetHalf('Alias|Note', true), 'Note');
+    // Multi-pipe bodies keep processWikilink's splits[0]/splits[1] picks.
+    assert.strictEqual(bundle.wikilinkTargetHalf('a|b|c', false), 'a');
+    assert.strictEqual(bundle.wikilinkTargetHalf('a|b|c', true), 'b');
     // Halves are trimmed either way.
     assert.strictEqual(
       bundle.wikilinkTargetHalf(' Note | Alias ', false),
@@ -160,5 +168,63 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
     assert.deepStrictEqual(openedUris, [
       `file://${path.join(notebookDir, 'target-note.md')}`,
     ]);
+  });
+
+  test('hover previews the target half on GitHub style, not the display (#2479)', async function () {
+    const notebook = await makeNotebook({
+      useGitHubStylePipedLink: true,
+    });
+    const manager = { getNotebook: async () => notebook };
+
+    const readUris = [];
+    globalThis.__vscodeStubFsReadFile = async (uri) => {
+      readUris.push(uri.toString());
+      return new TextEncoder().encode('# Real target\n\nTarget note body.');
+    };
+
+    const provider = new bundle.WikilinkHoverProvider(manager);
+    const document = {
+      uri: bundle.stubUri(path.join(notebookDir, 'source.md')),
+      lineAt: () => ({ text: 'see [[Display Text|Target Note]] here' }),
+    };
+    const hover = await provider.provideHover(
+      document,
+      bundle.stubPosition(0, 4),
+    );
+
+    // The hover read and previewed the *target* note's content.
+    assert.deepStrictEqual(readUris, [
+      `file://${path.join(notebookDir, 'Target Note.md')}`,
+    ]);
+    assert.ok(hover, 'expected a hover');
+    assert.match(hover.contents.value, /Real target/);
+    assert.match(hover.contents.value, /Target note body\./);
+  });
+
+  test('hover previews the first half on the default style', async function () {
+    const notebook = await makeNotebook({});
+    const manager = { getNotebook: async () => notebook };
+
+    const readUris = [];
+    globalThis.__vscodeStubFsReadFile = async (uri) => {
+      readUris.push(uri.toString());
+      return new TextEncoder().encode('Target note body.');
+    };
+
+    const provider = new bundle.WikilinkHoverProvider(manager);
+    const document = {
+      uri: bundle.stubUri(path.join(notebookDir, 'source.md')),
+      lineAt: () => ({ text: 'see [[Target Note|Display Text]] here' }),
+    };
+    const hover = await provider.provideHover(
+      document,
+      bundle.stubPosition(0, 4),
+    );
+
+    assert.deepStrictEqual(readUris, [
+      `file://${path.join(notebookDir, 'Target Note.md')}`,
+    ]);
+    assert.ok(hover, 'expected a hover');
+    assert.match(hover.contents.value, /Target note body\./);
   });
 });
