@@ -1,7 +1,13 @@
-import { extractBlockIds, findFragmentTargetLine, matter } from 'crossnote';
+import {
+  extractBlockIds,
+  findFragmentTargetLine,
+  matter,
+  type Notebook,
+} from 'crossnote';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import NotebooksManager from './notebooks-manager';
+import { wikilinkTargetHalf } from './wikilink-helpers';
 
 /**
  * Editor-side hover preview for `[[Note]]`, `[[Note#Heading]]`,
@@ -62,22 +68,29 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
 
     const body = bodyMatch[1];
     // body shape: "Note", "Note#Heading", "Note^abc", "Note#Heading^abc",
-    //             "Note|alias", or any of the above with an alias
-    const beforePipe = body.split('|')[0].trim();
-    if (!beforePipe) return undefined;
+    //             "Note|alias", or any of the above with an alias.
+    // Which half of a pipe is the target depends on the notebook's
+    // `useGitHubStylePipedLink` config (#2479) — resolve the notebook
+    // up front (resolveNoteUri reuses it too).
+    const notebook = await this.getNotebookIfAvailable(document.uri);
+    const target = wikilinkTargetHalf(
+      body,
+      notebook?.config.useGitHubStylePipedLink ?? false,
+    );
+    if (!target) return undefined;
 
     // Pick out target / heading / block parts
-    const blockIdx = beforePipe.indexOf('^');
-    const hashIdx = beforePipe.indexOf('#');
-    let noteName = beforePipe;
+    const blockIdx = target.indexOf('^');
+    const hashIdx = target.indexOf('#');
+    let noteName = target;
     let fragment = '';
     if (blockIdx !== -1 || hashIdx !== -1) {
       const splitAt =
         hashIdx !== -1 && (blockIdx === -1 || hashIdx < blockIdx)
           ? hashIdx
           : blockIdx;
-      noteName = beforePipe.slice(0, splitAt).trim();
-      fragment = beforePipe.slice(splitAt + (splitAt === hashIdx ? 1 : 0));
+      noteName = target.slice(0, splitAt).trim();
+      fragment = target.slice(splitAt + (splitAt === hashIdx ? 1 : 0));
       // Keep ^ when it's the only marker so findFragmentTargetLine
       // can match.
       if (splitAt === blockIdx && fragment[0] !== '^') {
@@ -86,7 +99,7 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
     }
     if (!noteName) return undefined;
 
-    const targetUri = await this.resolveNoteUri(document, noteName);
+    const targetUri = await this.resolveNoteUri(document, noteName, notebook);
     if (!targetUri) {
       return new vscode.Hover(
         new vscode.MarkdownString(`*Note not found:* \`${noteName}\``),
@@ -211,22 +224,31 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
     return out.join('\n');
   }
 
+  /**
+   * Resolve the notebook for a document, or `undefined` when there is
+   * none (untitled doc, scratch buffer, test scaffold).
+   */
+  private async getNotebookIfAvailable(
+    uri: vscode.Uri,
+  ): Promise<Notebook | undefined> {
+    if (!this.notebooksManager) {
+      return undefined;
+    }
+    try {
+      return await this.notebooksManager.getNotebook(uri);
+    } catch {
+      return undefined;
+    }
+  }
+
   private async resolveNoteUri(
     document: vscode.TextDocument,
     noteName: string,
+    notebook?: Notebook,
   ): Promise<vscode.Uri | undefined> {
-    // Resolve the notebook (if any) up front so both the primary
-    // resolver path and the typo-recovery fallback can reuse its
-    // configured `wikiLinkTargetFileExtension`.
-    let notebook:
-      Awaited<ReturnType<NotebooksManager['getNotebook']>> | undefined;
-    if (this.notebooksManager) {
-      try {
-        notebook = await this.notebooksManager.getNotebook(document.uri);
-      } catch {
-        // No notebook for this URI (untitled doc, scratch buffer).
-      }
-    }
+    // `notebook` is the notebook already resolved by `provideHover`;
+    // its configured `wikiLinkTargetFileExtension` also feeds the
+    // typo-recovery fallback below.
     const defaultExt = notebook?.config.wikiLinkTargetFileExtension || '.md';
     const ext = path.extname(noteName);
     const fileName = ext ? noteName : `${noteName}${defaultExt}`;

@@ -221,7 +221,17 @@ const VSCODE_STUB_SOURCE = `
       registerTextDocumentContentProvider: () => disposable,
       createFileSystemWatcher: () => ({ onDidCreate: event, onDidChange: event, onDidDelete: event, dispose: noop }),
       findFiles: async () => [],
-      fs: { readFile: async () => new Uint8Array(), writeFile: async () => {}, stat: async () => ({}) },
+      fs: {
+        readFile: async (uri) =>
+          globalThis.__vscodeStubFsReadFile
+            ? globalThis.__vscodeStubFsReadFile(uri)
+            : new Uint8Array(),
+        writeFile: async () => {},
+        stat: async (uri) =>
+          globalThis.__vscodeStubFsStat
+            ? globalThis.__vscodeStubFsStat(uri)
+            : ({}),
+      },
       onDidChangeConfiguration: (handler) => {
         recorder.configurationChangeHandlers.push(handler);
         return disposable;
@@ -279,6 +289,11 @@ const VSCODE_STUB_SOURCE = `
       }
     },
     DocumentLink: class { constructor(range, target) { this.range = range; this.target = target; } },
+    Hover: class { constructor(contents, range) { this.contents = contents; this.range = range; } },
+    MarkdownString: class {
+      constructor(value = '') { this.value = value; }
+      appendMarkdown(text) { this.value += text; return this; }
+    },
     TextEditorRevealType: { Default: 0, InCenter: 1, InCenterIfOutsideViewport: 2, AtTop: 3 },
     EventEmitter: class { constructor() { this.event = event; } fire() {} dispose() {} },
     Disposable: class { static from() { return disposable; } dispose() {} },
@@ -379,6 +394,8 @@ globalThis.__vscodeStubVisibleTextEditors = [];
 globalThis.__vscodeStubTabGroups = [];
 globalThis.__vscodeStubOpenTextDocument = undefined;
 globalThis.__vscodeStubExecuteCommand = undefined;
+globalThis.__vscodeStubFsReadFile = undefined;
+globalThis.__vscodeStubFsStat = undefined;
 globalThis.__vscodeStubVersion = '1.107.0';
 globalThis.__crossnoteStubEngine = () => ({
   generateHTMLTemplateForPreview: async () => '<html></html>',
