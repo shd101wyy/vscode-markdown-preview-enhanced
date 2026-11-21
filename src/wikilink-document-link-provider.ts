@@ -200,9 +200,6 @@ async function resolveWikilinkUri(
   noteName: string,
   notebooksManager?: NotebooksManager,
 ): Promise<vscode.Uri | undefined> {
-  // Resolve the notebook (if any) up front so both the primary
-  // resolver path and the legacy fallback use the same configured
-  // `wikiLinkTargetFileExtension`.
   let notebook:
     Awaited<ReturnType<NotebooksManager['getNotebook']>> | undefined;
   if (notebooksManager) {
@@ -212,11 +209,15 @@ async function resolveWikilinkUri(
       // No notebook for this URI (test scaffold, untitled, etc.).
     }
   }
-  const defaultExt = notebook?.config.wikiLinkTargetFileExtension || '.md';
-  const ext = path.extname(noteName);
-  const fileName = ext ? noteName : `${noteName}${defaultExt}`;
 
   if (notebook) {
+    // Run the note name through the notebook's `processWikilink` — the
+    // same transform the preview renderer applies — so the editor's
+    // ctrl+click creates and opens the same file the preview links to
+    // (#2477).  It applies `wikiLinkTargetFileNameChangeCase` to the
+    // name part, appends the default extension, keeps any directory
+    // prefix, and handles the `0.7.4`-style version edge.
+    const fileName = notebook.processWikilink(noteName).link;
     const rootFsPath = notebook.notebookPath.fsPath;
     const currentRelPath = path.relative(rootFsPath, sourceUri.fsPath);
     // shortest mode searches the note index — ensure it is populated.
@@ -232,6 +233,10 @@ async function resolveWikilinkUri(
     return vscode.Uri.file(path.join(rootFsPath, resolvedRel));
   }
 
+  // Legacy fallback (no notebook): plain note name with a default
+  // `.md` extension — no case transform to apply without config.
+  const ext = path.extname(noteName);
+  const fileName = ext ? noteName : `${noteName}.md`;
   const sameDir = vscode.Uri.joinPath(
     vscode.Uri.parse(path.dirname(sourceUri.toString(true)) + '/'),
     fileName,
