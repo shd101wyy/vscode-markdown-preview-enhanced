@@ -36,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Checkbox clicks can only edit markdown files** — the click handler's open-document fallback ran for any URI the webview named; it now accepts only the configured markdown extensions, the same allowlist the updateMarkdown write path enforces.
 - **The editor-side wikilink tests run green on Windows** — the test scaffold's `Uri` stub parsed and stringified Windows drive paths differently from `vscode-uri` (a hand-built `file://C:\…` put the whole drive path in the URI authority), which made the new wikilink, file-name-case and image-paste suites fail locally on Windows while staying green on the Linux CI. The stub now mirrors `vscode-uri`'s drive-path behavior on the load-bearing observables (`file()` shape and native `fsPath`) and the tests build URIs the way production does (`Uri.file(…).toString()`).
 
+### Improvements
+
+- **The TypeScript source is type-checked in CI again** — nothing in the pipeline ran `tsc`: `check:all` was ESLint (not type-aware) + Prettier, and esbuild transpiles without checking, so the `strict: true` tsconfig was never enforced (crossnote has gated on `tsc` all along). A new `check:tsc` (`tsc --noEmit`) joins `check:all`, and the one error it surfaced — `crossnote/cli` is declared only through crossnote's `exports` map, which classic Node resolution does not read — is fixed with a `paths` mapping to the declaration the map names. The mocha suites stay JavaScript on purpose (each bundles the TS source against the stubs and requires the fresh bundle, so the code under test is untyped either way); a `test/jsconfig.json` gives them editor IntelliSense for the mocha/node/assert APIs.
+
 ### Picked up from crossnote 0.9.43 and 0.9.44
 
 The extension now pins crossnote 0.9.44.

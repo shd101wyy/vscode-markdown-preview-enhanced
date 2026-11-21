@@ -15,7 +15,17 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "noImplicitAny": true,
-    "strict": true
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      // `crossnote/cli` is declared only through the package's `exports`
+      // map, which this config's classic Node resolution does not read
+      // (TS2307). Point the checker at the same declaration the map
+      // names; esbuild resolves the real module for the bundles.
+      "crossnote/cli": [
+        "node_modules/crossnote/out/types/src/cli/index.d.ts"
+      ]
+    }
   },
   "include": [
     "src/**/*",
