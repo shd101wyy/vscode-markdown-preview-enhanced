@@ -150,5 +150,15 @@
   "markdown-preview-enhanced.startCrossnoteServer.title": "Markdown Preview Enhanced: Start Crossnote Server",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "Markdown Preview Enhanced: Stop Crossnote Server",
   "markdown-preview-enhanced.crossnoteServePort.description": "Port used by the crossnote server started via the Start crossnote Server command. Auto-increments when busy.",
-  "markdown-preview-enhanced.buildStandaloneWiki.title": "Markdown Preview Enhanced: Build standalone Wiki (HTML)"
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "Markdown Preview Enhanced: Build standalone Wiki (HTML)",
+  "markdown-preview-enhanced.sidePanelContainer.title": "Markdown Preview",
+  "markdown-preview-enhanced.sidePanelView.name": "Markdown Preview",
+  "markdown-preview-enhanced.automaticallyShowPreviewInSidePanel.description": "Automatically show and update the Markdown preview in the Side Panel when a Markdown document is opened or focused.",
+  "markdown-preview-enhanced.openPreviewInSidePanel.title": "Markdown Preview Enhanced: Open Preview in Side Panel",
+  "markdown-preview-enhanced.toggleSidePanelPreviewLock.title": "Markdown Preview Enhanced: Toggle Side Panel Preview Lock",
+  "markdown-preview-enhanced.lockSidePanelPreview.title": "Lock Side Panel Preview",
+  "markdown-preview-enhanced.unlockSidePanelPreview.title": "Unlock Side Panel Preview",
+  "markdown-preview-enhanced.refreshSidePanelPreview.title": "Refresh Side Panel Preview",
+  "markdown-preview-enhanced.openSidePanelSourceInEditor.title": "Open Source File in Editor",
+  "markdown-preview-enhanced.popOutSidePanelPreviewToEditor.title": "Open Preview in Editor Tab"
 }

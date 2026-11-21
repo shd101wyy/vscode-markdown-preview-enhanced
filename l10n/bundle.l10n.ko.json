@@ -61,5 +61,9 @@
   "Failed to start the crossnote server: {message}": "crossnote 서버 시작 실패: {message}",
   "The crossnote server exited early (code {code}).{detail}": "crossnote 서버가 조기에 종료되었습니다(코드 {code}). {detail}",
   "crossnote server stopped": "crossnote 서버가 중지되었습니다",
-  "The crossnote server is not running.": "crossnote 서버가 실행 중이 아닙니다."
+  "The crossnote server is not running.": "crossnote 서버가 실행 중이 아닙니다.",
+  "Side Panel preview is locked to the current file.": "측면 패널 미리보기가 현재 파일로 고정되었습니다.",
+  "Side Panel preview is unlocked and will follow the active editor.": "측면 패널 미리보기 고정이 해제되어 활성 편집기를 따라갑니다.",
+  "No Markdown preview open": "열려 있는 Markdown 미리보기가 없습니다",
+  "Open a Markdown document or run \"Open Preview in Side Panel\" to view it here.": "여기에서 보려면 Markdown 문서를 열거나 \"측면 패널에서 미리보기 열기\"를 실행하세요."
 }

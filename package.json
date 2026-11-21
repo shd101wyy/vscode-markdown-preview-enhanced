@@ -38,7 +38,7 @@
     "run-in-browser:watch": "node build.js --web-dev && concurrently \"vscode-test-web --browser none --extensionDevelopmentPath=. ${SERVE_DIR:-.}\" \"npx http-server ./crossnote -p 6789 --cors\" \"node build.js --watch\"",
     "run-in-vscode-dev": "npx serve --cors -l 5000 --ssl-cert $HOME/certs/localhost.pem --ssl-key $HOME/certs/localhost-key.pem",
     "test": "pnpm test:unit",
-    "test:unit": "mocha --ui tdd --reporter spec test/ai-translation-cache.test.js test/block-id-helpers.test.js test/crossnote-serve-output.test.js test/current-preview-source.test.js test/custom-editor-options.test.js test/custom-editor-single-preview.test.js test/editor-associations.test.js test/editor-screen-rows.test.js test/filesystem-root-warning.test.js test/find-fragment-target-line.test.js test/image-helper.test.js test/l10n-bundles.test.js test/line-fragment.test.js test/native-runtime-compat.test.js test/preview-source-integration.test.js test/rank-by-closeness.test.js test/same-file-wikilink.test.js test/task-checkbox.test.js test/trusted-script-roots.test.js",
+    "test:unit": "mocha --ui tdd --reporter spec test/ai-translation-cache.test.js test/block-id-helpers.test.js test/crossnote-serve-output.test.js test/current-preview-source.test.js test/custom-editor-options.test.js test/custom-editor-single-preview.test.js test/editor-associations.test.js test/editor-screen-rows.test.js test/filesystem-root-warning.test.js test/find-fragment-target-line.test.js test/image-helper.test.js test/l10n-bundles.test.js test/line-fragment.test.js test/native-runtime-compat.test.js test/preview-source-integration.test.js test/rank-by-closeness.test.js test/same-file-wikilink.test.js test/side-panel-preview.test.js test/task-checkbox.test.js test/trusted-script-roots.test.js",
     "vscode:prepublish": "pnpm install --frozen-lockfile && pnpm build",
     "watch": "gulp copy-files && gulp clean-out && node build.js --watch"
   },
@@ -205,6 +205,43 @@
         "command": "markdown-preview-enhanced.buildStandaloneWiki",
         "title": "%markdown-preview-enhanced.buildStandaloneWiki.title%",
         "enablement": "!isWeb"
+      },
+      {
+        "command": "markdown-preview-enhanced.openPreviewInSidePanel",
+        "title": "%markdown-preview-enhanced.openPreviewInSidePanel.title%",
+        "icon": {
+          "light": "./media/side-panel-preview-light.svg",
+          "dark": "./media/side-panel-preview-dark.svg"
+        }
+      },
+      {
+        "command": "markdown-preview-enhanced.toggleSidePanelPreviewLock",
+        "title": "%markdown-preview-enhanced.toggleSidePanelPreviewLock.title%"
+      },
+      {
+        "command": "markdown-preview-enhanced.lockSidePanelPreview",
+        "title": "%markdown-preview-enhanced.lockSidePanelPreview.title%",
+        "icon": "$(unlock)"
+      },
+      {
+        "command": "markdown-preview-enhanced.unlockSidePanelPreview",
+        "title": "%markdown-preview-enhanced.unlockSidePanelPreview.title%",
+        "icon": "$(lock)"
+      },
+      {
+        "command": "markdown-preview-enhanced.refreshSidePanelPreview",
+        "title": "%markdown-preview-enhanced.refreshSidePanelPreview.title%",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "markdown-preview-enhanced.openSidePanelSourceInEditor",
+        "title": "%markdown-preview-enhanced.openSidePanelSourceInEditor.title%",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "markdown-preview-enhanced.popOutSidePanelPreviewToEditor",
+        "title": "%markdown-preview-enhanced.popOutSidePanelPreviewToEditor.title%",
+        "icon": "$(link-external)"
       }
     ],
     "configuration": {
@@ -282,6 +319,11 @@
         },
         "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": {
           "description": "%markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited.description%",
+          "default": false,
+          "type": "boolean"
+        },
+        "markdown-preview-enhanced.automaticallyShowPreviewInSidePanel": {
+          "description": "%markdown-preview-enhanced.automaticallyShowPreviewInSidePanel.description%",
           "default": false,
           "type": "boolean"
         },
@@ -949,6 +991,11 @@
     "menus": {
       "explorer/context": [
         {
+          "command": "markdown-preview-enhanced.openPreviewInSidePanel",
+          "when": "resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/ || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
+          "group": "navigation"
+        },
+        {
           "command": "markdown-preview-enhanced.startCrossnoteServer",
           "when": "(resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/ || resourceLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/) && !isWeb",
           "group": "markdown-preview-enhanced"
@@ -960,6 +1007,11 @@
         }
       ],
       "editor/context": [
+        {
+          "command": "markdown-preview-enhanced.openPreviewInSidePanel",
+          "when": "resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/ || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
+          "group": "markdown-preview-enhanced"
+        },
         {
           "command": "markdown-preview-enhanced.openPreviewToTheSide",
           "when": "resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/ || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
@@ -986,6 +1038,96 @@
           "command": "markdown-preview-enhanced.openPreviewToTheSide",
           "when": "resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/ || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
           "group": "navigation"
+        },
+        {
+          "command": "markdown-preview-enhanced.openPreviewInSidePanel",
+          "when": "resourceExtname =~ /\\.(md|markdown|mdown|mkdn|mkd|rmd|qmd|mdx)$/ || editorLangId =~ /^(markdown|quarto|prompt|instructions|chatagent|skill)$/",
+          "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "markdown-preview-enhanced.lockSidePanelPreview",
+          "when": "view =~ /^markdown-preview-enhanced\\.sidePanelView(Legacy)?$/ && !markdown-preview-enhanced.sidePanelLocked",
+          "group": "navigation@1"
+        },
+        {
+          "command": "markdown-preview-enhanced.unlockSidePanelPreview",
+          "when": "view =~ /^markdown-preview-enhanced\\.sidePanelView(Legacy)?$/ && markdown-preview-enhanced.sidePanelLocked",
+          "group": "navigation@1"
+        },
+        {
+          "command": "markdown-preview-enhanced.refreshSidePanelPreview",
+          "when": "view =~ /^markdown-preview-enhanced\\.sidePanelView(Legacy)?$/ && markdown-preview-enhanced.sidePanelHasSource",
+          "group": "navigation@2"
+        },
+        {
+          "command": "markdown-preview-enhanced.openSidePanelSourceInEditor",
+          "when": "view =~ /^markdown-preview-enhanced\\.sidePanelView(Legacy)?$/ && markdown-preview-enhanced.sidePanelHasSource",
+          "group": "navigation@3"
+        },
+        {
+          "command": "markdown-preview-enhanced.popOutSidePanelPreviewToEditor",
+          "when": "view =~ /^markdown-preview-enhanced\\.sidePanelView(Legacy)?$/ && markdown-preview-enhanced.sidePanelHasSource",
+          "group": "navigation@4"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "markdown-preview-enhanced.lockSidePanelPreview",
+          "when": "false"
+        },
+        {
+          "command": "markdown-preview-enhanced.unlockSidePanelPreview",
+          "when": "false"
+        },
+        {
+          "command": "markdown-preview-enhanced.refreshSidePanelPreview",
+          "when": "markdown-preview-enhanced.sidePanelHasSource"
+        },
+        {
+          "command": "markdown-preview-enhanced.openSidePanelSourceInEditor",
+          "when": "markdown-preview-enhanced.sidePanelHasSource"
+        },
+        {
+          "command": "markdown-preview-enhanced.popOutSidePanelPreviewToEditor",
+          "when": "markdown-preview-enhanced.sidePanelHasSource"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "markdown-preview-enhanced-side-panel-legacy",
+          "title": "%markdown-preview-enhanced.sidePanelContainer.title%",
+          "icon": "media/side-panel-preview.svg",
+          "when": "markdown-preview-enhanced.doesNotSupportSecondarySidebar"
+        }
+      ],
+      "secondarySidebar": [
+        {
+          "id": "markdown-preview-enhanced-side-panel",
+          "title": "%markdown-preview-enhanced.sidePanelContainer.title%",
+          "icon": "media/side-panel-preview.svg",
+          "when": "!markdown-preview-enhanced.doesNotSupportSecondarySidebar"
+        }
+      ]
+    },
+    "views": {
+      "markdown-preview-enhanced-side-panel-legacy": [
+        {
+          "type": "webview",
+          "id": "markdown-preview-enhanced.sidePanelViewLegacy",
+          "name": "%markdown-preview-enhanced.sidePanelView.name%",
+          "when": "markdown-preview-enhanced.doesNotSupportSecondarySidebar"
+        }
+      ],
+      "markdown-preview-enhanced-side-panel": [
+        {
+          "type": "webview",
+          "id": "markdown-preview-enhanced.sidePanelView",
+          "name": "%markdown-preview-enhanced.sidePanelView.name%",
+          "when": "!markdown-preview-enhanced.doesNotSupportSecondarySidebar"
         }
       ]
     }
@@ -997,7 +1139,9 @@
     "onLanguage:prompt",
     "onLanguage:instructions",
     "onLanguage:chatagent",
-    "onLanguage:skill"
+    "onLanguage:skill",
+    "onView:markdown-preview-enhanced.sidePanelView",
+    "onView:markdown-preview-enhanced.sidePanelViewLegacy"
   ],
   "husky": {
     "hooks": {

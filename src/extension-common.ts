@@ -9,6 +9,10 @@ import {
   WikilinkDocumentLinkProvider,
   openWikilinkTarget,
 } from './wikilink-document-link-provider';
+import {
+  isExcludedFromAutoPreview,
+  resolveAutoPreviewRouting,
+} from './auto-preview-filter';
 import { PreviewColorScheme, getMPEConfig, updateMPEConfig } from './config';
 import {
   formatPreviewSourcePath,
@@ -33,6 +37,11 @@ import {
   getPreviewUri,
 } from './preview-provider';
 import { GraphViewProvider } from './graph-view-provider';
+import {
+  SIDE_PANEL_LEGACY_VIEW_ID,
+  SIDE_PANEL_VIEW_ID,
+  SidePanelPreviewProvider,
+} from './side-panel-preview-provider';
 import {
   createMissingMarkdownNote,
   getBottomVisibleLine,
@@ -75,6 +84,85 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     );
   }
   PreviewProvider.notebooksManager = notebooksManager;
+
+  function isDocumentExcludedFromAutoPreview(
+    document: vscode.TextDocument,
+  ): boolean {
+    return isExcludedFromAutoPreview({
+      scheme: document.uri.scheme,
+      fileName: document.fileName,
+      exclusionSchemes:
+        getMPEConfig<string[]>('disableAutoPreviewForUriSchemes') ?? [],
+      exclusionPatterns:
+        getMPEConfig<string[]>('disableAutoPreviewForFilePatterns') ?? [],
+    });
+  }
+
+  const sidePanelProvider = new SidePanelPreviewProvider(
+    context,
+    isDocumentExcludedFromAutoPreview,
+  );
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      SIDE_PANEL_VIEW_ID,
+      sidePanelProvider,
+      {
+        webviewOptions: {
+          retainContextWhenHidden: true,
+        },
+      },
+    ),
+    vscode.window.registerWebviewViewProvider(
+      SIDE_PANEL_LEGACY_VIEW_ID,
+      sidePanelProvider,
+      {
+        webviewOptions: {
+          retainContextWhenHidden: true,
+        },
+      },
+    ),
+  );
+
+  async function openPreviewInSidePanel(uri?: vscode.Uri) {
+    const activeEditor = vscode.window.activeTextEditor;
+    const targetUri = uri ?? activeEditor?.document.uri;
+    if (!targetUri) {
+      vscode.window.showWarningMessage(
+        vscode.l10n.t('Open a markdown file first.'),
+      );
+      return;
+    }
+
+    try {
+      const matchesActive =
+        activeEditor?.document.uri.toString() === targetUri.toString();
+      const document = matchesActive
+        ? activeEditor.document
+        : await vscode.workspace.openTextDocument(targetUri);
+      if (!isMarkdownFile(document)) {
+        vscode.window.showWarningMessage(
+          vscode.l10n.t('Open a markdown file first.'),
+        );
+        return;
+      }
+
+      await sidePanelProvider.openPreview({
+        sourceUri: targetUri,
+        document,
+        cursorLine: matchesActive
+          ? getEditorActiveCursorLine(activeEditor)
+          : undefined,
+        preserveFocus: true,
+      });
+    } catch (error) {
+      console.error('[MPE] openPreviewInSidePanel failed:', error);
+      vscode.window.showErrorMessage(
+        vscode.l10n.t('MPE Preview failed: {message}', {
+          message: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    }
+  }
 
   function getCurrentWorkingDirectory() {
     const activeEditor = vscode.window.activeTextEditor;
@@ -1327,12 +1415,16 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((event) => {
-      // console.log(
-      //   'onDidChangeConfiguration: ',
-      //   event.affectsConfiguration('markdown-preview-enhanced'),
-      // );
       if (event.affectsConfiguration('markdown-preview-enhanced')) {
         notebooksManager.updateAllNotebooksConfig();
+        if (
+          event.affectsConfiguration(
+            'markdown-preview-enhanced.automaticallyShowPreviewInSidePanel',
+          ) &&
+          getMPEConfig<boolean>('automaticallyShowPreviewInSidePanel')
+        ) {
+          void autoOpenPreviewForEditor(vscode.window.activeTextEditor);
+        }
       }
     }),
   );
@@ -1455,107 +1547,115 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
   );
 
   /**
-   * Open preview automatically if the `automaticallyShowPreviewOfMarkdownBeingEdited` is on.
+   * Open preview automatically when `automaticallyShowPreviewInSidePanel` or
+   * `automaticallyShowPreviewOfMarkdownBeingEdited` is enabled.
    */
   async function autoOpenPreviewForEditor(
     editor: vscode.TextEditor | undefined,
   ) {
-    // Check if editor and document exist
-    if (editor && editor.document && editor.document.uri) {
-      // Get the list of schemes to exclude from the configuration
-      const exclusionSchemes =
-        getMPEConfig<string[]>('disableAutoPreviewForUriSchemes') ?? [];
+    if (!editor?.document?.uri) {
+      return;
+    }
+    if (!isMarkdownFile(editor.document)) {
+      return;
+    }
 
-      // Check if the current document's scheme should be excluded
-      for (const scheme of exclusionSchemes) {
-        if (editor.document.uri.scheme.startsWith(scheme)) {
-          return; // Don't trigger preview if scheme matches exclusion list
-        }
-      }
+    const excluded = isDocumentExcludedFromAutoPreview(editor.document);
+    const sourceUri = editor.document.uri;
+    const automaticallyShowPreviewInSidePanel =
+      getMPEConfig<boolean>('automaticallyShowPreviewInSidePanel') ?? false;
+    const automaticallyShowPreviewOfMarkdownBeingEdited =
+      getMPEConfig<boolean>('automaticallyShowPreviewOfMarkdownBeingEdited') ??
+      false;
 
-      // Original check: Proceed only if it's considered a Markdown file
-      if (isMarkdownFile(editor.document)) {
-        // Check if the file matches any exclusion pattern
-        const exclusionPatterns = (
-          getMPEConfig<string[]>('disableAutoPreviewForFilePatterns') ?? []
-        ).filter((p): p is string => typeof p === 'string');
-        const fileName = path.basename(editor.document.fileName);
-        const excluded = exclusionPatterns.some((pattern) => {
-          // Simple wildcard matching: convert "*.note.md" to a regex
-          const escaped = pattern
-            .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-            .replace(/\*/g, '.*');
-          return new RegExp(`^${escaped}$`, 'i').test(fileName);
+    const routing = resolveAutoPreviewRouting({
+      excluded,
+      automaticallyShowPreviewInSidePanel,
+      automaticallyShowPreviewOfMarkdownBeingEdited,
+      sidePanelVisible: sidePanelProvider.isVisible(),
+      sidePanelHasSource: sidePanelProvider.hasSource(),
+      sidePanelLocked: sidePanelProvider.isLocked(),
+    });
+
+    if (routing.openOrUpdateSidePanel) {
+      try {
+        await sidePanelProvider.openPreview({
+          sourceUri,
+          document: editor.document,
+          cursorLine: getEditorActiveCursorLine(editor),
+          preserveFocus: true,
         });
+      } catch (error) {
+        console.error('[MPE] autoOpenSidePanel failed:', error);
+      }
+    }
 
-        const sourceUri = editor.document.uri;
-        const automaticallyShowPreviewOfMarkdownBeingEdited =
-          getMPEConfig<boolean>(
-            'automaticallyShowPreviewOfMarkdownBeingEdited',
-          );
-        const previewMode = getPreviewMode();
-        /**
-         * Is using single preview and the preview is on.
-         * When we switched text ed()tor, update preview to that text editor.
-         */
-        const previewProvider = await getPreviewContentProvider(sourceUri);
-        if (previewProvider.isPreviewOn(sourceUri)) {
-          if (
-            previewMode === PreviewMode.SinglePreview &&
-            // Only the shared single-preview panel follows the active
-            // editor. Custom editor panels are pinned to their documents —
-            // when they are the only previews open there is nothing to
-            // switch, and re-initializing them here would reload their
-            // webview on every editor switch (vscode-mpe#2433).
-            previewProvider.hasSinglePreviewPanel() &&
-            !previewProvider.previewHasTheSameSingleSourceUri(sourceUri)
-          ) {
-            // Don't switch a locked preview to a different file
-            if (previewProvider.isSinglePreviewLocked()) {
-              return;
-            }
-            // Skip auto-switching single preview to an excluded file
-            if (!excluded) {
-              await previewProvider.initPreview({
-                sourceUri,
-                document: editor.document,
-                cursorLine: getEditorActiveCursorLine(editor),
-                viewOptions: {
-                  viewColumn:
-                    previewProvider.getPreviews(sourceUri)?.[0]?.viewColumn ??
-                    vscode.ViewColumn.One,
-                  preserveFocus: true,
-                },
-              });
-            }
-          } else if (
-            previewMode === PreviewMode.MultiplePreviews &&
-            automaticallyShowPreviewOfMarkdownBeingEdited
-          ) {
-            // Only surface an already-open preview when the user has opted
-            // into auto-showing previews. Otherwise switching between
-            // markdown files force-reveals the matching preview tab to the
-            // front of its group on every switch, disrupting the editor
-            // layout (the preview is revealed with `preserveFocus`, so the
-            // cursor stays put, but the tab still jumps). Fixes #2286.
-            const previews = previewProvider.getPreviews(sourceUri);
-            if (previews && previews.length > 0) {
-              previews[0].reveal(/*vscode.ViewColumn.Two*/ undefined, true);
-            }
-          }
-          // NOTE: For PreviewMode.PreviewsOnly, we don't need to do anything.
-        } else if (automaticallyShowPreviewOfMarkdownBeingEdited) {
-          // Skip auto-opening preview for an excluded file
-          if (!excluded) {
-            openPreviewToTheSide(sourceUri);
-          }
+    const previewMode = getPreviewMode();
+    const previewProvider = await getPreviewContentProvider(sourceUri);
+    if (previewProvider.isPanelPreviewOn(sourceUri)) {
+      if (
+        previewMode === PreviewMode.SinglePreview &&
+        // Only the shared single-preview panel follows the active
+        // editor. Custom editor panels are pinned to their documents —
+        // when they are the only previews open there is nothing to
+        // switch, and re-initializing them here would reload their
+        // webview on every editor switch (vscode-mpe#2433).
+        previewProvider.hasSinglePreviewPanel() &&
+        !previewProvider.previewHasTheSameSingleSourceUri(sourceUri)
+      ) {
+        // Don't switch a locked preview to a different file
+        if (previewProvider.isSinglePreviewLocked()) {
+          return;
+        }
+        // Skip auto-switching single preview to an excluded file
+        if (!excluded) {
+          await previewProvider.initPreview({
+            sourceUri,
+            document: editor.document,
+            cursorLine: getEditorActiveCursorLine(editor),
+            viewOptions: {
+              viewColumn:
+                previewProvider.getPanelPreviews(sourceUri)?.[0]?.viewColumn ??
+                vscode.ViewColumn.One,
+              preserveFocus: true,
+            },
+          });
+        }
+      } else if (
+        previewMode === PreviewMode.MultiplePreviews &&
+        routing.allowSplitEditorAutoOpen
+      ) {
+        // Only surface an already-open preview when the user has opted
+        // into auto-showing previews without Side Panel auto-preview.
+        const previews = previewProvider.getPanelPreviews(sourceUri);
+        if (previews && previews.length > 0) {
+          previews[0].reveal(/*vscode.ViewColumn.Two*/ undefined, true);
         }
       }
+      // NOTE: For PreviewMode.PreviewsOnly, we don't need to do anything.
+    } else if (routing.allowSplitEditorAutoOpen) {
+      openPreviewToTheSide(sourceUri);
     }
   }
 
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(autoOpenPreviewForEditor),
+  );
+
+  if (vscode.window.tabGroups?.onDidChangeTabs) {
+    context.subscriptions.push(
+      vscode.window.tabGroups.onDidChangeTabs((event) => {
+        if (event.closed.length > 0) {
+          return sidePanelProvider.handleSourcePossiblyClosed();
+        }
+      }),
+    );
+  }
+
+  context.subscriptions.push(
+    vscode.workspace.onDidCloseTextDocument(() => {
+      return sidePanelProvider.handleSourcePossiblyClosed();
+    }),
   );
   // The active editor can already be set before the handler above is
   // registered: when VS Code itself is launched by opening a markdown file
@@ -1616,6 +1716,56 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'markdown-preview-enhanced.togglePreviewLock',
       togglePreviewLock,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.openPreviewInSidePanel',
+      openPreviewInSidePanel,
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.toggleSidePanelPreviewLock',
+      async () => {
+        const locked = await sidePanelProvider.toggleLock();
+        vscode.window.showInformationMessage(
+          locked
+            ? vscode.l10n.t('Side Panel preview is locked to the current file.')
+            : vscode.l10n.t(
+                'Side Panel preview is unlocked and will follow the active editor.',
+              ),
+        );
+      },
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.lockSidePanelPreview',
+      async () => {
+        await sidePanelProvider.setLocked(true);
+      },
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.unlockSidePanelPreview',
+      async () => {
+        await sidePanelProvider.setLocked(false);
+      },
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.refreshSidePanelPreview',
+      async () => {
+        await sidePanelProvider.refresh();
+      },
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.openSidePanelSourceInEditor',
+      async () => {
+        await sidePanelProvider.openSourceInEditor();
+      },
+    ),
+    vscode.commands.registerCommand(
+      'markdown-preview-enhanced.popOutSidePanelPreviewToEditor',
+      async () => {
+        await sidePanelProvider.popOutToEditorTab();
+      },
     ),
   );
 

@@ -61,5 +61,9 @@
   "Failed to start the crossnote server: {message}": "Failed to start the crossnote server: {message}",
   "The crossnote server exited early (code {code}).{detail}": "The crossnote server exited early (code {code}).{detail}",
   "crossnote server stopped": "crossnote server stopped",
-  "The crossnote server is not running.": "The crossnote server is not running."
+  "The crossnote server is not running.": "The crossnote server is not running.",
+  "Side Panel preview is locked to the current file.": "Side Panel preview is locked to the current file.",
+  "Side Panel preview is unlocked and will follow the active editor.": "Side Panel preview is unlocked and will follow the active editor.",
+  "No Markdown preview open": "No Markdown preview open",
+  "Open a Markdown document or run \"Open Preview in Side Panel\" to view it here.": "Open a Markdown document or run \"Open Preview in Side Panel\" to view it here."
 }

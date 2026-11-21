@@ -150,5 +150,15 @@
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:Crossnote-server starten",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:Crossnote-server stoppen",
   "markdown-preview-enhanced.crossnoteServePort.description": "Poort die wordt gebruikt door de crossnote-server die via de opdracht crossnote-server starten is gestart. Wordt automatisch verhoogd wanneer bezet.",
-  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Standalone wiki (HTML) bouwen"
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Standalone wiki (HTML) bouwen",
+  "markdown-preview-enhanced.sidePanelContainer.title": "Markdown-voorbeeld",
+  "markdown-preview-enhanced.sidePanelView.name": "Markdown-voorbeeld",
+  "markdown-preview-enhanced.automaticallyShowPreviewInSidePanel.description": "Toon en werk het Markdown-voorbeeld automatisch bij in het zijpaneel wanneer een Markdown-document wordt geopend of gefocust.",
+  "markdown-preview-enhanced.openPreviewInSidePanel.title": "MPE:Voorbeeld openen in zijpaneel",
+  "markdown-preview-enhanced.toggleSidePanelPreviewLock.title": "MPE:Vergrendeling van zijpaneelvoorbeeld schakelen",
+  "markdown-preview-enhanced.lockSidePanelPreview.title": "Zijpaneelvoorbeeld vergrendelen",
+  "markdown-preview-enhanced.unlockSidePanelPreview.title": "Zijpaneelvoorbeeld ontgrendelen",
+  "markdown-preview-enhanced.refreshSidePanelPreview.title": "Zijpaneelvoorbeeld vernieuwen",
+  "markdown-preview-enhanced.openSidePanelSourceInEditor.title": "Bronbestand openen in editor",
+  "markdown-preview-enhanced.popOutSidePanelPreviewToEditor.title": "Voorbeeld openen in editortabblad"
 }

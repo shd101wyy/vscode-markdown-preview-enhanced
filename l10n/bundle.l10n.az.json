@@ -61,5 +61,9 @@
   "Failed to start the crossnote server: {message}": "crossnote serveri başladıla bilmədi: {message}",
   "The crossnote server exited early (code {code}).{detail}": "crossnote serveri vaxtından əvvəl dayandı (kod {code}).{detail}",
   "crossnote server stopped": "crossnote serveri dayandırıldı",
-  "The crossnote server is not running.": "crossnote serveri işləmir."
+  "The crossnote server is not running.": "crossnote serveri işləmir.",
+  "Side Panel preview is locked to the current file.": "Yan panel önbaxışı cari fayla bağlanıb.",
+  "Side Panel preview is unlocked and will follow the active editor.": "Yan panel önbaxışının kilidi açılıb və aktiv redaktoru izləyəcək.",
+  "No Markdown preview open": "Açıq Markdown önbaxışı yoxdur",
+  "Open a Markdown document or run \"Open Preview in Side Panel\" to view it here.": "Burada görmək üçün bir Markdown sənədi açın və ya \"Önbaxışı yan paneldə aç\" əmrini icra edin."
 }

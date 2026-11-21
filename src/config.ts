@@ -27,6 +27,7 @@ export enum PreviewColorScheme {
 }
 
 type VSCodeMPEConfigKey =
+  | 'automaticallyShowPreviewInSidePanel'
   | 'automaticallyShowPreviewOfMarkdownBeingEdited'
   | 'configPath'
   | 'enableImageLightbox'
@@ -153,6 +154,7 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
   public readonly isVSCode: boolean = true;
 
   // preview config
+  public readonly automaticallyShowPreviewInSidePanel: boolean;
   public readonly automaticallyShowPreviewOfMarkdownBeingEdited: boolean;
   public readonly hideDefaultVSCodeMarkdownPreviewButtons: boolean;
   public readonly imageUploader: ImageUploader;
@@ -269,6 +271,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       getMPEConfig<number>('liveUpdateDebounceMs') ?? 300;
     this.previewMode =
       getMPEConfig<PreviewMode>('previewMode') ?? PreviewMode.SinglePreview;
+    this.automaticallyShowPreviewInSidePanel =
+      getMPEConfig<boolean>('automaticallyShowPreviewInSidePanel') ?? false;
     this.automaticallyShowPreviewOfMarkdownBeingEdited =
       getMPEConfig<boolean>('automaticallyShowPreviewOfMarkdownBeingEdited') ??
       false;

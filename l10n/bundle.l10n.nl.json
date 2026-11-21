@@ -61,5 +61,9 @@
   "Failed to start the crossnote server: {message}": "Kan de crossnote-server niet starten: {message}",
   "The crossnote server exited early (code {code}).{detail}": "De crossnote-server is voortijdig gestopt (code {code}).{detail}",
   "crossnote server stopped": "crossnote-server gestopt",
-  "The crossnote server is not running.": "De crossnote-server is niet actief."
+  "The crossnote server is not running.": "De crossnote-server is niet actief.",
+  "Side Panel preview is locked to the current file.": "Het zijpaneelvoorbeeld is vergrendeld op het huidige bestand.",
+  "Side Panel preview is unlocked and will follow the active editor.": "Het zijpaneelvoorbeeld is ontgrendeld en volgt de actieve editor.",
+  "No Markdown preview open": "Geen Markdown-voorbeeld geopend",
+  "Open a Markdown document or run \"Open Preview in Side Panel\" to view it here.": "Open een Markdown-document of voer \"Voorbeeld openen in zijpaneel\" uit om het hier te bekijken."
 }

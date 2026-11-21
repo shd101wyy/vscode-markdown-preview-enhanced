@@ -61,5 +61,9 @@
   "Failed to start the crossnote server: {message}": "Error al iniciar el servidor crossnote: {message}",
   "The crossnote server exited early (code {code}).{detail}": "El servidor crossnote terminó antes de tiempo (código {code}).{detail}",
   "crossnote server stopped": "Servidor crossnote detenido",
-  "The crossnote server is not running.": "El servidor crossnote no se está ejecutando."
+  "The crossnote server is not running.": "El servidor crossnote no se está ejecutando.",
+  "Side Panel preview is locked to the current file.": "La vista previa del panel lateral está bloqueada en el archivo actual.",
+  "Side Panel preview is unlocked and will follow the active editor.": "La vista previa del panel lateral está desbloqueada y seguirá al editor activo.",
+  "No Markdown preview open": "No hay ninguna vista previa de Markdown abierta",
+  "Open a Markdown document or run \"Open Preview in Side Panel\" to view it here.": "Abre un documento Markdown o ejecuta \"Abrir vista previa en el panel lateral\" para verlo aquí."
 }

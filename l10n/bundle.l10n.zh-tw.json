@@ -61,5 +61,9 @@
   "Failed to start the crossnote server: {message}": "啟動 crossnote 伺服器失敗：{message}",
   "The crossnote server exited early (code {code}).{detail}": "crossnote 伺服器提前結束（代碼 {code}）。{detail}",
   "crossnote server stopped": "crossnote 伺服器已停止",
-  "The crossnote server is not running.": "crossnote 伺服器未在執行。"
+  "The crossnote server is not running.": "crossnote 伺服器未在執行。",
+  "Side Panel preview is locked to the current file.": "側邊面板預覽已鎖定到目前檔案。",
+  "Side Panel preview is unlocked and will follow the active editor.": "側邊面板預覽已解鎖，將跟隨作用中的編輯器。",
+  "No Markdown preview open": "尚未開啟 Markdown 預覽",
+  "Open a Markdown document or run \"Open Preview in Side Panel\" to view it here.": "開啟 Markdown 文件或執行「在側邊面板中開啟預覽」即可在此檢視。"
 }

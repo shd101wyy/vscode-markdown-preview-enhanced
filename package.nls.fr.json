@@ -150,5 +150,15 @@
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:Démarrer le serveur Crossnote",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:Arrêter le serveur Crossnote",
   "markdown-preview-enhanced.crossnoteServePort.description": "Port utilisé par le serveur crossnote démarré via la commande Démarrer le serveur crossnote. Incrémenté automatiquement s'il est occupé.",
-  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Construire un wiki autonome (HTML)"
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:Construire un wiki autonome (HTML)",
+  "markdown-preview-enhanced.sidePanelContainer.title": "Aperçu Markdown",
+  "markdown-preview-enhanced.sidePanelView.name": "Aperçu Markdown",
+  "markdown-preview-enhanced.automaticallyShowPreviewInSidePanel.description": "Afficher et mettre à jour automatiquement l’aperçu Markdown dans le panneau latéral lorsqu’un document Markdown est ouvert ou activé.",
+  "markdown-preview-enhanced.openPreviewInSidePanel.title": "MPE:Ouvrir l’aperçu dans le panneau latéral",
+  "markdown-preview-enhanced.toggleSidePanelPreviewLock.title": "MPE:Basculer le verrouillage de l’aperçu du panneau latéral",
+  "markdown-preview-enhanced.lockSidePanelPreview.title": "Verrouiller l’aperçu du panneau latéral",
+  "markdown-preview-enhanced.unlockSidePanelPreview.title": "Déverrouiller l’aperçu du panneau latéral",
+  "markdown-preview-enhanced.refreshSidePanelPreview.title": "Actualiser l’aperçu du panneau latéral",
+  "markdown-preview-enhanced.openSidePanelSourceInEditor.title": "Ouvrir le fichier source dans l’éditeur",
+  "markdown-preview-enhanced.popOutSidePanelPreviewToEditor.title": "Ouvrir l’aperçu dans un onglet de l’éditeur"
 }

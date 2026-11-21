@@ -150,5 +150,15 @@
   "markdown-preview-enhanced.startCrossnoteServer.title": "MPE:Crossnoteサーバーを起動",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "MPE:Crossnoteサーバーを停止",
   "markdown-preview-enhanced.crossnoteServePort.description": "「crossnoteサーバーを起動」コマンドで起動したcrossnoteサーバーが使用するポートです。使用中の場合は自動的に増加します。",
-  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:スタンドアロンwiki（HTML）をビルド"
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "MPE:スタンドアロンwiki（HTML）をビルド",
+  "markdown-preview-enhanced.sidePanelContainer.title": "Markdown プレビュー",
+  "markdown-preview-enhanced.sidePanelView.name": "Markdown プレビュー",
+  "markdown-preview-enhanced.automaticallyShowPreviewInSidePanel.description": "Markdown ドキュメントを開いたとき、またはフォーカスしたときにサイドパネルの Markdown プレビューを自動的に表示・更新します。",
+  "markdown-preview-enhanced.openPreviewInSidePanel.title": "MPE:サイドパネルでプレビューを開く",
+  "markdown-preview-enhanced.toggleSidePanelPreviewLock.title": "MPE:サイドパネルプレビューのロックを切り替え",
+  "markdown-preview-enhanced.lockSidePanelPreview.title": "サイドパネルプレビューをロック",
+  "markdown-preview-enhanced.unlockSidePanelPreview.title": "サイドパネルプレビューのロックを解除",
+  "markdown-preview-enhanced.refreshSidePanelPreview.title": "サイドパネルプレビューを更新",
+  "markdown-preview-enhanced.openSidePanelSourceInEditor.title": "ソースファイルをエディターで開く",
+  "markdown-preview-enhanced.popOutSidePanelPreviewToEditor.title": "エディタータブでプレビューを開く"
 }

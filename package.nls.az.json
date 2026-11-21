@@ -150,5 +150,15 @@
   "markdown-preview-enhanced.startCrossnoteServer.title": "Markdown Preview Enhanced: Crossnote serverini başlat",
   "markdown-preview-enhanced.stopCrossnoteServer.title": "Markdown Preview Enhanced: Crossnote serverini dayandır",
   "markdown-preview-enhanced.crossnoteServePort.description": "\"crossnote serverini başlat\" əmri ilə başladılmış crossnote serveri tərəfindən istifadə olunan port. Məşğul olduqda avtomatik artır.",
-  "markdown-preview-enhanced.buildStandaloneWiki.title": "Markdown Preview Enhanced: Standalone wiki (HTML) qur"
+  "markdown-preview-enhanced.buildStandaloneWiki.title": "Markdown Preview Enhanced: Standalone wiki (HTML) qur",
+  "markdown-preview-enhanced.sidePanelContainer.title": "Markdown Önbaxış",
+  "markdown-preview-enhanced.sidePanelView.name": "Markdown Önbaxış",
+  "markdown-preview-enhanced.automaticallyShowPreviewInSidePanel.description": "Markdown sənədi açıldıqda və ya fokuslandıqda yan paneldə Markdown önbaxışını avtomatik göstər və yenilə.",
+  "markdown-preview-enhanced.openPreviewInSidePanel.title": "Markdown Preview Enhanced: Önbaxışı yan paneldə aç",
+  "markdown-preview-enhanced.toggleSidePanelPreviewLock.title": "Markdown Preview Enhanced: Yan panel önbaxış kilidini dəyiş",
+  "markdown-preview-enhanced.lockSidePanelPreview.title": "Yan panel önbaxışını kilidlə",
+  "markdown-preview-enhanced.unlockSidePanelPreview.title": "Yan panel önbaxışının kilidini aç",
+  "markdown-preview-enhanced.refreshSidePanelPreview.title": "Yan panel önbaxışını yenilə",
+  "markdown-preview-enhanced.openSidePanelSourceInEditor.title": "Mənbə faylını redaktorda aç",
+  "markdown-preview-enhanced.popOutSidePanelPreviewToEditor.title": "Önbaxışı redaktor vərəqində aç"
 }
