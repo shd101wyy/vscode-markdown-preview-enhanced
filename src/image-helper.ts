@@ -71,16 +71,13 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
             const lastDotOffset = imageFileName.lastIndexOf('.');
             const uid = '_' + Math.random().toString(36).substr(2, 9);
 
-            if (lastDotOffset > 0) {
-              description = imageFileName.slice(0, lastDotOffset);
-              imageFileName =
-                imageFileName.slice(0, lastDotOffset) +
-                uid +
-                imageFileName.slice(lastDotOffset, imageFileName.length);
-            } else {
-              description = imageFileName;
-              imageFileName = imageFileName + uid;
-            }
+            description = stripImageExtension(imageFileName);
+            imageFileName =
+              lastDotOffset > 0
+                ? imageFileName.slice(0, lastDotOffset) +
+                  uid +
+                  imageFileName.slice(lastDotOffset)
+                : imageFileName + uid;
 
             fs.createReadStream(imageFilePath).pipe(
               fs.createWriteStream(

@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import NotebooksManager from './notebooks-manager';
 import { createMissingMarkdownNote } from './utils';
-import { wikilinkTargetHalf } from './wikilink-helpers';
+import { splitWikilinkTarget, wikilinkTargetHalf } from './wikilink-helpers';
 
 /**
  * Editor-side `Follow link` (alt+click / Ctrl+click) for wikilinks.
@@ -129,25 +129,12 @@ export async function openWikilinkTarget(
   // fragment.  Then split out heading / block fragments from the
   // target — same rules `WikilinkHoverProvider.provideHover` uses, so
   // the hover tooltip and the click destination agree.
-  const body = wikilinkTargetHalf(
-    wikilinkBody,
-    notebook?.config.useGitHubStylePipedLink ?? false,
+  const { noteName, fragment } = splitWikilinkTarget(
+    wikilinkTargetHalf(
+      wikilinkBody,
+      notebook?.config.useGitHubStylePipedLink ?? false,
+    ),
   );
-  const blockIdx = body.indexOf('^');
-  const hashIdx = body.indexOf('#');
-  let noteName = body;
-  let fragment = '';
-  if (blockIdx !== -1 || hashIdx !== -1) {
-    const splitAt =
-      hashIdx !== -1 && (blockIdx === -1 || hashIdx < blockIdx)
-        ? hashIdx
-        : blockIdx;
-    noteName = body.slice(0, splitAt).trim();
-    fragment = body.slice(splitAt + (splitAt === hashIdx ? 1 : 0)).trim();
-    if (splitAt === blockIdx && fragment && fragment[0] !== '^') {
-      fragment = '^' + fragment;
-    }
-  }
   if (!noteName && !fragment) return;
 
   const targetUri = noteName

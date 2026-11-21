@@ -1041,6 +1041,16 @@ export class PreviewProvider {
     this.previewToDocumentMap = new Map();
     this.previewToSourceUriMap = new Map();
     this.customEditorPanels = new Set();
+    // A side-panel view dropped here while its first render was still in
+    // flight (its source mapping doesn't exist yet, so it can't be
+    // preserved) must not stay marked initialized: its render aborts on
+    // that flag and the view would sit frozen. Drop the flag so the next
+    // open re-initializes the view.
+    for (const view of this.sidePanelViews) {
+      if (!preservedSidePanelEntries.some((entry) => entry.view === view)) {
+        this.initializedPreviews.delete(view);
+      }
+    }
     this.sidePanelViews = new Set();
     // Clear all pending update timeouts
     this.updateTimeouts.forEach((timeout) => clearTimeout(timeout));

@@ -7,7 +7,7 @@ import {
 import * as path from 'path';
 import * as vscode from 'vscode';
 import NotebooksManager from './notebooks-manager';
-import { wikilinkTargetHalf } from './wikilink-helpers';
+import { splitWikilinkTarget, wikilinkTargetHalf } from './wikilink-helpers';
 
 /**
  * Editor-side hover preview for `[[Note]]`, `[[Note#Heading]]`,
@@ -73,33 +73,22 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
     // `useGitHubStylePipedLink` config (#2479) — resolve the notebook
     // up front (resolveNoteUri reuses it too).
     const notebook = await this.getNotebookIfAvailable(document.uri);
-    const target = wikilinkTargetHalf(
-      body,
-      notebook?.config.useGitHubStylePipedLink ?? false,
+    // Split out note / heading / block parts with the same rules the
+    // document-link provider uses, so the hover tooltip and the click
+    // destination agree.
+    const { noteName, fragment } = splitWikilinkTarget(
+      wikilinkTargetHalf(
+        body,
+        notebook?.config.useGitHubStylePipedLink ?? false,
+      ),
     );
-    if (!target) return undefined;
+    if (!noteName && !fragment) return undefined;
 
-    // Pick out target / heading / block parts
-    const blockIdx = target.indexOf('^');
-    const hashIdx = target.indexOf('#');
-    let noteName = target;
-    let fragment = '';
-    if (blockIdx !== -1 || hashIdx !== -1) {
-      const splitAt =
-        hashIdx !== -1 && (blockIdx === -1 || hashIdx < blockIdx)
-          ? hashIdx
-          : blockIdx;
-      noteName = target.slice(0, splitAt).trim();
-      fragment = target.slice(splitAt + (splitAt === hashIdx ? 1 : 0));
-      // Keep ^ when it's the only marker so findFragmentTargetLine
-      // can match.
-      if (splitAt === blockIdx && fragment[0] !== '^') {
-        fragment = '^' + fragment;
-      }
-    }
-    if (!noteName) return undefined;
-
-    const targetUri = await this.resolveNoteUri(document, noteName, notebook);
+    // A same-file link (`[[#Heading]]`, `[[#^block]]`) addresses the
+    // current document, exactly like a ctrl+click on it (#2472).
+    const targetUri = noteName
+      ? await this.resolveNoteUri(document, noteName, notebook)
+      : document.uri;
     if (!targetUri) {
       return new vscode.Hover(
         new vscode.MarkdownString(`*Note not found:* \`${noteName}\``),
@@ -251,7 +240,15 @@ export class WikilinkHoverProvider implements vscode.HoverProvider {
     // typo-recovery fallback below.
     const defaultExt = notebook?.config.wikiLinkTargetFileExtension || '.md';
     const ext = path.extname(noteName);
-    const fileName = ext ? noteName : `${noteName}${defaultExt}`;
+    // Run the note name through the notebook's `processWikilink` — the
+    // same transform the preview renderer and the ctrl+click resolver
+    // apply (#2477) — so the hover previews the same file they open,
+    // case transform and all.
+    const fileName = notebook
+      ? notebook.processWikilink(noteName).link
+      : ext
+        ? noteName
+        : `${noteName}${defaultExt}`;
 
     // Preferred path: delegate to the notebook's own resolver so
     // hover honours `wikiLinkResolution` (relative/shortest/absolute)

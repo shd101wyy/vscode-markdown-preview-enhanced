@@ -1646,15 +1646,25 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       vscode.window.tabGroups.onDidChangeTabs((event) => {
         if (event.closed.length > 0) {
-          return sidePanelProvider.handleSourcePossiblyClosed();
+          // Only closes that actually involve the previewed source may
+          // clear/switch the preview — a source opened from the Explorer
+          // has no tab of its own and must survive unrelated closes.
+          const closed = event.closed
+            .map((tab) =>
+              (tab.input as { uri?: vscode.Uri } | undefined)?.uri?.toString(),
+            )
+            .filter((uri): uri is string => !!uri);
+          return sidePanelProvider.handleSourcePossiblyClosed(closed);
         }
       }),
     );
   }
 
   context.subscriptions.push(
-    vscode.workspace.onDidCloseTextDocument(() => {
-      return sidePanelProvider.handleSourcePossiblyClosed();
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      return sidePanelProvider.handleSourcePossiblyClosed([
+        document.uri.toString(),
+      ]);
     }),
   );
   // The active editor can already be set before the handler above is

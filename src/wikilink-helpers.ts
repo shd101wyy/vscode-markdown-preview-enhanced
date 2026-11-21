@@ -21,3 +21,36 @@ export function wikilinkTargetHalf(
   }
   return (useGitHubStylePipedLink ? splits[1] : splits[0]).trim();
 }
+
+export interface WikilinkTargetParts {
+  /** The note the link names; empty for a same-file `[[#fragment]]`. */
+  noteName: string;
+  /** `#heading` content (no `#`) or `^block-id` (with the `^`). */
+  fragment: string;
+}
+
+/**
+ * Split a wikilink's target (already the config-selected pipe half) into
+ * its note name and `#heading`/`^block` fragment. Shared by the
+ * document-link provider and the hover provider so a click and the hover
+ * tooltip always agree on what a link addresses.
+ */
+export function splitWikilinkTarget(target: string): WikilinkTargetParts {
+  const blockIdx = target.indexOf('^');
+  const hashIdx = target.indexOf('#');
+  if (blockIdx === -1 && hashIdx === -1) {
+    return { noteName: target.trim(), fragment: '' };
+  }
+  const splitAt =
+    hashIdx !== -1 && (blockIdx === -1 || hashIdx < blockIdx)
+      ? hashIdx
+      : blockIdx;
+  const noteName = target.slice(0, splitAt).trim();
+  let fragment = target.slice(splitAt + (splitAt === hashIdx ? 1 : 0)).trim();
+  // Keep ^ when the block marker is the split point so block matching
+  // (findFragmentTargetLine, extractBlockIds) can see it.
+  if (splitAt === blockIdx && fragment && fragment[0] !== '^') {
+    fragment = '^' + fragment;
+  }
+  return { noteName, fragment };
+}
