@@ -1,8 +1,9 @@
-import { findFragmentTargetLine, matter } from 'crossnote';
+import { findFragmentTargetLine, matter, type Notebook } from 'crossnote';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import NotebooksManager from './notebooks-manager';
 import { createMissingMarkdownNote } from './utils';
+import { wikilinkTargetHalf } from './wikilink-helpers';
 
 /**
  * Editor-side `Follow link` (alt+click / Ctrl+click) for wikilinks.
@@ -56,13 +57,15 @@ export class WikilinkDocumentLinkProvider
       m !== null;
       m = WikilinkDocumentLinkProvider.WIKILINK_RE.exec(text)
     ) {
-      const body = m[1];
+      const body = m[1].trim();
       // body shape: "Note", "Note#Heading", "Note^abc",
       // "Note#Heading^abc", "alias|Note", "Note|alias", or any of
-      // those with leading ! for embed.  Strip the alias half (we
-      // route by target name, not display).
-      const beforePipe = body.split('|')[0].trim();
-      if (!beforePipe) continue;
+      // those with leading ! for embed.  Which half of a pipe is the
+      // target depends on the notebook's `useGitHubStylePipedLink`
+      // config, which only the async command handler can read — so
+      // pass the whole body and let `openWikilinkTarget` pick the
+      // half (#2479).
+      if (!body) continue;
 
       // Range covers the whole `[[…]]` (or `![[…]]`) so VSCode
       // shows the full match as the clickable region.
@@ -73,7 +76,7 @@ export class WikilinkDocumentLinkProvider
       // Encode the wikilink body into a `command:` URI so
       // alt+click invokes our handler with the source-document URI
       // (so we can resolve relative paths) plus the wikilink body.
-      const args = [document.uri.toString(), beforePipe];
+      const args = [document.uri.toString(), body];
       const target = vscode.Uri.parse(
         `command:_crossnote.openWikilinkTarget?${encodeURIComponent(
           JSON.stringify(args),
@@ -83,7 +86,7 @@ export class WikilinkDocumentLinkProvider
       const link = new vscode.DocumentLink(range, target);
       // Tooltip shown in the alt+click hover.  Plain string so
       // VSCode shows it verbatim.
-      link.tooltip = `Follow wikilink: ${beforePipe}`;
+      link.tooltip = `Follow wikilink: ${body}`;
       links.push(link);
     }
     return links;
@@ -97,7 +100,8 @@ export class WikilinkDocumentLinkProvider
  * to the fragment line if any.
  *
  * Args: `[sourceUriString, wikilinkBody]` where `wikilinkBody` is
- * the inside of `[[…]]` with the alias half already stripped.
+ * the whole inside of `[[…]]` (a `|` alias pipe may be present —
+ * the target half is picked here, per notebook config).
  */
 export async function openWikilinkTarget(
   sourceUriString: string,
@@ -106,12 +110,29 @@ export async function openWikilinkTarget(
 ): Promise<void> {
   const sourceUri = vscode.Uri.parse(sourceUriString);
 
-  // Split out heading / block fragments from the link target — same
-  // rules `WikilinkHoverProvider.provideHover` uses, so the hover
-  // tooltip and the click destination agree.  Trim the body once, up
-  // front: `[[ #Heading ]]` must not resolve as a note named `" "`,
-  // and its trailing space must not end up in the fragment.
-  const body = wikilinkBody.trim();
+  // Resolve the notebook up front: its config decides which half of
+  // a piped link is the target (#2479), and `resolveWikilinkUri`
+  // reuses it for the case transform and path resolution (#2477).
+  let notebook: Notebook | undefined;
+  if (notebooksManager) {
+    try {
+      notebook = await notebooksManager.getNotebook(sourceUri);
+    } catch {
+      // No notebook for this URI (test scaffold, untitled, etc.).
+    }
+  }
+
+  // Pick the target half of a piped link per `useGitHubStylePipedLink`
+  // — without a notebook the default (target-first) style is assumed.
+  // Trim once, up front: `[[ #Heading ]]` must not resolve as a note
+  // named `" "`, and its trailing space must not end up in the
+  // fragment.  Then split out heading / block fragments from the
+  // target — same rules `WikilinkHoverProvider.provideHover` uses, so
+  // the hover tooltip and the click destination agree.
+  const body = wikilinkTargetHalf(
+    wikilinkBody,
+    notebook?.config.useGitHubStylePipedLink ?? false,
+  );
   const blockIdx = body.indexOf('^');
   const hashIdx = body.indexOf('#');
   let noteName = body;
@@ -130,7 +151,7 @@ export async function openWikilinkTarget(
   if (!noteName && !fragment) return;
 
   const targetUri = noteName
-    ? await resolveWikilinkUri(sourceUri, noteName, notebooksManager)
+    ? await resolveWikilinkUri(sourceUri, noteName, notebook)
     : sourceUri;
   if (!targetUri) {
     vscode.window.showErrorMessage(
@@ -191,25 +212,16 @@ export async function openWikilinkTarget(
  * caller's auto-create step can write a stub there — Obsidian-style
  * click-to-create.
  *
- * Falls back to the historical sibling-then-workspace-search
- * heuristic when no notebook is available (untitled docs, scratch
- * buffers).
+ * `notebook` is the notebook already resolved by
+ * `openWikilinkTarget`.  Falls back to the historical
+ * sibling-then-workspace-search heuristic when none is available
+ * (untitled docs, scratch buffers).
  */
 async function resolveWikilinkUri(
   sourceUri: vscode.Uri,
   noteName: string,
-  notebooksManager?: NotebooksManager,
+  notebook?: Notebook,
 ): Promise<vscode.Uri | undefined> {
-  let notebook:
-    Awaited<ReturnType<NotebooksManager['getNotebook']>> | undefined;
-  if (notebooksManager) {
-    try {
-      notebook = await notebooksManager.getNotebook(sourceUri);
-    } catch {
-      // No notebook for this URI (test scaffold, untitled, etc.).
-    }
-  }
-
   if (notebook) {
     // Run the note name through the notebook's `processWikilink` — the
     // same transform the preview renderer applies — so the editor's

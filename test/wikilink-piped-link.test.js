@@ -1,0 +1,164 @@
+/* global suite, test, suiteSetup, suiteTeardown, teardown */
+
+const assert = require('assert');
+const path = require('path');
+const fs = require('fs');
+const os = require('os');
+const esbuild = require('esbuild');
+const { Notebook } = require('crossnote');
+const { stubPlugin } = require('./vscode-stub');
+
+let bundle;
+let tmpFile;
+let notebookDir;
+
+suite('piped wikilink target half (editor ctrl+click)', function () {
+  this.timeout(30000);
+
+  suiteSetup(async function () {
+    const result = await esbuild.build({
+      stdin: {
+        contents:
+          "export { openWikilinkTarget } from './src/wikilink-document-link-provider';" +
+          "export { wikilinkTargetHalf } from './src/wikilink-helpers';",
+        resolveDir: path.join(__dirname, '..'),
+        loader: 'ts',
+      },
+      bundle: true,
+      platform: 'node',
+      format: 'cjs',
+      target: 'node18',
+      write: false,
+      logLevel: 'silent',
+      plugins: [stubPlugin()],
+    });
+    tmpFile = path.join(__dirname, '.wikilink-piped-link.bundle.cjs');
+    fs.writeFileSync(tmpFile, result.outputFiles[0].text);
+    bundle = require(tmpFile);
+    notebookDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wikilink-pipe-'));
+  });
+
+  suiteTeardown(function () {
+    if (tmpFile && fs.existsSync(tmpFile)) {
+      fs.unlinkSync(tmpFile);
+    }
+    if (notebookDir && fs.existsSync(notebookDir)) {
+      fs.rmSync(notebookDir, { recursive: true, force: true });
+    }
+  });
+
+  teardown(function () {
+    globalThis.__vscodeStubOpenTextDocument = undefined;
+    globalThis.__vscodeStubShowTextDocument = undefined;
+    globalThis.__crossnoteStubFindFragmentTargetLine = undefined;
+  });
+
+  // A real crossnote Notebook supplies processWikilink/resolveWikilink,
+  // so the same pipe rules the preview applies decide the target.
+  async function makeNotebook(config) {
+    return Notebook.init({
+      notebookPath: notebookDir,
+      config,
+    });
+  }
+
+  function stubOpen() {
+    const openedUris = [];
+    globalThis.__vscodeStubOpenTextDocument = async (uri) => {
+      openedUris.push(uri.toString());
+      return { uri, getText: () => '' };
+    };
+    globalThis.__vscodeStubShowTextDocument = async (_doc, editor) => editor;
+    return openedUris;
+  }
+
+  test('wikilinkTargetHalf mirrors processWikilink pipe rules', function () {
+    assert.strictEqual(bundle.wikilinkTargetHalf('Note', true), 'Note');
+    assert.strictEqual(bundle.wikilinkTargetHalf('Note', false), 'Note');
+    assert.strictEqual(bundle.wikilinkTargetHalf('Note|Alias', false), 'Note');
+    assert.strictEqual(bundle.wikilinkTargetHalf('Alias|Note', true), 'Note');
+    // Halves are trimmed either way.
+    assert.strictEqual(
+      bundle.wikilinkTargetHalf(' Note | Alias ', false),
+      'Note',
+    );
+    assert.strictEqual(
+      bundle.wikilinkTargetHalf(' Alias | Note ', true),
+      'Note',
+    );
+  });
+
+  test('default style [[target|display]] keeps resolving the target', async function () {
+    const notebook = await makeNotebook({});
+    const manager = { getNotebook: async () => notebook };
+    const openedUris = stubOpen();
+
+    await bundle.openWikilinkTarget(
+      `file://${path.join(notebookDir, 'source.md')}`,
+      'Target Note|Display Text',
+      manager,
+    );
+    assert.deepStrictEqual(openedUris, [
+      `file://${path.join(notebookDir, 'Target Note.md')}`,
+    ]);
+  });
+
+  test('GitHub style [[display|target]] follows the target, not the display (#2479)', async function () {
+    const notebook = await makeNotebook({
+      useGitHubStylePipedLink: true,
+    });
+    const manager = { getNotebook: async () => notebook };
+    const openedUris = stubOpen();
+
+    await bundle.openWikilinkTarget(
+      `file://${path.join(notebookDir, 'source.md')}`,
+      'Display Text|Target Note',
+      manager,
+    );
+    // Used to open `Display Text.md` — the display half.
+    assert.deepStrictEqual(openedUris, [
+      `file://${path.join(notebookDir, 'Target Note.md')}`,
+    ]);
+  });
+
+  test('GitHub style keeps fragments attached to the target half', async function () {
+    const notebook = await makeNotebook({
+      useGitHubStylePipedLink: true,
+    });
+    const manager = { getNotebook: async () => notebook };
+    const openedUris = stubOpen();
+    const receivedFragments = [];
+    globalThis.__crossnoteStubFindFragmentTargetLine = (_text, fragment) => {
+      receivedFragments.push(fragment);
+      return 0;
+    };
+
+    await bundle.openWikilinkTarget(
+      `file://${path.join(notebookDir, 'source.md')}`,
+      'Display Text|Target Note#Intro',
+      manager,
+    );
+    assert.deepStrictEqual(openedUris, [
+      `file://${path.join(notebookDir, 'Target Note.md')}`,
+    ]);
+    assert.deepStrictEqual(receivedFragments, ['Intro']);
+  });
+
+  test('GitHub style works with the case transform too', async function () {
+    const notebook = await makeNotebook({
+      useGitHubStylePipedLink: true,
+      wikiLinkTargetFileNameChangeCase: 'kebabCase',
+    });
+    const manager = { getNotebook: async () => notebook };
+    const openedUris = stubOpen();
+
+    await bundle.openWikilinkTarget(
+      `file://${path.join(notebookDir, 'source.md')}`,
+      'Display Text|Target Note',
+      manager,
+    );
+    assert.deepStrictEqual(openedUris, [
+      `file://${path.join(notebookDir, 'target-note.md')}`,
+    ]);
+  });
+});
