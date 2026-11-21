@@ -16,7 +16,11 @@ suite('same-file wikilink navigation', function () {
     const result = await esbuild.build({
       stdin: {
         contents:
-          "export { openWikilinkTarget } from './src/wikilink-document-link-provider';",
+          "import * as vscode from 'vscode';" +
+          "export { openWikilinkTarget } from './src/wikilink-document-link-provider';" +
+          "export { WikilinkHoverProvider } from './src/wikilink-hover-provider';" +
+          'export const stubUri = (p) => vscode.Uri.file(p);' +
+          'export const stubPosition = (line, character) => new vscode.Position(line, character);',
         resolveDir: path.join(__dirname, '..'),
         loader: 'ts',
       },
@@ -43,12 +47,14 @@ suite('same-file wikilink navigation', function () {
     globalThis.__vscodeStubOpenTextDocument = undefined;
     globalThis.__vscodeStubShowTextDocument = undefined;
     globalThis.__crossnoteStubFindFragmentTargetLine = undefined;
+    globalThis.__vscodeStubFsReadFile = undefined;
   });
 
   teardown(function () {
     globalThis.__vscodeStubOpenTextDocument = undefined;
     globalThis.__vscodeStubShowTextDocument = undefined;
     globalThis.__crossnoteStubFindFragmentTargetLine = undefined;
+    globalThis.__vscodeStubFsReadFile = undefined;
   });
 
   test('navigates to same-file heading and block wikilinks', async function () {
@@ -123,5 +129,40 @@ suite('same-file wikilink navigation', function () {
 
     await bundle.openWikilinkTarget('file:///ws/note.md', '   ');
     assert.strictEqual(opened, false);
+  });
+
+  test('hover previews the same-file fragment from the current document (#2472)', async function () {
+    const readUris = [];
+    globalThis.__vscodeStubFsReadFile = async (uri) => {
+      readUris.push(uri.toString());
+      return new TextEncoder().encode(
+        '# Title\n\n## Intro Section\n\nIntro body text.\n\nLater.\n',
+      );
+    };
+
+    // No notebooksManager: same-file hover must not need one.  The
+    // fragment is the slug form ('Intro Section' → 'intro-section'),
+    // which is what crossnote's findFragmentTargetLine matches; the
+    // bundle stubs it, so resolve the heading line here like the click
+    // tests do.
+    globalThis.__crossnoteStubFindFragmentTargetLine = (_text, fragment) =>
+      fragment === 'intro-section' ? 2 : -1;
+    const provider = new bundle.WikilinkHoverProvider();
+    const document = {
+      uri: bundle.stubUri('/ws/note.md'),
+      lineAt: () => ({ text: 'link to [[#intro-section]] here' }),
+    };
+    const hover = await provider.provideHover(
+      document,
+      bundle.stubPosition(0, 11),
+    );
+
+    // The hover read the current document and previewed the section
+    // under its heading.
+    assert.deepStrictEqual(readUris, [
+      bundle.stubUri('/ws/note.md').toString(),
+    ]);
+    assert.ok(hover, 'expected a hover');
+    assert.match(hover.contents.value, /Intro body text\./);
   });
 });

@@ -359,6 +359,31 @@ suite('side panel markdown preview', function () {
       );
     });
 
+    test('an unrelated close does not clear a preview whose source has no tab', async function () {
+      const editorA = makeMarkdownEditor('/ws/a.md', '# Doc A');
+      const other = makeMarkdownEditor('/ws/other.md', '# Other');
+
+      await resolveAndOpen('/ws/a.md', '# Doc A');
+      assert.strictEqual(viewInstance.webview.html, '<html># Doc A</html>');
+
+      // Explorer-style: the previewed file has no editor tab of its own
+      // and nothing else is active.
+      setActiveTextEditor(undefined);
+      setTabGroups([{ tabs: [] }]);
+
+      // Some other file's tab closes — the preview must survive it.
+      await emitTabsClosed([other.document.uri]);
+      assert.strictEqual(viewInstance.webview.html, '<html># Doc A</html>');
+      assert.strictEqual(viewInstance.description, 'a.md');
+
+      // But a close that does involve the previewed file still clears.
+      await emitTabsClosed([editorA.document.uri]);
+      assert.ok(
+        viewInstance.webview.html.includes('No Markdown preview open'),
+        'expected empty-state placeholder after the source itself closed',
+      );
+    });
+
     test('switches cleanly across multi-root workspace folders without calling dispose() on WebviewView', async function () {
       await resolveAndOpen('/ws/a.md', '# WS1 Doc');
       const ws1Provider =

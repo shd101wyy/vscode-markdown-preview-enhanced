@@ -21,7 +21,9 @@ suite('wikilink target file name case (editor ctrl+click)', function () {
         contents:
           "import * as vscode from 'vscode';" +
           "export { openWikilinkTarget } from './src/wikilink-document-link-provider';" +
-          'export const stubUri = (p) => vscode.Uri.file(p);',
+          "export { WikilinkHoverProvider } from './src/wikilink-hover-provider';" +
+          'export const stubUri = (p) => vscode.Uri.file(p);' +
+          'export const stubPosition = (line, character) => new vscode.Position(line, character);',
         resolveDir: path.join(__dirname, '..'),
         loader: 'ts',
       },
@@ -52,6 +54,7 @@ suite('wikilink target file name case (editor ctrl+click)', function () {
     globalThis.__vscodeStubOpenTextDocument = undefined;
     globalThis.__vscodeStubShowTextDocument = undefined;
     globalThis.__crossnoteStubFindFragmentTargetLine = undefined;
+    globalThis.__vscodeStubFsReadFile = undefined;
   });
 
   // A real crossnote Notebook supplies processWikilink/resolveWikilink,
@@ -138,5 +141,37 @@ suite('wikilink target file name case (editor ctrl+click)', function () {
     assert.deepStrictEqual(openedUris, [
       bundle.stubUri(path.join(notebookDir, 'Wiki Link.md')).toString(),
     ]);
+  });
+
+  test('hover previews the case-transformed file, not "Note not found" (#2477)', async function () {
+    const notebook = await makeNotebook({
+      wikiLinkTargetFileNameChangeCase: 'kebabCase',
+    });
+    const manager = { getNotebook: async () => notebook };
+
+    const readUris = [];
+    globalThis.__vscodeStubFsReadFile = async (uri) => {
+      readUris.push(uri.toString());
+      return new TextEncoder().encode('# Kebab target\n\nKebab body.');
+    };
+
+    const provider = new bundle.WikilinkHoverProvider(manager);
+    const document = {
+      uri: bundle.stubUri(path.join(notebookDir, 'source.md')),
+      lineAt: () => ({ text: 'see [[Wiki Link]] here' }),
+    };
+    const hover = await provider.provideHover(
+      document,
+      bundle.stubPosition(0, 6),
+    );
+
+    // The hover read the same kebab-case file ctrl+click opens — the raw
+    // name used to miss and render "Note not found: Wiki Link".
+    assert.deepStrictEqual(readUris, [
+      bundle.stubUri(path.join(notebookDir, 'wiki-link.md')).toString(),
+    ]);
+    assert.ok(hover, 'expected a hover');
+    assert.match(hover.contents.value, /Kebab target/);
+    assert.doesNotMatch(hover.contents.value, /Note not found/);
   });
 });
