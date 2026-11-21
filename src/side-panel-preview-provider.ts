@@ -115,7 +115,12 @@ export class SidePanelPreviewProvider implements vscode.WebviewViewProvider {
     if (
       !forceRefresh &&
       this.hasRenderedCurrentSource &&
-      this.currentSourceUri?.toString() === sourceUri.toString()
+      this.currentSourceUri?.toString() === sourceUri.toString() &&
+      // The provider must still be tracking this view's finished render —
+      // a preview-mode switch (closeAllPreviews) or a provider switch can
+      // unregister it, and taking the fast path then would leave the view
+      // frozen on stale HTML.
+      this.currentProvider?.isSurfaceShowing(this.webviewView!, sourceUri)
     ) {
       this.currentDocument = document;
       this.updateDescription();
@@ -179,8 +184,10 @@ export class SidePanelPreviewProvider implements vscode.WebviewViewProvider {
 
     webviewView.onDidDispose(
       () => {
-        if (this.currentProvider && this.webviewView) {
-          this.currentProvider.detachSidePanelView(this.webviewView);
+        // Detach the disposing view itself, not whatever view is current
+        // by then — resolveWebviewView may have been called again.
+        if (this.currentProvider) {
+          this.currentProvider.detachSidePanelView(webviewView);
         }
         if (this.webviewView === webviewView) {
           this.webviewView = undefined;

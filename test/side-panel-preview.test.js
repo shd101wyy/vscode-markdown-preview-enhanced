@@ -86,6 +86,15 @@ suite('side panel markdown preview', function () {
     setMarkdownEngine(() => ({
       generateHTMLTemplateForPreview: async ({ inputString }) =>
         `<html>${inputString}</html>`,
+      // updateMarkdown renders through parseMD; echo the (already
+      // checkbox-transformed) text as the html, like the real engine
+      // would render the markdown it is handed.
+      parseMD: async (text) => ({
+        html: `<html>${text}</html>`,
+        tocHTML: '',
+        JSAndCssFiles: [],
+        yamlConfig: {},
+      }),
     }));
 
     await bundle.initExtensionCommon(makeExtensionContext());
@@ -384,6 +393,65 @@ suite('side panel markdown preview', function () {
       );
     });
 
+    test('re-renders in full after its registration is dropped (no frozen fast path)', async function () {
+      await resolveAndOpen('/ws/a.md', '# Doc A');
+      assert.strictEqual(viewInstance.webview.html, '<html># Doc A</html>');
+
+      // The state a preview-mode switch leaves behind when it cannot
+      // preserve the view: unregistered, stale HTML still installed.
+      const provider = await bundle.PreviewProvider.getPreviewContentProvider(
+        makeUri('/ws/a.md'),
+        makeExtensionContext(),
+      );
+      provider.detachSidePanelView(viewInstance);
+
+      // Re-opening the same file must take the full render path — taking
+      // the scroll-message fast path here would freeze the stale HTML.
+      const editorA2 = makeMarkdownEditor('/ws/a.md', '# Doc A2');
+      await sidePanelRegistration.provider.openPreview({
+        sourceUri: editorA2.document.uri,
+        document: editorA2.document,
+      });
+      assert.strictEqual(viewInstance.webview.html, '<html># Doc A2</html>');
+    });
+
+    test('updateHtml carries the untransformed markdown for source mapping', async function () {
+      const content = '- [ ] buy milk\n';
+      await resolveAndOpen('/ws/a.md', content);
+
+      // updateMarkdown prefers disk content when the buffer is clean.
+      globalThis.__vscodeStubFsReadFile = async () =>
+        new TextEncoder().encode(content);
+
+      const provider = await bundle.PreviewProvider.getPreviewContentProvider(
+        makeUri('/ws/a.md'),
+        makeExtensionContext(),
+      );
+      await provider.updateMarkdown(makeUri('/ws/a.md'));
+
+      // updateMarkdown's render is fire-and-forget; poll for the payload.
+      const deadline = Date.now() + 5000;
+      let updateMessage;
+      while (Date.now() < deadline) {
+        updateMessage = [...viewInstance.postedMessages]
+          .reverse()
+          .find((m) => m && m.command === 'updateHtml');
+        if (updateMessage) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+
+      assert.ok(updateMessage, 'expected an updateHtml message');
+      // The source-mapping markdown keeps the editor's true columns …
+      assert.strictEqual(updateMessage.markdown, content);
+      // … while the rendered HTML carries the checkbox transform.
+      assert.ok(
+        String(updateMessage.html).includes('mpe-task-checkbox'),
+        'expected the checkbox transform in the rendered html',
+      );
+    });
+
     test('switches cleanly across multi-root workspace folders without calling dispose() on WebviewView', async function () {
       await resolveAndOpen('/ws/a.md', '# WS1 Doc');
       const ws1Provider =
@@ -532,19 +600,24 @@ function makeMarkdownEditor(fsPath, text) {
 
 function makeWebviewView(viewType = bundle.SIDE_PANEL_VIEW_ID) {
   const disposeHandlers = [];
+  const postedMessages = [];
   const view = {
     viewType,
     title: 'Markdown Preview',
     description: '',
     visible: true,
     disposedCalled: false,
+    postedMessages,
     webview: {
       html: '',
       options: {},
       cspSource: 'vscode-webview://mock',
       asWebviewUri: (uri) => uri,
       onDidReceiveMessage: () => ({ dispose() {} }),
-      postMessage: async () => true,
+      postMessage: async (message) => {
+        postedMessages.push(message);
+        return true;
+      },
     },
     show() {},
     onDidChangeVisibility: () => ({ dispose() {} }),

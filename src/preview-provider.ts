@@ -589,6 +589,38 @@ export class PreviewProvider {
     }));
   }
 
+  /**
+   * Whether a surface's render completed and is currently showing
+   * `sourceUri`. A render aborted by `closeAllPreviews` (e.g. a preview
+   * mode switch during the surface's first render) leaves the surface
+   * initialized-but-untracked; callers that cache "has rendered" must not
+   * latch on that state or the surface never re-renders.
+   */
+  public isSurfaceShowing(surface: PreviewSurface, sourceUri: Uri): boolean {
+    return (
+      this.initializedPreviews.has(surface) &&
+      this.previewToSourceUriMap.get(surface)?.toString() ===
+        sourceUri.toString()
+    );
+  }
+
+  /**
+   * Whether any initialized surface is currently showing `sourceUri`.
+   * `postMessageToPreview` falls back to the single-preview panel for an
+   * unknown source, so callers that must not act on a preview of a
+   * different file (e.g. painting an editor's selection into it) check
+   * this first.
+   */
+  public isAnySurfaceShowing(sourceUri: Uri): boolean {
+    const target = sourceUri.toString();
+    for (const surface of this.initializedPreviews) {
+      if (this.previewToSourceUriMap.get(surface)?.toString() === target) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public destroyPreview(sourceUri: Uri, panel?: PreviewSurface) {
     if (panel) {
       // A specific surface was disposed. Remove exactly its registrations so
@@ -605,6 +637,11 @@ export class PreviewProvider {
         panels.delete(panel);
         if (panels.size === 0) {
           this.previewMaps.delete(key);
+          // The closure's sourceUri is the FIRST source a reused
+          // single-preview panel ever showed; drop the stamp for every
+          // source whose set emptied here, or the entry outlives the
+          // source's last preview.
+          this.latestRenderRequestBySourceUri.delete(key);
         }
       }
       const remaining = this.previewMaps.get(sourceUri.toString());
@@ -632,6 +669,14 @@ export class PreviewProvider {
       }
     }
     this.clearAutoTranslateTimer(sourceUri.toString());
+    // Symmetric with closeAllPreviews: a pending debounced update must not
+    // outlive the last surface of the source (its callback re-checks and
+    // no-ops, but the timer shouldn't linger).
+    const updateTimeout = this.updateTimeouts.get(sourceUri.toString());
+    if (updateTimeout) {
+      clearTimeout(updateTimeout);
+      this.updateTimeouts.delete(sourceUri.toString());
+    }
   }
 
   public detachSidePanelView(webviewView: vscode.WebviewView): void {
@@ -1230,6 +1275,12 @@ export class PreviewProvider {
       if (translationOverride !== undefined) {
         text = translationOverride;
       }
+      // The webview matches preview text against this markdown for
+      // text-level scroll sync and click-to-reveal, so it must carry the
+      // editor's true columns: the checkbox transform replaces `[ ]` with
+      // a ~175-char <input> tag, which would shift every later column on
+      // a task line. The rendered `html` below keeps the transform.
+      const markdownForSourceMap = text;
       text = this.previewMarkdown(sourceUri, text);
       await this.postMessageToPreview(sourceUri, {
         command: 'startParsingMarkdown',
@@ -1285,7 +1336,7 @@ export class PreviewProvider {
           } else {
             await this.postMessageToPreview(sourceUri, {
               command: 'updateHtml',
-              markdown: text,
+              markdown: markdownForSourceMap,
               html,
               tocHTML,
               totalLineCount: document.lineCount,

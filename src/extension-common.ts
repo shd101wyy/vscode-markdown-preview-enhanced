@@ -795,6 +795,12 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       previewsWithSelection.add(key);
     }
     const previewProvider = await getPreviewContentProvider(sourceUri);
+    if (!previewProvider.isAnySurfaceShowing(sourceUri)) {
+      // postMessageToPreview falls back to the single-preview panel for
+      // an unknown source — painting this editor's selection into a
+      // preview of a different file would highlight the wrong text.
+      return;
+    }
     previewProvider.postMessageToPreview(sourceUri, {
       command: 'highlightSourceSelection',
       selection:
@@ -838,6 +844,15 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       editor?.document ??
       vscode.workspace.textDocuments.find((item) => matches(item.uri));
     if (!document) {
+      // The open-file fallback is the one path that acts on a URI the
+      // webview named without any editor behind it; keep it inside the
+      // markdown extensions, exactly like the updateMarkdown write path.
+      const allowedExts =
+        getMPEConfig<string[]>('markdownFileExtensions') ?? [];
+      const ext = path.extname(sourceUri.path).toLowerCase();
+      if (!ext || !allowedExts.includes(ext)) {
+        return;
+      }
       try {
         document = await vscode.workspace.openTextDocument(sourceUri);
       } catch {
