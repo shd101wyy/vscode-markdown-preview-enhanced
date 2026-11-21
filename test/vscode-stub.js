@@ -50,7 +50,14 @@ const VSCODE_STUB_SOURCE = `
       this.fragment = fragment || '';
     }
     static file(path) {
-      return new Uri('file', '', path);
+      // Mirror vscode-uri: a Windows drive path becomes "/c:/…" (forward
+      // slashes, leading slash, drive lowercased) so toString/parse/fsPath
+      // roundtrip and crossnote's own vscode-uri reads the same path.
+      let p = String(path);
+      if (/^[A-Za-z]:[\\\\/]/.test(p)) {
+        p = '/' + p[0].toLowerCase() + p.slice(1).replace(/\\\\/g, '/');
+      }
+      return new Uri('file', '', p);
     }
     static parse(value) {
       const m = /^([a-z][a-z0-9+.-]*):\\/\\/([^/?#]*)([^?#]*)(?:\\?([^#]*))?(?:#(.*))?$/i.exec(value);
@@ -60,6 +67,15 @@ const VSCODE_STUB_SOURCE = `
       return new Uri(base.scheme, base.authority, [base.path, ...parts].join('/'));
     }
     get fsPath() {
+      // Mirror vscode-uri: the drive of a "/c:/…" file path is lowercased
+      // and, on Windows, separators become native — crossnote's vscode-uri
+      // produces the same fsPath, so product code comparing paths from the
+      // two libraries agrees.
+      const drive = /^\\/([A-Za-z]:)(\\/.*)$/.exec(this.path);
+      if (this.scheme === 'file' && drive) {
+        const native = drive[1].toLowerCase() + drive[2];
+        return process.platform === 'win32' ? native.replace(/\\//g, '\\\\') : native;
+      }
       return this.path;
     }
     with(change) {

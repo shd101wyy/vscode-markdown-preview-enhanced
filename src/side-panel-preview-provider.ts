@@ -235,8 +235,23 @@ export class SidePanelPreviewProvider implements vscode.WebviewViewProvider {
     this.renderEmptyState();
   }
 
-  public async handleSourcePossiblyClosed(): Promise<void> {
+  /**
+   * React to a tab/document close that may involve the previewed source.
+   * `closedUriStrings` names what actually closed; when the previewed
+   * source is not among it (a source opened from the Explorer has no tab
+   * of its own), unrelated closes must not clear the preview.
+   */
+  public async handleSourcePossiblyClosed(
+    closedUriStrings?: string[],
+  ): Promise<void> {
     if (this.locked || !this.currentSourceUri) {
+      return;
+    }
+
+    if (
+      closedUriStrings &&
+      !closedUriStrings.includes(this.currentSourceUri.toString())
+    ) {
       return;
     }
 

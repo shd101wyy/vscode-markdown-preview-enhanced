@@ -102,12 +102,12 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
     const openedUris = stubOpen();
 
     await bundle.openWikilinkTarget(
-      `file://${path.join(notebookDir, 'source.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'source.md')).toString(),
       'Target Note|Display Text',
       manager,
     );
     assert.deepStrictEqual(openedUris, [
-      `file://${path.join(notebookDir, 'Target Note.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'Target Note.md')).toString(),
     ]);
   });
 
@@ -119,13 +119,13 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
     const openedUris = stubOpen();
 
     await bundle.openWikilinkTarget(
-      `file://${path.join(notebookDir, 'source.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'source.md')).toString(),
       'Display Text|Target Note',
       manager,
     );
     // Used to open `Display Text.md` — the display half.
     assert.deepStrictEqual(openedUris, [
-      `file://${path.join(notebookDir, 'Target Note.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'Target Note.md')).toString(),
     ]);
   });
 
@@ -142,12 +142,12 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
     };
 
     await bundle.openWikilinkTarget(
-      `file://${path.join(notebookDir, 'source.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'source.md')).toString(),
       'Display Text|Target Note#Intro',
       manager,
     );
     assert.deepStrictEqual(openedUris, [
-      `file://${path.join(notebookDir, 'Target Note.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'Target Note.md')).toString(),
     ]);
     assert.deepStrictEqual(receivedFragments, ['Intro']);
   });
@@ -161,12 +161,12 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
     const openedUris = stubOpen();
 
     await bundle.openWikilinkTarget(
-      `file://${path.join(notebookDir, 'source.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'source.md')).toString(),
       'Display Text|Target Note',
       manager,
     );
     assert.deepStrictEqual(openedUris, [
-      `file://${path.join(notebookDir, 'target-note.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'target-note.md')).toString(),
     ]);
   });
 
@@ -194,7 +194,7 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
 
     // The hover read and previewed the *target* note's content.
     assert.deepStrictEqual(readUris, [
-      `file://${path.join(notebookDir, 'Target Note.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'Target Note.md')).toString(),
     ]);
     assert.ok(hover, 'expected a hover');
     assert.match(hover.contents.value, /Real target/);
@@ -222,7 +222,7 @@ suite('piped wikilink target half (editor ctrl+click)', function () {
     );
 
     assert.deepStrictEqual(readUris, [
-      `file://${path.join(notebookDir, 'Target Note.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'Target Note.md')).toString(),
     ]);
     assert.ok(hover, 'expected a hover');
     assert.match(hover.contents.value, /Target note body\./);

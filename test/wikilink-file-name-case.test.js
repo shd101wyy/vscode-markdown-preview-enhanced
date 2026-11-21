@@ -19,7 +19,9 @@ suite('wikilink target file name case (editor ctrl+click)', function () {
     const result = await esbuild.build({
       stdin: {
         contents:
-          "export { openWikilinkTarget } from './src/wikilink-document-link-provider';",
+          "import * as vscode from 'vscode';" +
+          "export { openWikilinkTarget } from './src/wikilink-document-link-provider';" +
+          'export const stubUri = (p) => vscode.Uri.file(p);',
         resolveDir: path.join(__dirname, '..'),
         loader: 'ts',
       },
@@ -75,14 +77,14 @@ suite('wikilink target file name case (editor ctrl+click)', function () {
     globalThis.__vscodeStubShowTextDocument = async (_doc, editor) => editor;
 
     await bundle.openWikilinkTarget(
-      `file://${path.join(notebookDir, 'source.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'source.md')).toString(),
       'Wiki Link',
       manager,
     );
     // The preview links `[[Wiki Link]]` to `wiki-link.md` when the
     // setting is kebabCase; the editor must land there too.
     assert.deepStrictEqual(openedUris, [
-      `file://${path.join(notebookDir, 'wiki-link.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'wiki-link.md')).toString(),
     ]);
   });
 
@@ -105,12 +107,12 @@ suite('wikilink target file name case (editor ctrl+click)', function () {
     };
 
     await bundle.openWikilinkTarget(
-      `file://${path.join(notebookDir, 'source.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'source.md')).toString(),
       'Wiki Link#Intro',
       manager,
     );
     assert.deepStrictEqual(openedUris, [
-      `file://${path.join(notebookDir, 'wiki-link.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'wiki-link.md')).toString(),
     ]);
     assert.deepStrictEqual(receivedFragments, ['Intro']);
   });
@@ -129,12 +131,12 @@ suite('wikilink target file name case (editor ctrl+click)', function () {
     globalThis.__vscodeStubShowTextDocument = async (_doc, editor) => editor;
 
     await bundle.openWikilinkTarget(
-      `file://${path.join(notebookDir, 'source.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'source.md')).toString(),
       'Wiki Link',
       manager,
     );
     assert.deepStrictEqual(openedUris, [
-      `file://${path.join(notebookDir, 'Wiki Link.md')}`,
+      bundle.stubUri(path.join(notebookDir, 'Wiki Link.md')).toString(),
     ]);
   });
 });
