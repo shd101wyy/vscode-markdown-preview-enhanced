@@ -54,7 +54,9 @@ const VSCODE_STUB_SOURCE = `
       // slashes, leading slash, drive lowercased) and a UNC path such as
       // \\\\server\\share\\a.md becomes the authority "server" and the path
       // "/share/a.md", so toString/parse/fsPath roundtrip and crossnote's
-      // own vscode-uri reads the same path.
+      // own vscode-uri reads the same path. The real library splits a UNC
+      // path written with backslashes on Windows only; the stub does so on
+      // every platform, so that a test can name a Windows path.
       let p = String(path);
       if (/^[A-Za-z]:[\\\\/]/.test(p)) {
         p = '/' + p[0].toLowerCase() + p.slice(1).replace(/\\\\/g, '/');
@@ -371,6 +373,7 @@ const CROSSNOTE_STUB_SOURCE = `
       setCrossnoteBuildDirectory: () => {},
       useExternalAddFileProtocolFunction: () => {},
       addFileProtocol: (value) => value,
+      uploadImage: async () => globalThis.__vscodeStubUploadedImageUrl ?? '',
       escapeString: (value) => value,
       unescapeString: (value) => value,
     },
@@ -426,9 +429,13 @@ globalThis.__vscodeStubExecuteCommand = undefined;
 globalThis.__vscodeStubFsReadFile = undefined;
 globalThis.__vscodeStubFsStat = undefined;
 globalThis.__vscodeStubVersion = '1.107.0';
-globalThis.__crossnoteStubEngine = () => ({
-  generateHTMLTemplateForPreview: async () => '<html></html>',
-});
+function defaultMarkdownEngine() {
+  return {
+    generateHTMLTemplateForPreview: async () => '<html></html>',
+  };
+}
+globalThis.__crossnoteStubEngine = defaultMarkdownEngine;
+globalThis.__vscodeStubUploadedImageUrl = undefined;
 
 module.exports = {
   recorder,
@@ -442,7 +449,7 @@ module.exports = {
   setRelativePathResolver(fn) {
     globalThis.__vscodeStubRelativePath = fn;
   },
-  setMarkdownEngine(fn) {
+  setMarkdownEngine(fn = defaultMarkdownEngine) {
     globalThis.__crossnoteStubEngine = fn;
   },
   setConfiguration(config) {
@@ -474,6 +481,10 @@ module.exports = {
   },
   setFileReader(fn) {
     globalThis.__vscodeStubFsReadFile = fn;
+  },
+  /** What `utility.uploadImage` resolves to. */
+  setUploadedImageUrl(url) {
+    globalThis.__vscodeStubUploadedImageUrl = url;
   },
   setExecuteCommandHandler(fn) {
     globalThis.__vscodeStubExecuteCommand = fn;

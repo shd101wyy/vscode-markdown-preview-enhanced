@@ -88,16 +88,28 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
 /**
  * Whether two URIs name the same file.
  *
- * Compared as `toString()`, not as `fsPath`: `vscode.Uri.toString()`
- * lower-cases the authority, so a URI that has been to the preview webview
- * and back — the preview is handed `sourceUri.toString()` and sends it
- * along with every message — has a lower-cased server name. A file on a
- * network share (`\\NAS\docs\a.md`) comes back as `\\nas\docs\a.md`, which
- * an exact `fsPath` comparison reports as another file
- * (vscode-mpe#2451).
+ * They are compared in VS Code's canonical string form (`toString()`),
+ * without query and fragment — as `fsPath` equality does, except that
+ * `fsPath` keeps the case of a server name while `toString()` lower-cases
+ * it. That case is lost on the way through the preview webview: it is
+ * handed `sourceUri.toString()` and sends it along with every message, so a
+ * file on a network share (`\\NAS\docs\a.md`) comes back as
+ * `\\nas\docs\a.md`, which an exact `fsPath` comparison reports as another
+ * file (vscode-mpe#2451).
+ *
+ * The fragment is left out because a preview opened from a
+ * `note.md#heading` link carries it in its source URI, which an editor's
+ * URI never does.
+ *
+ * This is for finding the editor and the preview of a file, not for
+ * guarding a write, where the URI itself has to match
+ * (`dispatchPreviewWebviewMessage`).
  */
 export function isSameUri(a: vscode.Uri, b: vscode.Uri): boolean {
-  return a.toString() === b.toString();
+  return (
+    a.with({ query: '', fragment: '' }).toString() ===
+    b.with({ query: '', fragment: '' }).toString()
+  );
 }
 
 /**

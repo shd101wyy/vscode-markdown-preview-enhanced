@@ -9,6 +9,7 @@ import {
   parseTagTriggerContext,
 } from './block-id-helpers';
 import NotebooksManager from './notebooks-manager';
+import { isSameUri } from './utils';
 
 /**
  * Wikilink fragment + body-text `#tag` completion.  Trigger contexts:
@@ -203,12 +204,15 @@ export class WikilinkCompletionProvider
 
     const partialLower = partial.toLowerCase();
     const items: vscode.CompletionItem[] = [];
-    const currentPath =
-      document.uri.scheme === 'file' ? document.uri.fsPath : '';
+    // The notebook's file list is rebuilt from the notebook path's string
+    // form, so its server name is lower-cased; compare the way the preview
+    // does, or the current note is offered for `[[` on a network share.
+    const currentUri =
+      document.uri.scheme === 'file' ? document.uri : undefined;
     const seen = new Set<string>();
 
     const addItem = (fileUri: vscode.Uri) => {
-      if (fileUri.fsPath === currentPath) return;
+      if (currentUri && isSameUri(fileUri, currentUri)) return;
       const baseName = path.basename(fileUri.fsPath);
       const ext = path.extname(baseName).toLowerCase();
       const isMarkdown = markdownExts.includes(ext);

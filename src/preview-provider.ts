@@ -167,11 +167,13 @@ export function dispatchPreviewWebviewMessage(
     return;
   }
   const expectedSourceUri = getExpectedSourceUri();
+  // `updateMarkdown` writes the file, so the URI has to be the expected one
+  // exactly, not merely name the same file (`isSameUri`).
   if (
     command === 'updateMarkdown' &&
     (typeof args[0] !== 'string' ||
       !expectedSourceUri ||
-      !isSameUri(Uri.parse(args[0]), expectedSourceUri))
+      Uri.parse(args[0]).toString() !== expectedSourceUri.toString())
   ) {
     return;
   }
@@ -334,7 +336,8 @@ export class PreviewProvider {
   private static singlePreviewLocked = false;
 
   /**
-   * The key is markdown file fsPath
+   * The key is the markdown file's URI (`toString()`, so that the URI the
+   * webview sends back and the editor's own are one key)
    * value is JSAndCssFiles
    */
   private jsAndCssFilesMaps: { [key: string]: string[] } = {};
@@ -908,7 +911,7 @@ export class PreviewProvider {
           )
         : undefined;
       const newResourceRoot = getWorkspaceFolderUri(sourceUri);
-      if (oldResourceRoot?.fsPath !== newResourceRoot.fsPath) {
+      if (!oldResourceRoot || !isSameUri(oldResourceRoot, newResourceRoot)) {
         const singlePreview = PreviewProvider.singlePreviewPanel;
         PreviewProvider.singlePreviewPanel = null;
         PreviewProvider.singlePreviewPanelSourceUriTarget = null;
@@ -1324,14 +1327,14 @@ export class PreviewProvider {
           // check jsAndCssFiles
           const normalizedResources = this.normalizeResourceList(jsAndCssFiles);
           const previousResources = this.normalizeResourceList(
-            this.jsAndCssFilesMaps[sourceUri.fsPath],
+            this.jsAndCssFilesMaps[sourceUri.toString()],
           );
           if (
             JSON.stringify(normalizedResources) !==
               JSON.stringify(previousResources) ||
             yamlConfig['isPresentationMode']
           ) {
-            this.jsAndCssFilesMaps[sourceUri.fsPath] = normalizedResources;
+            this.jsAndCssFilesMaps[sourceUri.toString()] = normalizedResources;
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
