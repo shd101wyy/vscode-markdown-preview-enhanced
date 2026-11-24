@@ -51,11 +51,20 @@ const VSCODE_STUB_SOURCE = `
     }
     static file(path) {
       // Mirror vscode-uri: a Windows drive path becomes "/c:/…" (forward
-      // slashes, leading slash, drive lowercased) so toString/parse/fsPath
-      // roundtrip and crossnote's own vscode-uri reads the same path.
+      // slashes, leading slash, drive lowercased) and a UNC path such as
+      // \\\\server\\share\\a.md becomes the authority "server" and the path
+      // "/share/a.md", so toString/parse/fsPath roundtrip and crossnote's
+      // own vscode-uri reads the same path. The real library splits a UNC
+      // path written with backslashes on Windows only; the stub does so on
+      // every platform, so that a test can name a Windows path.
       let p = String(path);
       if (/^[A-Za-z]:[\\\\/]/.test(p)) {
         p = '/' + p[0].toLowerCase() + p.slice(1).replace(/\\\\/g, '/');
+      } else {
+        const unc = /^[\\\\/]{2}([^\\\\/]+)([\\\\/][^]*)$/.exec(p);
+        if (unc) {
+          return new Uri('file', unc[1], unc[2].replace(/\\\\/g, '/'));
+        }
       }
       return new Uri('file', '', p);
     }
@@ -67,10 +76,14 @@ const VSCODE_STUB_SOURCE = `
       return new Uri(base.scheme, base.authority, [base.path, ...parts].join('/'));
     }
     get fsPath() {
-      // Mirror vscode-uri: the drive of a "/c:/…" file path is lowercased
-      // and, on Windows, separators become native — crossnote's vscode-uri
-      // produces the same fsPath, so product code comparing paths from the
-      // two libraries agrees.
+      // Mirror vscode-uri: a UNC path is "//server/share/a.md" with the
+      // server name as given — toString() below lower-cases it; the drive
+      // of a "/c:/…" file path is lowercased and, on Windows, separators
+      // become native — crossnote's vscode-uri produces the same fsPath,
+      // so product code comparing paths from the two libraries agrees.
+      if (this.scheme === 'file' && this.authority && this.path.length > 1) {
+        return '//' + this.authority + this.path;
+      }
       const drive = /^\\/([A-Za-z]:)(\\/.*)$/.exec(this.path);
       if (this.scheme === 'file' && drive) {
         const native = drive[1].toLowerCase() + drive[2];
@@ -88,8 +101,10 @@ const VSCODE_STUB_SOURCE = `
       );
     }
     toString() {
+      // Mirror vscode-uri: the authority is lower-cased — "file://NAS01/…"
+      // prints as "file://nas01/…" — while fsPath keeps its case.
       return (
-        this.scheme + '://' + this.authority + this.path +
+        this.scheme + '://' + this.authority.toLowerCase() + this.path +
         (this.query ? '?' + this.query : '') +
         (this.fragment ? '#' + this.fragment : '')
       );
@@ -358,6 +373,7 @@ const CROSSNOTE_STUB_SOURCE = `
       setCrossnoteBuildDirectory: () => {},
       useExternalAddFileProtocolFunction: () => {},
       addFileProtocol: (value) => value,
+      uploadImage: async () => globalThis.__vscodeStubUploadedImageUrl ?? '',
       escapeString: (value) => value,
       unescapeString: (value) => value,
     },
@@ -413,9 +429,13 @@ globalThis.__vscodeStubExecuteCommand = undefined;
 globalThis.__vscodeStubFsReadFile = undefined;
 globalThis.__vscodeStubFsStat = undefined;
 globalThis.__vscodeStubVersion = '1.107.0';
-globalThis.__crossnoteStubEngine = () => ({
-  generateHTMLTemplateForPreview: async () => '<html></html>',
-});
+function defaultMarkdownEngine() {
+  return {
+    generateHTMLTemplateForPreview: async () => '<html></html>',
+  };
+}
+globalThis.__crossnoteStubEngine = defaultMarkdownEngine;
+globalThis.__vscodeStubUploadedImageUrl = undefined;
 
 module.exports = {
   recorder,
@@ -429,7 +449,7 @@ module.exports = {
   setRelativePathResolver(fn) {
     globalThis.__vscodeStubRelativePath = fn;
   },
-  setMarkdownEngine(fn) {
+  setMarkdownEngine(fn = defaultMarkdownEngine) {
     globalThis.__crossnoteStubEngine = fn;
   },
   setConfiguration(config) {
@@ -458,6 +478,13 @@ module.exports = {
   },
   setOpenTextDocumentResolver(fn) {
     globalThis.__vscodeStubOpenTextDocument = fn;
+  },
+  setFileReader(fn) {
+    globalThis.__vscodeStubFsReadFile = fn;
+  },
+  /** What `utility.uploadImage` resolves to. */
+  setUploadedImageUrl(url) {
+    globalThis.__vscodeStubUploadedImageUrl = url;
   },
   setExecuteCommandHandler(fn) {
     globalThis.__vscodeStubExecuteCommand = fn;

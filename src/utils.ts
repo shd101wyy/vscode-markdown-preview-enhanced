@@ -86,6 +86,33 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
 }
 
 /**
+ * Whether two URIs name the same file.
+ *
+ * They are compared in VS Code's canonical string form (`toString()`),
+ * without query and fragment, as `fsPath` equality compares — but with the
+ * scheme and authority part of it, and with the authority lower-cased as
+ * `toString()` does while `fsPath` keeps the case. The case of a server name
+ * is lost on the way through the preview webview: it is handed
+ * `sourceUri.toString()` and sends it along with every message, so a file on
+ * a network share (`\\NAS\docs\a.md`) comes back as `\\nas\docs\a.md`, which
+ * an exact `fsPath` comparison reports as another file (vscode-mpe#2451).
+ *
+ * The fragment is left out because a preview opened from a
+ * `note.md#heading` link carries it in its source URI, which an editor's
+ * URI never does.
+ *
+ * This is for finding the editor and the preview of a file, not for
+ * guarding a write, where the URI itself has to match
+ * (`dispatchPreviewWebviewMessage`).
+ */
+export function isSameUri(a: vscode.Uri, b: vscode.Uri): boolean {
+  return (
+    a.with({ query: '', fragment: '' }).toString() ===
+    b.with({ query: '', fragment: '' }).toString()
+  );
+}
+
+/**
  * Why the note index must refuse to walk a notebook root, if it must.
  *
  * - `'filesystem-root'`: `/`, a Windows drive root, or dot-path

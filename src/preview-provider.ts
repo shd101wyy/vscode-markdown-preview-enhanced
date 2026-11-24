@@ -23,6 +23,7 @@ import {
   getWorkspaceFolderUri,
   globalConfigPath,
   isMarkdownFile,
+  isSameUri,
   isVSCodeWebExtension,
   isVSCodewebExtensionDevMode,
 } from './utils';
@@ -166,6 +167,8 @@ export function dispatchPreviewWebviewMessage(
     return;
   }
   const expectedSourceUri = getExpectedSourceUri();
+  // `updateMarkdown` writes the file, so the URI has to be the expected one
+  // exactly, not merely name the same file (`isSameUri`).
   if (
     command === 'updateMarkdown' &&
     (typeof args[0] !== 'string' ||
@@ -333,7 +336,8 @@ export class PreviewProvider {
   private static singlePreviewLocked = false;
 
   /**
-   * The key is markdown file fsPath
+   * The key is the markdown file's URI (`toString()`, so that the URI the
+   * webview sends back and the editor's own are one key)
    * value is JSAndCssFiles
    */
   private jsAndCssFilesMaps: { [key: string]: string[] } = {};
@@ -370,7 +374,7 @@ export class PreviewProvider {
     const target = PreviewProvider.singlePreviewPanelSourceUriTarget;
     // When no single preview exists at all (e.g. only custom editors are
     // open), nothing excludes this source.
-    return !target || target.fsPath === sourceUri.fsPath;
+    return !target || isSameUri(target, sourceUri);
   }
 
   /**
@@ -744,7 +748,7 @@ export class PreviewProvider {
     inputStringOverride?: string;
   }): Promise<void> {
     let initialLine: number | undefined;
-    if (document.uri.fsPath === sourceUri.fsPath) {
+    if (isSameUri(document.uri, sourceUri)) {
       initialLine = cursorLine;
     }
 
@@ -907,7 +911,7 @@ export class PreviewProvider {
           )
         : undefined;
       const newResourceRoot = getWorkspaceFolderUri(sourceUri);
-      if (oldResourceRoot?.fsPath !== newResourceRoot.fsPath) {
+      if (!oldResourceRoot || !isSameUri(oldResourceRoot, newResourceRoot)) {
         const singlePreview = PreviewProvider.singlePreviewPanel;
         PreviewProvider.singlePreviewPanel = null;
         PreviewProvider.singlePreviewPanelSourceUriTarget = null;
@@ -1144,9 +1148,9 @@ export class PreviewProvider {
     if (!PreviewProvider.singlePreviewPanelSourceUriTarget) {
       return false;
     } else {
-      return (
-        PreviewProvider.singlePreviewPanelSourceUriTarget.fsPath ===
-        sourceUri.fsPath
+      return isSameUri(
+        PreviewProvider.singlePreviewPanelSourceUriTarget,
+        sourceUri,
       );
     }
   }
@@ -1323,14 +1327,14 @@ export class PreviewProvider {
           // check jsAndCssFiles
           const normalizedResources = this.normalizeResourceList(jsAndCssFiles);
           const previousResources = this.normalizeResourceList(
-            this.jsAndCssFilesMaps[sourceUri.fsPath],
+            this.jsAndCssFilesMaps[sourceUri.toString()],
           );
           if (
             JSON.stringify(normalizedResources) !==
               JSON.stringify(previousResources) ||
             yamlConfig['isPresentationMode']
           ) {
-            this.jsAndCssFilesMaps[sourceUri.fsPath] = normalizedResources;
+            this.jsAndCssFilesMaps[sourceUri.toString()] = normalizedResources;
             // restart iframe
             this.refreshPreview(sourceUri);
           } else {
@@ -1380,7 +1384,7 @@ export class PreviewProvider {
         !surface ||
         !isMarkdownFile(document) ||
         !document.uri ||
-        document.uri.fsPath !== sourceUri.fsPath
+        !isSameUri(document.uri, sourceUri)
       ) {
         continue;
       }
