@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug fixes
+
+- **The preview of a Markdown file on a network share (`\\NAS\docs\a.md`) renders on the first try** — VS Code keeps the server name's case in a URI's `fsPath` but lower-cases it in the URI's string form, and that string form is what the preview webview is given and sends back with every message it posts. The extension matched such a URI against the open editor's and the preview's by exact `fsPath`, so `\\NAS\docs\a.md` came back as `\\nas\docs\a.md` and counted as another file: in the default Single Preview mode the first render, which the webview asks for once it has loaded, was dropped, and the preview stayed on "Something is wrong. Please close and open the preview again." until an edit to the document triggered a render through the editor's own URI. Scrolling the preview to reveal the source, refreshing it from its own menu, and pasting or uploading an image from the preview missed the editor the same way. URIs are now compared in VS Code's canonical string form ([#2451](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2451) reported by @cydhhp).
+
 ## [0.8.41] - 2026-11-21
 
 ### Features

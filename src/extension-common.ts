@@ -50,6 +50,7 @@ import {
   getTopVisibleLine,
   getWorkspaceFolderUri,
   isMarkdownFile,
+  isSameUri,
 } from './utils';
 import * as path from 'path';
 
@@ -615,7 +616,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       .filter(
         (editor) =>
           isMarkdownFile(editor.document) &&
-          editor.document.uri.fsPath === sourceUri.fsPath,
+          isSameUri(editor.document.uri, sourceUri),
       )
       .forEach((editor) => {
         // const line = editor.selection.active.line
@@ -833,9 +834,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     }
     const checkboxOffset = Number.isInteger(offset) ? offset : undefined;
     const sourceUri = vscode.Uri.parse(uri);
-    const matches = (candidate: vscode.Uri) =>
-      candidate.toString() === sourceUri.toString() ||
-      candidate.fsPath === sourceUri.fsPath;
+    const matches = (candidate: vscode.Uri) => isSameUri(candidate, sourceUri);
 
     const editor = vscode.window.visibleTextEditors.find((item) =>
       matches(item.document.uri),
@@ -2406,7 +2405,7 @@ function revealSourceRange(
     .filter(
       (editor) =>
         isMarkdownFile(editor.document) &&
-        editor.document.uri.fsPath === sourceUri.fsPath,
+        isSameUri(editor.document.uri, sourceUri),
     )
     .forEach((editor) => {
       const start = editor.document.validatePosition(
@@ -2447,7 +2446,7 @@ function revealLine(uri: string, line: number) {
     .filter(
       (editor) =>
         isMarkdownFile(editor.document) &&
-        editor.document.uri.fsPath === sourceUri.fsPath,
+        isSameUri(editor.document.uri, sourceUri),
     )
     .forEach((editor) => {
       const sourceLine = Math.min(

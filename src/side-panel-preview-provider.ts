@@ -5,7 +5,7 @@ import {
   PreviewProvider,
   dispatchPreviewWebviewMessage,
 } from './preview-provider';
-import { getEditorActiveCursorLine, isMarkdownFile } from './utils';
+import { getEditorActiveCursorLine, isMarkdownFile, isSameUri } from './utils';
 
 export const SIDE_PANEL_VIEW_ID = 'markdown-preview-enhanced.sidePanelView';
 export const SIDE_PANEL_LEGACY_VIEW_ID =
@@ -360,14 +360,8 @@ export class SidePanelPreviewProvider implements vscode.WebviewViewProvider {
   }
 
   private isUriOpenInTabs(targetUri: vscode.Uri): boolean {
-    const targetFsPath = targetUri.fsPath;
-    const targetStr = targetUri.toString();
     const matches = (uri: vscode.Uri | undefined): boolean =>
-      !!uri &&
-      (uri.toString() === targetStr ||
-        (targetUri.scheme === 'file' &&
-          uri.scheme === 'file' &&
-          uri.fsPath === targetFsPath));
+      !!uri && isSameUri(uri, targetUri);
 
     const tabGroups = vscode.window.tabGroups?.all ?? [];
     for (const group of tabGroups) {

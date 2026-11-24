@@ -23,6 +23,7 @@ import {
   getWorkspaceFolderUri,
   globalConfigPath,
   isMarkdownFile,
+  isSameUri,
   isVSCodeWebExtension,
   isVSCodewebExtensionDevMode,
 } from './utils';
@@ -170,7 +171,7 @@ export function dispatchPreviewWebviewMessage(
     command === 'updateMarkdown' &&
     (typeof args[0] !== 'string' ||
       !expectedSourceUri ||
-      Uri.parse(args[0]).toString() !== expectedSourceUri.toString())
+      !isSameUri(Uri.parse(args[0]), expectedSourceUri))
   ) {
     return;
   }
@@ -370,7 +371,7 @@ export class PreviewProvider {
     const target = PreviewProvider.singlePreviewPanelSourceUriTarget;
     // When no single preview exists at all (e.g. only custom editors are
     // open), nothing excludes this source.
-    return !target || target.fsPath === sourceUri.fsPath;
+    return !target || isSameUri(target, sourceUri);
   }
 
   /**
@@ -744,7 +745,7 @@ export class PreviewProvider {
     inputStringOverride?: string;
   }): Promise<void> {
     let initialLine: number | undefined;
-    if (document.uri.fsPath === sourceUri.fsPath) {
+    if (isSameUri(document.uri, sourceUri)) {
       initialLine = cursorLine;
     }
 
@@ -1144,9 +1145,9 @@ export class PreviewProvider {
     if (!PreviewProvider.singlePreviewPanelSourceUriTarget) {
       return false;
     } else {
-      return (
-        PreviewProvider.singlePreviewPanelSourceUriTarget.fsPath ===
-        sourceUri.fsPath
+      return isSameUri(
+        PreviewProvider.singlePreviewPanelSourceUriTarget,
+        sourceUri,
       );
     }
   }
@@ -1380,7 +1381,7 @@ export class PreviewProvider {
         !surface ||
         !isMarkdownFile(document) ||
         !document.uri ||
-        document.uri.fsPath !== sourceUri.fsPath
+        !isSameUri(document.uri, sourceUri)
       ) {
         continue;
       }

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { getMPEConfig } from './config';
-import { getWorkspaceFolderUri, isMarkdownFile } from './utils';
+import { getWorkspaceFolderUri, isMarkdownFile, isSameUri } from './utils';
 
 /**
  * Strip the file extension for image alt text while keeping dotfiles and
@@ -57,8 +57,7 @@ export function pasteImageFile(sourceUri: string, imageFilePath: string) {
   vscode.window.visibleTextEditors
     .filter(
       (editor) =>
-        isMarkdownFile(editor.document) &&
-        editor.document.uri.fsPath === uri.fsPath,
+        isMarkdownFile(editor.document) && isSameUri(editor.document.uri, uri),
     )
     .forEach((editor) => {
       fs.mkdir(assetDirectoryPath, { recursive: true }, (mkdirError) => {
@@ -183,7 +182,7 @@ export function uploadImageFile(
     .filter(
       (editor) =>
         isMarkdownFile(editor.document) &&
-        editor.document.uri.fsPath === sourceUri.fsPath,
+        isSameUri(editor.document.uri, sourceUri),
     )
     .forEach((editor) => {
       const uid = Math.random().toString(36).substr(2, 9);

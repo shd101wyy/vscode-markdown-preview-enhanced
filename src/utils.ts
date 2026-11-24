@@ -86,6 +86,21 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
 }
 
 /**
+ * Whether two URIs name the same file.
+ *
+ * Compared as `toString()`, not as `fsPath`: `vscode.Uri.toString()`
+ * lower-cases the authority, so a URI that has been to the preview webview
+ * and back — the preview is handed `sourceUri.toString()` and sends it
+ * along with every message — has a lower-cased server name. A file on a
+ * network share (`\\NAS\docs\a.md`) comes back as `\\nas\docs\a.md`, which
+ * an exact `fsPath` comparison reports as another file
+ * (vscode-mpe#2451).
+ */
+export function isSameUri(a: vscode.Uri, b: vscode.Uri): boolean {
+  return a.toString() === b.toString();
+}
+
+/**
  * Why the note index must refuse to walk a notebook root, if it must.
  *
  * - `'filesystem-root'`: `/`, a Windows drive root, or dot-path
