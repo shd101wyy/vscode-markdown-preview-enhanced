@@ -9,6 +9,7 @@ const {
   recorder,
   stubPlugin,
   setWorkspaceFolderResolver,
+  setWorkspaceFolders,
   setMarkdownEngine,
   setConfiguration,
   setActiveTextEditor,
@@ -77,9 +78,7 @@ suite('preview of a file on a network share', function () {
       fs.unlinkSync(tmpFile);
     }
     fs.rmSync(root, { recursive: true, force: true });
-    setWorkspaceFolderResolver(() => undefined);
-    setConfiguration({});
-    setMarkdownEngine();
+    restoreStubState();
   });
 
   setup(function () {
@@ -88,15 +87,11 @@ suite('preview of a file on a network share', function () {
     sourceUriGivenToTheWebview = undefined;
     cursorLineGivenToTheWebview = undefined;
     renders = 0;
+    restoreStubState();
     setWorkspaceFolderResolver(() => ({
       uri: bundle.vscode.Uri.file(root),
     }));
     setConfiguration({ previewMode: 'Single Preview' });
-    setActiveTextEditor(undefined);
-    setVisibleTextEditors([]);
-    setOpenTextDocumentResolver(undefined);
-    setFileReader(undefined);
-    setUploadedImageUrl(undefined);
     setMarkdownEngine(makeEngine);
   });
 
@@ -133,8 +128,10 @@ suite('preview of a file on a network share', function () {
     assert.strictEqual(message.html, '<h1>Title</h1>\n');
   });
 
+  // Its own document: the JS/CSS-files map outlives a test, and a document
+  // known to load scripts would be restarted instead of rendered.
   test('sends an edit of a document that loads scripts to the preview instead of restarting it again', async function () {
-    const { editor } = openDocument('\\\\NAS01\\docs\\a.md', '# Title\n');
+    const { editor } = openDocument('\\\\NAS01\\docs\\scripts.md', '# Title\n');
     setMarkdownEngine(() => makeEngine(['a.js']));
     const panel = await openPreviewToTheSide();
     const posted = recordPostedMessages(panel);
@@ -184,6 +181,7 @@ suite('preview of a file on a network share', function () {
     // With no folder open, what the preview may load from is the document's
     // own folder, rebuilt from the fsPath — which keeps the server name's case.
     setWorkspaceFolderResolver(() => undefined);
+    setWorkspaceFolders([]);
     openDocument('\\\\NAS01\\docs\\a.md', 'a\n');
     await openPreviewToTheSide();
     await runCommand('_crossnote.refreshPreview', sourceUriGivenToTheWebview);
@@ -335,8 +333,9 @@ suite('preview of a file on a network share', function () {
 
     // the URI the preview was given
     askToRewrite(sourceUriGivenToTheWebview);
-    // another place in the document
+    // the same document, addressed by a fragment or a query
     askToRewrite(`${sourceUriGivenToTheWebview}#L3`);
+    askToRewrite(`${sourceUriGivenToTheWebview}?raw=1`);
     // another document on the share
     askToRewrite('file://nas01/docs/other.md');
 
@@ -524,6 +523,19 @@ function waitFor(condition, message) {
     };
     poll();
   });
+}
+
+/** Put the `vscode` and `crossnote` stubs back to how the stub file sets them up. */
+function restoreStubState() {
+  setWorkspaceFolderResolver(() => undefined);
+  setWorkspaceFolders([]);
+  setConfiguration({});
+  setMarkdownEngine();
+  setActiveTextEditor(undefined);
+  setVisibleTextEditors([]);
+  setOpenTextDocumentResolver(undefined);
+  setFileReader(undefined);
+  setUploadedImageUrl(undefined);
 }
 
 function makeExtensionContext() {

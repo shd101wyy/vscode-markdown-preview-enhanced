@@ -89,13 +89,13 @@ export function getWorkspaceFolderUri(uri: vscode.Uri) {
  * Whether two URIs name the same file.
  *
  * They are compared in VS Code's canonical string form (`toString()`),
- * without query and fragment — as `fsPath` equality does, except that
- * `fsPath` keeps the case of a server name while `toString()` lower-cases
- * it. That case is lost on the way through the preview webview: it is
- * handed `sourceUri.toString()` and sends it along with every message, so a
- * file on a network share (`\\NAS\docs\a.md`) comes back as
- * `\\nas\docs\a.md`, which an exact `fsPath` comparison reports as another
- * file (vscode-mpe#2451).
+ * without query and fragment, as `fsPath` equality compares — but with the
+ * scheme and authority part of it, and with the authority lower-cased as
+ * `toString()` does while `fsPath` keeps the case. The case of a server name
+ * is lost on the way through the preview webview: it is handed
+ * `sourceUri.toString()` and sends it along with every message, so a file on
+ * a network share (`\\NAS\docs\a.md`) comes back as `\\nas\docs\a.md`, which
+ * an exact `fsPath` comparison reports as another file (vscode-mpe#2451).
  *
  * The fragment is left out because a preview opened from a
  * `note.md#heading` link carries it in its source URI, which an editor's
