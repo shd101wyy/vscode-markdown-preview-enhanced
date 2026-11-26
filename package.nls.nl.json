@@ -75,7 +75,7 @@
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.1": "Front matter weergeven als tabel met één kolom per sleutel",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.2": "Front matter weergeven als tabel met één sleutel en waarde per rij",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.3": "Front matter weergeven als codeblok",
-  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid-thema, u kunt er een kiezen uit [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
+  "markdown-preview-enhanced.mermaidTheme.description": "Het thema van Mermaid-diagrammen: default, dark, forest, neutral of null.",
   "markdown-preview-enhanced.codeBlockTheme.description": "Thema voor codeblokken. Als `auto.css` wordt gekozen, wordt het codeblokthema gekozen dat het beste past bij het huidige voorbeeldthema.",
   "markdown-preview-enhanced.previewTheme.description": "Voorbeeldthema",
   "markdown-preview-enhanced.previewTheme.markdownEnumDescriptions.0": "Atom Dark",

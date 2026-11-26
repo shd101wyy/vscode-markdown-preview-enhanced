@@ -75,7 +75,7 @@
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.1": "Front matter-i hər açar üçün bir sütun olan cədvəl kimi render et",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.2": "Front matter-i hər sətirdə bir açar və dəyər olan cədvəl kimi render et",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.3": "Front matter-i kod bloku kimi render et",
-  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid teması, [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"] arasından birini seçə bilərsiniz",
+  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid diaqramlarının teması: default, dark, forest, neutral və ya null.",
   "markdown-preview-enhanced.codeBlockTheme.description": "Kod bloku teması. `auto.css` seçilibsə, cari önbaxış temasına ən uyğun kod bloku teması seçiləcək.",
   "markdown-preview-enhanced.previewTheme.description": "Önbaxış teması",
   "markdown-preview-enhanced.previewTheme.markdownEnumDescriptions.0": "Atom Dark",
