@@ -75,7 +75,7 @@
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.1": "Render front matter as a table with one column per key",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.2": "Render front matter as a table with one key and value per row",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.3": "Render front matter as a code block",
-  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid theme, you can choose one from [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"]",
+  "markdown-preview-enhanced.mermaidTheme.description": "The theme of Mermaid diagrams: `default`, `dark`, `forest`, `neutral` or `null`.",
   "markdown-preview-enhanced.codeBlockTheme.description": "Code block theme. If `auto.css` is chosen, then the code block theme that best matches the current preview theme will be picked.",
   "markdown-preview-enhanced.previewTheme.description": "Preview Theme",
   "markdown-preview-enhanced.previewTheme.markdownEnumDescriptions.0": "Atom Dark",

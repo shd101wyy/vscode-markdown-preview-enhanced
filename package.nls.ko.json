@@ -75,7 +75,7 @@
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.1": "front matter를 키당 한 열의 표로 렌더링",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.2": "front matter를 행당 키-값 한 쌍의 표로 렌더링",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.3": "front matter를 코드 블록으로 렌더링",
-  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid 테마. [\"mermaid.css\", \"mermaid.dark.css\", \"mermaid.forest.css\"] 중 하나를 선택할 수 있습니다",
+  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid 다이어그램의 테마: `default`, `dark`, `forest`, `neutral`, `null` 중 하나입니다.",
   "markdown-preview-enhanced.codeBlockTheme.description": "코드 블록 테마입니다. `auto.css`를 선택하면 현재 미리 보기 테마에 가장 잘 맞는 코드 블록 테마가 선택됩니다.",
   "markdown-preview-enhanced.previewTheme.description": "미리 보기 테마",
   "markdown-preview-enhanced.previewTheme.markdownEnumDescriptions.0": "Atom Dark",
