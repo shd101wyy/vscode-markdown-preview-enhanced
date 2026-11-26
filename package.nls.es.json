@@ -75,7 +75,7 @@
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.1": "Renderizar el front matter como tabla con una columna por clave",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.2": "Renderizar el front matter como tabla con una clave y valor por fila",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.3": "Renderizar el front matter como bloque de código",
-  "markdown-preview-enhanced.mermaidTheme.description": "Tema de los diagramas de Mermaid: `default`, `dark`, `forest`, `neutral` o `null`.",
+  "markdown-preview-enhanced.mermaidTheme.description": "Tema de los diagramas de Mermaid: default, dark, forest, neutral o null.",
   "markdown-preview-enhanced.codeBlockTheme.description": "Tema de los bloques de código. Si se elige `auto.css`, se seleccionará el tema de bloque de código que mejor coincida con el tema de vista previa actual.",
   "markdown-preview-enhanced.previewTheme.description": "Tema de la vista previa",
   "markdown-preview-enhanced.previewTheme.markdownEnumDescriptions.0": "Atom Dark",

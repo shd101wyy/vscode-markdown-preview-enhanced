@@ -75,7 +75,7 @@
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.1": "将 front matter 渲染为表格，每个键占一列",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.2": "将 front matter 渲染为表格，每行一组键值对",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.3": "将 front matter 渲染为代码块",
-  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid 图表的主题：`default`、`dark`、`forest`、`neutral` 或 `null`。",
+  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid 图表的主题：default、dark、forest、neutral 或 null。",
   "markdown-preview-enhanced.codeBlockTheme.description": "代码块主题。若选择 `auto.css`，则会自动选择与当前预览主题最匹配的代码块主题。",
   "markdown-preview-enhanced.previewTheme.description": "预览主题",
   "markdown-preview-enhanced.previewTheme.markdownEnumDescriptions.0": "Atom Dark",

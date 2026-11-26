@@ -34,22 +34,28 @@ const types = fs.readFileSync(
   'utf8',
 );
 
-/** The members of a union of strings that the pinned crossnote declares. */
+/** The strings of a union, or of an enum of strings, that the pinned crossnote declares. */
 function crossnoteStrings(typeName) {
   const union = new RegExp(
     '^export type ' + typeName + '\\s*=\\s*([^;]*);',
     'm',
   ).exec(types);
-  assert.ok(union, 'the pinned crossnote does not declare ' + typeName);
-  return union[1].match(/'[^']+'/g).map((member) => member.slice(1, -1));
+  const enumeration = new RegExp(
+    '^export (?:declare )?enum ' + typeName + '\\s*\\{([^}]*)\\}',
+    'm',
+  ).exec(types);
+  const strings = union ? union[1] : enumeration && enumeration[1];
+  assert.ok(strings, 'the pinned crossnote does not declare ' + typeName);
+  return strings.match(/'[^']+'|"[^"]+"/g).map((member) => member.slice(1, -1));
 }
 
 /**
  * Each setting whose enum is a type of crossnote, by that type.
  *
- * `frontMatterRenderingOption` is not among them: crossnote has `code` and
- * `code block` where the setting has `code block` only, an old name that is
- * kept for the configs that have it.
+ * `frontMatterRenderingOption` is not among them, for crossnote has `code`
+ * and `code block` where the setting has `code block` only: an old name that
+ * is kept for the configs that have it. The setting is still checked for a
+ * value crossnote does not have.
  */
 const settings = [
   ['codeBlockTheme', 'CodeBlockTheme'],
@@ -58,6 +64,7 @@ const settings = [
   ['markdownParser', 'MarkdownParser'],
   ['mathRenderingOption', 'MathRenderingOption'],
   ['mermaidTheme', 'MermaidTheme'],
+  ['previewMode', 'PreviewMode'],
   ['previewTheme', 'PreviewTheme'],
   ['revealjsTheme', 'RevealJsTheme'],
   ['wikiLinkResolution', 'WikiLinkResolution'],
@@ -73,6 +80,14 @@ suite('settings that are an enum of what crossnote accepts', () => {
       );
     });
   }
+
+  test('frontMatterRenderingOption lists no value that crossnote does not have', () => {
+    const members = crossnoteStrings('FrontMatterRenderingOption');
+    for (const value of properties[prefix + 'frontMatterRenderingOption']
+      .enum) {
+      assert.ok(members.includes(value), value);
+    }
+  });
 
   test('each has its default among its values', () => {
     for (const [setting] of settings) {

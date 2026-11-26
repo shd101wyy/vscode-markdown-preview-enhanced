@@ -75,7 +75,7 @@
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.1": "front matter を、キーごとに 1 列のテーブルとして表示",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.2": "front matter を、1 行に 1 組のキーと値のペアでテーブルとして表示",
   "markdown-preview-enhanced.frontMatterRenderingOption.enumDescriptions.3": "front matter をコードブロックとして表示",
-  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid 図のテーマ：`default`、`dark`、`forest`、`neutral`、`null` のいずれかです。",
+  "markdown-preview-enhanced.mermaidTheme.description": "Mermaid 図のテーマ：default、dark、forest、neutral、null のいずれかです。",
   "markdown-preview-enhanced.codeBlockTheme.description": "コードブロックのテーマ。`auto.css` を選択すると、現在のプレビューテーマに最も合うコードブロックのテーマが選択されます。",
   "markdown-preview-enhanced.previewTheme.description": "プレビューテーマ",
   "markdown-preview-enhanced.previewTheme.markdownEnumDescriptions.0": "Atom Dark",
