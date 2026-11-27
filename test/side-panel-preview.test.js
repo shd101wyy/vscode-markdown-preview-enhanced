@@ -493,12 +493,16 @@ suite('side panel markdown preview', function () {
       // The Git extension names a revision of a file by the query of its URI.
       await resolveAndOpen('/ws/a.md', '# Doc A');
       const revision = makeUri('/ws/a.md').with({ query: 'ref=~1' });
-      setOpenTextDocumentResolver(async () => ({
-        uri: revision,
-        languageId: 'markdown',
-        fileName: '/ws/a.md',
-        getText: () => '# Doc A, revised\n',
-      }));
+      let openedWith;
+      setOpenTextDocumentResolver(async (uri) => {
+        openedWith = uri;
+        return {
+          uri,
+          languageId: 'markdown',
+          fileName: '/ws/a.md',
+          getText: () => '# Doc A, revised\n',
+        };
+      });
       const openCmd = recorder.commands.get(
         'markdown-preview-enhanced.openPreviewInSidePanel',
       );
@@ -509,6 +513,8 @@ suite('side panel markdown preview', function () {
         viewInstance.webview.html,
         '<html># Doc A, revised\n</html>',
       );
+      // It is the revision that is opened, not the file at the same path.
+      assert.strictEqual(openedWith?.toString(), revision.toString());
     });
 
     test('falls back to the Activity Bar legacy view ID on VS Code versions before 1.106', async function () {

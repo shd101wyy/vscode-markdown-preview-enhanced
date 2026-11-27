@@ -25,6 +25,8 @@ let bundle;
 let tmpFile;
 /** What the page of the preview was given: its text and its config. */
 let pages;
+/** The URI of the last document asked of `openTextDocument`. */
+let openedWith;
 
 /** Each command, and the panel it opens: its column, and whether it is focused. */
 const COMMANDS = [
@@ -85,6 +87,7 @@ suite('the preview commands given a file', function () {
   setup(async function () {
     recorder.reset();
     pages = [];
+    openedWith = undefined;
     setActiveTextEditor(undefined);
     setOpenTextDocumentResolver(async (uri) =>
       makeDocument(uri, `# ${path.basename(uri.fsPath)} from disk\n`),
@@ -126,15 +129,18 @@ suite('the preview commands given a file', function () {
       const revision = bundle.vscode.Uri.file('/ws/a.md').with({
         query: 'ref=~1',
       });
-      setOpenTextDocumentResolver(async () =>
-        makeDocument(revision, '# a.md at ~1\n'),
-      );
+      setOpenTextDocumentResolver(async (uri) => {
+        openedWith = uri;
+        return makeDocument(uri, '# a.md at ~1\n');
+      });
       await runCommand(commandId, revision);
 
       const page = thePage();
       assert.strictEqual(page.config.sourceUri, revision.toString());
       assert.strictEqual(page.text, '# a.md at ~1\n');
       assert.strictEqual(page.config.cursorLine, undefined);
+      // It is the revision that is opened, not the file at the same path.
+      assert.strictEqual(openedWith?.toString(), revision.toString());
     });
 
     test(`a preview ${label} previews the file it is given, not the text of the active editor`, async function () {

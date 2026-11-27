@@ -152,8 +152,8 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     }
     // A link to the open file may carry a fragment. A query names another
     // document: a revision of the file in the Git extension.
-    const withoutFragment = (uri: vscode.Uri) =>
-      uri.with({ fragment: '' }).toString();
+    const withoutFragment = (of: vscode.Uri) =>
+      of.with({ fragment: '' }).toString();
     if (
       editor &&
       withoutFragment(editor.document.uri) === withoutFragment(targetUri)
