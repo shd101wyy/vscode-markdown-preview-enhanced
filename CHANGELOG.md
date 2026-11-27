@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **The fade of the preview's context menu can be turned off** — the new `enablePreviewContextMenuAnimation` setting (default: on). Turn it off to take the fade off the right-click menu of the preview and off its submenus: the menu opens at once, and Escape or a click outside closes it at once, as the menus of VS Code do; an item that is clicked keeps a brief highlight before the menu closes ([#2496](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2496) by @shd101wyy; [#2341](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2341) reported by @silv3rarr0w). It needs a crossnote release that contains [crossnote#621](https://github.com/shd101wyy/crossnote/pull/621); until the extension pins one, the setting changes nothing.
+
 ### Bug fixes
 
 - **`Open Preview`, `Open Preview to the Side` and `Open Locked Preview to the Side` preview the file they are given, with no editor open** — the three commands take a file as an optional argument (VS Code passes it from a menu, and another extension can pass any file), but each returned at once when no text editor was active, so `vscode.commands.executeCommand('markdown-preview-enhanced.openPreviewToTheSide', uri)` did nothing until a file was open in an editor. And when a file was passed while the active editor showed another one, the preview carried the file's name and rendered the active editor's text. All four preview commands, the Side Panel's included, now find what to preview in one place: while a text editor shows the file, the preview reads what the editor shows and follows its cursor; otherwise it reads the file itself. With neither an argument nor an active editor the user is told to open a Markdown file first, and a file that cannot be opened is reported by all three commands, where `Open Preview` used to fail silently ([#2495](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2495) by @shd101wyy; [#2494](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2494) reported by @1684838553).
