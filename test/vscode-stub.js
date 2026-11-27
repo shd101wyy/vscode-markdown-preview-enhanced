@@ -13,6 +13,7 @@ const recorder = {
   webviewViewProviders: new Map(),
   clipboard: { text: null },
   warnings: [],
+  errors: [],
   activeEditorHandlers: [],
   tabChangeHandlers: [],
   closeDocumentHandlers: [],
@@ -25,6 +26,7 @@ const recorder = {
     this.webviewViewProviders = new Map();
     this.clipboard = { text: null };
     this.warnings = [];
+    this.errors = [];
     this.activeEditorHandlers = [];
     this.tabChangeHandlers = [];
     this.closeDocumentHandlers = [];
@@ -156,12 +158,14 @@ const VSCODE_STUB_SOURCE = `
         if (!args || typeof args !== 'object') {
           return message;
         }
-        return message.replace(/\{(\w+)\}/g, (_, key) => String(args[key]));
+        return message.replace(/\\{(\\w+)\\}/g, (_, key) => String(args[key]));
       },
     },
     window: {
       createWebviewPanel: createMockWebviewPanel,
-      showErrorMessage: noop,
+      showErrorMessage: (message) => {
+        recorder.errors.push(message);
+      },
       showWarningMessage: (message) => {
         recorder.warnings.push(message);
         return Promise.resolve(undefined);
