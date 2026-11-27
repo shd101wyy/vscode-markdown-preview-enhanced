@@ -26,12 +26,22 @@ let tmpFile;
 /** What the page of the preview was given: its text and its config. */
 let pages;
 
+/** Each command, and the panel it opens: its column, and whether it is focused. */
 const COMMANDS = [
-  ['markdown-preview-enhanced.openPreview', 'open'],
-  ['markdown-preview-enhanced.openPreviewToTheSide', 'to the side'],
+  [
+    'markdown-preview-enhanced.openPreview',
+    'open',
+    { column: 'One', focused: true },
+  ],
+  [
+    'markdown-preview-enhanced.openPreviewToTheSide',
+    'to the side',
+    { column: 'Beside', focused: false },
+  ],
   [
     'markdown-preview-enhanced.openLockedPreviewToTheSide',
     'locked to the side',
+    { column: 'Beside', focused: false },
   ],
 ];
 
@@ -93,7 +103,7 @@ suite('the preview commands given a file', function () {
     recorder.createdPanels.forEach((panel) => panel.dispose());
   });
 
-  for (const [commandId, label] of COMMANDS) {
+  for (const [commandId, label, panel] of COMMANDS) {
     test(`a preview ${label} previews the file it is given when no editor is open`, async function () {
       const b = bundle.vscode.Uri.file('/ws/b.md');
       await runCommand(commandId, b);
@@ -101,6 +111,29 @@ suite('the preview commands given a file', function () {
       const page = thePage();
       assert.strictEqual(page.config.sourceUri, b.toString());
       assert.strictEqual(page.text, '# b.md from disk\n');
+      assert.strictEqual(page.config.cursorLine, undefined);
+      const created = recorder.createdPanels[0];
+      assert.strictEqual(
+        created.viewColumn,
+        bundle.vscode.ViewColumn[panel.column],
+      );
+      assert.strictEqual(created.active, panel.focused);
+    });
+
+    test(`a preview ${label} previews another document of the open file's path, which its query names`, async function () {
+      openEditor('/ws/a.md', '# a.md unsaved\n');
+      // The Git extension names a revision of a file by the query of its URI.
+      const revision = bundle.vscode.Uri.file('/ws/a.md').with({
+        query: 'ref=~1',
+      });
+      setOpenTextDocumentResolver(async () =>
+        makeDocument(revision, '# a.md at ~1\n'),
+      );
+      await runCommand(commandId, revision);
+
+      const page = thePage();
+      assert.strictEqual(page.config.sourceUri, revision.toString());
+      assert.strictEqual(page.text, '# a.md at ~1\n');
       assert.strictEqual(page.config.cursorLine, undefined);
     });
 
@@ -155,6 +188,24 @@ suite('the preview commands given a file', function () {
 
     assert.strictEqual(thePage().config.sourceUri, link.toString());
     assert.strictEqual(thePage().text, '# a.md unsaved\n');
+  });
+
+  test('a locked preview to the side is the one preview, and stays on its file', async function () {
+    setConfiguration({
+      previewMode: 'Single Preview',
+      automaticallyShowPreviewOfMarkdownBeingEdited: true,
+    });
+    const b = bundle.vscode.Uri.file('/ws/b.md');
+    await runCommand('markdown-preview-enhanced.openLockedPreviewToTheSide', b);
+    assert.strictEqual(panelTitle(), 'Preview [Locked] b.md');
+
+    // Another file becomes the one the editor shows: the preview stays.
+    const { editor } = openEditor('/ws/c.md', '# c.md\n');
+    for (const handler of recorder.activeEditorHandlers) {
+      await handler(editor);
+    }
+    assert.strictEqual(pages.length, 1);
+    assert.strictEqual(recorder.createdPanels.length, 1);
   });
 
   for (const [commandId, label] of COMMANDS) {

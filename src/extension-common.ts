@@ -129,9 +129,10 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
    *
    * A command is given the file by a menu or by another extension, which can
    * be while no editor is open or while the active editor shows another file
-   * (vscode-mpe#2494): the page then reads the file itself. While an editor
-   * shows the file, the page reads what the editor shows and follows its
-   * cursor. Nothing is returned, and the user is told, when no file is named.
+   * (vscode-mpe#2494): the page then reads the file itself. While the active
+   * editor shows the file, the page reads what the editor shows and follows
+   * its cursor. Nothing is returned, and the user is told, when no file is
+   * named.
    */
   async function resolvePreviewTarget(uri?: vscode.Uri): Promise<
     | {
@@ -149,7 +150,14 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
       );
       return undefined;
     }
-    if (editor && isSameUri(editor.document.uri, targetUri)) {
+    // A link to the open file may carry a fragment. A query names another
+    // document: a revision of the file in the Git extension.
+    const withoutFragment = (uri: vscode.Uri) =>
+      uri.with({ fragment: '' }).toString();
+    if (
+      editor &&
+      withoutFragment(editor.document.uri) === withoutFragment(targetUri)
+    ) {
       return {
         uri: targetUri,
         document: editor.document,
@@ -213,6 +221,7 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
    * Open the preview of a file in an editor group. A failure is shown to the
    * user, whichever command it comes from.
    */
+  // `uri` cannot be optional: a required parameter follows it.
   async function openPreviewOfFile(
     uri: vscode.Uri | undefined,
     viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus: boolean },
