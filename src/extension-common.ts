@@ -124,44 +124,81 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     ),
   );
 
-  async function openPreviewInSidePanel(uri?: vscode.Uri) {
-    const activeEditor = vscode.window.activeTextEditor;
-    const targetUri = uri ?? activeEditor?.document.uri;
+  /**
+   * The file a preview is opened for, and the text its page reads.
+   *
+   * A command is given the file by a menu or by another extension, which can
+   * be while no editor is open or while the active editor shows another file
+   * (vscode-mpe#2494): the page then reads the file itself. While the active
+   * editor shows the file, the page reads what the editor shows and follows
+   * its cursor. Nothing is returned, and the user is told, when no file is
+   * named.
+   */
+  async function resolvePreviewTarget(uri?: vscode.Uri): Promise<
+    | {
+        uri: vscode.Uri;
+        document: vscode.TextDocument;
+        cursorLine?: number;
+      }
+    | undefined
+  > {
+    const editor = vscode.window.activeTextEditor;
+    const targetUri = uri ?? editor?.document.uri;
     if (!targetUri) {
       vscode.window.showWarningMessage(
         vscode.l10n.t('Open a markdown file first.'),
       );
-      return;
+      return undefined;
     }
+    // A link to the open file may carry a fragment. A query names another
+    // document: a revision of the file in the Git extension.
+    const withoutFragment = (of: vscode.Uri) =>
+      of.with({ fragment: '' }).toString();
+    if (
+      editor &&
+      withoutFragment(editor.document.uri) === withoutFragment(targetUri)
+    ) {
+      return {
+        uri: targetUri,
+        document: editor.document,
+        cursorLine: getEditorActiveCursorLine(editor),
+      };
+    }
+    return {
+      uri: targetUri,
+      document: await vscode.workspace.openTextDocument(targetUri),
+    };
+  }
 
+  function showPreviewError(error: unknown) {
+    vscode.window.showErrorMessage(
+      vscode.l10n.t('MPE Preview failed: {message}', {
+        message: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  }
+
+  async function openPreviewInSidePanel(uri?: vscode.Uri) {
     try {
-      const matchesActive =
-        activeEditor?.document.uri.toString() === targetUri.toString();
-      const document = matchesActive
-        ? activeEditor.document
-        : await vscode.workspace.openTextDocument(targetUri);
-      if (!isMarkdownFile(document)) {
+      const target = await resolvePreviewTarget(uri);
+      if (!target) {
+        return;
+      }
+      if (!isMarkdownFile(target.document)) {
         vscode.window.showWarningMessage(
           vscode.l10n.t('Open a markdown file first.'),
         );
         return;
       }
-
       await sidePanelProvider.openPreview({
-        sourceUri: targetUri,
-        document,
-        cursorLine: matchesActive
-          ? getEditorActiveCursorLine(activeEditor)
-          : undefined,
+        sourceUri: target.uri,
+        document: target.document,
+        cursorLine: target.cursorLine,
         preserveFocus: true,
       });
     } catch (error) {
       console.error('[MPE] openPreviewInSidePanel failed:', error);
-      vscode.window.showErrorMessage(
-        vscode.l10n.t('MPE Preview failed: {message}', {
-          message: error instanceof Error ? error.message : String(error),
-        }),
-      );
+      showPreviewError(error);
     }
   }
 
@@ -180,86 +217,57 @@ export async function initExtensionCommon(context: vscode.ExtensionContext) {
     return await PreviewProvider.getPreviewContentProvider(uri, context);
   }
 
-  async function openPreviewToTheSide(uri?: vscode.Uri) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      return;
-    }
-    if (!uri) {
-      uri = editor.document.uri;
-    }
-
+  /**
+   * Open the preview of a file in an editor group. A failure is shown to the
+   * user, whichever command it comes from.
+   */
+  // `uri` cannot be optional: a required parameter follows it.
+  async function openPreviewOfFile(
+    uri: vscode.Uri | undefined,
+    viewOptions: { viewColumn: vscode.ViewColumn; preserveFocus: boolean },
+    { lock = false }: { lock?: boolean } = {},
+  ) {
     try {
-      const previewProvider = await getPreviewContentProvider(uri);
+      const target = await resolvePreviewTarget(uri);
+      if (!target) {
+        return;
+      }
+      const previewProvider = await getPreviewContentProvider(target.uri);
       await previewProvider.initPreview({
-        sourceUri: uri,
-        document: editor.document,
-        cursorLine: getEditorActiveCursorLine(editor),
-        viewOptions: {
-          viewColumn: vscode.ViewColumn.Beside,
-          preserveFocus: true,
-        },
+        sourceUri: target.uri,
+        document: target.document,
+        cursorLine: target.cursorLine,
+        viewOptions,
       });
+      if (lock) {
+        previewProvider.lockSinglePreview();
+      }
     } catch (error) {
-      console.error('[MPE] openPreviewToTheSide failed:', error);
-      vscode.window.showErrorMessage(
-        vscode.l10n.t('MPE Preview failed: {message}', {
-          message: error instanceof Error ? error.message : String(error),
-        }),
-      );
+      console.error('[MPE] openPreviewOfFile failed:', error);
+      showPreviewError(error);
     }
   }
 
-  async function openPreview(uri?: vscode.Uri) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      return;
-    }
-    if (!uri) {
-      uri = editor.document.uri;
-    }
+  async function openPreviewToTheSide(uri?: vscode.Uri) {
+    await openPreviewOfFile(uri, {
+      viewColumn: vscode.ViewColumn.Beside,
+      preserveFocus: true,
+    });
+  }
 
-    const previewProvider = await getPreviewContentProvider(uri);
-    previewProvider.initPreview({
-      sourceUri: uri,
-      document: editor.document,
-      cursorLine: getEditorActiveCursorLine(editor),
-      viewOptions: {
-        viewColumn: vscode.ViewColumn.One,
-        preserveFocus: false,
-      },
+  async function openPreview(uri?: vscode.Uri) {
+    await openPreviewOfFile(uri, {
+      viewColumn: vscode.ViewColumn.One,
+      preserveFocus: false,
     });
   }
 
   async function openLockedPreviewToTheSide(uri?: vscode.Uri) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      return;
-    }
-    if (!uri) {
-      uri = editor.document.uri;
-    }
-
-    try {
-      const previewProvider = await getPreviewContentProvider(uri);
-      await previewProvider.initPreview({
-        sourceUri: uri,
-        document: editor.document,
-        cursorLine: getEditorActiveCursorLine(editor),
-        viewOptions: {
-          viewColumn: vscode.ViewColumn.Beside,
-          preserveFocus: true,
-        },
-      });
-      previewProvider.lockSinglePreview();
-    } catch (error) {
-      console.error('[MPE] openLockedPreviewToTheSide failed:', error);
-      vscode.window.showErrorMessage(
-        vscode.l10n.t('MPE Preview failed: {message}', {
-          message: error instanceof Error ? error.message : String(error),
-        }),
-      );
-    }
+    await openPreviewOfFile(
+      uri,
+      { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
+      { lock: true },
+    );
   }
 
   async function togglePreviewLock(uri?: vscode.Uri) {

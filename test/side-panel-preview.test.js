@@ -489,6 +489,34 @@ suite('side panel markdown preview', function () {
       );
     });
 
+    test("is given a document that differs from the active editor's in its query only", async function () {
+      // The Git extension names a revision of a file by the query of its URI.
+      await resolveAndOpen('/ws/a.md', '# Doc A');
+      const revision = makeUri('/ws/a.md').with({ query: 'ref=~1' });
+      let openedWith;
+      setOpenTextDocumentResolver(async (uri) => {
+        openedWith = uri;
+        return {
+          uri,
+          languageId: 'markdown',
+          fileName: '/ws/a.md',
+          getText: () => '# Doc A, revised\n',
+        };
+      });
+      const openCmd = recorder.commands.get(
+        'markdown-preview-enhanced.openPreviewInSidePanel',
+      );
+      assert.ok(openCmd);
+      await openCmd(revision);
+
+      assert.strictEqual(
+        viewInstance.webview.html,
+        '<html># Doc A, revised\n</html>',
+      );
+      // It is the revision that is opened, not the file at the same path.
+      assert.strictEqual(openedWith?.toString(), revision.toString());
+    });
+
     test('falls back to the Activity Bar legacy view ID on VS Code versions before 1.106', async function () {
       globalThis.__vscodeStubVersion = '1.95.0';
       const legacyRegistration = recorder.webviewViewProviders.get(
