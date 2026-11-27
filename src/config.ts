@@ -136,6 +136,11 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
    * crossnote versions that predate the field the value is ignored.
    */
   public readonly enablePreviewContextMenu: boolean;
+  /**
+   * Whether the context menu of the preview fades in and out. Part of
+   * crossnote's `NotebookConfig` (read by the webview).
+   */
+  public readonly enablePreviewContextMenuAnimation: boolean;
   public readonly wikiLinkTargetFileExtension: string;
   public readonly wikiLinkTargetFileNameChangeCase: WikiLinkTargetFileNameChangeCase;
   public readonly wikiLinkResolution: WikiLinkResolution;
@@ -331,6 +336,8 @@ export class MarkdownPreviewEnhancedConfig implements NotebookConfig {
       defaultConfig.useVSCodeThemeForContextMenu;
     this.enablePreviewContextMenu =
       getMPEConfig<boolean>('enablePreviewContextMenu') ?? true;
+    this.enablePreviewContextMenuAnimation =
+      getMPEConfig<boolean>('enablePreviewContextMenuAnimation') ?? true;
     this.wikiLinkTargetFileExtension =
       getMPEConfig<string>('wikiLinkTargetFileExtension') ??
       defaultConfig.wikiLinkTargetFileExtension;

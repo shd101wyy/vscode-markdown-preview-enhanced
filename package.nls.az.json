@@ -137,6 +137,7 @@
   "markdown-preview-enhanced.enablePreviewZenMode.description": "Bu seçimi aktivləşdirmək, siçan üzərində olmadıqda önbaxışdakı lazımsız interfeys elementlərini gizlədəcək.",
   "markdown-preview-enhanced.useVSCodeThemeForContextMenu.description": "Aktivləşdirildikdə, önbaxışdakı kontekst menyusu standart üslub əvəzinə VS Code-un tema rənglərini və şriftini miras alır.",
   "markdown-preview-enhanced.enablePreviewContextMenu.description": "Önbaxışda genişlənmənin fərdi sağ klik menyusunu göstər. Söndürsəniz, adi Kopyala/Yapışdır bəndləri olan brauzerin daxili kontekst menyusuna qayıdılır.",
+  "markdown-preview-enhanced.enablePreviewContextMenuAnimation.description": "Önbaxışda genişlənmənin fərdi sağ klik menyusu solma effekti ilə açılır və bağlanır. Menyunun VS Code menyuları kimi dərhal açılıb bağlanması üçün söndürün.",
   "markdown-preview-enhanced.enableImageLightbox.description": "Önbaxışda bir şəkilə klikləyərək onu tam ekran lightbox qatında görüntüləyin. Bağlamaq üçün Escape düyməsinə basın və ya arxa fona klikləyin.",
   "markdown-preview-enhanced.aiTranslationProvider.description": "Tərcümə funksiyası üçün AI provayder ID-si, məsələn \"openai\", \"anthropic\", \"minimax-cn\", \"deepseek\". @earendil-works/pi-ai provayder siyahısına baxın.",
   "markdown-preview-enhanced.aiTranslationModel.description": "AI tərcüməsi üçün model ID-si, məsələn \"gpt-4o-mini\". Seçilmiş provayder üçün etibarlı model olmalıdır.",

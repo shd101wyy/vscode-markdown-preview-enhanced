@@ -916,6 +916,11 @@
           "default": true,
           "type": "boolean"
         },
+        "markdown-preview-enhanced.enablePreviewContextMenuAnimation": {
+          "description": "%markdown-preview-enhanced.enablePreviewContextMenuAnimation.description%",
+          "default": true,
+          "type": "boolean"
+        },
         "markdown-preview-enhanced.enableImageLightbox": {
           "description": "%markdown-preview-enhanced.enableImageLightbox.description%",
           "default": true,

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **The fade of the preview's context menu can be turned off** — the new `enablePreviewContextMenuAnimation` setting (default: on). Turn it off to make the right-click menu of the preview open and close at once, as the menus of VS Code do ([#**PR**](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/__PR__) by @shd101wyy; [#2341](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2341) reported by @silv3rarr0w). It needs a crossnote release that contains [crossnote#621](https://github.com/shd101wyy/crossnote/pull/621); until the extension pins one, the setting changes nothing.
+
 ### Bug fixes
 
 - **The `mermaidTheme` setting lists `neutral` and `null`** — crossnote has accepted these two themes since 2023-09 and passes the value to Mermaid as its `theme`, but the setting is an enum and listed three: they could only be typed into `settings.json` by hand. The description is brought up to date too; it named three CSS files that are not a choice any more. Every enum setting that is a type of crossnote is now checked against the crossnote the extension pins, so that a value crossnote gains fails CI until the setting lists it ([#2493](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2493) by @shd101wyy; [#2492](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2492) reported by @shd101wyy).
