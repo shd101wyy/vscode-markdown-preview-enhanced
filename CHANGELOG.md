@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-- **The fade of the preview's context menu can be turned off** — the new `enablePreviewContextMenuAnimation` setting (default: on). Turn it off to make the right-click menu of the preview open and close at once, as the menus of VS Code do ([#**PR**](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2496) by @shd101wyy; [#2341](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2341) reported by @silv3rarr0w). It needs a crossnote release that contains [crossnote#621](https://github.com/shd101wyy/crossnote/pull/621); until the extension pins one, the setting changes nothing.
+- **The fade of the preview's context menu can be turned off** — the new `enablePreviewContextMenuAnimation` setting (default: on). Turn it off to make the right-click menu of the preview open and close at once, as the menus of VS Code do ([#2496](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/pull/2496) by @shd101wyy; [#2341](https://github.com/shd101wyy/vscode-markdown-preview-enhanced/issues/2341) reported by @silv3rarr0w). It needs a crossnote release that contains [crossnote#621](https://github.com/shd101wyy/crossnote/pull/621); until the extension pins one, the setting changes nothing.
 
 ### Bug fixes
 
